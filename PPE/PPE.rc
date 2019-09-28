@@ -1,0 +1,1131 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+// Generated Help ID header file
+#define APSTUDIO_HIDDEN_SYMBOLS
+#include "resource.hm"
+#undef APSTUDIO_HIDDEN_SYMBOLS
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "#ifdef _WIN32\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#endif //_WIN32\r\n"
+    "#include ""res\\PPE.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""l.chs\\afxres.rc""          // Standard components\r\n"
+    "#include ""l.chs\\afxprint.rc""        // printing/print preview resources\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\Tower.ico"
+
+IDR_PLATENTYPE          ICON                    "res\\PPEDoc.ico"
+
+IDI_ITEM_PROP           ICON                    "res\\ico00002.ico"
+
+IDR_MAINFRAME_PNC       ICON                    "res\\pnc.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDR_MAINFRAME           BITMAP                  "res\\Toolbar.bmp"
+
+IDR_TOOLBAR_PLATE       BITMAP                  "res\\toolbar2.bmp"
+
+IDR_TOOLBAR_EDIT        BITMAP                  "res\\bmp00001.bmp"
+
+IDB_BMP_CUT_WING        BITMAP                  "res\\bmp_cut_.bmp"
+
+IDB_PART_TREE           BITMAP                  "res\\part_tree.bmp"
+
+IDR_TOOLBAR_CUT_PLATE   BITMAP                  "res\\toolbar_cut_plate.bmp"
+
+IDR_TOOLBAR_TOOLKIT     BITMAP                  "res\\toolbar_toolkit.bmp"
+
+IDR_TOOLBAR_PBJ         BITMAP                  "res\\toolbar_pbj.bmp"
+
+IDR_TOOLBAR_FILE        BITMAP                  "res\\toolbar1.bmp"
+
+IDR_MAINFRAME_PNC       BITMAP                  "res\\mainfram.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Toolbar
+//
+
+IDR_MAINFRAME TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_NEW_FILE
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_GL_ALL_ZOOM
+    BUTTON      ID_OPEN_WND_SEL
+    BUTTON      ID_HIDE_PART
+    BUTTON      ID_REDRAW_ALL
+    SEPARATOR
+    BUTTON      ID_FIRST_PART
+    BUTTON      ID_PREV_PART
+    BUTTON      ID_NEXT_PART
+    BUTTON      ID_FINAL_PART
+    SEPARATOR
+    BUTTON      ID_DRAW_MODE_NC
+    BUTTON      ID_DRAW_MODE_PROCESSCARD
+    BUTTON      ID_DRAW_MODE_EDIT
+END
+
+IDR_TOOLBAR_PLATE TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_ROTATE_ANTI_CLOCKWISE
+    BUTTON      ID_ROTATE_CLOCKWISE
+    BUTTON      ID_OVERTURN_PLATE
+    BUTTON      ID_AMEND_HOLE_INCREMENT
+END
+
+IDR_TOOLBAR_EDIT TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_FEATURE_PROP
+    SEPARATOR
+    BUTTON      ID_DEL_PART_FEATURE
+    BUTTON      ID_NEW_LS
+    BUTTON      ID_INSERT_VERTEX
+    BUTTON      ID_CAL_PLATE_PROFILE
+END
+
+IDB_PART_TREE TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_BUTTON32849
+    BUTTON      ID_BUTTON32849
+    BUTTON      ID_BUTTON32850
+    BUTTON      ID_BUTTON32851
+    BUTTON      ID_BUTTON32851
+    BUTTON      ID_BUTTON32852
+END
+
+IDR_TOOLBAR_CUT_PLATE TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_DEF_CUT_IN_PT
+    BUTTON      ID_PREVIEW_CUTTING_TRACK
+    SEPARATOR
+    BUTTON      ID_FILE_SAVE_TXT
+    BUTTON      ID_FILE_SAVE_NC
+    BUTTON      ID_FILE_SAVE_CNC
+END
+
+IDR_TOOLBAR_TOOLKIT TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_SPEC_WCS_ORGIN
+    BUTTON      ID_SPEC_AXIS_X_VERTEX
+    SEPARATOR
+    BUTTON      ID_MEASURE_DIST
+END
+
+IDR_TOOLBAR_PBJ TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_DISPLAY_BOLT_SORT
+    BUTTON      ID_ADJUST_HOLE_ORDER
+    BUTTON      ID_SMART_SORT_BOLT
+    BUTTON      ID_BATCH_SORT_HOLE
+    SEPARATOR
+    BUTTON      ID_FILE_SAVE_PBJ
+    BUTTON      ID_FILE_SAVE_PMZ
+END
+
+IDR_TOOLBAR_FILE TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_FILE_SAVE_DXF
+    BUTTON      ID_FILE_SAVE_TTP
+    BUTTON      ID_FILE_SAVE_WKF
+END
+
+IDR_MAINFRAME_PNC TOOLBAR 16, 15
+BEGIN
+    BUTTON      ID_NEW_FILE
+    BUTTON      ID_FILE_OPEN
+    BUTTON      ID_FILE_SAVE
+    SEPARATOR
+    BUTTON      ID_FILE_PRINT
+    SEPARATOR
+    BUTTON      ID_GL_ALL_ZOOM
+    BUTTON      ID_OPEN_WND_SEL
+    BUTTON      ID_HIDE_PART
+    BUTTON      ID_REDRAW_ALL
+    SEPARATOR
+    BUTTON      ID_FIRST_PART
+    BUTTON      ID_PREV_PART
+    BUTTON      ID_NEXT_PART
+    BUTTON      ID_FINAL_PART
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menu
+//
+
+IDR_MAINFRAME MENU
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)\tCtrl+N",              ID_NEW_FILE
+        MENUITEM "打开文件夹(&O)...\tCtrl+O",        ID_FILE_OPEN
+        MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)\tCtrl+P",              ID_FILE_PRINT
+        MENUITEM "打印预览",                        ID_FILE_PRINT_PREVIEW
+        MENUITEM "打印设置",                        ID_FILE_PRINT_SETUP
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)",                      ID_APP_EXIT
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "属性栏(P)",                      ID_VIEW_PROP_LIST
+        MENUITEM "构件列表(L)",                     ID_VIEW_PART_LIST
+        POPUP "工作环境"
+        BEGIN
+            MENUITEM "NC数据",                        ID_DRAW_MODE_NC
+            MENUITEM "构件编辑",                        ID_DRAW_MODE_EDIT
+            MENUITEM "工艺草图",                        ID_DRAW_MODE_PROCESSCARD
+        END
+        POPUP "工具栏和停靠窗口(&T)"
+        BEGIN
+            MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "缩放(&S)",                      ID_GL_ZOOM
+        MENUITEM "开窗选择(&O)",                    ID_OPEN_WND_SEL
+        MENUITEM "刷新屏幕(&R)\tF8",                ID_REDRAW_ALL
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "第一件(&F)",                     ID_FIRST_PART
+        MENUITEM "上一件(&P)",                     ID_PREV_PART
+        MENUITEM "下一件(&N)",                     ID_NEXT_PART
+        MENUITEM "最后一件(&L)",                    ID_FINAL_PART
+        MENUITEM SEPARATOR
+        MENUITEM "计算板外形(W)",                    ID_CAL_PLATE_PROFILE
+        MENUITEM "创建顶点(&C)",                    ID_INSERT_VERTEX
+        MENUITEM "生成螺栓(&N)",                    ID_NEW_LS
+        MENUITEM "特征属性(&P)",                    ID_FEATURE_PROP
+        MENUITEM "删除(D)",                       ID_DEL_PART_FEATURE
+        MENUITEM SEPARATOR
+        MENUITEM "开合角钢(&K)",                    ID_KAIHE_JG
+    END
+    POPUP "NC加工(&N)"
+    BEGIN
+        MENUITEM "逆时针旋转钢板(&A)",                 ID_ROTATE_ANTI_CLOCKWISE
+        MENUITEM "顺时针旋转钢板(&C)",                 ID_ROTATE_CLOCKWISE
+        MENUITEM "翻转构件(&T)",                    ID_OVERTURN_PLATE
+        MENUITEM "修正孔径增大值",                     ID_AMEND_HOLE_INCREMENT
+        MENUITEM SEPARATOR
+        MENUITEM "输出钢板DXF(&D)\tCtrl+D",         ID_FILE_SAVE_DXF
+        MENUITEM "输出钢板TTP",                     ID_FILE_SAVE_TTP
+        MENUITEM "输出钢板WKF",                     ID_FILE_SAVE_WKF
+        MENUITEM SEPARATOR
+        MENUITEM "输出角钢NC数据",                    ID_GEN_ANGLE_NC_FILE
+    END
+    POPUP "工具(&W)"
+    BEGIN
+        MENUITEM "装配坐标系(&A)",                   ID_ASSEMBLE_CS
+        MENUITEM "工作坐标系(&W)",                   ID_WORK_CS
+        POPUP "构造工作坐标系(&C)"
+        BEGIN
+            MENUITEM "选择工作原点(&O)",                  ID_SPEC_WCS_ORGIN
+            MENUITEM "选择X轴标定点(&X)",                 ID_SPEC_AXIS_X_VERTEX
+            MENUITEM "指定工作原点全局坐标(&G)",              ID_SPEC_WCS_ORGIN_BY_GLOBAL_CS
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "测量尺寸",                        32854
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 PPE(&A)...",               ID_APP_ABOUT
+    END
+END
+
+IDR_ITEM_CMD_POPUP MENU
+BEGIN
+    POPUP "_CMD_POPUP"
+    BEGIN
+        MENUITEM "属性",                          32845
+    END
+END
+
+IDR_MAINFRAME_PNC MENU
+BEGIN
+    POPUP "文件(&F)"
+    BEGIN
+        MENUITEM "新建(&N)\tCtrl+N",              ID_NEW_FILE
+        MENUITEM "打开文件夹(&O)...\tCtrl+O",        ID_FILE_OPEN
+        MENUITEM "保存(&S)\tCtrl+S",              ID_FILE_SAVE
+        MENUITEM SEPARATOR
+        MENUITEM "打印(&P)\tCtrl+P",              ID_FILE_PRINT
+        MENUITEM SEPARATOR
+        MENUITEM "退出(&X)",                      ID_APP_EXIT
+    END
+    POPUP "视图(&V)"
+    BEGIN
+        MENUITEM "属性栏(P)",                      ID_VIEW_PROP_LIST
+        MENUITEM "构件列表(L)",                     ID_VIEW_PART_LIST
+        POPUP "工具栏和停靠窗口(&T)"
+        BEGIN
+            MENUITEM "<占位符>",                       ID_VIEW_TOOLBAR
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "缩放(&S)",                      ID_GL_ZOOM
+        MENUITEM "开窗选择(&O)",                    ID_OPEN_WND_SEL
+        MENUITEM "刷新屏幕(&R)\tF8",                ID_REDRAW_ALL
+    END
+    POPUP "编辑(&E)"
+    BEGIN
+        MENUITEM "第一件(&F)",                     ID_FIRST_PART
+        MENUITEM "上一件(&P)",                     ID_PREV_PART
+        MENUITEM "下一件(&N)",                     ID_NEXT_PART
+        MENUITEM "最后一件(&L)",                    ID_FINAL_PART
+        MENUITEM SEPARATOR
+        MENUITEM "计算板外形(W)",                    ID_CAL_PLATE_PROFILE
+        MENUITEM "创建顶点(&C)",                    ID_INSERT_VERTEX
+        MENUITEM "生成螺栓(&N)",                    ID_NEW_LS
+        MENUITEM "特征属性(&P)",                    ID_FEATURE_PROP
+        MENUITEM "删除(D)",                       ID_DEL_PART_FEATURE
+    END
+    POPUP "NC加工(&N)"
+    BEGIN
+        MENUITEM "逆时针旋转钢板(&A)",                 ID_ROTATE_ANTI_CLOCKWISE
+        MENUITEM "顺时针旋转钢板(&C)",                 ID_ROTATE_CLOCKWISE
+        MENUITEM "翻转构件(&T)",                    ID_OVERTURN_PLATE
+        MENUITEM "修正孔径增大值",                     ID_AMEND_HOLE_INCREMENT
+        MENUITEM SEPARATOR
+        MENUITEM "输出钢板DXF(&D)\tCtrl+D",         ID_FILE_SAVE_DXF
+        MENUITEM "输出钢板TTP",                     ID_FILE_SAVE_TTP
+        MENUITEM "输出钢板WKF",                     ID_FILE_SAVE_WKF
+        MENUITEM SEPARATOR
+        MENUITEM "显示钢板孔序\tF2",                  ID_DISPLAY_BOLT_SORT
+        MENUITEM "优化孔序方案1\tF3",                 ID_SMART_SORT_BOLT
+        MENUITEM "优化孔序方案2\tF4",                 ID_SMART_SORT_BOLT_2
+        MENUITEM "优化孔序方案3\tF5",                 ID_SMART_SORT_BOLT_3
+        MENUITEM "调整钢板孔序",                      ID_ADJUST_HOLE_ORDER
+        MENUITEM "批量优化钢板孔序",                    ID_BATCH_SORT_HOLE
+        MENUITEM "输出钢板PBJ",                     ID_FILE_SAVE_PBJ
+        MENUITEM "输出钢板PMZ",                     ID_FILE_SAVE_PMZ
+        MENUITEM SEPARATOR
+        MENUITEM "定义钢板切入点(&D)",                 ID_DEF_CUT_IN_PT
+        MENUITEM "预览钢板切割轨迹(P)",                 ID_PREVIEW_CUTTING_TRACK
+        MENUITEM "输出钢板NC",                      ID_FILE_SAVE_NC
+        MENUITEM "输出钢板TXT",                     ID_FILE_SAVE_TXT
+        MENUITEM "输出钢板CNC",                     ID_FILE_SAVE_CNC
+        MENUITEM SEPARATOR
+        MENUITEM "一键生成NC数据",                    ID_CREATE_PLATE_NC_DATA
+    END
+    POPUP "工具(&W)"
+    BEGIN
+        MENUITEM "装配坐标系(&A)",                   ID_ASSEMBLE_CS
+        MENUITEM "工作坐标系(&W)",                   ID_WORK_CS
+        POPUP "构造工作坐标系(&C)"
+        BEGIN
+            MENUITEM "选择工作原点(&O)",                  ID_SPEC_WCS_ORGIN
+            MENUITEM "选择X轴标定点(&X)",                 ID_SPEC_AXIS_X_VERTEX
+            MENUITEM "指定工作原点全局坐标(&G)",              ID_SPEC_WCS_ORGIN_BY_GLOBAL_CS
+        END
+        MENUITEM SEPARATOR
+        MENUITEM "测量尺寸",                        32854
+    END
+    POPUP "帮助(&H)"
+    BEGIN
+        MENUITEM "关于 PPE(&A)...",               ID_APP_ABOUT
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_MAINFRAME ACCELERATORS
+BEGIN
+    VK_F2,          ID_DISPLAY_BOLT_SORT,   VIRTKEY, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_END,         ID_FINAL_PART,          VIRTKEY, NOINVERT
+    VK_HOME,        ID_FIRST_PART,          VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_DOWN,        ID_NEXT_PART,           VIRTKEY, NOINVERT
+    VK_NEXT,        ID_OVERTURN_PLATE,      VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_UP,          ID_PREV_PART,           VIRTKEY, NOINVERT
+    VK_LEFT,        ID_ROTATE_ANTI_CLOCKWISE, VIRTKEY, NOINVERT
+    VK_RIGHT,       ID_ROTATE_CLOCKWISE,    VIRTKEY, NOINVERT
+END
+
+IDR_MAINFRAME_PNC ACCELERATORS
+BEGIN
+    VK_F2,          ID_DISPLAY_BOLT_SORT,   VIRTKEY, NOINVERT
+    "C",            ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_COPY,           VIRTKEY, CONTROL, NOINVERT
+    VK_DELETE,      ID_EDIT_CUT,            VIRTKEY, SHIFT, NOINVERT
+    "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_EDIT_PASTE,          VIRTKEY, CONTROL, NOINVERT
+    VK_INSERT,      ID_EDIT_PASTE,          VIRTKEY, SHIFT, NOINVERT
+    VK_BACK,        ID_EDIT_UNDO,           VIRTKEY, ALT, NOINVERT
+    "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
+    "N",            ID_FILE_NEW,            VIRTKEY, CONTROL, NOINVERT
+    "O",            ID_FILE_OPEN,           VIRTKEY, CONTROL, NOINVERT
+    "P",            ID_FILE_PRINT,          VIRTKEY, CONTROL, NOINVERT
+    "S",            ID_FILE_SAVE,           VIRTKEY, CONTROL, NOINVERT
+    VK_END,         ID_FINAL_PART,          VIRTKEY, NOINVERT
+    VK_HOME,        ID_FIRST_PART,          VIRTKEY, NOINVERT
+    VK_F6,          ID_NEXT_PANE,           VIRTKEY, NOINVERT
+    VK_F6,          ID_PREV_PANE,           VIRTKEY, SHIFT, NOINVERT
+    VK_NEXT,        ID_OVERTURN_PLATE,      VIRTKEY, NOINVERT
+    VK_DOWN,        ID_NEXT_PART,           VIRTKEY, NOINVERT
+    VK_RIGHT,       ID_ROTATE_CLOCKWISE,    VIRTKEY, NOINVERT
+    VK_LEFT,        ID_ROTATE_ANTI_CLOCKWISE, VIRTKEY, NOINVERT
+    VK_UP,          ID_PREV_PART,           VIRTKEY, NOINVERT
+    VK_F3,          ID_SMART_SORT_BOLT,     VIRTKEY, NOINVERT
+    VK_F4,          ID_SMART_SORT_BOLT_2,   VIRTKEY, NOINVERT
+    VK_F5,          ID_SMART_SORT_BOLT_3,   VIRTKEY, NOINVERT
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 235, 55
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于 PPE"
+FONT 9, "宋体", 0, 0, 0x1
+BEGIN
+    ICON            IDR_MAINFRAME,IDC_S_ICON,11,17,20,20
+    LTEXT           "PPE 1.0 版",IDC_S_VERSION,40,10,188,8,SS_NOPREFIX
+    LTEXT           "北京信狐天诚软件科技有限公司    版权所有(C) 2014-2016",IDC_STATIC,40,25,129,22
+    DEFPUSHBUTTON   "确定",IDOK,178,33,50,14,WS_GROUP
+END
+
+IDD_NC_SET_DLG DIALOG 0, 0, 146, 63
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "NC数据输出设置"
+FONT 10, "宋体"
+BEGIN
+    LTEXT           "NC数据孔径增大值(mm)：",IDC_STATIC,7,9,84,8
+    EDITTEXT        IDC_E_HOLE_D_INCREMENT,99,7,40,14,ES_AUTOHSCROLL
+    LTEXT           "号位孔直径值(mm)：",IDC_STATIC,7,26,69,8
+    EDITTEXT        IDC_E_MK_HOLE_D,99,24,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,7,42,50,14
+    PUSHBUTTON      "取消",IDCANCEL,89,42,50,14
+END
+
+IDD_SIDE_BAFFLE_HIGH_DLG DIALOG 0, 0, 187, 46
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "侧挡板高度设定"
+FONT 10, "宋体"
+BEGIN
+    LTEXT           "侧档板高度(mm)：",IDC_STATIC,11,19,65,8
+    EDITTEXT        IDC_E_SIDE_BAFFLE_HIGH,77,16,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,130,7,50,14
+    PUSHBUTTON      "取消",IDCANCEL,130,24,50,14
+END
+
+IDD_NEW_PART_FILE DIALOGEX 0, 0, 171, 73
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "新建"
+FONT 9, "宋体", 400, 0, 0x86
+BEGIN
+    EDITTEXT        IDC_E_PARTNO,34,9,48,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_LEN,116,9,48,14,ES_AUTOHSCROLL
+    COMBOBOX        IDC_CMB_SPEC,34,26,48,85,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_CMB_MATERIAL,115,26,48,85,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "确定",IDOK,24,48,50,14
+    PUSHBUTTON      "取消",IDCANCEL,102,48,50,14
+    LTEXT           "件号：",IDC_STATIC,7,13,25,8
+    LTEXT           "规格：",IDC_STATIC,8,29,25,8
+    LTEXT           "材质：",IDC_STATIC,89,29,25,8
+    LTEXT           "长度：",IDC_STATIC,89,13,25,8
+END
+
+IDD_PART_PROPERTY_DLG DIALOG 0, 0, 187, 211
+STYLE DS_SETFONT | WS_CHILD
+FONT 8, "Tahoma"
+BEGIN
+    LISTBOX         IDC_LIST_BOX,7,75,173,69,LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | NOT WS_BORDER | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_E_PROP_HELP_STR,7,155,173,26,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER
+    CONTROL         "Tab1",IDC_TAB_GROUP,"SysTabControl32",TCS_HOTTRACK | TCS_BUTTONS,2,20,131,30
+    COMBOBOX        IDC_CMB_SELECT_OBJECT_INFO,2,3,89,150,CBS_DROPDOWNLIST | NOT WS_VISIBLE | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_PART_TREE_DLG DIALOGEX 0, 0, 191, 218
+STYLE DS_SETFONT | WS_CHILD | WS_SYSMENU
+FONT 9, "宋体", 400, 0, 0x1
+BEGIN
+    CONTROL         "",IDC_TREE_CTRL,"SysTreeView32",TVS_SHOWSELALWAYS | WS_HSCROLL | WS_TABSTOP,2,7,177,141
+END
+
+IDD_CUT_WING_ANGLE_DLG DIALOGEX 0, 0, 211, 90
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "切角切肢"
+FONT 10, "宋体", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "--VVV-切肢-VVV--",IDC_STATIC,7,6,106,77,WS_GROUP
+    CONTROL         "无",IDC_RDO_X_WING,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,9,16,23,10,0,HIDC_RDO_X_WING
+    CONTROL         "X肢",IDC_RDO_X_WING_X,"Button",BS_AUTORADIOBUTTON,41,16,27,10
+    CONTROL         "Y肢",IDC_RDO_X_WING_Y,"Button",BS_AUTORADIOBUTTON,77,16,27,10
+    LTEXT           "宽度(W)",IDC_STATIC,8,31,28,8
+    EDITTEXT        IDC_E_CUT_WING_WIDE,43,29,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_WING_WIDE
+    LTEXT           "长度(L)",IDC_STATIC,8,52,28,8
+    EDITTEXT        IDC_E_CUT_WING_LEN,43,48,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_WING_LEN
+    LTEXT           "长度2(H)",IDC_STATIC,8,71,32,8
+    EDITTEXT        IDC_E_CUT_WING_LEN2,43,67,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_WING_LEN2
+    CONTROL         IDD_PART_TREE_DLG,IDC_STATIC,"Static",SS_BITMAP,88,34,17,38
+    GROUPBOX        "--VVV-切角-VVV--",IDC_STATIC,112,6,92,59
+    LTEXT           "X肢",IDC_STATIC,127,18,12,8
+    LTEXT           "Y肢",IDC_STATIC,170,18,12,8
+    EDITTEXT        IDC_E_CUT_ANGLE_X_WIDE,115,29,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_ANGLE_X_WIDE
+    EDITTEXT        IDC_E_CUT_ANGLE_X_LEN,115,48,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_ANGLE_X_LEN
+    EDITTEXT        IDC_E_CUT_ANGLE_Y_WIDE,158,29,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_ANGLE_Y_WIDE
+    EDITTEXT        IDC_E_CUT_ANGLE_Y_LEN,158,48,40,14,ES_AUTOHSCROLL,0,HIDC_E_CUT_ANGLE_Y_LEN
+    DEFPUSHBUTTON   "确定",IDOK,114,68,42,14
+    PUSHBUTTON      "取消",IDCANCEL,162,68,42,14
+END
+
+IDD_INPUT_AN_STRING_VAL_DLG DIALOGEX 0, 0, 179, 30
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "输入"
+FONT 10, "宋体", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,133,7,40,14
+    EDITTEXT        IDC_E_VAL,6,7,126,15,ES_AUTOHSCROLL
+END
+
+IDD_KAIHE_JG_DLG DIALOGEX 0, 0, 113, 110
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "开合角钢"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,10,89,36,14
+    PUSHBUTTON      "取消",IDCANCEL,67,89,36,14
+    LTEXT           "开合肢：",IDC_STATIC,7,12,30,12
+    LTEXT           "标定位置：",IDC_STATIC,62,29,44,12
+    LTEXT           "开合角度：",IDC_STATIC,7,29,38,12
+    LTEXT           "左开合长度：",IDC_STATIC,7,61,45,12
+    LTEXT           "右开合长度：",IDC_STATIC,61,60,45,12
+    COMBOBOX        IDC_CMB_KAIHE_WING,37,9,69,42,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_E_KAIHE_ANGLE,7,41,44,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_DIM_POS,62,41,44,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_LEFT_LEN,7,72,44,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_RIGHT_LEN,62,72,44,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_KAIHE_WING,36,9,71,14,ES_AUTOHSCROLL
+END
+
+IDD_INPUT_AN_INTEGER_VAL_DLG DIALOGEX 0, 0, 141, 49
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "输入"
+FONT 10, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "值标题",IDC_S_TITLE,7,9,63,21
+    EDITTEXT        IDC_E_VAL,83,7,51,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,42,28,50,14,0,0,HIDOK
+END
+
+IDD_BEND_PLANK_STYLE_DLG DIALOGEX 0, 0, 183, 94
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "火曲面确定方式"
+FONT 10, "宋体", 0, 0, 0x1
+BEGIN
+    GROUPBOX        "确定方式",IDC_STATIC,7,7,141,25,WS_GROUP
+    CONTROL         "火曲角度",IDC_RDO_BEND_FACE_STYLE,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,18,46,10,0,HIDC_RDO_BEND_FACE_STYLE
+    CONTROL         "绝对法线",IDC_RADIO13,"Button",BS_AUTORADIOBUTTON,55,18,42,10
+    CONTROL         "相对法线",IDC_RADIO14,"Button",BS_AUTORADIOBUTTON,103,18,42,10
+    LTEXT           "火曲角度:",IDC_STATIC,7,38,35,8
+    EDITTEXT        IDC_E_BEND_ANGLE,44,36,35,14,ES_AUTOHSCROLL,0,HIDC_E_BEND_ANGLE
+    PUSHBUTTON      "粘贴",IDC_BN_PASTE_NORM,7,54,23,14
+    LTEXT           "X:",IDC_STATIC,32,57,9,8
+    EDITTEXT        IDC_E_NORM_X,44,54,35,14,ES_AUTOHSCROLL,0,HIDC_E_NORM_X
+    LTEXT           "Y:",IDC_STATIC,81,57,9,8
+    EDITTEXT        IDC_E_NORM_Y,94,54,35,14,ES_AUTOHSCROLL,0,HIDC_E_NORM_Y
+    LTEXT           "Z:",IDC_STATIC,130,57,9,8
+    EDITTEXT        IDC_E_NORM_Z,141,54,35,14,ES_AUTOHSCROLL,0,HIDC_E_NORM_Z
+    DEFPUSHBUTTON   "确定",IDOK,33,73,50,14
+    PUSHBUTTON      "取消",IDCANCEL,100,73,50,14
+END
+
+IDD_PROMPT_DLG DIALOGEX 0, 0, 127, 68
+STYLE DS_SETFONT | DS_SETFOREGROUND | DS_CENTER | WS_VISIBLE | WS_CAPTION
+CAPTION "提示..."
+FONT 10, "宋体", 0, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_MSG,0,0,127,68,ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | ES_WANTRETURN | WS_VSCROLL
+END
+
+IDD_ADJUST_ORDER_DLG DIALOGEX 0, 0, 115, 164
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+CAPTION "螺栓序号调整"
+FONT 10, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "调整前序号:",IDC_STR_LEFT,8,25,42,8
+    LISTBOX         IDC_LIST_LS_INDEX1,7,36,39,102,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP,0,HIDC_LIST_LS_INDEX1
+    LTEXT           "调整后顺序:",IDC_STR_RIGHT,68,25,42,8
+    LISTBOX         IDC_LIST_LS_INDEX2,69,36,39,102,LBS_NOINTEGRALHEIGHT | LBS_EXTENDEDSEL | WS_VSCROLL | WS_TABSTOP,0,HIDC_LIST_LS_INDEX2
+    PUSHBUTTON      "->",IDC_BN_ADD_LS_INDEX,48,71,18,14,0,0,HIDC_BN_ADD_LS_INDEX
+    PUSHBUTTON      "<-",IDC_BN_DEL_LS_INDEX,48,91,18,14,0,0,HIDC_BN_DEL_LS_INDEX
+    DEFPUSHBUTTON   "确定",IDOK,7,143,42,14
+    PUSHBUTTON      "取消",IDCANCEL,66,143,42,14,NOT WS_TABSTOP
+    LTEXT           "构件编号:",IDC_S_PART_NO,8,11,35,8
+    EDITTEXT        IDC_E_PART_NO,43,8,65,14,ES_AUTOHSCROLL
+END
+
+IDD_HOLE_INCREMENT_DLG DIALOGEX 0, 0, 95, 110
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "孔径增大值设置"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,12,88,33,14
+    PUSHBUTTON      "取消",IDCANCEL,51,88,33,14
+    CONTROL         "M12螺栓:",IDC_CHK_M12,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,10,39,10
+    CONTROL         "M16螺栓:",IDC_CHK_M16,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,26,39,10
+    CONTROL         "M20螺栓:",IDC_CHK_M20,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,42,40,10
+    CONTROL         "M24螺栓:",IDC_CHK_M24,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,57,40,10
+    CONTROL         "特殊螺栓:",IDC_CHK_SH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,9,73,41,10
+    EDITTEXT        IDC_E_M12,54,8,32,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_M16,54,24,32,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_M20,54,40,32,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_M24,54,56,32,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_MSH,54,72,32,14,ES_AUTOHSCROLL
+END
+
+IDD_SYNC_PROPERTY_DLG DIALOGEX 0, 0, 127, 150
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "同步属性设置"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,38,129,50,14
+    CONTROL         "",IDC_PROPERTY_LIST,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,113,122
+END
+
+IDD_PLANK_CONFIG_DLG DIALOGEX 0, 0, 171, 169
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "样板明细配置"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,34,148,50,14
+    PUSHBUTTON      "取消",IDCANCEL,88,148,50,14
+    LISTBOX         IDC_LIST_PART_INFO,8,8,155,56,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "编辑行:",IDC_STATIC,11,67,28,8
+    EDITTEXT        IDC_E_EDIT_LINE,40,65,123,13,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "重置编辑行",IDC_BN_CLEAR_EDIT_LINE,7,80,47,14
+    PUSHBUTTON      "添加编辑行",IDC_BN_ADD_EDIT_LINE,61,80,47,14
+    PUSHBUTTON      "删除当前行",IDC_BN_DEL_CURRENT_LINE,116,80,47,14
+    CONTROL         "设计单位",IDC_CHK_COMPANY_NAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,98,48,10
+    CONTROL         "工程编号",IDC_CHK_PRJ_CODE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,98,48,10
+    CONTROL         "工程名称",IDC_CHK_PRJ_NAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,98,48,10
+    CONTROL         "代号",IDC_CHK_TA_ALIAS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,111,32,10
+    CONTROL         "评审人",IDC_CHK_CRITIC,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,123,40,10
+    CONTROL         "操作员",IDC_CHK_OPERATOR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,123,40,10
+    CONTROL         "塔型",IDC_CHK_TA_TYPE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,111,32,10
+    CONTROL         "钢印号",IDC_CHK_STAMP_NO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,111,40,10
+    CONTROL         "审核人",IDC_CHK_AUDITOR,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,123,40,10
+    CONTROL         "件号",IDC_CHK_PARTNO,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,136,32,10
+    CONTROL         "材质",IDC_CHK_MAT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,61,136,32,10
+    CONTROL         "厚度",IDC_CHK_THICK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,116,136,32,10
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,2,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "北京信狐天诚软件科技有限公司"
+            VALUE "FileDescription", "PPE Microsoft 基础类应用程序"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "PPE"
+            VALUE "LegalCopyright", "版权所有 (C) 2006-2015"
+            VALUE "OriginalFilename", "PPE.EXE"
+            VALUE "ProductName", "PPE 应用程序"
+            VALUE "ProductVersion", "1, 2, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_ABOUTBOX, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 228
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 48
+    END
+
+    IDD_NC_SET_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 139
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 56
+    END
+
+    IDD_SIDE_BAFFLE_HIGH_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 180
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 39
+    END
+
+    IDD_NEW_PART_FILE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 164
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 66
+    END
+
+    IDD_PART_TREE_DLG, DIALOG
+    BEGIN
+        RIGHTMARGIN, 189
+    END
+
+    IDD_CUT_WING_ANGLE_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 204
+        TOPMARGIN, 6
+        BOTTOMMARGIN, 83
+    END
+
+    IDD_INPUT_AN_STRING_VAL_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 172
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 23
+    END
+
+    IDD_KAIHE_JG_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 106
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_INPUT_AN_INTEGER_VAL_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_BEND_PLANK_STYLE_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_PROMPT_DLG, DIALOG
+    BEGIN
+        RIGHTMARGIN, 126
+    END
+
+    IDD_ADJUST_ORDER_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 108
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 157
+    END
+
+    IDD_HOLE_INCREMENT_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 88
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 103
+    END
+
+    IDD_SYNC_PROPERTY_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 120
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 143
+    END
+
+    IDD_PLANK_CONFIG_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 164
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 162
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_PART_PROPERTY_DLG DLGINIT
+BEGIN
+    IDC_CMB_SELECT_OBJECT_INFO, 0x403, 7, 0
+0xdece, 0xa1d1, 0xf1d4, "\000" 
+    0
+END
+
+IDD_KAIHE_JG_DLG DLGINIT
+BEGIN
+    IDC_CMB_KAIHE_WING, 0x403, 6, 0
+0x2e30, 0xd658, 0x00ab, 
+    IDC_CMB_KAIHE_WING, 0x403, 6, 0
+0x2e31, 0xd659, 0x00ab, 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PLANK_CONFIG_DLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDR_MAINFRAME           "PPE\n\nPPE\n\n\nPPE.Document\nPPE Document"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_APP_TITLE       "PPE"
+    AFX_IDS_IDLEMESSAGE     "就绪"
+END
+
+STRINGTABLE
+BEGIN
+    ID_INDICATOR_EXT        "扩展名"
+    ID_INDICATOR_CAPS       "大写"
+    ID_INDICATOR_NUM        "数字"
+    ID_INDICATOR_SCRL       "滚动"
+    ID_INDICATOR_OVR        "改写"
+    ID_INDICATOR_REC        "记录"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_NEW             "建立新文档\n新建"
+    ID_FILE_OPEN            "打开一个现有文档\n打开"
+    ID_FILE_CLOSE           "关闭活动文档\n关闭"
+    ID_FILE_SAVE            "保存活动文档\n保存"
+    ID_FILE_SAVE_AS         "将活动文档以一个新文件名保存\n另存为"
+    ID_FILE_PAGE_SETUP      "改变打印选项\n页面设置"
+    ID_FILE_PRINT_SETUP     "改变打印机及打印选项\n打印设置"
+    ID_FILE_PRINT           "打印工艺卡\n打印"
+    ID_FILE_PRINT_PREVIEW   "显示整页\n打印预览"
+END
+
+STRINGTABLE
+BEGIN
+    ID_APP_ABOUT            "显示程序信息，版本号和版权\n关于"
+    ID_APP_EXIT             "退出应用程序；提示保存文档\n退出"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_MRU_FILE1       "打开该文档"
+    ID_FILE_MRU_FILE2       "打开该文档"
+    ID_FILE_MRU_FILE3       "打开该文档"
+    ID_FILE_MRU_FILE4       "打开该文档"
+    ID_FILE_MRU_FILE5       "打开该文档"
+    ID_FILE_MRU_FILE6       "打开该文档"
+    ID_FILE_MRU_FILE7       "打开该文档"
+    ID_FILE_MRU_FILE8       "打开该文档"
+    ID_FILE_MRU_FILE9       "打开该文档"
+    ID_FILE_MRU_FILE10      "打开该文档"
+    ID_FILE_MRU_FILE11      "打开该文档"
+    ID_FILE_MRU_FILE12      "打开该文档"
+    ID_FILE_MRU_FILE13      "打开该文档"
+    ID_FILE_MRU_FILE14      "打开该文档"
+    ID_FILE_MRU_FILE15      "打开该文档"
+    ID_FILE_MRU_FILE16      "打开该文档"
+END
+
+STRINGTABLE
+BEGIN
+    ID_NEXT_PANE            "切换到下一个窗格\n下一窗格"
+    ID_PREV_PANE            "切换回前一个窗格\n前一窗格"
+END
+
+STRINGTABLE
+BEGIN
+    ID_WINDOW_SPLIT         "将活动的窗口分隔成窗格\n分隔"
+END
+
+STRINGTABLE
+BEGIN
+    ID_EDIT_CLEAR           "删除被选对象\n删除"
+    ID_EDIT_CLEAR_ALL       "全部删除\n全部删除"
+    ID_EDIT_COPY            "复制被选对象并将其置于剪贴板上\n复制"
+    ID_EDIT_CUT             "剪切被选对象并将其置于剪贴板上\n剪切"
+    ID_EDIT_FIND            "查找指定的正文\n查找"
+    ID_EDIT_PASTE           "插入剪贴板内容\n粘贴"
+    ID_EDIT_REPEAT          "重复上一步操作\n重复"
+    ID_EDIT_REPLACE         "用不同的正文替换指定的正文\n替换"
+    ID_EDIT_SELECT_ALL      "选择整个文档\n选择全部"
+    ID_EDIT_UNDO            "撤消最后一步操作\n撤消"
+    ID_EDIT_REDO            "重新执行先前已撤消的操作\n重新执行"
+END
+
+STRINGTABLE
+BEGIN
+    ID_VIEW_TOOLBAR         "显示或隐藏工具栏\n显隐工具栏"
+    ID_VIEW_STATUS_BAR      "显示或隐藏状态栏\n显隐状态栏"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCSIZE          "改变窗口大小"
+    AFX_IDS_SCMOVE          "改变窗口位置"
+    AFX_IDS_SCMINIMIZE      "将窗口缩小成图标"
+    AFX_IDS_SCMAXIMIZE      "把窗口放大到最大尺寸"
+    AFX_IDS_SCNEXTWINDOW    "切换到下一个文档窗口"
+    AFX_IDS_SCPREVWINDOW    "切换到先前的文档窗口"
+    AFX_IDS_SCCLOSE         "关闭活动的窗口并提示保存所有文档"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_SCRESTORE       "把窗口恢复到正常大小"
+    AFX_IDS_SCTASKLIST      "激活任务表"
+END
+
+STRINGTABLE
+BEGIN
+    AFX_IDS_PREVIEW_CLOSE   "关闭打印预览模式\n取消预阅"
+END
+
+STRINGTABLE
+BEGIN
+    ID_GL_OPEN_WINDOW       "开窗\n开窗"
+    ID_PREV_PART            "上一块连接板件\n上一件"
+    ID_GL_ZOOM              "放缩\n放缩"
+    ID_ROTATE_CLOCKWISE     "顺时针方向旋转连接板\n顺时针旋转"
+    ID_ROTATE_ANTI_CLOCKWISE "逆时针方向旋转连接板\n逆时针旋转"
+    ID_OVERTURN_PLATE       "翻转连板正反面\n翻转"
+END
+
+STRINGTABLE
+BEGIN
+    ID_NEXT_PART            "下一块连接板件\n下一件"
+    ID_FIRST_PART           "第一块连接板\n第一件"
+    ID_FINAL_PART           "最后一块连接板\n最后一件"
+    ID_FILE_SAVE_TTP        "武汉远达TTP文件\n武汉远达TTP文件"
+END
+
+STRINGTABLE
+BEGIN
+    ID_INDICATOR_MOUSE      "鼠标位置"
+END
+
+STRINGTABLE
+BEGIN
+    ID_DRAW_MODE_NC         "以NC数据模式绘制构件\nNC数据模式"
+    ID_DRAW_MODE_EDIT       "以构件编辑模式绘制构件\n构件编辑模式"
+    ID_DRAW_MODE_PROCESSCARD "以工艺草图模式绘制构件\n工艺草图模式"
+    ID_INSERT_VERTEX        "插入板轮廓顶点\n插入板轮廓顶点"
+    ID_NEW_LS               "生成螺栓\n生成螺栓"
+    ID_FEATURE_PROP         "构件特征属性\n构件特征属性"
+    ID_SPEC_WCS_ORGIN       "选择工作原点\n选择工作原点"
+END
+
+STRINGTABLE
+BEGIN
+    ID_SPEC_AXIS_X_VERTEX   "择X轴标定点\n选择X轴标定点"
+    ID_DEL_PART_FEATURE     "删除构件上的特征\n删除构件上的特征"
+    ID_CAL_PLATE_PROFILE    "计算钢板外形\n计算钢板外形"
+END
+
+STRINGTABLE
+BEGIN
+    ID_NEW_FILE             "新建文件\n新建构件中性文件"
+    ID_GL_ALL_ZOOM          "全显\n全显"
+    ID_VIEW_PROP_LIST       "显示或隐藏属性栏\n显示或隐藏属性栏"
+    ID_VIEW_PART_LIST       "显示或隐藏构件列表\n显示或隐藏构件列表"
+    ID_HIDE_PART            "隐去构件\n隐去构件"
+    ID_OPEN_WND_SEL         "开窗选择\n开窗选择"
+    ID_KAIHE_JG             "开合角钢\n开合角钢"
+END
+
+STRINGTABLE
+BEGIN
+    ID_REDRAW_ALL           "刷新屏幕\n刷新屏幕(F8)"
+    ID_SMART_SORT_BOLT      "优化螺栓孔顺序\n优化螺栓孔顺序"
+    ID_FILE_SAVE_DXF        "输出钢板DXF文件\n输出钢板DXF文件"
+    ID_BATCH_SORT_HOLE      "批量优化螺栓孔顺序\n批量优化孔序"
+    ID_AMEND_HOLE_INCREMENT "修正孔径增大值\n修正孔径增大值"
+    ID_FILE_SAVE_TXT        "输出钢板火焰切割Txt文件\n输出钢板火焰切割Txt文件"
+    ID_FILE_SAVE_NC         "输出钢板等离子切割NC文件\n输出钢板等离子切割NC文件"
+END
+
+STRINGTABLE
+BEGIN
+    ID_DEF_CUT_IN_PT        "定义切入点\n定义切入点"
+    ID_PREVIEW_CUTTING_TRACK "预览切割轨迹\n预览切割轨迹"
+END
+
+STRINGTABLE
+BEGIN
+    ID_MEASURE_DIST         "测量\n测量"
+    ID_FILE_SAVE_PBJ        "输出PBJ文件\n输出PBJ文件"
+    ID_DISPLAY_BOLT_SORT    "显示孔顺序\n显示孔顺序"
+    ID_ADJUST_HOLE_ORDER    "调整钢板孔序\n调整钢板孔序"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_TOOLBAR_CUSTOMIZE   "自定义..."
+    IDS_PART_PROP_VIEW      "属性"
+    IDS_PART_TREE_VIEW      "构件"
+END
+
+STRINGTABLE
+BEGIN
+    ID_FILE_SAVE_CNC        "输出钢板火焰切割CNC文件\n输出钢板火焰切割CNC文件"
+    ID_FILE_SAVE_PMZ        "输出PMZ文件\n输出PMZ文件"
+    ID_FILE_SAVE_WKF        "济南法特WKF文件\n济南法特WKF文件"
+    ID_SMART_SORT_BOLT_2    "优化螺栓孔顺序\n优化螺栓孔顺序"
+    ID_SMART_SORT_BOLT_3    "优化螺栓孔顺序\n优化螺栓孔顺序"
+END
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE 4, 2
+#pragma code_page(936)
+#endif //_WIN32
+#include "res\PPE.rc2"  // non-Microsoft Visual C++ edited resources
+#include "l.chs\afxres.rc"          // Standard components
+#include "l.chs\afxprint.rc"        // printing/print preview resources
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

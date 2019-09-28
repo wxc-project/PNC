@@ -1,0 +1,516 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="源文件">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="头文件">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="资源文件">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="TowerCad">
+      <UniqueIdentifier>{3b730513-46eb-476d-995b-a058184596e8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ToolCode">
+      <UniqueIdentifier>{088bde15-beb0-4145-aabf-a9e0c85f9a9d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent">
+      <UniqueIdentifier>{9a90714b-2cb6-4f16-bd90-714c98e40d02}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLdsLm">
+      <UniqueIdentifier>{a8dd114a-e316-4666-a7d9-96ffced80849}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Algor">
+      <UniqueIdentifier>{03720b20-0a85-4bf5-8900-c882185f5195}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="PartLib">
+      <UniqueIdentifier>{dfe66844-0c47-4f3d-802f-3ea9ed7d238d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\Source Files">
+      <UniqueIdentifier>{c79b6ffc-562b-44e0-bea1-0aa49f5ebd7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\AES">
+      <UniqueIdentifier>{77d7d774-b5ac-4526-9a10-f27cd7403bf6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\DES">
+      <UniqueIdentifier>{deb00e7b-6c58-4fb4-9911-94f56d8de8d1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\RSA">
+      <UniqueIdentifier>{9c3baa27-3863-4120-8805-60434db9e08f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\DogDrvs">
+      <UniqueIdentifier>{49c6144c-a306-4de6-899c-7ebfa9f5c21d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\Computer">
+      <UniqueIdentifier>{a99f84b7-33f6-465a-b955-358c0dbfb8d6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="XhLicAgent\Header Files">
+      <UniqueIdentifier>{cff6e33e-3a3d-483f-9115-5af833a9f7f3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ReadMe.txt" />
+    <None Include="UBOM.def">
+      <Filter>源文件</Filter>
+    </None>
+    <None Include="res\UBOM.rc2">
+      <Filter>资源文件</Filter>
+    </None>
+    <None Include="res\il_file.bmp">
+      <Filter>资源文件</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="UBOM.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="RevisionDlg.CPP">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcBarDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MenuFunc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\Buffer.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\excel9.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\LogFile.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\SortFunc.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\SortHeaderCtrl.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\SuperEdit.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\supergridctrl.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\Variant.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\XhCharString.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\XhTreeCtrl.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\HiberarchyId.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="BomModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\TSPAlgorithm.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\DxfFile.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\FileIO.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DwgFile.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="InputAnValDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\LicFuncDef.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\EntList\f_ent_list.cpp">
+      <Filter>Algor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\Ent\f_ent.cpp">
+      <Filter>Algor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
+      <Filter>Algor</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
+      <Filter>PartLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\PartLib\PartLib.cpp">
+      <Filter>PartLib</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\ClassDef.cpp">
+      <Filter>XhLdsLm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\CryptLdsCode.cpp">
+      <Filter>XhLdsLm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\ToolKits.cpp">
+      <Filter>XhLdsLm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\XhLdsLm.cpp">
+      <Filter>XhLdsLm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\AgentCoreClassDef.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAgent.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\LegacyDogDataCryptKey.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\LicBuffer.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\SafeDecryptBuffer.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\XhLicAgent.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP">
+      <Filter>XhLicAgent\DogDrvs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\Des\DES.cpp">
+      <Filter>XhLicAgent\DES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\Aes\aes.cpp">
+      <Filter>XhLicAgent\AES</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\Computer.cpp">
+      <Filter>XhLicAgent\Computer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.cpp">
+      <Filter>XhLicAgent\Computer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.cpp">
+      <Filter>XhLicAgent\Computer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.cpp">
+      <Filter>XhLicAgent\Computer</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\RSA\BigInt.cpp">
+      <Filter>XhLicAgent\RSA</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\ProductFeature.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\CadToolFunc.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\MsgBox.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\PathManager.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\LogBinaryFile.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\DimStyle.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\LayerTable.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\TblDef.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\PNCModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\XeroExtractor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\DragEntSet.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\PNCSysPara.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\SegI.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\ComparePartNoString.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\DrawDamBoard.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\SteelSealReactor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\DrawUnit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\PNCCmd.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\PartListDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\DockBarManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\AdjustPlateMCS.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\XhListCtrl.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\ListViewComparer.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\ConvertToNC\InputMKRectDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="stdafx.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CADCallBackDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="DragEntSet.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MenuFunc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcBarDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="RevisionDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\ArrayList.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\Buffer.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\excel9.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\ExcelOper.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\HashTable.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\LogFile.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\SortFunc.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\SortHeaderCtrl.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\SuperEdit.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\supergridctrl.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\Variant.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\XhCharString.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\XhTreeCtrl.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\HiberarchyId.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="BomModel.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\TSPAlgorithm.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\DxfFile.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="image.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="InputAnValDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\LicFuncDef.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="CadToolFunc.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
+      <Filter>PartLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhCore\PartLib\PartLib.h">
+      <Filter>PartLib</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLdsLm\ToolKits.h">
+      <Filter>XhLdsLm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLdsLm\XhLdsLm.h">
+      <Filter>XhLdsLm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\Des\DES.h">
+      <Filter>XhLicAgent\DES</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\Aes\aes.h">
+      <Filter>XhLicAgent\AES</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\RSA\BigInt.h">
+      <Filter>XhLicAgent\RSA</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H">
+      <Filter>XhLicAgent\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\ProductFeature.h">
+      <Filter>XhLicAgent\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAgent.h">
+      <Filter>XhLicAgent\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\LicBuffer.h">
+      <Filter>XhLicAgent\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h">
+      <Filter>XhLicAgent\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\MsgBox.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\PathManager.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\LogBinaryFile.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\DimStyle.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\LayerTable.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\TblDef.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\PNCModel.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\XeroExtractor.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\DragEntSet.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\PNCSysPara.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\SegI.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\ComparePartNoString.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\DrawDamBoard.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\SteelSealReactor.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\DrawUnit.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\PNCCmd.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\PartListDlg.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\DockBarManager.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\AdjustPlateMCS.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\XhListCtrl.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\ListViewComparer.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\ConvertToNC\InputMKRectDlg.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="UBOM.rc">
+      <Filter>资源文件</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="Resource.h">
+      <Filter>头文件</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Object Include="..\..\XhLmd\DogDrvs\Unhwin32c.obj">
+      <Filter>XhLicAgent</Filter>
+    </Object>
+    <Object Include="..\..\XhLmd\DogDrvs\Mhwin32c.obj">
+      <Filter>XhLicAgent</Filter>
+    </Object>
+  </ItemGroup>
+</Project>

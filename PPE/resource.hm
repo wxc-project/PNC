@@ -1,0 +1,21 @@
+// Microsoft Visual C++ generated Help ID include file.
+// Used by PPE.rc
+//
+#define HIDC_BN_ADD_LS_INDEX            0x80e2048e    // IDD_ADJUST_ORDER_DLG
+#define HIDC_BN_DEL_LS_INDEX            0x80e2048f    // IDD_ADJUST_ORDER_DLG
+#define HIDC_E_BEND_ANGLE               0x80ec04a9    // IDD_BEND_PLANK_STYLE_DLG
+#define HIDC_E_CUT_ANGLE_X_LEN          0x812904ea    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_CUT_ANGLE_X_WIDE         0x812904e9    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_CUT_ANGLE_Y_LEN          0x812904ec    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_CUT_ANGLE_Y_WIDE         0x812904eb    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_CUT_WING_LEN             0x812904ee    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_CUT_WING_LEN2            0x812904ef    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_CUT_WING_WIDE            0x812904ed    // IDD_CUT_WING_ANGLE_DLG
+#define HIDC_E_NORM_X                   0x80ec03f8    // IDD_BEND_PLANK_STYLE_DLG
+#define HIDC_E_NORM_Y                   0x80ec03f9    // IDD_BEND_PLANK_STYLE_DLG
+#define HIDC_E_NORM_Z                   0x80ec03fa    // IDD_BEND_PLANK_STYLE_DLG
+#define HIDC_LIST_LS_INDEX1             0x80e2048c    // IDD_ADJUST_ORDER_DLG
+#define HIDC_LIST_LS_INDEX2             0x80e2048d    // IDD_ADJUST_ORDER_DLG
+#define HIDC_RDO_BEND_FACE_STYLE        0x80ec04a4    // IDD_BEND_PLANK_STYLE_DLG
+#define HIDC_RDO_X_WING                 0x8129051d    // IDD_CUT_WING_ANGLE_DLG
+#define HIDOK                           0x80ba0001    // IDD_INPUT_AN_INTEGER_VAL_DLG

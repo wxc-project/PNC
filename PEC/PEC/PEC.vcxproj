@@ -1,0 +1,266 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="PncRelease|Win32">
+      <Configuration>PncRelease</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{5FA2C8AD-8E29-4C6A-A598-EE4E802A33FB}</ProjectGuid>
+    <Keyword>MFCDLLProj</Keyword>
+    <ProjectName>PEC</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">PncRelease\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">PncRelease\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">false</LinkIncremental>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'" />
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</GenerateManifest>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">false</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\Ent;..\AlgFun;..\EntList;..\DrawSolid;..\LmaDlg;..\PartLib;..\ToolCode;..\XeroCad;..\TowerCad;..\XhLmd\XhLicAgent;..\XhLmd\XhLdsLm;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_WINDLL;_AFXDLL;PEC_EXPORTS;__TAP_CONTEXT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLicAgent2.lib;XhLdsLm2.lib;DrawSolid.lib;PartLib.lib;LmaDlg10.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)PEC.dll</OutputFile>
+      <AdditionalLibraryDirectories>..\Ent\Debug;..\AlgFun\Debug;..\EntList\Debug;..\DrawSolid\Debug;..\LmaDlg\2010Debug;..\PartLib\2010Release;..\XeroCad\Debug;..\XhLmd\XhLdsLm\Release2;..\XhLmd\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>.\PEC.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)PEC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_WINDLL;_AFXDLL;PEC_EXPORTS;__TAP_CONTEXT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\Ent;..\AlgFun;..\EntList;..\DrawSolid;..\LmaDlg;..\PartLib;..\XhLmd\XhLicAgent;..\XhLmd\XhLdsLm;..\ToolCode;..\XeroCad;..\TowerCad</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)PEC.dll</OutputFile>
+      <ModuleDefinitionFile>.\PEC.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(OutDir)PEC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\Ent\Debug;..\AlgFun\Debug;..\EntList\Debug;..\DrawSolid\Debug;..\LmaDlg\2010Release;..\PartLib\2010Release;..\XhLmd\XhLicAgent\Release2;..\XhLmd\XhLdsLm\Release2;..\XeroCad\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLdsLm2.lib;XhLicAgent2.lib;DrawSolid.lib;PartLib.lib;LmaDlg10.lib;XeroCad.lib</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;_WINDLL;_AFXDLL;PEC_EXPORTS;__PNC_;__TAP_CONTEXT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\Ent;..\AlgFun;..\EntList;..\DrawSolid;..\LmaDlg;..\PartLib;..\XhLmd\XhLicAgent;..\XhLmd\XhLdsLm;..\ToolCode;..\XeroCad;..\TowerCad</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(OutDir)PEC.dll</OutputFile>
+      <ModuleDefinitionFile>.\PEC.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <ImportLibrary>$(OutDir)PEC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\Ent\Debug;..\AlgFun\Debug;..\EntList\Debug;..\DrawSolid\Debug;..\LmaDlg\2010Release;..\PartLib\2010Release;..\XhLmd\XhLicAgent\Release2;..\XhLmd\XhLdsLm\Release2;..\XeroCad\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLdsLm2.lib;XhLicAgent2.lib;DrawSolid.lib;PartLib.lib;LmaDlg10.lib;XeroCad.lib</AdditionalDependencies>
+    </Link>
+    <Midl>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\ToolCode\BufferStack.cpp" />
+    <ClCompile Include="..\ToolCode\DistFillet.cpp" />
+    <ClCompile Include="..\ToolCode\Expression.cpp" />
+    <ClCompile Include="..\ToolCode\HiberarchyId.cpp" />
+    <ClCompile Include="..\ToolCode\LogFile.cpp" />
+    <ClCompile Include="..\ToolCode\SolidBody.cpp" />
+    <ClCompile Include="..\ToolCode\SolidBodyBuffer.cpp" />
+    <ClCompile Include="..\ToolCode\SortFunc.cpp" />
+    <ClCompile Include="..\ToolCode\Variant.cpp" />
+    <ClCompile Include="..\TowerCad\CadLib.cpp" />
+    <ClCompile Include="..\TowerCad\CopyPasteOper.cpp" />
+    <ClCompile Include="..\TowerCad\DrawDim.cpp" />
+    <ClCompile Include="..\TowerCad\DrawingToolKits.cpp" />
+    <ClCompile Include="..\TowerCad\DxfFile.cpp" />
+    <ClCompile Include="..\TowerCad\JgDrawing.cpp" />
+    <ClCompile Include="..\TowerCad\JgNcDataManager.cpp" />
+    <ClCompile Include="..\TowerCad\LicFuncDef.cpp" />
+    <ClCompile Include="..\TowerCad\NcJg.cpp" />
+    <ClCompile Include="..\TowerCad\ProcessPart.cpp" />
+    <ClCompile Include="..\TowerCad\Query.cpp" />
+    <ClCompile Include="..\TowerCad\XerocadDrawing.cpp" />
+    <ClCompile Include="2DPtDlg.cpp" />
+    <ClCompile Include="BoltHolePropDlg.cpp" />
+    <ClCompile Include="DefProfileVertexDlg.cpp" />
+    <ClCompile Include="Factory.cpp" />
+    <ClCompile Include="LineFeatDlg.cpp" />
+    <ClCompile Include="NcPlate.cpp" />
+    <ClCompile Include="PlankVertexDlg.cpp" />
+    <ClCompile Include="ProcessPartDraw.cpp" />
+    <ClCompile Include="PEC.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">Create</PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="..\ToolCode\Buffer.cpp" />
+    <ClCompile Include="..\ToolCode\XhCharString.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="PEC.def" />
+    <None Include="PEC.rc2" />
+    <None Include="res\PEC.rc2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\ToolCode\ArrayList.h" />
+    <ClInclude Include="..\ToolCode\Buffer.h" />
+    <ClInclude Include="..\ToolCode\CirStack.h" />
+    <ClInclude Include="..\ToolCode\DistFillet.h" />
+    <ClInclude Include="..\ToolCode\Expression.h" />
+    <ClInclude Include="..\ToolCode\HashTable.h" />
+    <ClInclude Include="..\ToolCode\HiberarchyId.h" />
+    <ClInclude Include="..\ToolCode\LogFile.h" />
+    <ClInclude Include="..\ToolCode\SolidBody.h" />
+    <ClInclude Include="..\ToolCode\SolidBodyBuffer.h" />
+    <ClInclude Include="..\ToolCode\SortFunc.h" />
+    <ClInclude Include="..\ToolCode\Variant.h" />
+    <ClInclude Include="..\ToolCode\XhCharString.h" />
+    <ClInclude Include="..\TowerCad\CadLib.h" />
+    <ClInclude Include="..\TowerCad\DrawDim.h" />
+    <ClInclude Include="..\TowerCad\DrawingDef.h" />
+    <ClInclude Include="..\TowerCad\DrawingToolKits.h" />
+    <ClInclude Include="..\TowerCad\DXFDef.h" />
+    <ClInclude Include="..\TowerCad\DxfFile.h" />
+    <ClInclude Include="..\TowerCad\JgDrawing.h" />
+    <ClInclude Include="..\TowerCad\JgNcDataManager.h" />
+    <ClInclude Include="..\TowerCad\LicFuncDef.h" />
+    <ClInclude Include="..\TowerCad\NcJg.h" />
+    <ClInclude Include="..\TowerCad\ProcessPart.h" />
+    <ClInclude Include="..\TowerCad\Query.h" />
+    <ClInclude Include="..\TowerCad\SegI.h" />
+    <ClInclude Include="..\TowerCad\XerocadDrawing.h" />
+    <ClInclude Include="2DPtDlg.h" />
+    <ClInclude Include="BoltHolePropDlg.h" />
+    <ClInclude Include="DefProfileVertexDlg.h" />
+    <ClInclude Include="IPEC.h" />
+    <ClInclude Include="LineFeatDlg.h" />
+    <ClInclude Include="NcPlate.h" />
+    <ClInclude Include="PlankVertexDlg.h" />
+    <ClInclude Include="ProcessPartDraw.h" />
+    <ClInclude Include="PEC.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="stdafx.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="PEC.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+  <ProjectExtensions>
+    <VisualStudio>
+      <UserProperties RESOURCE_FILE="PartsEditorCore.rc" />
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

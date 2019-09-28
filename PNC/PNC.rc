@@ -1,0 +1,245 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#include ""res\\PNC.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDR_MAINFRAME           ICON                    "res\\PNC.ico"
+
+IDI_UBOM                ICON                    "res\\UBOM.ico"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_PNC_DIALOG DIALOGEX 0, 0, 207, 70
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "PNC"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "提取样板图工艺信息",IDOK,7,45,78,18
+    PUSHBUTTON      "启动工艺管理器",ID_BTN_PPE,91,45,78,18
+    PUSHBUTTON      "关于",IDC_BTN_ABOUT,172,45,29,18
+    COMBOBOX        IDC_COMBO1,7,24,193,86,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "请确定AutoCAD的启动路径:",IDC_STATIC,9,10,99,8
+END
+
+IDD_INPUT_DLG DIALOGEX 0, 0, 214, 53
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "输入"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,156,29,50,17
+    EDITTEXT        IDC_E_INPUT,7,7,200,22,ES_AUTOHSCROLL
+END
+
+IDD_LICENSE_SERVER_ACTIVATE_DLG DIALOGEX 0, 0, 266, 47
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    PUSHBUTTON      "=>申请局域网子授权",IDC_BN_ACTIVATE_END_LICENSE,184,0,80,14,BS_FLAT
+    LTEXT           "    1.点击右侧按钮生成(*.apl)文件, 发给信狐公司",IDC_STATIC,0,19,170,8
+    PUSHBUTTON      "生成申请文件",IDC_BN_CREATE_IDENTITY_FILE,184,17,80,14
+    LTEXT           "    2.点击右侧按钮导入授权文件(*.aut)",IDC_STATIC,0,35,134,8
+    PUSHBUTTON      "导入授权文件",IDC_BN_IMPORT_AUTHORIZE_FILE,184,32,80,14
+    PUSHBUTTON      "在线申请主服务器授权",IDC_BN_ACTIVATE_SERVER_LICENSE,0,0,182,14,WS_DISABLED
+END
+
+IDD_LICENSE_AHTORIZE_DLG DIALOGEX 0, 0, 279, 131
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "证书授权管理"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CONTROL         "单机狗",IDC_RDO_DOG_TYPE,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,16,37,11
+    CONTROL         "网络狗",IDC_RDO_DOG_TYPE2,"Button",BS_AUTORADIOBUTTON,58,16,40,11
+    CONTROL         "HASP狗",IDC_RDO_DOG_TYPE3,"Button",BS_AUTORADIOBUTTON,102,16,41,11
+    GROUPBOX        "加密锁类型",IDC_STATIC,8,5,140,26,WS_GROUP
+    PUSHBUTTON      "连接加密锁",IDC_BN_DOG_TEST,191,7,81,25
+    LTEXT           "加密锁号：",IDC_STATIC,149,9,41,8
+    LTEXT           "",IDC_S_HARDLOCK_SERIAL,151,21,40,8
+    LTEXT           "服务器名称:",IDC_S_PRODUCT_SERVER_NAME,19,58,44,8,0,WS_EX_RIGHT
+    EDITTEXT        IDC_E_PRODUCT_SERVER_NAME,67,56,54,14,ES_AUTOHSCROLL
+    LTEXT           "服务器IP地址:",IDC_S_PRODUCT_SERVER_IP,13,81,50,8,0,WS_EX_RIGHT
+    CONTROL         "",IDC_IP_PRODUCT_SERVER_IP,"SysIPAddress32",WS_TABSTOP,67,78,97,15
+    CONTROL         "",IDC_S_APPLY_LICENSE_PANEL,"Static",SS_BLACKFRAME,7,48,266,52
+    PUSHBUTTON      "=>申请主服务器授权",IDC_BN_RETURN_TO_SERVER_LICENSE,191,50,81,18
+    PUSHBUTTON      "申请局域网子授权",IDC_BN_APPLY_FOR_LAN_LICENSE,191,72,81,24
+    LTEXT           "用户名称:",IDC_STATIC,7,108,36,8
+    EDITTEXT        IDC_E_CUSTOMER_NAME,43,107,61,14,ES_AUTOHSCROLL | ES_READONLY
+    LTEXT           "授权类型:",IDC_STATIC,108,109,36,8
+    EDITTEXT        IDC_E_AUTHORIZE_TYPE,143,107,46,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "退出",IDCANCEL,191,103,81,20
+    LTEXT           "3#执行目录下不存在证书文件或证书文件与加密狗不匹配",IDC_S_ERROR_MSG,9,35,250,8
+    LTEXT           "端口号:",IDC_S_PORT_NUMBER,126,58,28,8,0,WS_EX_RIGHT
+    EDITTEXT        IDC_E_PORT_NUMBER,158,56,29,14,ES_AUTOHSCROLL
+END
+
+IDD_ABOUT_DLG DIALOGEX 0, 0, 233, 176
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "关于PNC"
+FONT 10, "宋体", 400, 0, 0x0
+BEGIN
+    PUSHBUTTON      "确定",IDOK,176,155,50,14
+    LTEXT           "北京信狐天诚软件科技有限公司版权所有(C) 2015-2019",IDC_STATIC,114,9,110,17
+    LTEXT           "PNC 1.0 版",IDC_S_VERSION,9,9,100,10,SS_NOPREFIX
+    LTEXT           "授权号：",IDC_S_DOG,9,19,100,10,SS_NOPREFIX
+    PUSHBUTTON      "授权管理",IDC_BTN_AUTH,114,155,54,14
+    CONTROL         "",IDC_LIST_MODULE,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,31,219,120
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_PNC_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 200
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 63
+    END
+
+    IDD_INPUT_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 207
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 46
+    END
+
+    IDD_LICENSE_SERVER_ACTIVATE_DLG, DIALOG
+    BEGIN
+        RIGHTMARGIN, 262
+    END
+
+    IDD_LICENSE_AHTORIZE_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 272
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 124
+    END
+
+    IDD_ABOUT_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 226
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 169
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_PNC_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_ABOUT_DLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#include "res\PNC.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"      // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

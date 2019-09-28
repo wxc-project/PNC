@@ -1,0 +1,5 @@
+LIBRARY      "PNC"
+
+EXPORTS
+	zcrxEntryPoint		PRIVATE
+	zcrxGetApiVersion	PRIVATE

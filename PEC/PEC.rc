@@ -1,0 +1,389 @@
+//Microsoft Developer Studio generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Chinese (P.R.C.) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+#ifdef _WIN32
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE MOVEABLE PURE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#pragma code_page(936)\r\n"
+    "#include ""res\\PEC.rc2""  // 不是由 Microsoft Visual C++ 编辑过的资源\r\n"
+    "#include ""afxres.rc""     // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+#ifndef _MAC
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x4L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080403a8"
+        BEGIN
+			VALUE "CompanyName", "北京信狐天诚软件科技有限公司"
+            VALUE "FileDescription", "PEC Xerofox 基础类应用程序"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "PEC"
+            VALUE "LegalCopyright", "版权所有 (C) 2006-2016"
+            VALUE "OriginalFilename", "PEC.dll"
+            VALUE "ProductName", "PEC基础类库"
+            VALUE "ProductVersion", "1, 2, 0, 0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 936
+    END
+END
+
+#endif    // !_MAC
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_2D_VERTEX_DLG DIALOG DISCARDABLE  0, 0, 66, 87
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "二维点"
+FONT 10, "宋体"
+BEGIN
+    LTEXT           "X:",IDC_STATIC,6,10,9,8
+    EDITTEXT        IDC_E_PT_X,19,7,40,14,ES_AUTOHSCROLL
+    LTEXT           "Y:",IDC_STATIC,7,29,9,8
+    EDITTEXT        IDC_E_PT_Y,19,26,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "正确",IDOK,7,47,50,14
+    PUSHBUTTON      "取消",IDCANCEL,7,66,50,14
+END
+
+IDD_PLATE_VERTEX_DLG DIALOG DISCARDABLE  0, 0, 175, 89
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "三维点"
+FONT 10, "宋体"
+BEGIN
+    LTEXT           "X:",IDC_STATIC,56,10,9,8
+    EDITTEXT        IDC_E_PT_X,69,7,40,14,ES_AUTOHSCROLL
+    LTEXT           "Y:",IDC_STATIC,114,10,9,8
+    EDITTEXT        IDC_E_PT_Y,128,7,40,14,ES_AUTOHSCROLL
+    LTEXT           "顶点类型：",IDC_STATIC,6,49,38,8
+    COMBOBOX        IDC_CMB_VERTEX_TYPE,69,47,63,58,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    DEFPUSHBUTTON   "正确",IDOK,21,68,50,14
+    PUSHBUTTON      "取消",IDCANCEL,103,68,50,14
+    CONTROL         "直角坐标",IDC_CHK_CARTESIAN_CS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,9,46,10
+    LTEXT           "α:",IDC_STATIC,53,28,12,8
+    EDITTEXT        IDC_E_PT_ALFA,69,25,40,14,ES_AUTOHSCROLL
+    LTEXT           "r:",IDC_STATIC,114,28,9,8
+    EDITTEXT        IDC_E_PT_R,128,25,40,14,ES_AUTOHSCROLL
+    CONTROL         "极坐标",IDC_CHK_POLAR_CS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,6,28,38,10
+END
+
+IDD_LINE_FEATURE_DLG DIALOG DISCARDABLE  0, 0, 211, 313
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "线属性"
+FONT 10, "宋体"
+BEGIN
+    CONTROL         "焊缝线",IDC_CHK_WELD_EDGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,76,38,10
+    CONTROL         "卷边",IDC_CHK_ROLL_EDGE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,49,76,31,10
+    LTEXT           "加工间隙:",IDC_S_PARAM_TITLE,101,76,34,8
+    EDITTEXT        IDC_E_MANU_SPACE,136,74,29,14,ES_AUTOHSCROLL
+    LTEXT           "对活点方向:",IDC_STATIC,7,92,41,8
+    COMBOBOX        IDC_CMB_LOCAL_POINT_VEC,48,91,38,56,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "对活点Y坐标:",IDC_S_POS_Y,89,92,45,8
+    EDITTEXT        IDC_E_LOCAL_POINT_Y,136,91,29,14,ES_AUTOHSCROLL
+    LTEXT           "----------VVVV--火曲线--VVVV----------",IDC_STATIC,7,
+                    109,152,8
+    LTEXT           "火曲半径:",IDC_S_HUOQU,7,122,35,8
+    EDITTEXT        IDC_E_HUOQU_R,46,120,30,14,ES_AUTOHSCROLL
+    LTEXT           "中性层系数:",IDC_S_MIDDLE_LAYER,90,122,42,8
+    EDITTEXT        IDC_E_DEFORM_COEF,136,120,29,14,ES_AUTOHSCROLL
+    LTEXT           "火曲线变形量",IDC_S_DEFORMED_LENGTH,7,138,158,8
+    LTEXT           "--------VVVV---边线类型:",IDC_STATIC,7,153,95,8
+    COMBOBOX        IDC_CMB_EDGE_TYPE,106,151,39,46,CBS_DROPDOWNLIST | 
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "圆弧扇形角计算方式",IDC_STATIC,7,166,151,26,WS_GROUP
+    CONTROL         "指定扇形角",IDC_RDO_SECTOR_ANGLE_STYLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,11,178,53,10
+    CONTROL         "指定R",IDC_RADIO14,"Button",BS_AUTORADIOBUTTON,66,178,
+                    35,10
+    CONTROL         "椭圆弧",IDC_RADIO15,"Button",BS_AUTORADIOBUTTON,106,178,
+                    38,10
+    GROUPBOX        "旋转方式",IDC_STATIC,7,195,95,24,WS_GROUP
+    CONTROL         "逆时针",IDC_RDO_ROTATE_STYLE,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,11,205,38,10
+    CONTROL         "顺时针",IDC_RADIO3,"Button",BS_AUTORADIOBUTTON,60,205,
+                    38,10
+    EDITTEXT        IDC_E_ARC_ANGLE_OR_R,134,201,29,14,ES_AUTOHSCROLL
+    LTEXT           "扇形角:",IDC_S_ANGLE_OR_R,106,204,27,8
+    LTEXT           "°",IDC_S_ARC_PARA_UNIT,170,204,8,8
+    LTEXT           "-------VVVV--(椭)圆心拾取点位置--VVVV-------",
+                    IDC_STATIC,14,225,172,8
+    LTEXT           "X:",IDC_STATIC,7,234,9,8
+    EDITTEXT        IDC_E_CENTER_X,18,234,36,14,ES_AUTOHSCROLL
+    LTEXT           "Y:",IDC_STATIC,61,235,9,8
+    EDITTEXT        IDC_E_CENTER_Y,73,234,36,14,ES_AUTOHSCROLL
+    LTEXT           "Z:",IDC_STATIC,115,236,9,8
+    EDITTEXT        IDC_E_CENTER_Z,126,234,36,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "粘贴",IDC_BN_PASTE_CENTER,165,234,42,14
+    LTEXT           "---------VVVV--圆柱面轴线方向--VVVV---------",
+                    IDC_STATIC,14,251,173,8
+    LTEXT           "X:",IDC_STATIC,7,263,9,8
+    EDITTEXT        IDC_E_COL_AXIS_X,18,263,36,14,ES_AUTOHSCROLL
+    LTEXT           "Y:",IDC_STATIC,61,264,9,8
+    EDITTEXT        IDC_E_COL_AXIS_Y,73,263,36,14,ES_AUTOHSCROLL
+    LTEXT           "Z:",IDC_STATIC,115,265,9,8
+    EDITTEXT        IDC_E_COL_AXIS_Z,126,263,36,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "粘贴",IDC_BN_PASTE_COL_AXIS,165,263,42,14
+    DEFPUSHBUTTON   "确定",IDOK,49,288,50,14
+    PUSHBUTTON      "取消",IDCANCEL,111,288,50,14
+    LTEXT           "----------VVVV--始点--VVVV----------",IDC_STATIC,14,7,
+                    144,8
+    LTEXT           "X:",IDC_STATIC,7,16,9,8
+    EDITTEXT        IDC_E_START_X,18,16,36,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "Y:",IDC_STATIC,61,17,9,8
+    EDITTEXT        IDC_E_START_Y,73,17,36,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "Z:",IDC_STATIC,115,18,9,8
+    EDITTEXT        IDC_E_START_Z,126,18,36,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "----------VVVV--终点--VVVV----------",IDC_STATIC,14,33,
+                    144,8
+    LTEXT           "X:",IDC_STATIC,7,45,9,8
+    EDITTEXT        IDC_E_END_X,18,45,36,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "Y:",IDC_STATIC,61,46,9,8
+    EDITTEXT        IDC_E_END_Y,73,46,36,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "Z:",IDC_STATIC,115,47,9,8
+    EDITTEXT        IDC_E_END_Z,126,47,36,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "总长:",IDC_STATIC,7,61,20,8
+    EDITTEXT        IDC_E_LENGTH,30,61,29,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_BORDER
+    LTEXT           "线型:",IDC_STATIC,62,61,20,8
+    LTEXT           "线型",IDC_S_LINE_TYPE,85,61,47,8
+END
+
+IDD_BOLT_PROP_DLG DIALOGEX 0, 0, 187, 161
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "螺栓属性"
+FONT 10, "宋体", 0, 0, 0x1
+BEGIN
+    LTEXT           "螺栓句柄:",IDC_STATIC,7,6,35,8
+    LTEXT           "Static",IDC_S_LS_HANDLE,43,6,53,8
+    CONTROL         "虚拟螺栓",IDC_CHK_VIRTUAL_BOLT,"Button",BS_AUTOCHECKBOX | 
+                    NOT WS_VISIBLE | WS_TABSTOP,101,5,46,10
+    LTEXT           "螺栓规格:",IDC_STATIC,7,20,35,8
+    COMBOBOX        IDC_CMB_LS_GUIGE,43,18,55,86,CBS_DROPDOWN | WS_VSCROLL | 
+                    WS_TABSTOP
+    LTEXT           "孔径 :",IDC_STATIC,101,21,24,8
+    EDITTEXT        IDC_E_HOLE_D,134,18,46,12,ES_AUTOHSCROLL
+    LTEXT           "腰圆长度:",IDC_STATIC,7,38,35,8
+    EDITTEXT        IDC_E_WAIST_LEN,43,36,23,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "方向>>",IDC_BTN_MODIFY_WAIST_VEC,68,36,29,12
+    PUSHBUTTON      "射线号",IDC_BN_LS_RAYNO,99,36,32,12
+    EDITTEXT        IDC_E_RAY_NO,135,36,45,12,ES_AUTOHSCROLL | ES_READONLY | 
+                    NOT WS_TABSTOP
+    LTEXT           "--▼▼-位置-▼▼--",IDC_STATIC,15,55,70,8
+    LTEXT           "X坐标:",IDC_STATIC,7,69,24,8
+    EDITTEXT        IDC_E_X,43,67,46,12,ES_AUTOHSCROLL
+    LTEXT           "Y坐标:",IDC_STATIC,7,84,24,8
+    EDITTEXT        IDC_E_Y,43,83,46,12,ES_AUTOHSCROLL
+    LTEXT           "Z坐标:",IDC_STATIC,7,99,24,8
+    EDITTEXT        IDC_E_Z,43,98,46,12,ES_AUTOHSCROLL
+    LTEXT           "--▼▼-法线-▼▼--",IDC_STATIC,101,55,70,8
+    LTEXT           "X坐标:",IDC_STATIC,101,69,24,8
+    EDITTEXT        IDC_E_NORM_X,133,67,46,12,ES_AUTOHSCROLL
+    LTEXT           "Y坐标:",IDC_STATIC,101,84,24,8
+    EDITTEXT        IDC_E_NORM_Y,133,83,46,12,ES_AUTOHSCROLL
+    LTEXT           "Z坐标:",IDC_STATIC,101,99,24,8
+    EDITTEXT        IDC_E_NORM_Z,133,98,46,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "拷贝",IDC_BN_COPY_POS,23,115,32,14
+    PUSHBUTTON      "粘贴",IDC_BN_PASTE_POS,57,115,32,14
+    PUSHBUTTON      "拷贝",IDC_BN_COPY_NORM,114,115,32,14
+    PUSHBUTTON      "粘贴",IDC_BN_PASTE_NORM,149,115,32,14
+    DEFPUSHBUTTON   "确定",IDOK,7,140,84,14
+    PUSHBUTTON      "取消",IDCANCEL,97,140,84,14
+END
+
+IDD_DEF_VERTEX_DLG DIALOG DISCARDABLE  0, 0, 83, 103
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "定义轮廓点"
+FONT 10, "宋体"
+BEGIN
+    LTEXT           "类型:",IDC_STATIC,7,10,20,8
+    COMBOBOX        IDC_CMB_DEF_TYPE,28,7,48,72,CBS_DROPDOWNLIST | 
+                    WS_VSCROLL | WS_TABSTOP
+    LTEXT           "X:",IDC_STATIC,15,25,9,8
+    EDITTEXT        IDC_E_PT_X,28,22,48,12,ES_AUTOHSCROLL
+    LTEXT           "Y:",IDC_STATIC,15,44,9,8
+    EDITTEXT        IDC_E_PT_Y,28,41,48,12,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,16,60,50,14
+    PUSHBUTTON      "取消",IDCANCEL,16,82,50,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog Info
+//
+
+IDD_PLATE_VERTEX_DLG DLGINIT
+BEGIN
+    IDC_CMB_VERTEX_TYPE, 0x403, 11, 0
+0xf9bb, 0xbcd7, 0xe6c3, 0xa5b6, 0xe3b5, "\000" 
+    IDC_CMB_VERTEX_TYPE, 0x403, 12, 0
+0xdab5, 0xbb32, 0xc7f0, 0xc3fa, 0xb5e6, 0x00e3, 
+    IDC_CMB_VERTEX_TYPE, 0x403, 12, 0
+0x2d31, 0xc332, 0xbbe6, 0xc7f0, 0xb5fa, 0x00e3, 
+    IDC_CMB_VERTEX_TYPE, 0x403, 12, 0
+0xdab5, 0xbb33, 0xc7f0, 0xc3fa, 0xb5e6, 0x00e3, 
+    IDC_CMB_VERTEX_TYPE, 0x403, 12, 0
+0x2d31, 0xc333, 0xbbe6, 0xc7f0, 0xb5fa, 0x00e3, 
+    0
+END
+
+IDD_LINE_FEATURE_DLG DLGINIT
+BEGIN
+    IDC_CMB_LOCAL_POINT_VEC, 0x403, 3, 0
+0xdece, "\000" 
+    IDC_CMB_LOCAL_POINT_VEC, 0x403, 7, 0
+0xbcca, 0x3e2d, 0xd5d6, "\000" 
+    IDC_CMB_LOCAL_POINT_VEC, 0x403, 7, 0
+0xd5d6, 0x3e2d, 0xbcca, "\000" 
+    IDC_CMB_EDGE_TYPE, 0x403, 7, 0
+0x2e30, 0xb1d6, 0xdfcf, "\000" 
+    IDC_CMB_EDGE_TYPE, 0x403, 7, 0
+0x2e31, 0xb2d4, 0xa1bb, "\000" 
+    0
+END
+
+IDD_DEF_VERTEX_DLG DLGINIT
+BEGIN
+    IDC_CMB_DEF_TYPE, 0x403, 9, 0
+0xb8d6, 0xa8b6, 0xf8d7, 0xeab1, "\000" 
+    IDC_CMB_DEF_TYPE, 0x403, 9, 0
+0xb8d6, 0xa8b6, 0x5820, 0xb5d6, "\000" 
+    IDC_CMB_DEF_TYPE, 0x403, 9, 0
+0xb8d6, 0xa8b6, 0x5920, 0xb5d6, "\000" 
+    0
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO MOVEABLE PURE 
+BEGIN
+    IDD_PLATE_VERTEX_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 6
+        RIGHTMARGIN, 168
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 82
+    END
+
+    IDD_BOLT_PROP_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 181
+        BOTTOMMARGIN, 154
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Chinese (P.R.C.) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#pragma code_page(936)
+#include "res\PEC.rc2"  // 不是由 Microsoft Visual C++ 编辑过的资源
+#include "afxres.rc"     // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+
