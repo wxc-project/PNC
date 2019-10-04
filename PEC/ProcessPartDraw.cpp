@@ -1679,7 +1679,7 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 	line.feature=2;	//火曲线火曲
 	for(int i=2;i<=pPlate->m_cFaceN;i++)
 	{
-		if(pPlate->GetHuoQuAngle(i-1,&line)!=0)
+		if(pPlate->GetBendLineAt(i-2,&line)!=0)
 		{
 			line.ID=i-1;	//第一条火曲线
 			HIBERID huoquLineId(pPlate->GetKey(),HIBERARCHY(0,0,1,line.ID));

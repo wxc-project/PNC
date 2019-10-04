@@ -409,7 +409,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 	{
 		for (int i = 2; i <= tempPlate.m_cFaceN; i++)
 		{
-			if (tempPlate.GetHuoQuAngle(i - 1, &huoquLine[i - 2]) == 0)
+			if (tempPlate.GetBendLineAt(i - 2, &huoquLine[i - 2]) == 0)
 			{
 				huoquLine[i - 2].startPt.Set();
 				huoquLine[i - 2].endPt.Set();
@@ -563,7 +563,11 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 					file.NewLine(huoquLine[i].startPt, huoquLine[i].endPt, 1);	//设置火曲线为红色
 					//判断正反曲，并在火曲线附近标注 + -号
 					BYTE cBendType = bendTypeArr[i];
-
+					//暂未提取火曲角度，无法识别火曲类型 wht 19-10-04
+					/*if (cBendType == CProcessPlate::BEND_IN)
+						file.NewText("-",);
+					else if (cBendType == CProcessPlate::BEND_OUT)
+						file.NewText("+");*/
 				}
 			}
 			//激光加工模式下，显示用户指定的信息
