@@ -175,12 +175,6 @@
     <ClCompile Include="MouseStatusBar.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ToolKits\TowerCad\NcJg.cpp">
-      <Filter>ToolCode</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp">
-      <Filter>ToolCode</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
@@ -188,6 +182,12 @@
       <Filter>TowerCad</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\SegI.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\NcJg.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
   </ItemGroup>
@@ -373,7 +373,7 @@
       <Filter>ToolCode</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h">
-      <Filter>ToolCode</Filter>
+      <Filter>TowerCad</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

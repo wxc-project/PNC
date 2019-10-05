@@ -1380,7 +1380,7 @@ void CPlateProcessInfo::CalEquidistantShape(double minDistance,ATOM_LIST<VERTEX>
 		double radius = pDestVertex->arc.radius;
 		if (pDestVertex->ciEdgeType >= 2)
 			pDestVertex->arc.radius = radius + offset;
-		pDestVertex->pos = (double*)curPt;
+		//pDestVertex->pos = (double*)curPt; //此处不能赋值，否则无法设置间隙值无效 wht 19-09-29
 		pDestVertex->arc.radius = radius;
 		if (pDestVertex->ciEdgeType >= 2)
 		{	//为圆弧或椭圆弧添加分片轮廓点，否则提取螺栓孔时可能漏孔 wht 19-08-14

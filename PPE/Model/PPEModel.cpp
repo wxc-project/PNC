@@ -299,6 +299,12 @@ bool CPPEModel::SavePartToFile(CProcessPart *pPart)
 	CXhChar500 sFilePath=model.GetPartFilePath(pPart->GetPartNo());
 	if(sFilePath.Length()<=0)
 		return false;
+	if (sFilePath.StartWith('.') && m_sFolderPath.GetLength()>0)
+	{	//使用SetCurrentDirectory设置工作路径后，使用相对路径写文件
+		//可以避免文件夹中带"."无法保存或者路径名太长无法保存的问题 wht 19-04-24
+		//查询构件路径为相对路径时需要设置当前工作路径，否则ppi文件保存路径错误导致修改无效 wht 19-10-05
+		SetCurrentDirectory(m_sFolderPath);
+	}
 	FILE *fp=fopen(sFilePath,"wb");
 	if(fp==NULL)
 		return false;
