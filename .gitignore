@@ -81,6 +81,10 @@ artifacts/
 *.unsuccessfulbuild
 *.exp
 *.bsc
+*.pch.ib_tag
+*.exe.intermediate.manifest
+*.lib
+*.arx
 
 # Chutzpah Test files
 _Chutzpah*

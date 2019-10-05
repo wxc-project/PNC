@@ -368,7 +368,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'">
     <IntDir>Release05\</IntDir>
-    <OutDir>..\PNC\Release\</OutDir>
+    <OutDir>..\Release\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC05</TargetName>
@@ -376,7 +376,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|Win32'">
     <IntDir>UBOMRelease05\</IntDir>
-    <OutDir>..\PNC\UBOMRelease\</OutDir>
+    <OutDir>..\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC05</TargetName>
@@ -384,7 +384,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release10|Win32'">
     <IntDir>Release10\</IntDir>
-    <OutDir>..\PNC\Release\</OutDir>
+    <OutDir>..\Release\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC10</TargetName>
@@ -392,7 +392,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease10|Win32'">
     <IntDir>UBOMRelease10\</IntDir>
-    <OutDir>..\PNC\UBOMRelease\</OutDir>
+    <OutDir>..\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC10</TargetName>
@@ -400,7 +400,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseZrx19|Win32'">
     <IntDir>ReleaseZrx19\</IntDir>
-    <OutDir>..\PNC\Release\</OutDir>
+    <OutDir>..\Release\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.zrx</TargetExt>
     <TargetName>PNC19</TargetName>
@@ -416,7 +416,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release07|Win32'">
     <IntDir>Release07\</IntDir>
-    <OutDir>..\PNC\Release\</OutDir>
+    <OutDir>..\Release\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC07</TargetName>
@@ -424,7 +424,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">
     <IntDir>UBOMRelease07\</IntDir>
-    <OutDir>..\PNC\UBOMRelease\</OutDir>
+    <OutDir>..\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC07</TargetName>

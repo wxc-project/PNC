@@ -66,8 +66,8 @@
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">Release\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">PncRelease\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">..\UBOMRelease\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">..\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">PncRelease\</IntDir>

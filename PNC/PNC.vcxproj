@@ -76,11 +76,12 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>.\Release\</OutDir>
+    <OutDir>..\Release\</OutDir>
+    <IntDir>.\Release\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>.\Release\</OutDir>
+    <OutDir>..\Release\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease|Win32'">
     <LinkIncremental>false</LinkIncremental>
