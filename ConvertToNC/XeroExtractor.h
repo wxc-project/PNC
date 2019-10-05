@@ -93,9 +93,22 @@ struct BOLT_BLOCK
 		hole_d=holeD;
 	}
 };
+struct RECOG_SCHEMA{
+	int id;
+	CXhChar50 m_sSchemaName;//识别模式名称
+	int m_iDimStyle;		//0.单行标注 1.多行标注
+	CXhChar50 m_sPnKey;		//
+	CXhChar50 m_sThickKey;	//
+	CXhChar50 m_sMatKey;	//
+	CXhChar50 m_sPnNumKey;	//
+	CXhChar50 m_sFrontBendKey;	//正曲
+	CXhChar50 m_sReverseBendKey;//反曲
+	RECOG_SCHEMA() { id = 0; m_iDimStyle = 0; }
+};
 class CPlateExtractor : public IPlateExtractor
 {
 public:
+	ATOM_LIST<RECOG_SCHEMA> m_recogSchemaList;
 	int m_iDimStyle;		//0.单行标注 1.多行标注
 	CXhChar50 m_sPnKey;		//
 	CXhChar50 m_sThickKey;	//
