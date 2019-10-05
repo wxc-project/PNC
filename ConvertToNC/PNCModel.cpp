@@ -2103,19 +2103,19 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		pEnt->close();
 		CXhChar50 sLayerName;
 		AcDbObjectId lineId=GetEntLineTypeId(pEnt,sLayerName);
-		if(g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
+		if(g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 		{	//按线型过滤
 			if (m_hashSolidLineTypeId.GetValue(lineId.asOldId()) == NULL)
 				continue;
 		}
-		else if(g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LAYER)
+		else if(g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 		{	//按图层过滤
 			if(g_pncSysPara.IsNeedFilterLayer(sLayerName))
 				continue;
 		}
-		else if(g_pncSysPara.m_iRecogMode==CPNCSysPara::FILTER_BY_COLOR)
+		else if(g_pncSysPara.m_ciRecogMode==CPNCSysPara::FILTER_BY_COLOR)
 		{	//按颜色过滤
-			if(GetEntColorIndex(pEnt)!=g_pncSysPara.m_iProfileColorIndex)
+			if(GetEntColorIndex(pEnt)!=g_pncSysPara.m_ciProfileColorIndex)
 				continue;
 		} 
 		if(pEnt->isKindOf(AcDbEllipse::desc()))
@@ -2193,7 +2193,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			pEnt->close();
 			continue;
 		}
-		if (g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LAYER)
+		if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 		{	//按图层过滤
 			if (g_pncSysPara.IsNeedFilterLayer(sLayerName))
 			{
@@ -2212,11 +2212,11 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 				continue;
 			}
 		}
-		else if(g_pncSysPara.m_iRecogMode==CPNCSysPara::FILTER_BY_COLOR)
+		else if(g_pncSysPara.m_ciRecogMode==CPNCSysPara::FILTER_BY_COLOR)
 		{	//按颜色过滤
 			int iColor=GetEntColorIndex(pEnt);
-			if( iColor!=g_pncSysPara.m_iProfileColorIndex||
-				iColor==g_pncSysPara.m_iBendLineColorIndex)
+			if( iColor!=g_pncSysPara.m_ciProfileColorIndex||
+				iColor==g_pncSysPara.m_ciBendLineColorIndex)
 			{
 				pEnt->setLayer(m_idNewLayer);
 				pEnt->close();
@@ -2233,7 +2233,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 				continue;
 			}
 		}
-		else if (g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
+		else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 		{	//按线型过滤
 			//过滤非轮廓边线型图元
 			if (m_hashSolidLineTypeId.GetValue(curLineId.asOldId()) == NULL)

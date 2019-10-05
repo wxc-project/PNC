@@ -295,19 +295,19 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList,CPropTreeItem *pIt
 	}
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_iRecogMode"))
 	{
-		g_pncSysPara.m_iRecogMode=valueStr[0]-'0';
+		g_pncSysPara.m_ciRecogMode=valueStr[0]-'0';
 		pPropList->DeleteAllSonItems(pItem);
-		if(g_pncSysPara.m_iRecogMode==CPNCSysPara::FILTER_BY_COLOR)
+		if(g_pncSysPara.m_ciRecogMode==CPNCSysPara::FILTER_BY_COLOR)
 		{	//按颜色识别
 			oper.InsertCmbColorPropItem(pItem,"m_iProfileColorIndex","","","",-1,TRUE);
 			oper.InsertCmbColorPropItem(pItem,"m_iBendLineColorIndex","","","",-1,TRUE);
 		}
-		else if(g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LAYER)
+		else if(g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 		{	//按图层识别
 			CPropTreeItem *pPropItem=oper.InsertPopMenuItem(pItem,"layer_mode","","","",-1,TRUE);
 			UpdateFilterLayerProperty(pPropList,pPropItem);
 		}
-		else if (g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
+		else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 		{	//按线型识别
 			oper.InsertCmbListPropItem(pItem, "m_iProfileLineTypeName", "", "", "", -1, TRUE);
 		}
@@ -323,9 +323,9 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList,CPropTreeItem *pIt
 		memmove(tem_str, tem_str+3, 97);//跳过RGB
 		sscanf(tem_str,"%X",&curClr);
 		if(pItem->m_idProp==CPNCSysPara::GetPropID("m_iProfileColorIndex"))
-			g_pncSysPara.m_iProfileColorIndex=GetNearestACI(curClr);
+			g_pncSysPara.m_ciProfileColorIndex=GetNearestACI(curClr);
 		else //if(pItem->m_idProp==CPNCSysPara::GetPropID("m_iBendLineColorIndex"))
-			g_pncSysPara.m_iBendLineColorIndex=GetNearestACI(curClr);
+			g_pncSysPara.m_ciBendLineColorIndex=GetNearestACI(curClr);
 	}
 	return TRUE;
 }
@@ -558,17 +558,17 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	pGroupItem=oper.InsertPropItem(pRootItem,"layer_set");
 	pGroupItem->m_dwPropGroup = GetSingleWord(GROUP_GENERAL);
 	pPropItem=oper.InsertCmbListPropItem(pGroupItem,"m_iRecogMode");
-	if(g_pncSysPara.m_iRecogMode==CPNCSysPara::FILTER_BY_COLOR)
+	if(g_pncSysPara.m_ciRecogMode==CPNCSysPara::FILTER_BY_COLOR)
 	{	//按颜色识别
 		oper.InsertCmbColorPropItem(pPropItem,"m_iProfileColorIndex");
 		oper.InsertCmbColorPropItem(pPropItem,"m_iBendLineColorIndex");
 	}
-	else if(g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LAYER)
+	else if(g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 	{	//按图层识别
 		pItem =oper.InsertPopMenuItem(pPropItem,"layer_mode");
 		UpdateFilterLayerProperty(&m_propList, pItem);
 	}
-	else if (g_pncSysPara.m_iRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
+	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 	{	//按线型识别
 		oper.InsertCmbListPropItem(pPropItem, "m_iProfileLineTypeName");
 	}
@@ -630,9 +630,9 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 		COLORREF clr=GetColorFromIndex(iColorIndex);
 		char tem_str[100]="";
 		if(CPNCSysPara::GetPropID("m_iProfileColorIndex")==pItem->m_idProp)
-			g_pncSysPara.m_iProfileColorIndex=iColorIndex;
+			g_pncSysPara.m_ciProfileColorIndex=iColorIndex;
 		else if(CPNCSysPara::GetPropID("m_iBendLineColorIndex")==pItem->m_idProp)
-			g_pncSysPara.m_iBendLineColorIndex=iColorIndex;
+			g_pncSysPara.m_ciBendLineColorIndex=iColorIndex;
 		else
 			return;
 		if(g_pncSysPara.GetPropValueStr(pItem->m_idProp,tem_str)>0)

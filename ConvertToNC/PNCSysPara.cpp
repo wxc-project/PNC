@@ -40,10 +40,10 @@ void CPNCSysPara::Init()
 	//默认过滤图层名
 	InitDrawingEnv();
 	m_iLayerMode=0;
-	m_iRecogMode=0;
+	m_ciRecogMode=0;
 	m_ciBoltRecogMode = BOLT_RECOG_DEFAULT;
-	m_iProfileColorIndex=1;		//红色
-	m_iBendLineColorIndex=190;	//紫色
+	m_ciProfileColorIndex=1;		//红色
+	m_ciBendLineColorIndex=190;	//紫色
 	m_sProfileLineType.Copy("CONTINUOUS");
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName,LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName,1));//不可见轮廓线
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltSymbolLayer.layerName,LAYER_ITEM(LayerTable::BoltSymbolLayer.layerName,1));		//螺栓图符
@@ -252,11 +252,11 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if(GetPropID("m_iRecogMode")==id)
 	{
-		if(m_iRecogMode==FILTER_BY_LINETYPE)
+		if(m_ciRecogMode==FILTER_BY_LINETYPE)
 			sText.Copy("0.按线型识别");
-		else if (m_iRecogMode == FILTER_BY_LAYER)
+		else if (m_ciRecogMode == FILTER_BY_LAYER)
 			sText.Copy("1.按图层识别");
-		else if(m_iRecogMode==FILTER_BY_COLOR)
+		else if(m_ciRecogMode==FILTER_BY_COLOR)
 			sText.Copy("2.按颜色识别");
 	}
 	else if (GetPropID("m_ciBoltRecogMode") == id)
@@ -267,9 +267,9 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Copy("0.默认");
 	}
 	else if(GetPropID("m_iProfileColorIndex")==id)
-		sText.Printf("RGB%X",GetColorFromIndex(m_iProfileColorIndex));
+		sText.Printf("RGB%X",GetColorFromIndex(m_ciProfileColorIndex));
 	else if(GetPropID("m_iBendLineColorIndex")==id)
-		sText.Printf("RGB%X",GetColorFromIndex(m_iBendLineColorIndex));
+		sText.Printf("RGB%X",GetColorFromIndex(m_ciBendLineColorIndex));
 	else if(GetPropID("m_iProfileLineTypeName")==id)
 		sText.Copy(m_sProfileLineType);
 	if(valueStr)
@@ -279,7 +279,7 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 
 BOOL CPNCSysPara::IsNeedFilterLayer(const char* sLayer)
 {
-	if(m_iRecogMode==FILTER_BY_LAYER)
+	if(m_ciRecogMode==FILTER_BY_LAYER)
 	{
 		if(m_iLayerMode==0&&m_xHashEdgeKeepLayers.GetNodeNum()>0)
 		{	//用户指定轮廓边所在图层
@@ -300,8 +300,8 @@ BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/
 	BOOL bRet=CPlateExtractor::IsBendLine(pAcDbLine,pRecognizer);
 	if(!bRet)
 	{	
-		if(m_iRecogMode==FILTER_BY_COLOR)
-			bRet=(GetEntColorIndex(pAcDbLine)==m_iBendLineColorIndex);
+		if(m_ciRecogMode==FILTER_BY_COLOR)
+			bRet=(GetEntColorIndex(pAcDbLine)==m_ciBendLineColorIndex);
 	}
 	return bRet;
 }
@@ -430,6 +430,7 @@ void PNCSysSetImportDefault()
 	strcat(file_name,"rule.set");
 	if((fp=fopen(file_name,"rt"))==NULL)
 		return;
+	int nTemp = 0;
 	g_pncSysPara.hashBoltDList.Empty();
 	while(!feof(fp))
 	{
@@ -475,14 +476,30 @@ void PNCSysSetImportDefault()
 			sscanf(line_txt,"%s%f",key_word,&g_pncSysPara.m_fMapScale);
 		else if(_stricmp(key_word,"bIncFilterLayer")==0)
 			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iLayerMode);
-		else if(_stricmp(key_word,"RecogMode")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iRecogMode);
+		else if (_stricmp(key_word, "RecogMode") == 0)
+		{	//使用%d读取BYTE型变量，一次更新4个字节影响其它变量取值
+			//可使用%hhu读取BYTE变量但测试无效，先读取到临时变量中，再赋值到相应变量中 wht 19-10-05
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciRecogMode = nTemp;
+		}
 		else if (_stricmp(key_word, "BoltRecogMode") == 0)
-			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_ciBoltRecogMode);
-		else if(_stricmp(key_word,"BendLineColorIndex")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iBendLineColorIndex);
-		else if(_stricmp(key_word,"ProfileColorIndex")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iProfileColorIndex);
+		{
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciBoltRecogMode = nTemp;
+			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciBoltRecogMode);
+		}
+		else if (_stricmp(key_word, "BendLineColorIndex") == 0)
+		{
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciBendLineColorIndex = nTemp;
+			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciBendLineColorIndex);
+		}
+		else if (_stricmp(key_word, "ProfileColorIndex") == 0)
+		{
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciProfileColorIndex = nTemp;
+			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciProfileColorIndex);
+		}
 		else if(_stricmp(key_word, "ProfileLineType") == 0)
 			sscanf(line_txt,"%s%s",key_word,&g_pncSysPara.m_sProfileLineType);
 		else if(_stricmp(key_word,"BoltDKey")==0)
@@ -557,10 +574,10 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "CDrawDamBoard::m_bDrawAllBamBoard=%d ;绘制所有档板\n", CDrawDamBoard::m_bDrawAllBamBoard);
 	fprintf(fp,"图层设置\n");
 	fprintf(fp,"bIncFilterLayer=%d ;启用过滤默认图层\n",g_pncSysPara.m_iLayerMode);
-	fprintf(fp,"RecogMode=%d ;识别模式\n",g_pncSysPara.m_iRecogMode);
+	fprintf(fp,"RecogMode=%d ;识别模式\n",g_pncSysPara.m_ciRecogMode);
 	fprintf(fp, "BoltRecogMode=%d ;螺栓识别模式\n", g_pncSysPara.m_ciBoltRecogMode);
-	fprintf(fp,"ProfileColorIndex=%d ;轮廓边颜色\n",g_pncSysPara.m_iProfileColorIndex);
-	fprintf(fp,"BendLineColorIndex=%d ;制弯线颜色\n",g_pncSysPara.m_iBendLineColorIndex);
+	fprintf(fp,"ProfileColorIndex=%d ;轮廓边颜色\n",g_pncSysPara.m_ciProfileColorIndex);
+	fprintf(fp,"BendLineColorIndex=%d ;制弯线颜色\n",g_pncSysPara.m_ciBendLineColorIndex);
 	fprintf(fp,"ProfileLineType=%s ;轮廓边线型\n", (char*)g_pncSysPara.m_sProfileLineType);
 	fprintf(fp,"文字识别设置\n");
 	fprintf(fp,"DimStyle=%d ;文字标注类型\n",g_pncSysPara.m_iDimStyle);

@@ -76,6 +76,11 @@ artifacts/
 *.read.1.tlog
 *.write.1.tlog
 *.command.1.tlog
+*.lastbuildstate
+*.res
+*.unsuccessfulbuild
+*.exp
+*.bsc
 
 # Chutzpah Test files
 _Chutzpah*

@@ -644,7 +644,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -660,7 +660,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
       <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ObjectARX 2005\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2005\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -691,7 +691,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -707,7 +707,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
       <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ObjectARX 2005\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2005\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -738,7 +738,7 @@
       <PreprocessorDefinitions>_ARX_2010;__CAD_CONTEXT_;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2010\inc-win32;..\..\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2010\inc-win32;D:\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -754,7 +754,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
       <AdditionalDependencies>acdb18.lib;acge18.lib;acISMobj18.lib;adui18.lib;acui18.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ObjectARX 2010\lib-win32;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2010\lib-win32;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -784,7 +784,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;_ARX_2010;__CAD_CONTEXT_;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2010\inc-win32;..\..\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2010\inc-win32;D:\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -800,7 +800,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
       <AdditionalDependencies>acdb18.lib;acge18.lib;acISMobj18.lib;adui18.lib;acui18.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ObjectARX 2010\lib-win32;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2010\lib-win32;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -830,7 +830,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;_MAPTMA_ZRX;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ZRXSDK2019\arxport;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ZRXSDK2019\arxport;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -846,7 +846,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC-ZRX.def</ModuleDefinitionFile>
       <AdditionalDependencies>ZwRx.lib;ZwZrx.lib;ZWCAD.lib;ZwDatabase.lib;ZwAuto.lib;ZwGeometry.lib;ZdUI.lib;ZwUI.lib;HtmlHelp.lib;hasp_windows_106281.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ZRXSDK2019\lib-win32;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ZRXSDK2019\lib-win32;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -919,7 +919,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <DisableSpecificWarnings>4819;</DisableSpecificWarnings>
     </ClCompile>
@@ -936,7 +936,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
       <AdditionalDependencies>acdb17.lib;acge17.lib;acISMobj17.lib;adui17.lib;acui17.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ObjectARX 2007\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2007\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>
@@ -966,7 +966,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;__CAD_CONTEXT_;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <DisableSpecificWarnings>4819;</DisableSpecificWarnings>
     </ClCompile>
@@ -983,7 +983,7 @@
       <TargetMachine>MachineX86</TargetMachine>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
       <AdditionalDependencies>acdb17.lib;acge17.lib;acISMobj17.lib;adui17.lib;acui17.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>..\..\ObjectARX 2007\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2007\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
     </Link>

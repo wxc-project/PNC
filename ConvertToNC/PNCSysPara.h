@@ -54,9 +54,9 @@ public:
 	static const BYTE FILTER_BY_LINETYPE = 0;
 	static const BYTE FILTER_BY_LAYER	 = 1;
 	static const BYTE FILTER_BY_COLOR	 = 2;
-	BYTE m_iRecogMode;		//0.按图层&线型识别 1.按颜色识别
-	BYTE m_iProfileColorIndex;
-	BYTE m_iBendLineColorIndex;
+	BYTE m_ciRecogMode;		//0.按图层&线型识别 1.按颜色识别
+	BYTE m_ciProfileColorIndex;
+	BYTE m_ciBendLineColorIndex;
 	CXhChar16 m_sProfileLineType;
 public:
 	CPNCSysPara();
