@@ -37,9 +37,6 @@
     <ClCompile Include="NcPlate.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\XhCore\XeroCad\Localize\LocalDrawing.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\SolidBody.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
@@ -102,6 +99,9 @@
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\CopyPasteOper.cpp">
       <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore-dll\XeroCad\Localize\LocalDrawing.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

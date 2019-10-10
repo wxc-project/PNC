@@ -95,7 +95,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\XhCore\DrawSolid;..\PEC;..\..\XhCore\PartLib;..\..\XhCore\LmaDlg;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore\XeroCad;..\DockPage;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\PEC;..\..\XhCore-dll\PartLib;..\..\XhCore-dll\LmaDlg;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad;..\DockPage;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;__ALL_LICFUNC_;__PROPERTYLIST_UI_;__VS2010_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -116,7 +116,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore\Ent\Debug;..\..\XhCore\AlgFun\Debug;..\..\XhCore\EntList\Debug;..\..\XhCore\LmaDlg\2010Release;..\PEC\Debug;..\..\XhCore\DrawSolid\Debug;..\..\XhCore\PartLib\Release;..\..\XhCore\XeroCad\Debug;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Debug;..\..\XhCore-dll\AlgFun\Debug;..\..\XhCore-dll\EntList\Debug;..\..\XhCore-dll\LmaDlg\2010Release;..\PEC\Debug;..\..\XhCore-dll\DrawSolid\Debug;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\Release/PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -140,7 +140,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\XhCore\DrawSolid;..\PEC;..\..\XhCore\PartLib;..\..\XhCore\LmaDlg;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore\XeroCad;..\DockPage;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\PEC;..\..\XhCore-dll\PartLib;..\..\XhCore-dll\LmaDlg;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad;..\DockPage;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;__ALL_LICFUNC_;__PROPERTYLIST_UI_;__VS2010_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -161,7 +161,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>.\Release/PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore\Ent\Debug;..\..\XhCore\AlgFun\Debug;..\..\XhCore\EntList\Debug;..\..\XhCore\LmaDlg\2010Release;..\PEC\Debug;..\..\XhCore\DrawSolid\Debug;..\..\XhCore\PartLib\Release;..\..\XhCore\XeroCad\Debug;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Debug;..\..\XhCore-dll\AlgFun\Debug;..\..\XhCore-dll\EntList\Debug;..\..\XhCore-dll\LmaDlg\2010Release;..\PEC\Debug;..\..\XhCore-dll\DrawSolid\Debug;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\Release/PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -185,7 +185,7 @@
     <ClCompile>
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
-      <AdditionalIncludeDirectories>..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\XhCore\DrawSolid;..\PEC;..\..\XhCore\PartLib;..\..\XhCore\LmaDlg;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore\XeroCad;..\DockPage;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\PEC;..\..\XhCore-dll\PartLib;..\..\XhCore-dll\LmaDlg;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad;..\DockPage;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;__PNC_;__ALL_LICFUNC_;__PROPERTYLIST_UI_;__VS2010_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
@@ -206,7 +206,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore\Ent\Release;..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\LmaDlg\Release;..\PEC\Release;..\..\XhCore\DrawSolid\Release;..\..\XhCore\PartLib\Release;..\..\XhCore\XeroCad\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\LmaDlg\Release;..\PEC\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>$(OutDir)PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
@@ -229,7 +229,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\XhCore\DrawSolid;..\PEC;..\..\XhCore\PartLib;..\..\XhCore\LmaDlg;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore\XeroCad;..\DockPage;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\PEC;..\..\XhCore-dll\PartLib;..\..\XhCore-dll\LmaDlg;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad;..\DockPage;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;__PNC_;__ALL_LICFUNC_;__PROPERTYLIST_UI_;__VS2010_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -250,7 +250,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>..\PNC\Debug/PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore\Ent\Release;..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\LmaDlg\Release;..\PEC\Release;..\..\XhCore\DrawSolid\Release;..\..\XhCore\PartLib\Release;..\..\XhCore\XeroCad\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\LmaDlg\Release;..\PEC\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>..\PNC\Debug/PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
