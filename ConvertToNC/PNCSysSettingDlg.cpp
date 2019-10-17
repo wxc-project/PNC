@@ -453,7 +453,16 @@ IMPLEMENT_DYNAMIC(CPNCSysSettingDlg, CDialog)
 CPNCSysSettingDlg::CPNCSysSettingDlg(CWnd* pParent /*=NULL*/)
 	: CCADCallBackDlg(CPNCSysSettingDlg::IDD, pParent)
 {
-
+	int iCurSel = m_ctrlPropGroup.GetCurSel();
+	m_propList.m_iPropGroup = iCurSel;
+	m_listCtrlSysSetting.DeleteAllItems();
+	m_listCtrlSysSetting.AddColumnHeader("模式名称");
+	m_listCtrlSysSetting.AddColumnHeader("件号标识");
+	m_listCtrlSysSetting.AddColumnHeader("规格标识");
+	m_listCtrlSysSetting.AddColumnHeader("材质标识");
+	m_listCtrlSysSetting.AddColumnHeader("加工数标识");
+	m_listCtrlSysSetting.AddColumnHeader("正曲标识");
+	m_listCtrlSysSetting.AddColumnHeader("反曲标识");
 }
 
 CPNCSysSettingDlg::~CPNCSysSettingDlg()
@@ -465,6 +474,7 @@ void CPNCSysSettingDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST_BOX, m_propList);
 	DDX_Control(pDX, IDC_TAB_GROUP, m_ctrlPropGroup);
+	DDX_Control(pDX, IDC_LIST_SYSTEM_SETTING_DLG, m_listCtrlSysSetting);
 }
 
 
@@ -478,6 +488,21 @@ END_MESSAGE_MAP()
 BOOL CPNCSysSettingDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+	long col_wide_arr[3]={200,230,70};
+	m_listCtrlSysSetting.InitListCtrl(col_wide_arr);
+
+
+	CString sText;
+	for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
+	{
+		CListCtrlItemInfo* lpInfo = new CListCtrlItemInfo();
+		lpInfo->SetSubItemText(0, _T("规范级"));
+		lpInfo->SetSubItemText(0, _T("覆冰密度(kg/m3)"));
+		lpInfo->AddSubItemText(pBoltD->m_sPnKey);
+		lpInfo->AddSubItemText(pBoltD->m_sFrontBendKey);
+		lpInfo->SetListItemsStr(1, "A:近海或沙漠平坦地区|B:内陆建筑物稀疏地区|C:有密集建筑群市区|D:有密集建筑群和高层建筑市区");
+		CSuperGridCtrl::CTreeItem* pGroupItem = m_listCtrlSysSetting.InsertRootItem(lpInfo);
+	}
 	//
 	m_ctrlPropGroup.DeleteAllItems();
 	m_ctrlPropGroup.InsertItem(0,"常规设置");

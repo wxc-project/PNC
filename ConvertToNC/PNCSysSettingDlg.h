@@ -4,7 +4,7 @@
 #include "PropertyList.h"
 #include "PropListItem.h"
 #include "CADCallBackDlg.h"
-
+#include "SuperGridCtrl.h"
 class CPNCSysSettingDlg : public CCADCallBackDlg
 {
 	DECLARE_DYNAMIC(CPNCSysSettingDlg)
@@ -31,4 +31,5 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	afx_msg void OnBnClickedBtnDefault();
+	CSuperGridCtrl m_listCtrlSysSetting;
 };

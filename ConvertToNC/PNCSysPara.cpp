@@ -595,6 +595,17 @@ void PNCSysSetExportDefault()
 		fprintf(fp,"%d;",pBoltD->diameter);
 		fprintf(fp,"%.1f\n",pBoltD->hole_d);
 	}
+	for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
+	{
+		fprintf(fp, "%s:", (char*)pBoltD->m_sSchemaName);
+		fprintf(fp, "%d;", pBoltD->m_iDimStyle);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sPnKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sThickKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sMatKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sPnNumKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sFrontBendKey);
+		fprintf(fp, "%s\n", (char*)pBoltD->m_sReverseBendKey);
+	}
 	fprintf(fp,"比例识别\n");
 	fprintf(fp,"MapScale=%.f ;缩放比例\n",g_pncSysPara.m_fMapScale);
 	fclose(fp);

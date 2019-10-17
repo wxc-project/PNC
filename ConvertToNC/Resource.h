@@ -11,7 +11,7 @@
 #define PRODUCT_VER_MAIN                1
 #define PRODUCT_VER_MAIN2               2
 #define ID_BTN_DEFAULT                  3
-#define PRODUCT_VER_SUB_05              9
+#define PRODUCT_VER_SUB_05              69
 #define IDS_PROJNAME                    100
 #define IDC_LIST_BOX                    100
 #define IDD_SYSTEM_SETTING_DLG          101
@@ -64,6 +64,8 @@
 #define IDC_BTN_MOVE_MK_RECT            128
 #define IDC_CHECK1                      129
 #define IDC_CHK_EDIT_MK                 129
+#define IDC_LIST_                       132
+#define IDC_LIST_SYSTEM_SETTING_DLG     132
 #define IDD_REVISION_DLG                136
 #define IDR_ITEM_CMD_POPUP              140
 #define IDC_TREE_CONTRL                 141
@@ -86,8 +88,8 @@
 #define ID_REFRESH_PART_NUM             32779
 #define ID_EXPORT_PROJECT               32780
 #define ID_REVISE_TEH_PLATE             32782
-#define ID_RETRIEVED_ANGLES				32783
-#define ID_RETRIEVED_PLATES				32784
+#define ID_RETRIEVED_ANGLES             32783
+#define ID_RETRIEVED_PLATES             32784
 #define ID_MODIFY_ERP_FILE              32785
 #define ID_DELETE_ITEM                  32786
 
@@ -95,9 +97,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        123
+#define _APS_NEXT_RESOURCE_VALUE        124
 #define _APS_NEXT_COMMAND_VALUE         32770
-#define _APS_NEXT_CONTROL_VALUE         130
+#define _APS_NEXT_CONTROL_VALUE         133
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
