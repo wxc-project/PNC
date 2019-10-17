@@ -1625,12 +1625,33 @@ void CPlateProcessInfo::InitEdgeEntIdMap()
 		CAcDbObjLife entLife(pEnt);
 		if(pEnt==NULL)
 			continue;
-		if(!pEnt->isKindOf(AcDbLine::desc()))
-			continue;
-		AcDbLine *pLine=(AcDbLine*)pEnt;
-		ACAD_LINEID *pLineId=lineIdList.append();
-		GEPOINT start(pLine->startPoint().x,pLine->startPoint().y,0),end(pLine->endPoint().x,pLine->endPoint().y,0);
-		pLineId->Init(entId,start,end);
+		if (pEnt->isKindOf(AcDbLine::desc()))
+		{
+			AcDbLine *pLine = (AcDbLine*)pEnt;
+			ACAD_LINEID *pLineId = lineIdList.append();
+			GEPOINT start(pLine->startPoint().x, pLine->startPoint().y, 0), end(pLine->endPoint().x, pLine->endPoint().y, 0);
+			pLineId->Init(entId, start, end);
+		}
+		else if (pEnt->isKindOf(AcDbArc::desc()))
+		{
+			AcDbArc* pArc = (AcDbArc*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pArc->getStartPoint(startPt);
+			pArc->getEndPoint(endPt);
+			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
+			ACAD_LINEID *pLineId = lineIdList.append();
+			pLineId->Init(entId, start, end);
+		}
+		else if (pEnt->isKindOf(AcDbEllipse::desc()))
+		{
+			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pEllipse->getStartPoint(startPt);
+			pEllipse->getEndPoint(endPt);
+			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
+			ACAD_LINEID *pLineId = lineIdList.append();
+			pLineId->Init(entId, start, end);
+		}
 	}
 	for(ULONG *pId=m_cloneEntIdList.GetFirst();pId;pId=m_cloneEntIdList.GetNext())
 	{
@@ -1639,12 +1660,33 @@ void CPlateProcessInfo::InitEdgeEntIdMap()
 		CAcDbObjLife entLife(pEnt);
 		if(pEnt==NULL)
 			continue;
-		if(!pEnt->isKindOf(AcDbLine::desc()))
-			continue;
-		AcDbLine *pLine=(AcDbLine*)pEnt;
-		ACAD_LINEID *pLineId=hashCloneEntIdByLineId.Add(*pId);
-		GEPOINT start(pLine->startPoint().x,pLine->startPoint().y,0),end(pLine->endPoint().x,pLine->endPoint().y,0);
-		pLineId->Init(entId,start,end);
+		if (pEnt->isKindOf(AcDbLine::desc()))
+		{
+			AcDbLine *pLine = (AcDbLine*)pEnt;
+			ACAD_LINEID *pLineId = hashCloneEntIdByLineId.Add(*pId);
+			GEPOINT start(pLine->startPoint().x, pLine->startPoint().y, 0), end(pLine->endPoint().x, pLine->endPoint().y, 0);
+			pLineId->Init(entId, start, end);
+		}
+		else if (pEnt->isKindOf(AcDbArc::desc()))
+		{
+			AcDbArc* pArc = (AcDbArc*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pArc->getStartPoint(startPt);
+			pArc->getEndPoint(endPt);
+			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
+			ACAD_LINEID *pLineId = hashCloneEntIdByLineId.Add(*pId);
+			pLineId->Init(entId, start, end);
+		}
+		else if (pEnt->isKindOf(AcDbEllipse::desc()))
+		{
+			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pEllipse->getStartPoint(startPt);
+			pEllipse->getEndPoint(endPt);
+			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
+			ACAD_LINEID *pLineId = hashCloneEntIdByLineId.Add(*pId);
+			pLineId->Init(entId, start, end);
+		}
 	}
 	//2.初始化轮廓边对应的CAD实体
 	int n=vertexList.GetNodeNum();

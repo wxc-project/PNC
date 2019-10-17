@@ -24,8 +24,13 @@ bool CAdjustPlateMCS::Rotation()
 	int n = m_pPlateInfo->xPlate.vertex_list.GetNodeNum();
 	int cur_edge = m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge;
 	int next_edge = (cur_edge + 1) % n;
-	if (!IsValidVertex(next_edge))
-		next_edge = (cur_edge + 2) % n;
+	int i = 2;
+	while (IsConcavePt(next_edge) && i<n)
+	{
+		next_edge = cur_edge + i;
+		next_edge = next_edge % n;
+		i++;
+	}
 	ACAD_LINEID *pLineS = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetValue(cur_edge + 1);
 	ACAD_LINEID *pLineE = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetValue(next_edge + 1);
 	if (pLineS == NULL || pLineE == NULL)
@@ -103,10 +108,10 @@ void CAdjustPlateMCS::AnticlockwiseRotation()
 			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge + 1) % n;
 		else
 			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge - 1 + n) % n;
-		if (IsValidVertex(m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge))
+		if (IsValidDockVertex(m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge))
 		{
-			Rotation();
-			break;
+			if(Rotation())
+				break;
 		}
 	}
 }
@@ -122,10 +127,10 @@ void CAdjustPlateMCS::ClockwiseRotation()
 			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge - 1 + n) % n;
 		else
 			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge + 1) % n;
-		if (IsValidVertex(m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge))
+		if (IsValidDockVertex(m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge))
 		{
-			Rotation();
-			break;
+			if(Rotation())
+				break;
 		}
 	}
 }
@@ -183,7 +188,7 @@ void CAdjustPlateMCS::Mirror()
 	m_pPlateInfo->UpdateEdgeEntPos();
 }
 
-bool CAdjustPlateMCS::IsValidVertex(BYTE ciEdgeIndex)
+bool CAdjustPlateMCS::IsValidDockVertex(BYTE ciEdgeIndex)
 {
 	int i = 0, n = m_pPlateInfo->xPlate.vertex_list.GetNodeNum();
 	DYN_ARRAY<GEPOINT> vertex_arr(n);
@@ -197,13 +202,34 @@ bool CAdjustPlateMCS::IsValidVertex(BYTE ciEdgeIndex)
 		if (i < ciEdgeIndex)
 			pPreVertex = pVertex;
 	}
-	if (pPreVertex->type != 1 || pCurVertex->type != 1)
+	//if (pPreVertex->type != 1 || pCurVertex->type != 1)
+	if (pCurVertex == NULL || pCurVertex->type != 1)
 		return false;
+	else
+	{
+		if (IsConcavePt(ciEdgeIndex))
+			return false;
+		else
+			return true;
+	}
+}
+
+bool CAdjustPlateMCS::IsConcavePt(BYTE ciEdgeIndex)
+{
+	int i = 0, n = m_pPlateInfo->xPlate.vertex_list.GetNodeNum();
+	DYN_ARRAY<GEPOINT> vertex_arr(n);
+	PROFILE_VER *pCurVertex = NULL, *pPreVertex = m_pPlateInfo->xPlate.vertex_list.GetTail();
+	for (PROFILE_VER *pVertex = m_pPlateInfo->xPlate.vertex_list.GetFirst(); pVertex;
+		pVertex = m_pPlateInfo->xPlate.vertex_list.GetNext(), i++)
+	{
+		vertex_arr[i] = pVertex->vertex;
+	}
 	f3dPoint ptPre = vertex_arr[(ciEdgeIndex - 1 + n) % n];
 	f3dPoint ptCur = vertex_arr[ciEdgeIndex];
 	f3dPoint ptNex = vertex_arr[(ciEdgeIndex + 1) % n];
 	double result = DistOf2dPtLine(ptNex, ptPre, ptCur);
 	if (result <= 0)	// 后点在线右侧，有凹角出现,或者三点共线
+		return true;
+	else
 		return false;
-	return true;
 }

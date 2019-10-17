@@ -7,7 +7,8 @@ class CAdjustPlateMCS
 	ARRAY_LIST<AcDbObjectId> m_xEntIdList;
 	f2dPoint m_origin;
 	f2dRect m_curRect;
-	bool IsValidVertex(BYTE ciEdgeIndex);
+	bool IsValidDockVertex(BYTE ciEdgeIndex);
+	bool IsConcavePt(BYTE ciEdgeIndex);
 	bool Rotation();
 public:
 	CAdjustPlateMCS(CPlateProcessInfo *pPlate);
