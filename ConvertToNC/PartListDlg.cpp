@@ -454,7 +454,7 @@ void CPartListDlg::OnBnClickedChkEditMk()
 void CPartListDlg::PreSubclassWindow()
 {
 #ifdef __SUPPORT_DOCK_UI_
-	//ModifyStyle(DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION, DS_SETFONT | WS_CHILD);
+	ModifyStyle(DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION, DS_SETFONT | WS_CHILD);
 	CAcUiDialog::PreSubclassWindow();
 #else
 	//ModifyStyle(WS_CHILD, DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU);

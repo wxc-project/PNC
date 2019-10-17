@@ -43,11 +43,34 @@ struct ACAD_LINEID{
 		AcDbEntity *pEnt=NULL;
 		acdbOpenAcDbEntity(pEnt,m_lineId,AcDb::kForRead);
 		CAcDbObjLife life(pEnt);
-		if(pEnt==NULL||!pEnt->isKindOf(AcDbLine::desc()))
+		if(pEnt==NULL)
 			return FALSE;
-		AcDbLine *pLine=(AcDbLine*)pEnt;
-		m_ptStart.Set(pLine->startPoint().x,pLine->startPoint().y,0);
-		m_ptEnd.Set(pLine->endPoint().x,pLine->endPoint().y,0);
+		if (pEnt->isKindOf(AcDbLine::desc()))
+		{
+			AcDbLine *pLine = (AcDbLine*)pEnt;
+			m_ptStart.Set(pLine->startPoint().x, pLine->startPoint().y, 0);
+			m_ptEnd.Set(pLine->endPoint().x, pLine->endPoint().y, 0);
+		}
+		else if (pEnt->isKindOf(AcDbArc::desc()))
+		{
+			AcDbArc* pArc = (AcDbArc*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pArc->getStartPoint(startPt);
+			pArc->getEndPoint(endPt);
+			m_ptStart.Set(startPt.x, startPt.y, 0);
+			m_ptEnd.Set(endPt.x, endPt.y, 0);
+		}
+		else if (pEnt->isKindOf(AcDbEllipse::desc()))
+		{
+			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pEllipse->getStartPoint(startPt);
+			pEllipse->getEndPoint(endPt);
+			m_ptStart.Set(startPt.x, startPt.y, 0);
+			m_ptEnd.Set(endPt.x, endPt.y, 0);
+		}
+		else
+			return FALSE;
 		if(m_bReverse)
 		{
 			GEPOINT temp=m_ptStart;

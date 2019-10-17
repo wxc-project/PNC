@@ -1,6 +1,7 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
+#include "Version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -50,8 +51,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,2,0,69
+ FILEVERSION FILE_VER_MAIN, FILE_VER_MAIN2, FILE_VER_SUB, FILE_VER_SUB2
+ PRODUCTVERSION PRODUCT_VER_MAIN, PRODUCT_VER_MAIN2, PRODUCT_VER_SUB, PRODUCT_VER_SUB2
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -68,12 +69,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "北京信狐天诚软件科技有限公司"
             VALUE "FileDescription", "ConvertToNC ObjectARX application"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", RELEASE_FILE_VER
             VALUE "InternalName", "PNC"
             VALUE "LegalCopyright", "版权所有 (C) 2015-2019"
             VALUE "OriginalFilename", "PNC.arx"
             VALUE "ProductName", "ConvertToNC ObjectARX Application"
-            VALUE "ProductVersion", "1.2.0.69"
+            VALUE "ProductVersion", RELEASE_PRODUCT_VER
         END
     END
     BLOCK "VarFileInfo"

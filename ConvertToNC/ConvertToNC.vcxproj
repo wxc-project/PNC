@@ -17,12 +17,20 @@
       <Configuration>Debug2010</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug7|Win32">
-      <Configuration>Debug7</Configuration>
+    <ProjectConfiguration Include="Debug05|Win32">
+      <Configuration>Debug05</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug7|x64">
-      <Configuration>Debug7</Configuration>
+    <ProjectConfiguration Include="Debug05|x64">
+      <Configuration>Debug05</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugDll05|Win32">
+      <Configuration>DebugDll05</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="DebugDll05|x64">
+      <Configuration>DebugDll05</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
@@ -113,7 +121,7 @@
     <UseOfAtl>false</UseOfAtl>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
@@ -121,6 +129,15 @@
     <UseOfAtl>false</UseOfAtl>
     <CLRSupport>false</CLRSupport>
     <PlatformToolset>v141</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+    <PlatformToolset>v70</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
@@ -228,7 +245,14 @@
     <UseOfAtl>false</UseOfAtl>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'" Label="Configuration">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -311,7 +335,10 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'" Label="PropertySheets">
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'" Label="PropertySheets">
@@ -353,9 +380,16 @@
     <TargetName>PNC</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'">
     <IntDir>Debug7\</IntDir>
     <OutDir>Debug7\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetExt>.arx</TargetExt>
+    <TargetName>PNC</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">
+    <IntDir>DebugDll05\</IntDir>
+    <OutDir>..\bin\DebugDll05\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC</TargetName>
@@ -444,7 +478,12 @@
     <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|x64'">
+    <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
+    <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|x64'">
     <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
     <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
     <LinkIncremental>true</LinkIncremental>
@@ -544,7 +583,7 @@
       <PreprocessorDefinitions>__TMA_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'">
     <ClCompile>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
@@ -561,7 +600,7 @@
       <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;__CAD_CONTEXT_;WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>.\Debug7/PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug7/</AssemblerListingLocation>
       <ObjectFileName>.\Debug7/</ObjectFileName>
@@ -577,6 +616,47 @@
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>..\..\ObjectARX 2005\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;_DEBUG;__PNC_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
+      <MinimalRebuild>true</MinimalRebuild>
+      <StringPooling>false</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;__CAD_CONTEXT_;WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd-dll;..\..\XhLmd-dll\AES;..\..\XhLmd-dll\DES;..\..\XhLmd-dll\RSA;..\..\XhLmd-dll\DogDrvs;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd-dll\XhLmd</AdditionalIncludeDirectories>
+      <PrecompiledHeaderOutputFile>$(OutDir)PNC.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)PNC.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <ProgramDatabaseFile>$(OutDir)PNC.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;D:\ObjectARX 2005\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;PartLib.lib;XhLicAgent2.lib;XhLdsLm2.lib;acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
     </Link>
     <ResourceCompile>
@@ -602,7 +682,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;_ARX_2007;__CAD_CONTEXT_;WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>.\Debug7/PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug7/</AssemblerListingLocation>
       <ObjectFileName>.\Debug7/</ObjectFileName>
@@ -645,7 +725,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -692,7 +772,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -739,7 +819,7 @@
       <PreprocessorDefinitions>_ARX_2010;__CAD_CONTEXT_;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2010\inc-win32;D:\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2010\inc-win32;D:\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -785,7 +865,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;_ARX_2010;__CAD_CONTEXT_;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2010\inc-win32;D:\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2010\inc-win32;D:\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -831,7 +911,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;_MAPTMA_ZRX;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ZRXSDK2019\arxport;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ZRXSDK2019\arxport;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -877,7 +957,7 @@
       <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;__AFTER_ARX_2007;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2010\inc-win32;..\..\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2010\inc-win32;..\..\ObjectARX 2010\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
     </ClCompile>
     <Link>
@@ -920,7 +1000,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <DisableSpecificWarnings>4819;</DisableSpecificWarnings>
     </ClCompile>
@@ -967,7 +1047,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;__CAD_CONTEXT_;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <DisableSpecificWarnings>4819;</DisableSpecificWarnings>
     </ClCompile>
@@ -1014,7 +1094,7 @@
       <PreprocessorDefinitions>__CAD_CONTEXT_;_ARX_2007;WIN32;_WINDOWS;CONVERTTONC_MODULE;DEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <InlineFunctionExpansion>Default</InlineFunctionExpansion>
       <DisableSpecificWarnings>4819;</DisableSpecificWarnings>
     </ClCompile>
@@ -1071,7 +1151,38 @@
       <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug05|x64'">
+    <ClCompile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WarningLevel>Level1</WarningLevel>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <StringPooling>false</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>_WIN64;_WINDOWS;CONVERTTONC_MODULE;_AFXEXT;_ACRXAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>c:\Program Files\AutoCAD 2011\;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(outdir)/XHConvertToNC.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)/ConvertToNC.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)/ConvertToNC.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ModuleDefinitionFile>PNC.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll05|x64'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <WarningLevel>Level1</WarningLevel>
@@ -1431,11 +1542,21 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp" />
-    <ClCompile Include="..\..\XhCore\EntList\f_ent_list.cpp" />
-    <ClCompile Include="..\..\XhCore\Ent\f_ent.cpp" />
-    <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp" />
-    <ClCompile Include="..\..\XhCore\PartLib\PartLib.cpp" />
+    <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\EntList\f_ent_list.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\Ent\f_ent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhCore\PartLib\PartLib.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\AcUiDialogPanel.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\Buffer.cpp" />
@@ -1449,9 +1570,13 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\ListViewComparer.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\LogBinaryFile.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\LogFile.cpp" />
-    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\MsgBox.cpp" />
-    <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\PathManager.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\SortFunc.cpp" />
@@ -1469,27 +1594,67 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\DxfFile.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\LicFuncDef.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp" />
-    <ClCompile Include="..\..\ToolKits\TowerCad\ProductFeature.cpp" />
+    <ClCompile Include="..\..\ToolKits\TowerCad\ProductFeature.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\SegI.cpp" />
-    <ClCompile Include="..\..\XhLmd\AES\aes.cpp" />
-    <ClCompile Include="..\..\XhLmd\DES\DES.cpp" />
-    <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP" />
-    <ClCompile Include="..\..\XhLmd\RSA\BigInt.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLdsLm\ClassDef.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLdsLm\CryptLdsCode.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLdsLm\ToolKits.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLdsLm\XhLdsLm.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\AgentCoreClassDef.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\Computer.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAgent.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAPI.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\LegacyDogDataCryptKey.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\LicBuffer.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\SafeDecryptBuffer.cpp" />
-    <ClCompile Include="..\..\XhLmd\XhLicAgent\XhLicAgent.cpp" />
+    <ClCompile Include="..\..\XhLmd\AES\aes.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\DES\DES.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\RSA\BigInt.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\ClassDef.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\CryptLdsCode.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\ToolKits.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLdsLm\XhLdsLm.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\AgentCoreClassDef.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\Computer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAgent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAPI.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\LegacyDogDataCryptKey.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\LicBuffer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\SafeDecryptBuffer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="..\..\XhLmd\XhLicAgent\XhLicAgent.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="AddBoltBlockDlg.cpp" />
     <ClCompile Include="AdjustPlateMCS.cpp" />
     <ClCompile Include="BomModel.cpp" />
@@ -1513,7 +1678,8 @@
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug7|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|Win32'">Create</PrecompiledHeader>
@@ -1525,7 +1691,8 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug2007|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug7|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug05|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|x64'">Create</PrecompiledHeader>
@@ -1541,7 +1708,9 @@
     <ClCompile Include="XeroExtractor.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h" />
+    <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\AcUiDialogPanel.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\ArrayList.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.h" />
@@ -1569,7 +1738,9 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\HiberarchyId.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\ListViewComparer.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\LogFile.h" />
-    <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\PropertyList.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SortFunc.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SortHeaderCtrl.h" />
@@ -1580,24 +1751,58 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\DxfFile.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\LicFuncDef.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h" />
-    <ClInclude Include="..\..\ToolKits\TowerCad\ProductFeature.h" />
+    <ClInclude Include="..\..\ToolKits\TowerCad\ProductFeature.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\SegI.h" />
-    <ClInclude Include="..\..\XhLmd\AES\aes.h" />
-    <ClInclude Include="..\..\XhLmd\DES\DES.h" />
-    <ClInclude Include="..\..\XhLmd\DogDrvs\GSMH.H" />
-    <ClInclude Include="..\..\XhLmd\DogDrvs\hasp_api.h" />
-    <ClInclude Include="..\..\XhLmd\DogDrvs\NetDogAPI.h" />
-    <ClInclude Include="..\..\XhLmd\RSA\BigInt.h" />
-    <ClInclude Include="..\..\XhLmd\XhLdsLm\ToolKits.h" />
-    <ClInclude Include="..\..\XhLmd\XhLdsLm\XhLdsLm.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Computer.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Ident.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAgent.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAPI.h" />
-    <ClInclude Include="..\..\XhLmd\XhLicAgent\LicBuffer.h" />
+    <ClInclude Include="..\..\XhLmd\AES\aes.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\DES\DES.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\DogDrvs\GSMH.H">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\DogDrvs\hasp_api.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\DogDrvs\NetDogAPI.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\RSA\BigInt.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLdsLm\ToolKits.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLdsLm\XhLdsLm.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Computer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Ident.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAgent.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAPI.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\XhLicAgent\LicBuffer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
     <ClInclude Include="AddBoltBlockDlg.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
@@ -1644,8 +1849,12 @@
     <None Include="res\Right.ico" />
   </ItemGroup>
   <ItemGroup>
-    <Object Include="..\..\XhLmd\DogDrvs\MHWIN32C.OBJ" />
-    <Object Include="..\..\XhLmd\DogDrvs\UNHWIN32C.OBJ" />
+    <Object Include="..\..\XhLmd\DogDrvs\MHWIN32C.OBJ">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </Object>
+    <Object Include="..\..\XhLmd\DogDrvs\UNHWIN32C.OBJ">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+    </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

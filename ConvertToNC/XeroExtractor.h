@@ -84,6 +84,7 @@ public:
 //////////////////////////////////////////////////////////////////////////
 struct BOLT_BLOCK
 {
+	CXhChar50 sGroupName;	//·Ö×éÃû³Æ
 	CXhChar16 sBlockName;
 	short diameter;
 	double hole_d;
