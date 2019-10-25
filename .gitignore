@@ -275,3 +275,10 @@ paket-files/
 # Python Tools for Visual Studio (PTVS)
 __pycache__/
 *.pyc
+/ConvertToNC/RCc03044
+/ConvertToNC/RCb12832
+/ConvertToNC/RCa12832
+/ConvertToNC/RCb03044
+/ConvertToNC/RCa03044
+/ConvertToNC/RCa02940
+/ConvertToNC/RCa02092

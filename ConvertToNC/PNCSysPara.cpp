@@ -425,57 +425,62 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 void PNCSysSetImportDefault()
 {
 	FILE *fp;
-	char file_name[MAX_PATH],line_txt[MAX_PATH],key_word[100];
+	char file_name[MAX_PATH], line_txt[MAX_PATH], key_word[100];
+#ifdef __PNC_
 	GetAppPath(file_name);
-	strcat(file_name,"rule.set");
-	if((fp=fopen(file_name,"rt"))==NULL)
+#else
+	strcpy(file_name, "D:\\");
+#endif
+	strcat(file_name, "rule.set");
+	if ((fp = fopen(file_name, "rt")) == NULL)
 		return;
 	int nTemp = 0;
 	g_pncSysPara.hashBoltDList.Empty();
-	while(!feof(fp))
+	g_pncSysPara.m_recogSchemaList.Empty();
+	while (!feof(fp))
 	{
-		if(fgets(line_txt,MAX_PATH,fp)==NULL)
+		if (fgets(line_txt, MAX_PATH, fp) == NULL)
 			break;
 		char sText[MAX_PATH];
-		strcpy(sText,line_txt);
+		strcpy(sText, line_txt);
 		CString sLine(line_txt);
-		sLine.Replace('=',' ');
-		sprintf(line_txt,"%s",sLine);
-		char *skey=strtok((char*)sText,"=,;");
-		strncpy(key_word,skey,100);
+		sLine.Replace('=', ' ');
+		sprintf(line_txt, "%s", sLine);
+		char *skey = strtok((char*)sText, "=,;");
+		strncpy(key_word, skey, 100);
 		//常规设置
-		if(_stricmp(key_word,"DimStyle")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iDimStyle);
-		else if(_stricmp(key_word,"PnKey")==0)
+		if (_stricmp(key_word, "DimStyle") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iDimStyle);
+		else if (_stricmp(key_word, "PnKey") == 0)
 		{
-			skey=strtok(NULL,"=,;");
-			sprintf(g_pncSysPara.m_sPnKey,"%s",skey);
-			g_pncSysPara.m_sPnKey.Replace(" ","");
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sPnKey, "%s", skey);
+			g_pncSysPara.m_sPnKey.Replace(" ", "");
 		}
-		else if(_stricmp(key_word,"ThickKey")==0)
-		{	
-			skey=strtok(NULL,"=,;");
-			sprintf(g_pncSysPara.m_sThickKey,"%s",skey);
-			g_pncSysPara.m_sThickKey.Replace(" ","");
-		}
-		else if(_stricmp(key_word,"MatKey")==0)
+		else if (_stricmp(key_word, "ThickKey") == 0)
 		{
-			skey=strtok(NULL,"=,;");
-			sprintf(g_pncSysPara.m_sMatKey,"%s",skey);
-			g_pncSysPara.m_sMatKey.Replace(" ","");
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sThickKey, "%s", skey);
+			g_pncSysPara.m_sThickKey.Replace(" ", "");
 		}
-		else if(_stricmp(key_word,"PnNumKey")==0)
+		else if (_stricmp(key_word, "MatKey") == 0)
 		{
-			skey=strtok(NULL,"=,;");
-			sprintf(g_pncSysPara.m_sPnNumKey,"%s",skey);
-			g_pncSysPara.m_sPnNumKey.Replace(" ","");
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sMatKey, "%s", skey);
+			g_pncSysPara.m_sMatKey.Replace(" ", "");
 		}
-		else if(_stricmp(key_word,"MKPos")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_bMKPos);
-		else if(_stricmp(key_word,"MapScale")==0)
-			sscanf(line_txt,"%s%f",key_word,&g_pncSysPara.m_fMapScale);
-		else if(_stricmp(key_word,"bIncFilterLayer")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iLayerMode);
+		else if (_stricmp(key_word, "PnNumKey") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sPnNumKey, "%s", skey);
+			g_pncSysPara.m_sPnNumKey.Replace(" ", "");
+		}
+		else if (_stricmp(key_word, "MKPos") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_bMKPos);
+		else if (_stricmp(key_word, "MapScale") == 0)
+			sscanf(line_txt, "%s%f", key_word, &g_pncSysPara.m_fMapScale);
+		else if (_stricmp(key_word, "bIncFilterLayer") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iLayerMode);
 		else if (_stricmp(key_word, "RecogMode") == 0)
 		{	//使用%d读取BYTE型变量，一次更新4个字节影响其它变量取值
 			//可使用%hhu读取BYTE变量但测试无效，先读取到临时变量中，再赋值到相应变量中 wht 19-10-05
@@ -500,102 +505,155 @@ void PNCSysSetImportDefault()
 			g_pncSysPara.m_ciProfileColorIndex = nTemp;
 			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciProfileColorIndex);
 		}
-		else if(_stricmp(key_word, "ProfileLineType") == 0)
-			sscanf(line_txt,"%s%s",key_word,&g_pncSysPara.m_sProfileLineType);
-		else if(_stricmp(key_word,"BoltDKey")==0)
+		else if (_stricmp(key_word, "ProfileLineType") == 0)
+			sscanf(line_txt, "%s%s", key_word, &g_pncSysPara.m_sProfileLineType);
+		else if (_stricmp(key_word, "BoltDKey") == 0)
 		{
-			skey=strtok(NULL,"=,;");
-			if(strlen(skey)>0)
+			skey = strtok(NULL, "=,;");
+			if (strlen(skey) > 0)
 			{
-				BOLT_BLOCK *pBoltD=g_pncSysPara.hashBoltDList.Add(skey);
-				fgets(line_txt,MAX_PATH,fp);
-				skey=strtok(line_txt,";");
-				pBoltD->sBlockName.Printf("%s",skey);
-				skey=strtok(NULL,";");
-				pBoltD->diameter=atoi(skey);
-				skey=strtok(NULL,";");
-				if(skey!=NULL)
-					pBoltD->hole_d=atof(skey);
+				BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.Add(skey);
+				fgets(line_txt, MAX_PATH, fp);
+				skey = strtok(line_txt, ";");
+				pBoltD->sGroupName.Printf("%s", skey);
+				skey = strtok(NULL, ";");
+				pBoltD->sBlockName.Printf("%s", skey);
+				skey = strtok(NULL, ";");
+				pBoltD->diameter = atoi(skey);
+				skey = strtok(NULL, ";");
+				if (skey != NULL)
+					pBoltD->hole_d = atof(skey);
 			}
 		}
-		else if(_stricmp(key_word,"bIncDeformed")==0)
+		else if (_stricmp(key_word, "m_iDimStyle") == 0)
+		{
+			skey = strtok(NULL, ",;");
+			if (strlen(skey) > 0)
+			{
+				RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
+				pSchema->m_iDimStyle = atoi(skey);
+				skey = strtok(line_txt, ";");
+				skey = strtok(NULL, ";");
+				pSchema->m_sSchemaName = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_sPnKey = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_sThickKey = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_sMatKey = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_sPnNumKey = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_sFrontBendKey = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_sReverseBendKey = skey;
+				skey = strtok(NULL, ";");
+				pSchema->m_bEditable = atoi(skey);
+				skey = strtok(NULL, ";");
+				pSchema->m_bEnable = atoi(skey);
+			}
+		}
+		else if (_stricmp(key_word, "bIncDeformed") == 0)
 		{
 			CXhChar16 sText;
-			sscanf(line_txt,"%s%s",key_word,(char*)sText);
-			if(sText.Equal("是"))
-				g_pncSysPara.m_bIncDeformed=true;
+			sscanf(line_txt, "%s%s", key_word, (char*)sText);
+			if (sText.Equal("是"))
+				g_pncSysPara.m_bIncDeformed = true;
 			else
-				g_pncSysPara.m_bIncDeformed=false;
+				g_pncSysPara.m_bIncDeformed = false;
 		}
-		else if(_stricmp(key_word,"PPIMode")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iPPiMode);
-		else if(_stricmp(key_word,"AutoLayout")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_bAutoLayout);
-		else if(_stricmp(key_word,"MapLength")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_nMapLength);
-		else if(_stricmp(key_word,"MapWidth")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_nMapWidth);
-		else if(_stricmp(key_word,"MinDistance")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_nMinDistance);
-		else if(_stricmp(key_word,"AxisXCalType")==0)
-			sscanf(line_txt,"%s%d",key_word,&g_pncSysPara.m_iAxisXCalType);
+		else if (_stricmp(key_word, "PPIMode") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iPPiMode);
+		else if (_stricmp(key_word, "AutoLayout") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_bAutoLayout);
+		else if (_stricmp(key_word, "MapLength") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMapLength);
+		else if (_stricmp(key_word, "MapWidth") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMapWidth);
+		else if (_stricmp(key_word, "MinDistance") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMinDistance);
+		else if (_stricmp(key_word, "AxisXCalType") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iAxisXCalType);
 		else if (_stricmp(key_word, "m_nMkRectWidth") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectWidth);
 		else if (_stricmp(key_word, "m_nMkRectLen") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectLen);
+#ifdef __PNC_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::BOARD_HEIGHT);
 		else if (_stricmp(key_word, "CDrawDamBoard::m_bDrawAllBamBoard") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::m_bDrawAllBamBoard);
+#endif
 	}
 	fclose(fp);
 }
 void PNCSysSetExportDefault()
 {
 	char file_name[MAX_PATH];
+#ifdef __PNC_
 	GetAppPath(file_name);
-	strcat(file_name,"rule.set");
-	FILE *fp=fopen(file_name,"wt");
-	if(fp==NULL)
+#else
+	strcpy(file_name, "D:\\");
+#endif
+	strcat(file_name, "rule.set");
+	FILE *fp = fopen(file_name, "wt");
+	if (fp == NULL)
 	{
 		AfxMessageBox("打不开指定的配置文件!");
 		return;
 	}
-	fprintf(fp,"基本设置\n");
-	fprintf(fp,"bIncDeformed=%s ;考虑火曲变形量\n",g_pncSysPara.m_bIncDeformed?"是":"否");
-	fprintf(fp,"PPIMode=%d ;PPI文件模式\n",g_pncSysPara.m_iPPiMode);
-	fprintf(fp,"AutoLayout=%d ;自动排版\n",g_pncSysPara.m_bAutoLayout);
-	fprintf(fp,"MapWidth=%d ;图纸宽度\n",g_pncSysPara.m_nMapWidth);
-	fprintf(fp,"MapLength=%d ;图纸长度\n",g_pncSysPara.m_nMapLength);
-	fprintf(fp,"MinDistance=%d ;最小间距\n",g_pncSysPara.m_nMinDistance);
+	fprintf(fp, "基本设置\n");
+	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
+	fprintf(fp, "PPIMode=%d ;PPI文件模式\n", g_pncSysPara.m_iPPiMode);
+	fprintf(fp, "AutoLayout=%d ;自动排版\n", g_pncSysPara.m_bAutoLayout);
+	fprintf(fp, "MapWidth=%d ;图纸宽度\n", g_pncSysPara.m_nMapWidth);
+	fprintf(fp, "MapLength=%d ;图纸长度\n", g_pncSysPara.m_nMapLength);
+	fprintf(fp, "MinDistance=%d ;最小间距\n", g_pncSysPara.m_nMinDistance);
 	fprintf(fp, "m_nMkRectWidth=%d ;字盒宽度\n", g_pncSysPara.m_nMkRectWidth);
 	fprintf(fp, "m_nMkRectLen=%d ;字盒长度\n", g_pncSysPara.m_nMkRectLen);
+#ifdef __PNC_
 	fprintf(fp, "CDrawDamBoard::BOARD_HEIGHT=%d ;档板高度\n", CDrawDamBoard::BOARD_HEIGHT);
 	fprintf(fp, "CDrawDamBoard::m_bDrawAllBamBoard=%d ;绘制所有档板\n", CDrawDamBoard::m_bDrawAllBamBoard);
-	fprintf(fp,"图层设置\n");
-	fprintf(fp,"bIncFilterLayer=%d ;启用过滤默认图层\n",g_pncSysPara.m_iLayerMode);
-	fprintf(fp,"RecogMode=%d ;识别模式\n",g_pncSysPara.m_ciRecogMode);
+#endif
+	fprintf(fp, "图层设置\n");
+	fprintf(fp, "bIncFilterLayer=%d ;启用过滤默认图层\n", g_pncSysPara.m_iLayerMode);
+	fprintf(fp, "RecogMode=%d ;识别模式\n", g_pncSysPara.m_ciRecogMode);
 	fprintf(fp, "BoltRecogMode=%d ;螺栓识别模式\n", g_pncSysPara.m_ciBoltRecogMode);
-	fprintf(fp,"ProfileColorIndex=%d ;轮廓边颜色\n",g_pncSysPara.m_ciProfileColorIndex);
-	fprintf(fp,"BendLineColorIndex=%d ;制弯线颜色\n",g_pncSysPara.m_ciBendLineColorIndex);
-	fprintf(fp,"ProfileLineType=%s ;轮廓边线型\n", (char*)g_pncSysPara.m_sProfileLineType);
-	fprintf(fp,"文字识别设置\n");
-	fprintf(fp,"DimStyle=%d ;文字标注类型\n",g_pncSysPara.m_iDimStyle);
-	fprintf(fp,"PnKey=%s ;件号标识符\n",(char*)g_pncSysPara.m_sPnKey);
-	fprintf(fp,"ThickKey=%s ;厚度标识符\n",(char*)g_pncSysPara.m_sThickKey);
-	fprintf(fp,"MatKey=%s ;材质标识符\n",(char*)g_pncSysPara.m_sMatKey);
-	fprintf(fp,"PnNumKey=%s ;件数标识符\n",(char*)g_pncSysPara.m_sPnNumKey);
-	fprintf(fp,"MKPos=%d ;提取钢印位置\n",(char*)g_pncSysPara.m_bMKPos);
-	fprintf(fp,"AxisXCalType=%d ;X轴计算方式\n",(char*)g_pncSysPara.m_iAxisXCalType);
-	fprintf(fp,"螺栓识别设置\n");
-	for(BOLT_BLOCK *pBoltD=g_pncSysPara.hashBoltDList.GetFirst();pBoltD;pBoltD=g_pncSysPara.hashBoltDList.GetNext())
+	fprintf(fp, "ProfileColorIndex=%d ;轮廓边颜色\n", g_pncSysPara.m_ciProfileColorIndex);
+	fprintf(fp, "BendLineColorIndex=%d ;制弯线颜色\n", g_pncSysPara.m_ciBendLineColorIndex);
+	fprintf(fp, "ProfileLineType=%s ;轮廓边线型\n", (char*)g_pncSysPara.m_sProfileLineType);
+	fprintf(fp, "文字识别设置\n");
+	fprintf(fp, "DimStyle=%d ;文字标注类型\n", g_pncSysPara.m_iDimStyle);
+	fprintf(fp, "PnKey=%s ;件号标识符\n", (char*)g_pncSysPara.m_sPnKey);
+	fprintf(fp, "ThickKey=%s ;厚度标识符\n", (char*)g_pncSysPara.m_sThickKey);
+	fprintf(fp, "MatKey=%s ;材质标识符\n", (char*)g_pncSysPara.m_sMatKey);
+	fprintf(fp, "PnNumKey=%s ;件数标识符\n", (char*)g_pncSysPara.m_sPnNumKey);
+	fprintf(fp, "MKPos=%d ;提取钢印位置\n", (char*)g_pncSysPara.m_bMKPos);
+	fprintf(fp, "AxisXCalType=%d ;X轴计算方式\n", (char*)g_pncSysPara.m_iAxisXCalType);
+	fprintf(fp, "螺栓识别设置\n");
+	for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
 	{
-		fprintf(fp,"BoltDKey=%s;图块名称;螺栓直径\n",g_pncSysPara.hashBoltDList.GetCursorKey());
-		fprintf(fp,"%s;",(char*)pBoltD->sBlockName);
-		fprintf(fp,"%d;",pBoltD->diameter);
-		fprintf(fp,"%.1f\n",pBoltD->hole_d);
+		fprintf(fp, "BoltDKey=%s;图块名称;螺栓直径\n", g_pncSysPara.hashBoltDList.GetCursorKey());
+		fprintf(fp, "%s;", (char*)pBoltD->sGroupName);
+		fprintf(fp, "%s;", (char*)pBoltD->sBlockName);
+		fprintf(fp, "%d;", pBoltD->diameter);
+		fprintf(fp, "%.1f\n", pBoltD->hole_d);
 	}
-	fprintf(fp,"比例识别\n");
-	fprintf(fp,"MapScale=%.f ;缩放比例\n",g_pncSysPara.m_fMapScale);
+	fprintf(fp, "文字识别设置\n");
+	for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
+	{
+		fprintf(fp, "m_iDimStyle=%d;", pBoltD->m_iDimStyle);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sSchemaName);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sPnKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sThickKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sMatKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sPnNumKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sFrontBendKey);
+		fprintf(fp, "%s;", (char*)pBoltD->m_sReverseBendKey);
+		fprintf(fp, "%d;", pBoltD->m_bEditable ? 1 : 0);
+		fprintf(fp, "%d\n", pBoltD->m_bEnable ? 1 : 0);
+	}
+	fprintf(fp, "比例识别\n");
+	fprintf(fp, "MapScale=%.f ;缩放比例\n", g_pncSysPara.m_fMapScale);
 	fclose(fp);
 }
