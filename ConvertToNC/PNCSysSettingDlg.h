@@ -28,6 +28,8 @@ protected:
 	void OnPNCSysDel();
 	// DDX/DDV Ö§³Ö
 	void OnPNCSysAdd();
+	void OnPNCSysGroupDel();
+	void OnPNCSysGroupAdd();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnClose();
 	afx_msg void OnOK();

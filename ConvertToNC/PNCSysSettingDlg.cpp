@@ -569,6 +569,25 @@ void CPNCSysSettingDlg::OnPNCSysAdd()
 {
 	UpdateSave();
 }
+
+void CPNCSysSettingDlg::OnPNCSysGroupDel()
+{
+	OnPNCSysDel();
+}
+void CPNCSysSettingDlg::OnPNCSysGroupAdd()
+{
+	CListCtrlItemInfo* lpInfo = new CListCtrlItemInfo();
+	lpInfo->SetSubItemText(0, _T(""));
+	CSuperGridCtrl::CTreeItem* pParentItem = m_listCtrlSysSetting.InsertRootItem(lpInfo, TRUE);
+	hashGroupByItemName.SetValue(" ", pParentItem);
+	pParentItem->m_bHideChildren = FALSE;
+	CListCtrlItemInfo* lpInfoItem = new CListCtrlItemInfo();
+	lpInfoItem->SetSubItemText(1, _T(""));
+	lpInfoItem->SetSubItemText(2, _T(""));
+	lpInfoItem->SetSubItemText(3, _T(""));
+	lpInfoItem->SetCheck(TRUE);
+	CSuperGridCtrl::CTreeItem* pItem = m_listCtrlSysSetting.InsertItem(pParentItem, lpInfoItem, -1, true);
+}
 static BOOL FireLButtonDblclk(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem* pItem, int iSubItem)
 {
 
@@ -726,6 +745,8 @@ BEGIN_MESSAGE_MAP(CPNCSysSettingDlg, CDialog)
 	ON_BN_CLICKED(ID_BTN_DEFAULT, &CPNCSysSettingDlg::OnBnClickedBtnDefault)
 	ON_COMMAND(ID_MENU_PNCSYS_DEL, &CPNCSysSettingDlg::OnPNCSysDel)
 	ON_COMMAND(ID_MENU_PNCSYS_ADD, &CPNCSysSettingDlg::OnPNCSysAdd)
+	ON_COMMAND(ID_MENU_BOLT_DEL, &CPNCSysSettingDlg::OnPNCSysGroupDel)
+	ON_COMMAND(ID_MENU_BOLT_ADD, &CPNCSysSettingDlg::OnPNCSysGroupAdd)
 END_MESSAGE_MAP()
 static BOOL FireContextMenu(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem* pSelItem, CPoint point)
 {
@@ -742,7 +763,17 @@ static BOOL FireContextMenu(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 	HDHITTESTINFO info = { 0 };
 	info.pt = point;
 	//pHeadCtrl->HitTest(&info);
-
+	if (iCurSel == 2)
+	{
+		int i = pListCtrl->GetSelectionMark();//获得选 中行的行标
+		hashGroupByItemName;
+		CString boltKey = pListCtrl->GetItemText(i, 0);
+		if (!boltKey.IsEmpty() || !boltKey.GetLength() == 0)
+		{
+			pMenu->AppendMenu(MF_STRING, ID_MENU_BOLT_ADD, "添加分组");
+			pMenu->AppendMenu(MF_STRING, ID_MENU_BOLT_DEL, "删除分组");
+		}
+	}
 	CPoint menu_pos = point;
 	pListCtrl->ClientToScreen(&menu_pos);
 	popMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, menu_pos.x, menu_pos.y, pCfgDlg);

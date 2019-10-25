@@ -89,7 +89,9 @@
 #define ID_PROJECT_PROPERTY             32775
 #define ID_IMPORT_BOM_FILE              32776
 #define ID_COMPARE_DATA                 32777
+#define ID_MENU_BOLT_ADD                32777
 #define ID_EXPORT_COMPARE_RESULT        32778
+#define ID_MENU_BOLT_DEL                32778
 #define ID_REFRESH_PART_NUM             32779
 #define ID_EXPORT_PROJECT               32780
 #define ID_REVISE_TEH_PLATE             32782
@@ -103,7 +105,7 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        125
-#define _APS_NEXT_COMMAND_VALUE         32774
+#define _APS_NEXT_COMMAND_VALUE         32779
 #define _APS_NEXT_CONTROL_VALUE         133
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

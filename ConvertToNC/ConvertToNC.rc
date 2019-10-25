@@ -303,6 +303,11 @@ BEGIN
         MENUITEM "添加",                          ID_MENU_PNCSYS_ADD
         MENUITEM "删除",                          ID_MENU_PNCSYS_DEL
     END
+    POPUP "螺栓分组设置"
+    BEGIN
+        MENUITEM "添加分组",                        ID_MENU_BOLT_ADD
+        MENUITEM "删除分组",                        ID_MENU_BOLT_DEL
+    END
 END
 
 
