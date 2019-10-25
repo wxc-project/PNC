@@ -483,7 +483,10 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat)
 	if(m_iDimStyle==0)
 		sValue.Replace(m_sPnKey,"| ");
 	CString str(sValue);
-	str.Replace(m_sMatKey," Q");
+	if (strstr(str, "Q") == NULL)	//材质标识中没有Q时才需要将关键字替换为Q wht 19-10-22
+		str.Replace(m_sMatKey, " Q");
+	else
+		str.Replace(m_sMatKey, " ");
 	sValue.Copy(str);
 	//for(char* sKey=strtok(sValue," \t\\P");sKey;sKey=strtok(NULL," \t\\P"))
 	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))

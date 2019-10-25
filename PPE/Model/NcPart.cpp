@@ -556,18 +556,27 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		}
 		if (dxf_mode == CNCPart::LASER_MODE)
 		{	//输出火曲线并用+、-标识正反曲 wht 19-09-26
+			BOOL bOutputBendLine = FALSE, bOutputBendType = FALSE;
+			if (GetSysParaFromReg("nc.LaserPara.m_bOutputBendLine", sValue))
+				bOutputBendLine = atoi(sValue);
+			if (GetSysParaFromReg("nc.LaserPara.m_bOutputBendType", sValue))
+				bOutputBendType = atoi(sValue);
 			for (int i = 0; i < tempPlate.m_cFaceN-1; i++)
 			{
 				if(huoquLine[i].startPt!=huoquLine[i].endPt)
 				{
-					file.NewLine(huoquLine[i].startPt, huoquLine[i].endPt, 1);	//设置火曲线为红色
-					//判断正反曲，并在火曲线附近标注 + -号
-					BYTE cBendType = bendTypeArr[i];
-					//暂未提取火曲角度，无法识别火曲类型 wht 19-10-04
-					/*if (cBendType == CProcessPlate::BEND_IN)
-						file.NewText("-",);
-					else if (cBendType == CProcessPlate::BEND_OUT)
-						file.NewText("+");*/
+					if(bOutputBendLine)
+						file.NewLine(huoquLine[i].startPt, huoquLine[i].endPt, 1);	//设置火曲线为红色
+					if (bOutputBendType)
+					{
+						//判断正反曲，并在火曲线附近标注 + -号
+						BYTE cBendType = bendTypeArr[i];
+						//暂未提取火曲角度，无法识别火曲类型 wht 19-10-04
+						/*if (cBendType == CProcessPlate::BEND_IN)
+							file.NewText("-",);
+						else if (cBendType == CProcessPlate::BEND_OUT)
+							file.NewText("+");*/
+					}
 				}
 			}
 			//激光加工模式下，显示用户指定的信息

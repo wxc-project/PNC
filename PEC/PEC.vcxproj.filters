@@ -34,9 +34,6 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\DrawingToolKits.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NcPlate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\SolidBody.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
@@ -103,6 +100,9 @@
     <ClCompile Include="..\..\XhCore-dll\XeroCad\Localize\LocalDrawing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\PPE\Model\NcPlate.cpp">
+      <Filter>Source Files\Model</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PEC.h">
@@ -139,9 +139,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\DXFDef.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NcPlate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\LicFuncDef.h">
@@ -219,6 +216,9 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\XerocadDrawing.h">
       <Filter>TowerCad</Filter>
     </ClInclude>
+    <ClInclude Include="..\PPE\Model\NcPlate.h">
+      <Filter>Source Files\Model</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="PEC.def" />
@@ -241,6 +241,9 @@
     </Filter>
     <Filter Include="ToolCode">
       <UniqueIdentifier>{e2b76ca0-b437-41ac-a2f0-55eb63c9b3e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Model">
+      <UniqueIdentifier>{2d05fd43-e5d1-4095-85a0-9590e53490d7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

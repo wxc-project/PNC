@@ -351,6 +351,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	DeleteAssisstPts();
 	CHashSet<CAD_ENTITY*> hashInvalidBoltCirPtrSet;
 	PreprocessorBoltEnt(hashInvalidBoltCirPtrSet);
+	//baseInfo应定义在For循环外，否则多行多次提取会导致之前的提取到的结果被冲掉 wht 19-10-22
+	BASIC_INFO baseInfo;
 	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
 	{
 		if (hashInvalidBoltCirPtrSet.GetValue((DWORD)pRelaObj))
@@ -360,7 +362,6 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			continue;
 		pEnt->close();
 		//提取基本信息
-		BASIC_INFO baseInfo;
 		if(plateInfoBlockRefId==NULL&&g_pncSysPara.RecogBasicInfo(pEnt,baseInfo))
 		{	//plateInfoBlockRefId有效时已从块中提取到了基本属性 wht 19-01-04
 			if(baseInfo.m_cMat>0)

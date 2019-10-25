@@ -320,6 +320,22 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	}
 	else if (CSysPara::GetPropID("nc.LaserPara.m_sThick") == pItem->m_idProp)
 		g_sysPara.nc.m_xLaserPara.m_sThick.Copy(valueStr);
+	else if (CSysPara::GetPropID("nc.LaserPara.m_bOutputBendLine") == pItem->m_idProp)
+	{
+		if (valueStr.Compare("是") == 0)
+			g_sysPara.nc.m_xLaserPara.m_bOutputBendLine = TRUE;
+		else
+			g_sysPara.nc.m_xLaserPara.m_bOutputBendLine = FALSE;
+		g_sysPara.WriteSysParaToReg("nc.LaserPara.m_bOutputBendLine");
+	}
+	else if (CSysPara::GetPropID("nc.LaserPara.m_bOutputBendType") == pItem->m_idProp)
+	{
+		if (valueStr.Compare("是") == 0)
+			g_sysPara.nc.m_xLaserPara.m_bOutputBendType = TRUE;
+		else
+			g_sysPara.nc.m_xLaserPara.m_bOutputBendType = FALSE;
+		g_sysPara.WriteSysParaToReg("nc.LaserPara.m_bOutputBendType");
+	}
 	else if(CSysPara::GetPropID("nc.m_fBaffleHigh")==pItem->m_idProp)
 	{	
 		g_sysPara.nc.m_fBaffleHigh=atof(valueStr);
@@ -872,11 +888,13 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	}
 	pGroupItem->m_bHideChildren = (!g_sysPara.IsValidNcFlag(CNCPart::PROCESS_MODE));
 	//激光复合机
-	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "LaserCutInfo");
+	pGroupItem = oper.InsertEditPropItem(pParentItem, "LaserCutInfo");
 	oper.InsertEditPropItem(pGroupItem, "nc.LaserPara.m_sThick");
 	oper.InsertButtonPropItem(pGroupItem, "nc.LaserPara.Config");
 	pPropItem=oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_dwFileFlag");
 	pPropItem->SetReadOnly(TRUE);
+	oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendLine");
+	//oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendType");
 	pGroupItem->m_bHideChildren = (!g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE));
 	//文件设置
 	pParentItem = oper.InsertPropItem(pRootItem, "FileSet");

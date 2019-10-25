@@ -59,8 +59,28 @@ GEPOINT CNCPlate::ProcessPoint(const double* coord,BYTE cCSMode/*=0*/)
  * nExtraInLen:	额外的引入长度
  * nExtraOutLen:额外的引出长度
  */
-
+#ifdef PEC_EXPORTS
+BOOL GetSysParaFromReg(const char* sEntry, char* sValue)
+{
+	char sStr[MAX_PATH];
+	char sSubKey[MAX_PATH] = "Software\\Xerofox\\PPE\\Settings";
+	DWORD dwDataType, dwLength = MAX_PATH;
+	HKEY hKey;
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, sSubKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS && hKey)
+	{
+		if (RegQueryValueEx(hKey, sEntry, NULL, &dwDataType, (BYTE*)&sStr[0], &dwLength) != ERROR_SUCCESS)
+			return FALSE;
+		RegCloseKey(hKey);
+	}
+	else
+		return FALSE;
+	if (sValue && strlen(sStr) > 0)
+		strcpy(sValue, sStr);
+	return TRUE;
+}
+#else
 BOOL GetSysParaFromReg(const char* sEntry, char* sValue);	//From NcPart.cpp
+#endif
 CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE cCSMode/*=0*/,bool bClockwise/*=true*/,
 				   int nInLineLen/*=-1*/,int nOutLineLen/*=-1*/,int nExtraInLen/*=0*/,int nExtraOutLen/*=0*/,int nEnlargedSpace/*=0*/)
 {
@@ -104,18 +124,6 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE c
 		fSpecialD = atof(sValue);
 	if (GetSysParaFromReg("NeedSH", sValue))
 		bNeedSH = atoi(sValue);
-	for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
-	{
-		double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
-		if (hole_d < fSpecialD)
-			continue;
-		CUT_PT *pCutPt = m_xCutHoleList.append();
-		pCutPt->cByte = CUT_PT::HOLE_CIR;
-		pCutPt->bClockwise = FALSE;
-		pCutPt->centerPt.Set(pBoltInfo->posX, pBoltInfo->posY);
-		pCutPt->radius = hole_d * 0.5;
-		pCutPt->vertex.Set(pCutPt->centerPt.x + pCutPt->radius, pCutPt->centerPt.y);
-	}
 	//3.初始化钢板切入点
 	DWORD nCount=pPlate->vertex_list.GetNodeNum();
 	int iCurVertex=pPlate->m_xCutPt.hEntId;
@@ -156,6 +164,22 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE c
 		curPt+=(next_norm*nEnlargedSpace);
 	m_cutPt.vertex=ProcessPoint(curPt-prevPt,cCSMode);
 	prevPt=curPt;
+	//在切入点之后，初始化切大孔 wht 19-10-22
+	for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
+	{
+		double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
+		if (hole_d < fSpecialD)
+			continue;
+		CUT_PT *pCutPt = m_xCutHoleList.append(); 
+		pCutPt->radius = hole_d * 0.5;
+		pCutPt->cByte = CUT_PT::HOLE_CIR;
+		pCutPt->bClockwise = FALSE;
+		f3dPoint cir_center(pBoltInfo->posX, pBoltInfo->posY);
+		curPt.Set(cir_center.x + pCutPt->radius, cir_center.y);
+		pCutPt->vertex = ProcessPoint(curPt - prevPt, cCSMode);
+		pCutPt->centerPt = ProcessPoint(cir_center - GEPOINT(prevPt), cCSMode);
+		prevPt = curPt;
+	}
 	//4.初始化轮廓点信息
 	iCurVertex=0;
 	int initIndex=pPlate->m_xCutPt.hEntId;

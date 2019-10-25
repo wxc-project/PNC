@@ -507,23 +507,39 @@ void CPPEDoc::OnCreatePlateNcData()
 	//生成钢板所需NC数据
 	CXhChar500 sFolder = model.GetFolderPath();
 	CNCPart::m_bDeformedProfile = TRUE;	//PNC提取的钢板默认已考虑火曲变形
+	int nValidBranch = 0;
 	if (g_sysPara.IsValidNcFlag(CNCPart::CUT_MODE))
 	{	//切割下料
 		if (g_sysPara.nc.m_bFlameCut)
 		{	//火焰切割，根据用户输入厚度范围过滤钢板
 			if (g_sysPara.nc.m_xFlamePara.IsValidFile(CNCPart::PLATE_TXT_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xFlamePara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_TXT_FILE);
+				nValidBranch++;
+			}
 			if (g_sysPara.nc.m_xFlamePara.IsValidFile(CNCPart::PLATE_CNC_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xFlamePara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_CNC_FILE);
+				nValidBranch++;
+			}
 			if (g_sysPara.nc.m_xFlamePara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xFlamePara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_DXF_FILE);
+				nValidBranch++;
+			}
 		}
 		if (g_sysPara.nc.m_bPlasmaCut)
 		{	//等离子切割，根据用户输入厚度范围过滤钢板
-			if(g_sysPara.nc.m_xPlasmaPara.IsValidFile(CNCPart::PLATE_NC_FILE))
+			if (g_sysPara.nc.m_xPlasmaPara.IsValidFile(CNCPart::PLATE_NC_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPlasmaPara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_NC_FILE);
+				nValidBranch++;
+			}
 			if (g_sysPara.nc.m_xPlasmaPara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPlasmaPara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_DXF_FILE);
+				nValidBranch++;
+			}
 		}
 	}
 	if (g_sysPara.IsValidNcFlag(CNCPart::PROCESS_MODE))
@@ -531,27 +547,49 @@ void CPPEDoc::OnCreatePlateNcData()
 		if (g_sysPara.nc.m_bPunchPress)
 		{	//冲床，根据用户输入厚度范围过滤钢板
 			if (g_sysPara.nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_PBJ_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPunchPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PBJ_FILE);
+				nValidBranch++;
+			}
 			if (g_sysPara.nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_WKF_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPunchPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_WKF_FILE);
+				nValidBranch++;
+			}
 			if (g_sysPara.nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPunchPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_DXF_FILE);
+				nValidBranch++;
+			}
 		}
 		if (g_sysPara.nc.m_bDrillPress)
 		{	//钻床，根据用户输入厚度范围过滤钢板
-			if(g_sysPara.nc.m_xDrillPara.IsValidFile(CNCPart::PLATE_PMZ_FILE))
+			if (g_sysPara.nc.m_xDrillPara.IsValidFile(CNCPart::PLATE_PMZ_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PMZ_FILE);
+				nValidBranch++;
+			}
 			if (g_sysPara.pmz.m_bPmzCheck)	//输出钻床加工PMZ预审格式文件 wht 19-07-02
-				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PMZ_FILE,TRUE);
+			{
+				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PMZ_FILE, TRUE);
+				nValidBranch++;
+			}
 			if (g_sysPara.nc.m_xDrillPara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+			{
 				CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_DXF_FILE);
+				nValidBranch++;
+			}
 		}
 	}
 	if (g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE))
 	{	//激光处理
 		CreatePlateNcFiles(hashPlateByThickMat, NULL, sFolder, CNCPart::LASER_MODE, CNCPart::PLATE_DXF_FILE);
+		nValidBranch++;
 	}
-	ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
+	if (nValidBranch == 0)
+		AfxMessageBox("未设置钢板NC输出模式！请在系统设置=>输出=>输出设置中设置[钢板NC模式]。");
+	else
+		ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
 #endif
 }
 void CPPEDoc::OnGenAngleNcFile()

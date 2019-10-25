@@ -93,7 +93,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\XhCore-dll\XeroCad;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad\Localize;..\..\XhCore-dll\Graphics</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\XhCore-dll\XeroCad;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad\Localize;..\..\XhCore-dll\Graphics;..\PPE\Model</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_WINDLL;_AFXDLL;PEC_EXPORTS;__PNC_;__TAP_CONTEXT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -106,7 +106,7 @@
     <Link>
       <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLicAgent2.lib;XhLdsLm2.lib;DrawSolid.lib;PartLib.lib;LmaDlg10.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)PEC.dll</OutputFile>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\LmaDlg\Release;..\PEC\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\LmaDlg\Release;..\PEC\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\PPE\Model;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ModuleDefinitionFile>.\PEC.def</ModuleDefinitionFile>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
@@ -195,7 +195,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\XhCore-dll\XeroCad;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad\Localize</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\PPE\Model;..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\XhCore-dll\XeroCad;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad\Localize</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)PEC.dll</OutputFile>
@@ -242,12 +242,12 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\Query.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\XerocadDrawing.cpp" />
     <ClCompile Include="..\..\XhCore-dll\XeroCad\Localize\LocalDrawing.cpp" />
+    <ClCompile Include="..\PPE\Model\NcPlate.cpp" />
     <ClCompile Include="2DPtDlg.cpp" />
     <ClCompile Include="BoltHolePropDlg.cpp" />
     <ClCompile Include="DefProfileVertexDlg.cpp" />
     <ClCompile Include="Factory.cpp" />
     <ClCompile Include="LineFeatDlg.cpp" />
-    <ClCompile Include="NcPlate.cpp" />
     <ClCompile Include="PlankVertexDlg.cpp" />
     <ClCompile Include="ProcessPartDraw.cpp" />
     <ClCompile Include="PEC.cpp" />
@@ -293,12 +293,12 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\Query.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\SegI.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\XerocadDrawing.h" />
+    <ClInclude Include="..\PPE\Model\NcPlate.h" />
     <ClInclude Include="2DPtDlg.h" />
     <ClInclude Include="BoltHolePropDlg.h" />
     <ClInclude Include="DefProfileVertexDlg.h" />
     <ClInclude Include="IPEC.h" />
     <ClInclude Include="LineFeatDlg.h" />
-    <ClInclude Include="NcPlate.h" />
     <ClInclude Include="PlankVertexDlg.h" />
     <ClInclude Include="ProcessPartDraw.h" />
     <ClInclude Include="PEC.h" />

@@ -451,7 +451,11 @@ BOOL FirePickColor(CPropertyList* pPropList,CPropTreeItem* pItem,COLORREF &clr)
 IMPLEMENT_DYNAMIC(CPNCSysSettingDlg, CDialog)
 
 CPNCSysSettingDlg::CPNCSysSettingDlg(CWnd* pParent /*=NULL*/)
+#ifdef __PNC_
 	: CCADCallBackDlg(CPNCSysSettingDlg::IDD, pParent)
+#else
+	: CDialog(CPNCSysSettingDlg::IDD, pParent)
+#endif
 {
 
 }
@@ -612,6 +616,7 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 {
 	if(!m_bInernalStart||m_iBreakType!=1)
 		return;
+#ifdef __PNC_
 	//由于选择实体内部重启
 	CAD_SCREEN_ENT *pCADEnt=resultList.GetFirst();
 	CPropTreeItem *pItem=m_propList.FindItemByPropId(m_idEventProp,NULL);
@@ -638,4 +643,5 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 		if(g_pncSysPara.GetPropValueStr(pItem->m_idProp,tem_str)>0)
 			m_propList.SetItemPropValue(pItem->m_idProp,CString(tem_str));
 	}
+#endif
 }

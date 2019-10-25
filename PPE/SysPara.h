@@ -7,10 +7,17 @@ struct FILE_INFO_PARA
 {
 	CXhChar100 m_sThick;
 	DWORD m_dwFileFlag;
+	//以下参数目前只用于控制激光复合机DXF文件输出 wht 19-10-22
+	BOOL m_bOutputBendLine;
+	BOOL m_bOutputBendType;
 public:
 	FILE_INFO_PARA();
 	DWORD AddFileFlag(DWORD dwFlag);
 	bool IsValidFile(DWORD dwFlag);
+	BOOL SetOutputBendLine(BOOL bValue) { return (m_bOutputBendLine = bValue); }
+	BOOL IsOutputBendLine() { return m_bOutputBendLine; }
+	BOOL SetOutputBendType(BOOL bValue) { return (m_bOutputBendType = bValue); }
+	BOOL IsOutputBendType() { return m_bOutputBendType; }
 };
 class CSysPara : public ISysPara
 {

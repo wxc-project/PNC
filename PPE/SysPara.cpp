@@ -14,6 +14,7 @@ FILE_INFO_PARA::FILE_INFO_PARA()
 {
 	m_sThick.Copy("*"); 
 	m_dwFileFlag = CNCPart::PLATE_DXF_FILE; 
+	m_bOutputBendLine = m_bOutputBendType = FALSE;
 }
 DWORD FILE_INFO_PARA::AddFileFlag(DWORD dwFlag)
 {
@@ -118,6 +119,8 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.LaserPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.LaserPara.Config", PROPLIST_ITEM(id++, "样板明细"));
 	AddPropItem("nc.LaserPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件"));
+	AddPropItem("nc.LaserPara.m_bOutputBendLine", PROPLIST_ITEM(id++, "输出制弯线", "", "是|否"));
+	AddPropItem("nc.LaserPara.m_bOutputBendType", PROPLIST_ITEM(id++, "输出制弯类型", "", "是|否"));
 	//
 	AddPropItem("holeIncrement.m_fDatum",PROPLIST_ITEM(id++,"孔径增大值"));
 	AddPropItem("holeIncrement.m_fM12",PROPLIST_ITEM(id++,"M12增量"));
@@ -457,6 +460,8 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("plasmaCut.m_sIntoLineLen");
 	WriteSysParaToReg("plasmaCut.m_sOutLineLen");
 	WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
+	WriteSysParaToReg("nc.LaserPara.m_bOutputBendLine");
+	WriteSysParaToReg("nc.LaserPara.m_bOutputBendType");
 	WriteSysParaToReg("PbjMode");
 	WriteSysParaToReg("PbjIncVertex");
 	WriteSysParaToReg("PbjAutoSplitFile");
@@ -670,6 +675,8 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("plasmaCut.m_sIntoLineLen");
 	ReadSysParaFromReg("plasmaCut.m_sOutLineLen");
 	ReadSysParaFromReg("plasmaCut.m_wEnlargedSpace");
+	ReadSysParaFromReg("nc.LaserPara.m_bOutputBendLine");
+	ReadSysParaFromReg("nc.LaserPara.m_bOutputBendType");
 	ReadSysParaFromReg("PbjMode");
 	ReadSysParaFromReg("PbjIncVertex");
 	ReadSysParaFromReg("PbjAutoSplitFile");
@@ -775,6 +782,10 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			strcpy(sValue,plasmaCut.m_sOutLineLen);
 		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
 			sprintf(sValue,"%d",plasmaCut.m_wEnlargedSpace);
+		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendLine") == 0)
+			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendLine);
+		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendType") == 0)
+			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendType);
 		dwLength=strlen(sValue);
 		RegSetValueEx(hKey,lpszEntry,NULL,REG_SZ,(BYTE*)&sValue[0],dwLength);
 		RegCloseKey(hKey);
@@ -900,6 +911,10 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			plasmaCut.m_sOutLineLen.Copy(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
 			plasmaCut.m_wEnlargedSpace=atoi(sValue);
+		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendLine") == 0)
+			nc.m_xLaserPara.m_bOutputBendLine = atoi(sValue);
+		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendType") == 0)
+			nc.m_xLaserPara.m_bOutputBendType = atoi(sValue);
 		RegCloseKey(hKey);
 	}
 }
@@ -1101,6 +1116,20 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		strcpy(sText, nc.m_xLaserPara.m_sThick);
 	else if (GetPropID("nc.LaserPara.m_dwFileFlag") == id)
 		strcpy(sText, "DXF");
+	else if (GetPropID("nc.LaserPara.m_bOutputBendLine") == id)
+	{
+		if (nc.m_xLaserPara.m_bOutputBendLine)
+			sText.Copy("是");
+		else //if (nc.m_xLaserPara.m_bOutputBendLine)
+			sText.Copy("否");
+	}
+	else if (GetPropID("nc.LaserPara.m_bOutputBendType") == id)
+	{
+		if (nc.m_xLaserPara.m_bOutputBendType)
+			sText.Copy("是");
+		else //if (nc.m_xLaserPara.m_bOutputBendType)
+			sText.Copy("否");
+	}
 	else if(GetPropID("pbj.m_iPbjMode")==id)
 	{
 		if(pbj.m_iPbjMode==0)

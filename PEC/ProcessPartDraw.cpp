@@ -1961,6 +1961,23 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 	AppendDbPoint(pDrawing,drawEndPt,0,PS_SOLID,ptClr,8);
 	p2dDraw->RenderDrawing();
 	Sleep(ftol(interval*1000));
+	for (CNCPlate::CUT_PT *pCutPt = ncPlate.m_xCutHoleList.GetFirst(); pCutPt; pCutPt = ncPlate.m_xCutHoleList.GetNext())
+	{
+		startPt = endPt;
+		endPt = startPt + pCutPt->vertex;
+		drawStartPt = startPt, drawEndPt = endPt;
+		GEPOINT center(endPt.x - pCutPt->radius, endPt.y);
+		AppendDbCircle(pDrawing, center, GEPOINT(0, 0, 1), pCutPt->radius, 0, PS_SOLID, ptClr, 3);
+		/*
+		fprintf(fp, "G00 %s\n", (char*)PointToString(pCutPt->vertex, true));//移动刀头至圆孔外侧切点
+		fprintf(fp, "G41\n");						//刀径左向补齐
+		fprintf(fp, "M04\n");						//主轴反转  
+		fprintf(fp, "G03 I-%.1f\n", pCutPt->radius);	//绘制半径为35的整圆,因切入点在右侧，圆心在左侧
+		fprintf(fp, "M03\n");						//主轴正转
+		fprintf(fp, "G40\n");						//取消刀径补齐
+		*/
+	}
+	//
 	for(CNCPlate::CUT_PT *pPt=ncPlate.m_xCutPtList.GetFirst();pPt;pPt=ncPlate.m_xCutPtList.GetNext())
 	{
 		if(pPt->cByte==CNCPlate::CUT_PT::EDGE_LINE||pPt->cByte==CNCPlate::CUT_PT::EDGE_ARC)
