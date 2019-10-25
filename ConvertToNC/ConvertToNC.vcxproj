@@ -638,10 +638,10 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;__CAD_CONTEXT_;WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;__CAD_CONTEXT_;WIN32;NDEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd-dll;..\..\XhLmd-dll\AES;..\..\XhLmd-dll\DES;..\..\XhLmd-dll\RSA;..\..\XhLmd-dll\DogDrvs;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd-dll\XhLmd</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd-dll;..\..\XhLmd-dll\AES;..\..\XhLmd-dll\DES;..\..\XhLmd-dll\RSA;..\..\XhLmd-dll\DogDrvs;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd-dll\XhLmd</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(OutDir)PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -655,7 +655,7 @@
       <ProgramDatabaseFile>$(OutDir)PNC.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;D:\ObjectARX 2005\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\ObjectARX 2005\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;PartLib.lib;XhLicAgent2.lib;XhLdsLm2.lib;acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
     </Link>

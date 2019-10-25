@@ -104,7 +104,9 @@ struct RECOG_SCHEMA{
 	CXhChar50 m_sPnNumKey;	//
 	CXhChar50 m_sFrontBendKey;	//ÕýÇú
 	CXhChar50 m_sReverseBendKey;//·´Çú
-	RECOG_SCHEMA() { id = 0; m_iDimStyle = 0; }
+	BOOL m_bEditable;
+	BOOL m_bEnable;
+	RECOG_SCHEMA() { id = 0; m_iDimStyle = 0; m_bEditable = FALSE; m_bEnable = FALSE; }
 };
 class CPlateExtractor : public IPlateExtractor
 {

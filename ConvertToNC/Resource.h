@@ -11,7 +11,8 @@
 #define PRODUCT_VER_MAIN                1
 #define PRODUCT_VER_MAIN2               2
 #define ID_BTN_DEFAULT                  3
-#define PRODUCT_VER_SUB_05              69
+#define IDR_MENU_ADDORDEL               4
+#define PRODUCT_VER_SUB_05              71
 #define IDS_PROJNAME                    100
 #define IDC_LIST_BOX                    100
 #define IDD_SYSTEM_SETTING_DLG          101
@@ -77,9 +78,13 @@
 #define ID_CANCEL_FILTER                32768
 #define ID_NEW_ITEM                     32769
 #define ID_LOAD_PROJECT                 32770
+#define ID_32770                        32770
 #define ID_IMPORT_TMA_FILE              32771
+#define ID_32771                        32771
 #define ID_IMPORT_ERP_FILE              32772
+#define ID_MENU_PNCSYS_ADD              32772
 #define ID_IMPORT_ANGLE_DWG             32773
+#define ID_MENU_PNCSYS_DEL              32773
 #define ID_IMPORT_PLATE_DWG             32774
 #define ID_PROJECT_PROPERTY             32775
 #define ID_IMPORT_BOM_FILE              32776
@@ -97,8 +102,8 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        124
-#define _APS_NEXT_COMMAND_VALUE         32770
+#define _APS_NEXT_RESOURCE_VALUE        125
+#define _APS_NEXT_COMMAND_VALUE         32774
 #define _APS_NEXT_CONTROL_VALUE         133
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

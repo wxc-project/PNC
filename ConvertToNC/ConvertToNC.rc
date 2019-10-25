@@ -1,7 +1,6 @@
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include "Version.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
 /////////////////////////////////////////////////////////////////////////////
@@ -51,8 +50,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION FILE_VER_MAIN, FILE_VER_MAIN2, FILE_VER_SUB, FILE_VER_SUB2
- PRODUCTVERSION PRODUCT_VER_MAIN, PRODUCT_VER_MAIN2, PRODUCT_VER_SUB, PRODUCT_VER_SUB2
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,2,0,71
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -69,12 +68,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "北京信狐天诚软件科技有限公司"
             VALUE "FileDescription", "ConvertToNC ObjectARX application"
-            VALUE "FileVersion", RELEASE_FILE_VER
+            VALUE "FileVersion", "1.0.0.1"
             VALUE "InternalName", "PNC"
             VALUE "LegalCopyright", "版权所有 (C) 2015-2019"
             VALUE "OriginalFilename", "PNC.arx"
             VALUE "ProductName", "ConvertToNC ObjectARX Application"
-            VALUE "ProductVersion", RELEASE_PRODUCT_VER
+            VALUE "ProductVersion", "1.2.0.71"
         END
     END
     BLOCK "VarFileInfo"
@@ -108,8 +107,8 @@ BEGIN
     PUSHBUTTON      "取消",IDCANCEL,302,267,50,14
     EDITTEXT        IDC_E_PROP_HELP_STR,7,240,345,26,ES_AUTOHSCROLL | ES_READONLY
     CONTROL         "",IDC_TAB_GROUP,"SysTabControl32",TCS_HOTTRACK | TCS_BUTTONS,7,7,184,14
-    LISTBOX         IDC_LIST_BOX,7,61,345,220,LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_LIST_SYSTEM_SETTING_DLG,"SysListView32",LVS_REPORT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,7,26,332,206
+    LISTBOX         IDC_LIST_BOX,7,35,345,202,LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_LIST_SYSTEM_SETTING_DLG,"SysListView32",LVS_REPORT | NOT WS_VISIBLE | WS_BORDER | WS_TABSTOP,7,26,345,213
 END
 
 IDD_IDENTIFY_INFO_DLG DIALOGEX 0, 0, 106, 91
@@ -294,6 +293,15 @@ BEGIN
     POPUP "_CMD_POPUP"
     BEGIN
         MENUITEM "属性",                          32845
+    END
+END
+
+IDR_MENU_ADDORDEL MENU
+BEGIN
+    POPUP "菜单编辑"
+    BEGIN
+        MENUITEM "添加",                          ID_MENU_PNCSYS_ADD
+        MENUITEM "删除",                          ID_MENU_PNCSYS_DEL
     END
 END
 
