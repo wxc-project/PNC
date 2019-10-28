@@ -18,6 +18,7 @@ public:
 	enum { IDD = IDD_SYSTEM_SETTING_DLG };
 	CPropertyList	m_propList;
 	CTabCtrl	m_ctrlPropGroup;
+	CHashStrList<CSuperGridCtrl::CTreeItem*> hashGroupByItemName;
 	long m_idEventProp;		//记录触发中断的属性ID,恢复窗口时使用
 public:
 	void DisplaySystemSetting();
