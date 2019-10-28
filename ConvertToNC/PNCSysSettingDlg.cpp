@@ -648,6 +648,26 @@ static void InsertRecogSchemaItem(CSuperGridCtrl* pListCtrl, RECOG_SCHEMA *pSche
 	else
 		pGroupItem->m_idProp = 0;
 }
+static void InsertBoltBolckItem(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem* pGroupItem, BOLT_BLOCK *pSchema)
+{
+	BOLT_BLOCK schema;
+	if (pSchema == NULL)
+		pSchema = &schema;
+	CListCtrlItemInfo* lpInfoItem = new CListCtrlItemInfo();
+	lpInfoItem->SetSubItemText(1, _T(pSchema->sBlockName));
+	CXhChar16 hole_d;
+	sprintf(hole_d, "%d", pSchema->diameter);
+	lpInfoItem->SetSubItemText(2, _T(hole_d));
+	sprintf(hole_d, "%.3lf", pSchema->hole_d);
+	lpInfoItem->SetSubItemText(3, _T(hole_d));
+	lpInfoItem->SetCheck(TRUE);
+	CSuperGridCtrl::CTreeItem* pItem = pListCtrl->InsertItem(pGroupItem, lpInfoItem);
+	if (pSchema != &schema)
+		pItem->m_idProp = (long)pSchema;
+	else
+		pItem->m_idProp = 0;
+}
+
 static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem* pSelItem,
 	int iSubItem, CString& sTextValue)
 {
@@ -916,29 +936,14 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 					CSuperGridCtrl::CTreeItem* pGroupItem = m_listCtrlSysSetting.InsertRootItem(lpInfo, TRUE);
 					hashGroupByItemName.SetValue(pBoltD->sGroupName, pGroupItem);
 					pGroupItem->m_bHideChildren = FALSE;
-					CListCtrlItemInfo* lpInfoItem = new CListCtrlItemInfo();
-					lpInfoItem->SetSubItemText(1, _T(pBoltD->sBlockName));
-					CXhChar16 hole_d;
-					sprintf(hole_d, "%d", pBoltD->diameter);
-					lpInfoItem->SetSubItemText(2, _T(hole_d));
-					sprintf(hole_d, "%.3lf", pBoltD->hole_d);
-					lpInfoItem->SetSubItemText(3, _T(hole_d));
-					lpInfoItem->SetCheck(TRUE);
-					CSuperGridCtrl::CTreeItem* pItem = m_listCtrlSysSetting.InsertItem(pGroupItem, lpInfoItem);
+					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
 				}
 				else
 				{
 					CSuperGridCtrl::CTreeItem** ppGroupItem = hashGroupByItemName.GetValue(pBoltD->sGroupName);
 					CSuperGridCtrl::CTreeItem* pGroupItem = ppGroupItem ? *ppGroupItem : NULL;
-					CListCtrlItemInfo* lpInfoItem = new CListCtrlItemInfo();
-					lpInfoItem->SetSubItemText(1, _T(pBoltD->sBlockName));
-					CXhChar16 hole_d;
-					sprintf(hole_d, "%d", pBoltD->diameter);
-					lpInfoItem->SetSubItemText(2, _T(hole_d));
-					sprintf(hole_d, "%.3lf", pBoltD->hole_d);
-					lpInfoItem->SetSubItemText(3, _T(hole_d));
-					lpInfoItem->SetCheck(TRUE);
-					CSuperGridCtrl::CTreeItem* pItem = m_listCtrlSysSetting.InsertItem(pGroupItem, lpInfoItem);
+					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
+
 				}
 			}
 			m_listCtrlSysSetting.Redraw();
