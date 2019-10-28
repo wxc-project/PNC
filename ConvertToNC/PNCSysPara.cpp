@@ -422,6 +422,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 }
 //////////////////////////////////////////////////////////////////////////
 //
+
 void PNCSysSetImportDefault()
 {
 	FILE *fp;
@@ -647,9 +648,20 @@ void PNCSysSetExportDefault()
 		fprintf(fp, "%s;", (char*)pBoltD->m_sPnKey);
 		fprintf(fp, "%s;", (char*)pBoltD->m_sThickKey);
 		fprintf(fp, "%s;", (char*)pBoltD->m_sMatKey);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sPnNumKey);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sFrontBendKey);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sReverseBendKey);
+		if (!strcmp(pBoltD->m_sPnNumKey, ""))
+			fprintf(fp, "%s;", " ");
+		else
+			fprintf(fp, "%s;", (char*)pBoltD->m_sPnNumKey);
+
+		if (!strcmp(pBoltD->m_sFrontBendKey, ""))
+			fprintf(fp, "%s;", " ");
+		else
+			fprintf(fp, "%s;", (char*)pBoltD->m_sFrontBendKey);
+
+		if (!strcmp(pBoltD->m_sReverseBendKey, ""))
+			fprintf(fp, "%s;", " ");
+		else
+			fprintf(fp, "%s;", (char*)pBoltD->m_sReverseBendKey);
 		fprintf(fp, "%d;", pBoltD->m_bEditable ? 1 : 0);
 		fprintf(fp, "%d\n", pBoltD->m_bEnable ? 1 : 0);
 	}
