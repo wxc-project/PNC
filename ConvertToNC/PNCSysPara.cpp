@@ -38,6 +38,43 @@ void CPNCSysPara::Init()
 	//图纸比例设置
 	m_fMapScale=1;
 	//默认过滤图层名
+	//默认加载文字识别设置
+	g_pncSysPara.m_recogSchemaList.Empty();
+	RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
+	pSchema->m_bEditable = TRUE;
+	pSchema->m_bEnable = TRUE;
+	pSchema->m_sSchemaName = "信狐";
+	pSchema->m_iDimStyle = 0;
+	pSchema->m_sPnKey = "#";
+	pSchema->m_sThickKey = "-";
+	pSchema->m_sMatKey = "Q";
+	pSchema->m_sPnNumKey = "数量：";
+	pSchema->m_sFrontBendKey = "正曲：";
+	pSchema->m_sReverseBendKey = "反曲：";
+	RECOG_SCHEMA *pSchema1 = g_pncSysPara.m_recogSchemaList.append();
+	pSchema1->m_bEditable = TRUE;
+	pSchema1->m_bEnable = FALSE;
+	pSchema1->m_sSchemaName = "刀锋";
+	pSchema1->m_iDimStyle = 0;
+	pSchema1->m_sPnKey = "#";
+	pSchema1->m_sThickKey = "厚度:";
+	pSchema1->m_sMatKey = "Q";
+	pSchema1->m_sPnNumKey = "件数：";
+	pSchema1->m_sFrontBendKey = "正曲：";
+	pSchema1->m_sReverseBendKey = "反曲：";
+	RECOG_SCHEMA *pSchema2 = g_pncSysPara.m_recogSchemaList.append();
+	pSchema2->m_bEditable = TRUE;
+	pSchema2->m_bEnable = FALSE;
+	pSchema2->m_sSchemaName = "模式一";
+	pSchema2->m_iDimStyle = 1;
+	pSchema2->m_sPnKey = "件号:";
+	pSchema2->m_sThickKey = "-";
+	pSchema2->m_sMatKey = "材质：";
+	pSchema2->m_sPnNumKey = "件数：";
+	pSchema2->m_sFrontBendKey = "正曲：";
+	pSchema2->m_sReverseBendKey = "反曲：";
+
+
 	InitDrawingEnv();
 	m_iLayerMode=0;
 	m_ciRecogMode=0;
@@ -635,7 +672,10 @@ void PNCSysSetExportDefault()
 	for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
 	{
 		fprintf(fp, "BoltDKey=%s;图块名称;螺栓直径\n", g_pncSysPara.hashBoltDList.GetCursorKey());
-		fprintf(fp, "%s;", (char*)pBoltD->sGroupName);
+		if (!strcmp(pBoltD->sGroupName, ""))
+			fprintf(fp, "%s;", " ");
+		else
+			fprintf(fp, "%s;", (char*)pBoltD->sGroupName);
 		fprintf(fp, "%s;", (char*)pBoltD->sBlockName);
 		fprintf(fp, "%d;", pBoltD->diameter);
 		fprintf(fp, "%.1f\n", pBoltD->hole_d);
