@@ -835,7 +835,7 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 		m_listCtrlSysSetting.InsertColumn(8, _T("·´Çú±êÊ¶"), LVCFMT_LEFT, 70);
 		for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
 		{
-			bool m_bEditable = pBoltD->m_bEditable;
+			BOOL m_bEditable = pBoltD->m_bEditable;
 			CListCtrlItemInfo* lpInfo = new CListCtrlItemInfo();
 			lpInfo->SetSubItemText(0, _T(pBoltD->m_bEnable ? "¡Ì" : ""), true);
 			lpInfo->SetSubItemText(1, _T(pBoltD->m_sSchemaName), m_bEditable);
