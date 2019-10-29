@@ -88,10 +88,11 @@ struct BOLT_BLOCK
 	CXhChar16 sBlockName;
 	short diameter;
 	double hole_d;
-	BOLT_BLOCK(const char* name=NULL,short md=0,double holeD=0){
+	BOLT_BLOCK(const char* groupName = NULL, const char* name = NULL, short md = 0, double holeD = 0) {
+		sGroupName.Copy(groupName);
 		sBlockName.Copy(name);
-		diameter=md;
-		hole_d=holeD;
+		diameter = md;
+		hole_d = holeD;
 	}
 };
 struct RECOG_SCHEMA{

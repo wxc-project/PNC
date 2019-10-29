@@ -20,18 +20,18 @@ static char THIS_FILE[] = __FILE__;
 #endif
 //
 
-static const BYTE PROPGROUP_BY_RULE = 0;
-static const BYTE PROPGROUP_BY_TEXT = 1;
-static const BYTE PROPGROUP_BY_BOLT = 2;
-static const BYTE SCHEMA_BY_Enable = 0;
-static const BYTE SCHEMA_BY_SchemaName = 1;
-static const BYTE SCHEMA_BY_DimStyle = 2;
-static const BYTE SCHEMA_BY_PnKey = 3;
-static const BYTE SCHEMA_BY_ThickKey = 4;
-static const BYTE SCHEMA_BY_MatKey = 5;
-static const BYTE SCHEMA_BY_PnNumKey = 6;
-static const BYTE SCHEMA_BY_FrontBendKey = 7;
-static const BYTE SCHEMA_BY_ReverseBendKey = 8;
+static const BYTE PROPGROUP_RULE = 0;
+static const BYTE PROPGROUP_TEXT = 1;
+static const BYTE PROPGROUP_BOLT = 2;
+static const BYTE COLNAME_Enable = 0;
+static const BYTE COLNAME_SchemaName = 1;
+static const BYTE COLNAME_DimStyle = 2;
+static const BYTE COLNAME_PnKey = 3;
+static const BYTE COLNAME_ThickKey = 4;
+static const BYTE COLNAME_MatKey = 5;
+static const BYTE COLNAME_PnNumKey = 6;
+static const BYTE COLNAME_FrontBendKey = 7;
+static const BYTE COLNAME_ReverseBendKey = 8;
 void UpdateTxtDimProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 {
 	if(pParentItem==NULL)
@@ -491,7 +491,7 @@ void CPNCSysSettingDlg::OnPNCSysDel()
 	int iCurSel = m_ctrlPropGroup.GetCurSel();
 	int nCols = m_listCtrlSysSetting.GetItemCount();//总数
 	int iRows = m_listCtrlSysSetting.GetSelectionMark();//获得选 中行的行标
-	if (nCols != iRows + 1 && iCurSel == PROPGROUP_BY_TEXT)
+	if (nCols != iRows + 1 && iCurSel == PROPGROUP_TEXT)
 	{
 		if (g_pncSysPara.m_recogSchemaList[iRows].m_bEditable)
 			MessageBox("默认行不能删除！", "删除信息提示");
@@ -504,7 +504,7 @@ void CPNCSysSettingDlg::OnPNCSysDel()
 			}
 		}
 	}
-	else if (iCurSel == PROPGROUP_BY_BOLT)
+	else if (iCurSel == PROPGROUP_BOLT)
 	{
 		CSuperGridCtrl::CTreeItem *pCurSelItem = m_listCtrlSysSetting.GetTreeItem(iRows);
 		CSuperGridCtrl::CTreeItem *pParentItem = m_listCtrlSysSetting.GetParentItem(pCurSelItem);
@@ -542,7 +542,7 @@ void CPNCSysSettingDlg::OnPNCSysDel()
 void CPNCSysSettingDlg::OnPNCSysAdd()
 {
 	int iCurSel = m_ctrlPropGroup.GetCurSel();
-	if (iCurSel == PROPGROUP_BY_BOLT)
+	if (iCurSel == PROPGROUP_BOLT)
 	{
 		int iRows = m_listCtrlSysSetting.GetSelectedItem();
 		CSuperGridCtrl::CTreeItem *pCurSelItem = m_listCtrlSysSetting.GetTreeItem(iRows);
@@ -591,7 +591,7 @@ static BOOL FireLButtonDblclk(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeIt
 	int nCurSel = pSysSettingDlg->m_ctrlPropGroup.GetCurSel();
 	int iRows = pListCtrl->GetSelectedItem();//获取选中行
 	int nCols = pListCtrl->GetHeaderCtrl()->GetItemCount();//列数
-	if (nCurSel == PROPGROUP_BY_TEXT && iRows < g_pncSysPara.m_recogSchemaList.GetNodeNum())
+	if (nCurSel == PROPGROUP_TEXT && iRows < g_pncSysPara.m_recogSchemaList.GetNodeNum())
 	{
 		if (iSubItem == 0)//双击第一列
 		{
@@ -606,7 +606,7 @@ static BOOL FireLButtonDblclk(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeIt
 		}
 
 	}
-	else if (iSubItem = 1 || nCurSel == PROPGROUP_BY_BOLT)
+	else if (iSubItem = 1 || nCurSel == PROPGROUP_BOLT)
 	{
 		CSuperGridCtrl::CTreeItem* pGroupItem = pListCtrl->GetTreeItem(iRows);
 		pGroupItem->m_bHideChildren = FALSE;
@@ -688,33 +688,33 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 	int iRows = pListCtrl->GetSelectedItem();
 	int nCols = pListCtrl->GetItemCount();//总数
 	//在文字
-	if (nCurSel == PROPGROUP_BY_TEXT)
+	if (nCurSel == PROPGROUP_TEXT)
 	{
 		pListCtrl->SetSubItemText(pSelItem, iSubItem, sTextValue);
-		CString m_sSchemaName = pListCtrl->GetItemText(iRows, SCHEMA_BY_SchemaName);
-		CString m_sPnKey = pListCtrl->GetItemText(iRows, SCHEMA_BY_PnKey);
-		CString m_sThickKey = pListCtrl->GetItemText(iRows, SCHEMA_BY_ThickKey);
-		CString m_sMatKey = pListCtrl->GetItemText(iRows, SCHEMA_BY_MatKey);
+		CString m_sSchemaName = pListCtrl->GetItemText(iRows, COLNAME_SchemaName);
+		CString m_sPnKey = pListCtrl->GetItemText(iRows, COLNAME_PnKey);
+		CString m_sThickKey = pListCtrl->GetItemText(iRows, COLNAME_ThickKey);
+		CString m_sMatKey = pListCtrl->GetItemText(iRows, COLNAME_MatKey);
 		CString m_ModifyText = pListCtrl->GetItemText(iRows, iSubItem);
 		if (iRows < g_pncSysPara.m_recogSchemaList.GetNodeNum())
 		{
 			//CSuperGridCtrl::CTreeItem* pGroupItem= pListCtrl->GetTreeItem(iRows);
 			RECOG_SCHEMA* pSchema = (RECOG_SCHEMA*)pSelItem->m_idProp;
-			if (iSubItem == SCHEMA_BY_SchemaName)
+			if (iSubItem == COLNAME_SchemaName)
 				pSchema->m_sSchemaName = m_ModifyText;
-			else if (iSubItem == SCHEMA_BY_DimStyle)
+			else if (iSubItem == COLNAME_DimStyle)
 				pSchema->m_iDimStyle = atoi(!strcmp(m_ModifyText, "单行") ? "0" : "1");
-			else if (iSubItem == SCHEMA_BY_PnKey)
+			else if (iSubItem == COLNAME_PnKey)
 				pSchema->m_sPnKey = m_ModifyText;
-			else if (iSubItem == SCHEMA_BY_ThickKey)
+			else if (iSubItem == COLNAME_ThickKey)
 				pSchema->m_sThickKey = m_ModifyText;
-			else if (iSubItem == SCHEMA_BY_MatKey)
+			else if (iSubItem == COLNAME_MatKey)
 				pSchema->m_sMatKey = m_ModifyText;
-			else if (iSubItem == SCHEMA_BY_PnNumKey)
+			else if (iSubItem == COLNAME_PnNumKey)
 				pSchema->m_sPnNumKey = m_ModifyText;
-			else if (iSubItem == SCHEMA_BY_FrontBendKey)
+			else if (iSubItem == COLNAME_FrontBendKey)
 				pSchema->m_sFrontBendKey = m_ModifyText;
-			else if (iSubItem == SCHEMA_BY_ReverseBendKey)
+			else if (iSubItem == COLNAME_ReverseBendKey)
 				pSchema->m_sReverseBendKey = m_ModifyText;
 		}
 		else if (iRows >= g_pncSysPara.m_recogSchemaList.GetNodeNum())
@@ -725,20 +725,20 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 				pSchema->m_bEnable = FALSE;
 				pSchema->m_bEditable = FALSE;
 				pSchema->m_sSchemaName = m_sSchemaName;
-				CString m_iDimStyle = pListCtrl->GetItemText(iRows, SCHEMA_BY_DimStyle);
+				CString m_iDimStyle = pListCtrl->GetItemText(iRows, COLNAME_DimStyle);
 				pSchema->m_iDimStyle = atoi(!strcmp(m_iDimStyle, "单行") ? "0" : "1");
 				pSchema->m_sPnKey = m_sPnKey;
 				pSchema->m_sThickKey = m_sThickKey;
 				pSchema->m_sMatKey = m_sMatKey;
-				pSchema->m_sPnNumKey = pListCtrl->GetItemText(iRows, SCHEMA_BY_PnNumKey);
-				pSchema->m_sFrontBendKey = pListCtrl->GetItemText(iRows, SCHEMA_BY_FrontBendKey);
-				pSchema->m_sReverseBendKey = pListCtrl->GetItemText(iRows, SCHEMA_BY_ReverseBendKey);
+				pSchema->m_sPnNumKey = pListCtrl->GetItemText(iRows, COLNAME_PnNumKey);
+				pSchema->m_sFrontBendKey = pListCtrl->GetItemText(iRows, COLNAME_FrontBendKey);
+				pSchema->m_sReverseBendKey = pListCtrl->GetItemText(iRows, COLNAME_ReverseBendKey);
 				pSelItem->m_idProp = (long)pSchema;
 				InsertRecogSchemaItem(pListCtrl, NULL);
 			}
 		}
 	}
-	else if (nCurSel == PROPGROUP_BY_BOLT)
+	else if (nCurSel == PROPGROUP_BOLT)
 	{
 		CString strTempByGroupName = pListCtrl->GetItemText(iRows, 0);
 		CString strTempByBlockName = pListCtrl->GetItemText(iRows, 1);
@@ -860,7 +860,7 @@ static BOOL FireContextMenu(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 	HDHITTESTINFO info = { 0 };
 	info.pt = point;
 
-	if (iCurSel == PROPGROUP_BY_BOLT)
+	if (iCurSel == PROPGROUP_BOLT)
 	{
 		int i = pListCtrl->GetSelectionMark();
 		CString boltKey = pListCtrl->GetItemText(i, 0);
@@ -939,9 +939,9 @@ void CPNCSysSettingDlg::OnCancel()
 void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 {
 	int iCurSel = m_ctrlPropGroup.GetCurSel();
-	m_listCtrlSysSetting.ShowWindow(iCurSel == PROPGROUP_BY_RULE ? SW_HIDE : SW_SHOW);
-	m_propList.ShowWindow(iCurSel == PROPGROUP_BY_RULE ? SW_SHOW : SW_HIDE);
-	if (iCurSel == PROPGROUP_BY_RULE)
+	m_listCtrlSysSetting.ShowWindow(iCurSel == PROPGROUP_RULE ? SW_HIDE : SW_SHOW);
+	m_propList.ShowWindow(iCurSel == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
+	if (iCurSel == PROPGROUP_RULE)
 	{
 		m_propList.m_iPropGroup = iCurSel;
 		m_propList.Redraw();
@@ -951,7 +951,7 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 		while (m_listCtrlSysSetting.GetHeaderCtrl()->GetItemCount() > 0)
 			m_listCtrlSysSetting.DeleteColumn(0);
 		m_listCtrlSysSetting.DeleteAllItems();
-		if (iCurSel == PROPGROUP_BY_TEXT)
+		if (iCurSel == PROPGROUP_TEXT)
 		{
 			m_listCtrlSysSetting.InsertColumn(0, _T("启用"), LVCFMT_LEFT, 40);
 			m_listCtrlSysSetting.InsertColumn(1, _T("名称"), LVCFMT_LEFT, 55);
@@ -981,7 +981,7 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 				InsertRecogSchemaItem(&m_listCtrlSysSetting, NULL);
 			}
 		}
-		else if (iCurSel == PROPGROUP_BY_BOLT)
+		else if (iCurSel == PROPGROUP_BOLT)
 		{
 			hashGroupByItemName.Empty();
 			m_listCtrlSysSetting.InsertColumn(0, _T("分组"), LVCFMT_LEFT, 130);
