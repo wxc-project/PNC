@@ -22,11 +22,10 @@ public:
 	long m_idEventProp;		//记录触发中断的属性ID,恢复窗口时使用
 public:
 	void DisplaySystemSetting();
+	void OnPNCSysDel();
 	void SelectEntObj(int nResultEnt=1);				//选择对象节点或线
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
-	void UpdateSave();
-	void OnPNCSysDel();
 	// DDX/DDV 支持
 	void OnPNCSysAdd();
 	void OnPNCSysGroupDel();
