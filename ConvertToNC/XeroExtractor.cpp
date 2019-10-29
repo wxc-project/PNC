@@ -262,15 +262,15 @@ void CPlateExtractor::Init()
 	m_sThickKey.Copy("-");
 	m_sMatKey.Copy("Q");
 	//螺栓直径设置
-	hashBoltDList.SetValue("M24",BOLT_BLOCK("M24",24));
-	hashBoltDList.SetValue("M20",BOLT_BLOCK("M20",20));
-	hashBoltDList.SetValue("M16",BOLT_BLOCK("M16",16));
-	hashBoltDList.SetValue("M12",BOLT_BLOCK("M12",12));
-	hashBoltDList.SetValue("板孔25.5",BOLT_BLOCK("板孔25.5",24));
-	hashBoltDList.SetValue("板孔21.5",BOLT_BLOCK("板孔21.5",20));
-	hashBoltDList.SetValue("板孔17.5",BOLT_BLOCK("板孔17.5",16));
-	hashBoltDList.SetValue("板孔13.5",BOLT_BLOCK("板孔13.5",12));
-	hashBoltDList.SetValue("板孔默认",BOLT_BLOCK("板孔默认",0));
+	hashBoltDList.SetValue("M24", BOLT_BLOCK("模式一", "M24", 24));
+	hashBoltDList.SetValue("M20", BOLT_BLOCK("模式一", "M20", 20));
+	hashBoltDList.SetValue("M16", BOLT_BLOCK("模式一", "M16", 16));
+	hashBoltDList.SetValue("M12", BOLT_BLOCK("模式一", "M12", 12));
+	hashBoltDList.SetValue("板孔25.5", BOLT_BLOCK("模式一", "板孔25.5", 24));
+	hashBoltDList.SetValue("板孔21.5", BOLT_BLOCK("模式一", "板孔21.5", 20));
+	hashBoltDList.SetValue("板孔17.5", BOLT_BLOCK("模式一", "板孔17.5", 16));
+	hashBoltDList.SetValue("板孔13.5", BOLT_BLOCK("模式一", "板孔13.5", 12));
+	hashBoltDList.SetValue("板孔默认", BOLT_BLOCK("模式一", "板孔默认", 0));
 	//
 	m_sBendLineLayer="8";
 	m_sSlopeLineLayer="2";
