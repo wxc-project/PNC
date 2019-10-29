@@ -22,74 +22,110 @@ CPNCSysPara::CPNCSysPara()
 void CPNCSysPara::Init()
 {
 	CPlateExtractor::Init();
-	m_iPPiMode=1;
-	m_bIncDeformed=true;
-	m_iAxisXCalType=0;
+	m_iPPiMode = 1;
+	m_bIncDeformed = true;
+	m_iAxisXCalType = 0;
 	m_bReplaceSH = FALSE;
 	m_nReplaceHD = 20;
 	//自动排版设置
-	m_bAutoLayout=FALSE;
-	m_nMapWidth=1500;
-	m_nMapLength=0;
-	m_nMinDistance=0;
-	m_bMKPos=0;
-	m_nMkRectWidth=30;
-	m_nMkRectLen=60;
+	m_bAutoLayout = FALSE;
+	m_nMapWidth = 1500;
+	m_nMapLength = 0;
+	m_nMinDistance = 0;
+	m_bMKPos = 0;
+	m_nMkRectWidth = 30;
+	m_nMkRectLen = 60;
 	//图纸比例设置
-	m_fMapScale=1;
+	m_fMapScale = 1;
+	m_iLayerMode = 0;
+	m_ciRecogMode = 0;
+	m_ciBoltRecogMode = BOLT_RECOG_DEFAULT;
+	m_ciProfileColorIndex = 1;		//红色
+	m_ciBendLineColorIndex = 190;	//紫色
+	m_sProfileLineType.Copy("CONTINUOUS");
 	//默认过滤图层名
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
 	RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
 	pSchema->m_bEditable = TRUE;
 	pSchema->m_bEnable = TRUE;
-	pSchema->m_sSchemaName = "信狐";
+	pSchema->m_sSchemaName = "单行1";
 	pSchema->m_iDimStyle = 0;
 	pSchema->m_sPnKey = "#";
 	pSchema->m_sThickKey = "-";
 	pSchema->m_sMatKey = "Q";
-	pSchema->m_sPnNumKey = "数量：";
-	pSchema->m_sFrontBendKey = "正曲：";
-	pSchema->m_sReverseBendKey = "反曲：";
+	pSchema->m_sPnNumKey = "件数:";
+	pSchema->m_sFrontBendKey = "正曲";
+	pSchema->m_sReverseBendKey = "反曲";
 	RECOG_SCHEMA *pSchema1 = g_pncSysPara.m_recogSchemaList.append();
 	pSchema1->m_bEditable = TRUE;
 	pSchema1->m_bEnable = FALSE;
-	pSchema1->m_sSchemaName = "刀锋";
+	pSchema1->m_sSchemaName = "单行2";
 	pSchema1->m_iDimStyle = 0;
 	pSchema1->m_sPnKey = "#";
-	pSchema1->m_sThickKey = "厚度:";
+	pSchema1->m_sThickKey = "-";
 	pSchema1->m_sMatKey = "Q";
-	pSchema1->m_sPnNumKey = "件数：";
-	pSchema1->m_sFrontBendKey = "正曲：";
-	pSchema1->m_sReverseBendKey = "反曲：";
+	pSchema1->m_sPnNumKey = "件数:";
+	pSchema1->m_sFrontBendKey = "外曲";
+	pSchema1->m_sReverseBendKey = "内曲";
 	RECOG_SCHEMA *pSchema2 = g_pncSysPara.m_recogSchemaList.append();
 	pSchema2->m_bEditable = TRUE;
 	pSchema2->m_bEnable = FALSE;
-	pSchema2->m_sSchemaName = "模式一";
+	pSchema2->m_sSchemaName = "多行1";
 	pSchema2->m_iDimStyle = 1;
-	pSchema2->m_sPnKey = "件号:";
+	pSchema2->m_sPnKey = "#";
 	pSchema2->m_sThickKey = "-";
-	pSchema2->m_sMatKey = "材质：";
-	pSchema2->m_sPnNumKey = "件数：";
-	pSchema2->m_sFrontBendKey = "正曲：";
-	pSchema2->m_sReverseBendKey = "反曲：";
+	pSchema2->m_sMatKey = "Q";
+	pSchema2->m_sPnNumKey = "件数:";
+	pSchema2->m_sFrontBendKey = "正曲";
+	pSchema2->m_sReverseBendKey = "反曲";
 
+	RECOG_SCHEMA *pSchema3 = g_pncSysPara.m_recogSchemaList.append();
+	pSchema3->m_bEditable = TRUE;
+	pSchema3->m_bEnable = FALSE;
+	pSchema3->m_sSchemaName = "多行2";
+	pSchema3->m_iDimStyle = 1;
+	pSchema3->m_sPnKey = "#";
+	pSchema3->m_sThickKey = "-";
+	pSchema3->m_sMatKey = "Q";
+	pSchema3->m_sPnNumKey = "件数:";
+	pSchema3->m_sFrontBendKey = "外曲";
+	pSchema3->m_sReverseBendKey = "内曲";
 
+	RECOG_SCHEMA *pSchema4 = g_pncSysPara.m_recogSchemaList.append();
+	pSchema4->m_bEditable = TRUE;
+	pSchema4->m_bEnable = FALSE;
+	pSchema4->m_sSchemaName = "多行3";
+	pSchema4->m_iDimStyle = 1;
+	pSchema4->m_sPnKey = "件号:";
+	pSchema4->m_sThickKey = "板厚:";
+	pSchema4->m_sMatKey = "材质:";
+	pSchema4->m_sPnNumKey = "件数:";
+	pSchema4->m_sFrontBendKey = "正曲";
+	pSchema4->m_sReverseBendKey = "反曲";
+
+	RECOG_SCHEMA *pSchema5 = g_pncSysPara.m_recogSchemaList.append();
+	pSchema5->m_bEditable = TRUE;
+	pSchema5->m_bEnable = FALSE;
+	pSchema5->m_sSchemaName = "多行4";
+	pSchema5->m_iDimStyle = 1;
+	pSchema5->m_sPnKey = "件号:";
+	pSchema5->m_sThickKey = "板厚:";
+	pSchema5->m_sMatKey = "材质:";
+	pSchema5->m_sPnNumKey = "件数:";
+	pSchema5->m_sFrontBendKey = "外曲";
+	pSchema5->m_sReverseBendKey = "内曲";
+#ifdef __PNC_
 	InitDrawingEnv();
-	m_iLayerMode=0;
-	m_ciRecogMode=0;
-	m_ciBoltRecogMode = BOLT_RECOG_DEFAULT;
-	m_ciProfileColorIndex=1;		//红色
-	m_ciBendLineColorIndex=190;	//紫色
-	m_sProfileLineType.Copy("CONTINUOUS");
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName,LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName,1));//不可见轮廓线
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltSymbolLayer.layerName,LAYER_ITEM(LayerTable::BoltSymbolLayer.layerName,1));		//螺栓图符
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::BendLineLayer.layerName,LAYER_ITEM(LayerTable::BendLineLayer.layerName,1));		//角钢火曲、钢板火曲
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::BreakLineLayer.layerName,LAYER_ITEM(LayerTable::BreakLineLayer.layerName,1));		//断开界线
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::DimTextLayer.layerName,LAYER_ITEM(LayerTable::DimTextLayer.layerName,1));		//文字标注图层
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltLineLayer.layerName,LAYER_ITEM(LayerTable::BoltLineLayer.layerName,1));		//螺栓线
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::DamagedSymbolLine.layerName,LAYER_ITEM(LayerTable::DamagedSymbolLine.layerName,1));	//板边破损标记线
-	m_xHashDefaultFilterLayers.SetValue(LayerTable::CommonLayer.layerName,LAYER_ITEM(LayerTable::CommonLayer.layerName,1));			//其他
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName, LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName, 1));//不可见轮廓线
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltSymbolLayer.layerName, LAYER_ITEM(LayerTable::BoltSymbolLayer.layerName, 1));		//螺栓图符
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::BendLineLayer.layerName, LAYER_ITEM(LayerTable::BendLineLayer.layerName, 1));		//角钢火曲、钢板火曲
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::BreakLineLayer.layerName, LAYER_ITEM(LayerTable::BreakLineLayer.layerName, 1));		//断开界线
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::DimTextLayer.layerName, LAYER_ITEM(LayerTable::DimTextLayer.layerName, 1));		//文字标注图层
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltLineLayer.layerName, LAYER_ITEM(LayerTable::BoltLineLayer.layerName, 1));		//螺栓线
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::DamagedSymbolLine.layerName, LAYER_ITEM(LayerTable::DamagedSymbolLine.layerName, 1));	//板边破损标记线
+	m_xHashDefaultFilterLayers.SetValue(LayerTable::CommonLayer.layerName, LAYER_ITEM(LayerTable::CommonLayer.layerName, 1));			//其他
+#endif
 }
 CPNCSysPara::~CPNCSysPara()
 {
@@ -548,14 +584,23 @@ void PNCSysSetImportDefault()
 		else if (_stricmp(key_word, "BoltDKey") == 0)
 		{
 			skey = strtok(NULL, "=,;");
+			CString skeyName(skey);
 			if (strlen(skey) > 0)
 			{
 				BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.Add(skey);
 				fgets(line_txt, MAX_PATH, fp);
 				skey = strtok(line_txt, ";");
-				pBoltD->sGroupName.Printf("%s", skey);
-				skey = strtok(NULL, ";");
-				pBoltD->sBlockName.Printf("%s", skey);
+				if (!strcmp(skeyName, skey))
+				{
+					pBoltD->sGroupName.Printf(" ");
+					pBoltD->sBlockName.Printf("%s", skey);
+				}
+				else
+				{
+					pBoltD->sGroupName.Printf("%s", skey);
+					skey = strtok(NULL, ";");
+					pBoltD->sBlockName.Printf("%s", skey);
+				}
 				skey = strtok(NULL, ";");
 				pBoltD->diameter = atoi(skey);
 				skey = strtok(NULL, ";");
