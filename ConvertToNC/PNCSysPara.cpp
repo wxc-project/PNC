@@ -54,7 +54,7 @@ void CPNCSysPara::Init()
 	pSchema->m_sPnKey = "#";
 	pSchema->m_sThickKey = "-";
 	pSchema->m_sMatKey = "Q";
-	pSchema->m_sPnNumKey = "件数:";
+	pSchema->m_sPnNumKey = "件";
 	pSchema->m_sFrontBendKey = "正曲";
 	pSchema->m_sReverseBendKey = "反曲";
 	RECOG_SCHEMA *pSchema1 = g_pncSysPara.m_recogSchemaList.append();
@@ -65,7 +65,7 @@ void CPNCSysPara::Init()
 	pSchema1->m_sPnKey = "#";
 	pSchema1->m_sThickKey = "-";
 	pSchema1->m_sMatKey = "Q";
-	pSchema1->m_sPnNumKey = "件数:";
+	pSchema1->m_sPnNumKey = "件";
 	pSchema1->m_sFrontBendKey = "外曲";
 	pSchema1->m_sReverseBendKey = "内曲";
 	RECOG_SCHEMA *pSchema2 = g_pncSysPara.m_recogSchemaList.append();

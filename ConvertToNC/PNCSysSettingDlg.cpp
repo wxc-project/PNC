@@ -1092,6 +1092,7 @@ void CPNCSysSettingDlg::OnBnClickedBtnDefault()
 {
 	g_pncSysPara.Init();
 	DisplaySystemSetting();
+	OnSelchangeTabGroup(NULL, NULL);
 }
 
 //选择对象节点或线
