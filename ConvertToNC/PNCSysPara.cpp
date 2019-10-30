@@ -19,6 +19,30 @@ CPNCSysPara::CPNCSysPara()
 {
 	Init();
 }
+RECOG_SCHEMA* CPNCSysPara::InsertRecogSchema(const char* name,int dimStyle,const char* partNoKey,
+										     const char* matKey, const char* thickKey,const char* partCountKey/*=""*/,
+											 const char* frontBendKey/*=""*/,const char* reverseBendKey/*=""*/,BOOL bEditable/*=FALSE*/)
+{
+	RECOG_SCHEMA *pSchema1 = g_pncSysPara.m_recogSchemaList.append();
+	pSchema1->m_bEditable = bEditable;
+	pSchema1->m_iDimStyle = dimStyle;
+	pSchema1->m_bEnable = FALSE;
+	if(name!=NULL)
+		pSchema1->m_sSchemaName.Copy(name);
+	if(partCountKey!=NULL)
+		pSchema1->m_sPnKey.Copy(partNoKey);
+	if(thickKey!=NULL)
+		pSchema1->m_sThickKey.Copy(thickKey);
+	if(matKey!=NULL)
+		pSchema1->m_sMatKey.Copy(matKey);
+	if(partCountKey!=NULL)
+		pSchema1->m_sPnNumKey.Copy(partCountKey);
+	if(frontBendKey!=NULL)
+		pSchema1->m_sFrontBendKey.Copy(frontBendKey);
+	if(reverseBendKey!=NULL)
+		pSchema1->m_sReverseBendKey.Copy(reverseBendKey);
+	return pSchema1;
+}
 void CPNCSysPara::Init()
 {
 	CPlateExtractor::Init();
@@ -46,75 +70,19 @@ void CPNCSysPara::Init()
 	//默认过滤图层名
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
-	RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
-	pSchema->m_bEditable = TRUE;
-	pSchema->m_bEnable = TRUE;
-	pSchema->m_sSchemaName = "单行1";
-	pSchema->m_iDimStyle = 0;
-	pSchema->m_sPnKey = "#";
-	pSchema->m_sThickKey = "-";
-	pSchema->m_sMatKey = "Q";
-	pSchema->m_sPnNumKey = "件";
-	pSchema->m_sFrontBendKey = "正曲";
-	pSchema->m_sReverseBendKey = "反曲";
-	RECOG_SCHEMA *pSchema1 = g_pncSysPara.m_recogSchemaList.append();
-	pSchema1->m_bEditable = TRUE;
-	pSchema1->m_bEnable = FALSE;
-	pSchema1->m_sSchemaName = "单行2";
-	pSchema1->m_iDimStyle = 0;
-	pSchema1->m_sPnKey = "#";
-	pSchema1->m_sThickKey = "-";
-	pSchema1->m_sMatKey = "Q";
-	pSchema1->m_sPnNumKey = "件";
-	pSchema1->m_sFrontBendKey = "外曲";
-	pSchema1->m_sReverseBendKey = "内曲";
-	RECOG_SCHEMA *pSchema2 = g_pncSysPara.m_recogSchemaList.append();
-	pSchema2->m_bEditable = TRUE;
-	pSchema2->m_bEnable = FALSE;
-	pSchema2->m_sSchemaName = "多行1";
-	pSchema2->m_iDimStyle = 1;
-	pSchema2->m_sPnKey = "#";
-	pSchema2->m_sThickKey = "-";
-	pSchema2->m_sMatKey = "Q";
-	pSchema2->m_sPnNumKey = "件数:";
-	pSchema2->m_sFrontBendKey = "正曲";
-	pSchema2->m_sReverseBendKey = "反曲";
-
-	RECOG_SCHEMA *pSchema3 = g_pncSysPara.m_recogSchemaList.append();
-	pSchema3->m_bEditable = TRUE;
-	pSchema3->m_bEnable = FALSE;
-	pSchema3->m_sSchemaName = "多行2";
-	pSchema3->m_iDimStyle = 1;
-	pSchema3->m_sPnKey = "#";
-	pSchema3->m_sThickKey = "-";
-	pSchema3->m_sMatKey = "Q";
-	pSchema3->m_sPnNumKey = "件数:";
-	pSchema3->m_sFrontBendKey = "外曲";
-	pSchema3->m_sReverseBendKey = "内曲";
-
-	RECOG_SCHEMA *pSchema4 = g_pncSysPara.m_recogSchemaList.append();
-	pSchema4->m_bEditable = TRUE;
-	pSchema4->m_bEnable = FALSE;
-	pSchema4->m_sSchemaName = "多行3";
-	pSchema4->m_iDimStyle = 1;
-	pSchema4->m_sPnKey = "件号:";
-	pSchema4->m_sThickKey = "板厚:";
-	pSchema4->m_sMatKey = "材质:";
-	pSchema4->m_sPnNumKey = "件数:";
-	pSchema4->m_sFrontBendKey = "正曲";
-	pSchema4->m_sReverseBendKey = "反曲";
-
-	RECOG_SCHEMA *pSchema5 = g_pncSysPara.m_recogSchemaList.append();
-	pSchema5->m_bEditable = TRUE;
-	pSchema5->m_bEnable = FALSE;
-	pSchema5->m_sSchemaName = "多行4";
-	pSchema5->m_iDimStyle = 1;
-	pSchema5->m_sPnKey = "件号:";
-	pSchema5->m_sThickKey = "板厚:";
-	pSchema5->m_sMatKey = "材质:";
-	pSchema5->m_sPnNumKey = "件数:";
-	pSchema5->m_sFrontBendKey = "外曲";
-	pSchema5->m_sReverseBendKey = "内曲";
+	InsertRecogSchema("单行1", 0, "#", "Q", "-");
+	InsertRecogSchema("单行2", 0, "#", "Q", "-", "件");
+	InsertRecogSchema("单行3", 0, "#", "Q", "-", "件", "正曲", "反曲");
+	InsertRecogSchema("单行4", 0, "#", "Q", "-", "件", "外曲", "内曲");
+	InsertRecogSchema("多行1", 1, "#", "Q", "-");
+	InsertRecogSchema("多行2", 1, "#", "Q", "-", "件");
+	InsertRecogSchema("多行3", 1, "#", "Q", "-", "件", "正曲", "反曲");
+	InsertRecogSchema("多行4", 1, "#", "Q", "-", "件", "外曲", "内曲");
+	InsertRecogSchema("多行5", 1, "件号:", "材质：", "板厚：");
+	InsertRecogSchema("多行6", 1, "件号:", "材质：", "板厚：", "件数");
+	InsertRecogSchema("多行7", 1, "件号:", "材质：", "板厚：", "件数", "正曲", "反曲");
+	InsertRecogSchema("多行8", 1, "件号:", "材质：", "板厚：", "件数", "外曲", "内曲");
+	
 #ifdef __PNC_
 	InitDrawingEnv();
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName, LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName, 1));//不可见轮廓线
@@ -488,7 +456,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 				rotate_point_around_axis(ptArr[i],rot_angle,f3dPoint(),100*f3dPoint(0,0,1));
 			ptArr[i]+=orig;
 		}
-}
+	}
 	else
 		return FALSE;
 	return TRUE;
@@ -618,18 +586,25 @@ void PNCSysSetImportDefault()
 				skey = strtok(line_txt, ";");
 				skey = strtok(NULL, ";");
 				pSchema->m_sSchemaName = skey;
+				pSchema->m_sSchemaName.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_sPnKey = skey;
+				pSchema->m_sPnKey.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_sThickKey = skey;
+				pSchema->m_sThickKey.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_sMatKey = skey;
+				pSchema->m_sMatKey.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_sPnNumKey = skey;
+				pSchema->m_sPnNumKey.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_sFrontBendKey = skey;
+				pSchema->m_sFrontBendKey.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_sReverseBendKey = skey;
+				pSchema->m_sReverseBendKey.Replace(" ", "");
 				skey = strtok(NULL, ";");
 				pSchema->m_bEditable = atoi(skey);
 				skey = strtok(NULL, ";");
@@ -669,6 +644,15 @@ void PNCSysSetImportDefault()
 #endif
 	}
 	fclose(fp);
+	//加载配置文件后激活当前识别模型 wht 19-10-30
+	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
+	{
+		if (pSchema->m_bEnable)
+		{
+			g_pncSysPara.ActiveRecogSchema(pSchema);
+			break;
+		}
+	}
 }
 void PNCSysSetExportDefault()
 {
@@ -714,43 +698,46 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "MKPos=%d ;提取钢印位置\n", (char*)g_pncSysPara.m_bMKPos);
 	fprintf(fp, "AxisXCalType=%d ;X轴计算方式\n", (char*)g_pncSysPara.m_iAxisXCalType);
 	fprintf(fp, "螺栓识别设置\n");
-	for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
+	for (BOLT_BLOCK *pBoltBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBoltBlock; pBoltBlock = g_pncSysPara.hashBoltDList.GetNext())
 	{
 		fprintf(fp, "BoltDKey=%s;图块名称;螺栓直径\n", g_pncSysPara.hashBoltDList.GetCursorKey());
-		if (!strcmp(pBoltD->sGroupName, ""))
+		if (!strcmp(pBoltBlock->sGroupName, ""))
 			fprintf(fp, "%s;", " ");
 		else
-			fprintf(fp, "%s;", (char*)pBoltD->sGroupName);
-		fprintf(fp, "%s;", (char*)pBoltD->sBlockName);
-		fprintf(fp, "%d;", pBoltD->diameter);
-		fprintf(fp, "%.1f\n", pBoltD->hole_d);
+			fprintf(fp, "%s;", (char*)pBoltBlock->sGroupName);
+		fprintf(fp, "%s;", (char*)pBoltBlock->sBlockName);
+		fprintf(fp, "%d;", pBoltBlock->diameter);
+		fprintf(fp, "%.1f\n", pBoltBlock->hole_d);
 	}
 	fprintf(fp, "文字识别设置\n");
-	for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
+	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
 	{
-		fprintf(fp, "m_iDimStyle=%d;", pBoltD->m_iDimStyle);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sSchemaName);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sPnKey);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sThickKey);
-		fprintf(fp, "%s;", (char*)pBoltD->m_sMatKey);
-		if (!strcmp(pBoltD->m_sPnNumKey, ""))
-			fprintf(fp, "%s;", " ");
-		else
-			fprintf(fp, "%s;", (char*)pBoltD->m_sPnNumKey);
-
-		if (!strcmp(pBoltD->m_sFrontBendKey, ""))
-			fprintf(fp, "%s;", " ");
-		else
-			fprintf(fp, "%s;", (char*)pBoltD->m_sFrontBendKey);
-
-		if (!strcmp(pBoltD->m_sReverseBendKey, ""))
-			fprintf(fp, "%s;", " ");
-		else
-			fprintf(fp, "%s;", (char*)pBoltD->m_sReverseBendKey);
-		fprintf(fp, "%d;", pBoltD->m_bEditable ? 1 : 0);
-		fprintf(fp, "%d\n", pBoltD->m_bEnable ? 1 : 0);
+		fprintf(fp, "m_iDimStyle=%d;", pSchema->m_iDimStyle);
+		fprintf(fp, " %s;", (char*)pSchema->m_sSchemaName);
+		fprintf(fp, " %s;", (char*)pSchema->m_sPnKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sThickKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sMatKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sPnNumKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sFrontBendKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sReverseBendKey);
+		fprintf(fp, "%d;", pSchema->m_bEditable ? 1 : 0);
+		fprintf(fp, "%d\n", pSchema->m_bEnable ? 1 : 0);
 	}
 	fprintf(fp, "比例识别\n");
 	fprintf(fp, "MapScale=%.f ;缩放比例\n", g_pncSysPara.m_fMapScale);
 	fclose(fp);
+}
+
+void CPNCSysPara::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
+{
+	if (pSchema != NULL)
+	{
+		m_sPnKey.Copy(pSchema->m_sPnKey);
+		m_sMatKey.Copy(pSchema->m_sMatKey);
+		m_sThickKey.Copy(pSchema->m_sThickKey);
+		m_sPnNumKey.Copy(pSchema->m_sPnKey);
+		m_sFrontBendKey.Copy(pSchema->m_sFrontBendKey);
+		m_sReverseBendKey.Copy(pSchema->m_sReverseBendKey);
+		m_iDimStyle = pSchema->m_iDimStyle;
+	}
 }

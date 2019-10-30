@@ -2,6 +2,8 @@
 #include "f_alg_fun.h"
 #include "ArrayList.h"
 #include "XeroExtractor.h"
+#include "CadToolFunc.h"
+#include "LogFile.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -262,18 +264,18 @@ void CPlateExtractor::Init()
 	m_sThickKey.Copy("-");
 	m_sMatKey.Copy("Q");
 	//螺栓直径设置
-	hashBoltDList.SetValue("M24", BOLT_BLOCK("模式一", "M24", 24));
-	hashBoltDList.SetValue("M20", BOLT_BLOCK("模式一", "M20", 20));
-	hashBoltDList.SetValue("M16", BOLT_BLOCK("模式一", "M16", 16));
-	hashBoltDList.SetValue("M12", BOLT_BLOCK("模式一", "M12", 12));
-	hashBoltDList.SetValue("板孔25.5", BOLT_BLOCK("模式一", "板孔25.5", 24));
-	hashBoltDList.SetValue("板孔21.5", BOLT_BLOCK("模式一", "板孔21.5", 20));
-	hashBoltDList.SetValue("板孔17.5", BOLT_BLOCK("模式一", "板孔17.5", 16));
-	hashBoltDList.SetValue("板孔13.5", BOLT_BLOCK("模式一", "板孔13.5", 12));
-	hashBoltDList.SetValue("板孔默认", BOLT_BLOCK("模式一", "板孔默认", 0));
+	hashBoltDList.SetValue("M24",BOLT_BLOCK("TMA","M24",24));
+	hashBoltDList.SetValue("M20",BOLT_BLOCK("TMA", "M20",20));
+	hashBoltDList.SetValue("M16",BOLT_BLOCK("TMA", "M16",16));
+	hashBoltDList.SetValue("M12",BOLT_BLOCK("TMA", "M12",12));
+	hashBoltDList.SetValue("板孔25.5",BOLT_BLOCK("TW", "板孔25.5",24));
+	hashBoltDList.SetValue("板孔21.5",BOLT_BLOCK("TW", "板孔21.5",20));
+	hashBoltDList.SetValue("板孔17.5",BOLT_BLOCK("TW", "板孔17.5",16));
+	hashBoltDList.SetValue("板孔13.5",BOLT_BLOCK("TW", "板孔13.5",12));
+	hashBoltDList.SetValue("板孔默认",BOLT_BLOCK("TW", "板孔默认",0));
 	//
 	m_sBendLineLayer="8";
-	m_sSlopeLineLayer="2";
+	m_sSlopeLineLayer.Empty();
 }
 CPlateExtractor::~CPlateExtractor()
 {
@@ -578,6 +580,29 @@ BOOL CPlateExtractor::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogn
 	return bRet;
 }
 
+double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord,double scale)
+{
+	if (pTempBlockTableRecord == NULL)
+		return 0;
+	double fHoleD = 0;
+	AcDbEntity *pEnt = NULL;
+	AcDbBlockTableRecordIterator *pIterator = NULL;
+	pTempBlockTableRecord->newIterator(pIterator);
+	if (pIterator)
+	{
+		SCOPE_STRU scope;
+		for (; !pIterator->done(); pIterator->step())
+		{
+			pIterator->getEntity(pEnt, AcDb::kForRead);
+			if (pEnt == NULL)
+				continue;
+			VerifyVertexByCADEnt(scope, pEnt);
+			pEnt->close();
+		}
+		fHoleD = fabs(max(scope.wide(), scope.high())*scale);
+	}
+	return fHoleD;
+}
 BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 {
 	if(pEnt==NULL)
@@ -617,7 +642,9 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		}
 		else if(pBoltD->hole_d>0)
 		{	
-			int nHoleD=(int)floor(pBoltD->hole_d);
+			hole.d = pBoltD->hole_d;
+			hole.increment = 0;
+			/*int nHoleD=(int)floor(pBoltD->hole_d);
 			double fHoleFloat=pBoltD->hole_d-nHoleD;
 			if(fabs(fHoleFloat)<EPS)
 			{	//孔径为整数
@@ -628,7 +655,18 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 			{	//孔径为浮点数
 				hole.d=(BYTE)(nHoleD-1);
 				hole.increment=(float)(1+fHoleFloat);
+			}*/
+		}
+		else
+		{	//根据块内图元识别孔径 wht 19-10-16
+			double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+			if (fHoleD > 0)
+			{
+				hole.d = fHoleD;
+				hole.increment = 0;
 			}
+			else
+				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
 		}
 		hole.ciSymbolType=0;
 		return TRUE;

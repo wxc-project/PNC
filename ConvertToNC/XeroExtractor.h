@@ -88,7 +88,16 @@ struct BOLT_BLOCK
 	CXhChar16 sBlockName;
 	short diameter;
 	double hole_d;
-	BOLT_BLOCK(const char* groupName = NULL, const char* name = NULL, short md = 0, double holeD = 0) {
+	BOLT_BLOCK() {
+		Init("", "",0, 0);
+	}
+	BOLT_BLOCK(const char* name, short md=0, double holeD=0) {
+		Init("", name, md, holeD);
+	}
+	BOLT_BLOCK(const char* groupName, const char* name, short md=0, double holeD=0){
+		Init(groupName, name, md, holeD);
+	}
+	void Init(const char* groupName, const char* name, short md, double holeD) {
 		sGroupName.Copy(groupName);
 		sBlockName.Copy(name);
 		diameter = md;

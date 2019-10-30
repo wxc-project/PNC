@@ -594,22 +594,15 @@ static BOOL FireLButtonDblclk(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeIt
 	if (nCurSel == PROPGROUP_TEXT && iRows < g_pncSysPara.m_recogSchemaList.GetNodeNum())
 	{
 		if (iSubItem == 0)//双击第一列
-		{
-			//所有的m_bEnable设为false，清空选中项
-			for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
+		{	//所有的m_bEnable设为false，清空选中项
+			for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
 			{
-				pBoltD->m_bEnable = false;
+				pSchema->m_bEnable = false;
 			}
 			RECOG_SCHEMA *Schema = g_pncSysPara.m_recogSchemaList.GetByIndex(iRows);
 			Schema->m_bEnable = true;
 			pSysSettingDlg->OnSelchangeTabGroup(NULL, NULL);
 		}
-
-	}
-	else if (iSubItem = 1 || nCurSel == PROPGROUP_BOLT)
-	{
-		CSuperGridCtrl::CTreeItem* pGroupItem = pListCtrl->GetTreeItem(iRows);
-		pGroupItem->m_bHideChildren = FALSE;
 	}
 	return TRUE;
 }
@@ -914,14 +907,15 @@ void CPNCSysSettingDlg::OnClose()
 }
 void CPNCSysSettingDlg::OnOK()
 {
-	bool bEnable = FALSE;
-	for (RECOG_SCHEMA *pBoltD = g_pncSysPara.m_recogSchemaList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.m_recogSchemaList.GetNext())
+	RECOG_SCHEMA *pSchema = NULL;
+	for (pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
 	{
-		if (pBoltD->m_bEnable)
-			bEnable = TRUE;
+		if (pSchema->m_bEnable)
+			break;
 	}
-	if (bEnable) 
+	if (pSchema) 
 	{
+		g_pncSysPara.ActiveRecogSchema(pSchema);
 		CPNCSysSettingDlg::OnClose();
 		if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
 			DisplayPartListDockBar();
@@ -964,15 +958,11 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 			m_listCtrlSysSetting.InsertColumn(8, _T("反曲"), LVCFMT_LEFT, 55);
 			if (g_pncSysPara.m_recogSchemaList.GetNodeNum() == 0)
 			{
-				RECOG_SCHEMA *pSchema1 = new RECOG_SCHEMA();
-				pSchema1->m_bEnable = TRUE;
-				pSchema1->m_bEditable = FALSE;
-				pSchema1->m_iDimStyle = g_pncSysPara.m_iDimStyle;
-				pSchema1->m_sPnKey = g_pncSysPara.m_sPnKey;
-				pSchema1->m_sThickKey = g_pncSysPara.m_sThickKey;
-				pSchema1->m_sMatKey = g_pncSysPara.m_sMatKey;
-				pSchema1->m_sPnNumKey = g_pncSysPara.m_sPnNumKey;
-				InsertRecogSchemaItem(&m_listCtrlSysSetting, pSchema1);
+				RECOG_SCHEMA *pNewSchema = g_pncSysPara.InsertRecogSchema("", 
+					g_pncSysPara.m_iDimStyle, g_pncSysPara.m_sPnKey,
+					g_pncSysPara.m_sMatKey,g_pncSysPara.m_sThickKey,g_pncSysPara.m_sPnNumKey,
+					g_pncSysPara.m_sFrontBendKey, g_pncSysPara.m_sReverseBendKey, TRUE);
+				InsertRecogSchemaItem(&m_listCtrlSysSetting, pNewSchema);
 			}
 			else
 			{
@@ -1004,7 +994,6 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 					CSuperGridCtrl::CTreeItem** ppGroupItem = hashGroupByItemName.GetValue(pBoltD->sGroupName);
 					CSuperGridCtrl::CTreeItem* pGroupItem = ppGroupItem ? *ppGroupItem : NULL;
 					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
-
 				}
 			}
 			m_listCtrlSysSetting.Redraw();

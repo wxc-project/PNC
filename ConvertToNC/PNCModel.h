@@ -149,7 +149,7 @@ public:
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
-	void PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet);
+	void PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet, int *piInvalidCirCountForText);
 	void InternalExtractPlateRelaEnts();
 public:
 	CPlateProcessInfo();

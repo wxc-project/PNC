@@ -68,6 +68,10 @@ public:
 	LAYER_ITEM* GetEdgeLayerItem(const char* sLayer){return m_xHashEdgeKeepLayers.GetValue(sLayer);}
 	void EmptyEdgeLayerHash(){m_xHashEdgeKeepLayers.Empty();}
 	void Init();
+	RECOG_SCHEMA* InsertRecogSchema(const char* name, int dimStyle, const char* partNoKey,
+		const char* matKey, const char* thickKey, const char* partCountKey = "",
+		const char* frontBendKey = "", const char* reverseBendKey = "", BOOL bEditable = FALSE);
+	void ActiveRecogSchema(RECOG_SCHEMA *pSchema);
 	//
 	BOOL RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum);
 	BOOL IsNeedFilterLayer(const char* sLayer);

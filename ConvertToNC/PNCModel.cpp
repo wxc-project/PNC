@@ -250,7 +250,7 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 	}
 }
 
-void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet)
+void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet, int *piInvalidCirCountForText)
 {	//合并圆心相同的圆，同一圆心只保留直径最大的圆
 	CHashStrList<CAD_ENTITY*> hashEntPtrByCenterStr;	//记录圆心对应的直径最大的螺栓实体
 	hashInvalidBoltCirPtrSet.Empty();
@@ -278,12 +278,15 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 	}
 	if (g_pncSysPara.m_ciBoltRecogMode == CPNCSysPara::BOLT_RECOG_DEFAULT)
 	{
+		int nInvalidCount = 0;
 		for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
 		{
 			if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_TEXT && pEnt->ciEntType != RELA_ACADENTITY::TYPE_MTEXT)
 				continue;
 			//标注字符串中包含"钻孔或冲孔"，
-			if (strstr(pEnt->sText, "钻") != NULL || strstr(pEnt->sText, "冲") != NULL)
+			if (strstr(pEnt->sText, "钻") != NULL || strstr(pEnt->sText, "冲") != NULL ||
+				strstr(pEnt->sText, "Φ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
+				strstr(pEnt->sText, "焊") != NULL)
 				continue;
 			//排除件号标注圆圈
 			SCOPE_STRU scope;
@@ -301,9 +304,12 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 				{
 					hashInvalidBoltCirPtrSet.SetValue((DWORD)pCirEnt, pCirEnt);
 					hashEntPtrByCenterStr.DeleteCursor();
+					nInvalidCount++;
 				}
 			}
 		}
+		if (piInvalidCirCountForText)
+			*piInvalidCirCountForText = nInvalidCount;
 	}
 }
 //根据钢板相关的图元集合更新基本信息、螺栓信息及顶点(火曲)信息
@@ -350,7 +356,10 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	xPlate.m_cFaceN=1;
 	DeleteAssisstPts();
 	CHashSet<CAD_ENTITY*> hashInvalidBoltCirPtrSet;
-	PreprocessorBoltEnt(hashInvalidBoltCirPtrSet);
+	int nInvalidCirCountForText = 0;
+	PreprocessorBoltEnt(hashInvalidBoltCirPtrSet, &nInvalidCirCountForText);
+	if (nInvalidCirCountForText > 0)
+		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！");
 	//baseInfo应定义在For循环外，否则多行多次提取会导致之前的提取到的结果被冲掉 wht 19-10-22
 	BASIC_INFO baseInfo;
 	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())

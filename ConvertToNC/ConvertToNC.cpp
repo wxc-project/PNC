@@ -389,4 +389,3 @@ acrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
 	}
 	return AcRx::kRetOK;
 }
-
