@@ -6,8 +6,20 @@ CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 {
 	m_pPlateInfo=pPlate;
 	m_xEntIdList.Empty();
-	for(unsigned long *pId=pPlate->m_cloneEntIdList.GetFirst();pId;pId=pPlate->m_cloneEntIdList.GetNext())
+	unsigned long cloneMarkCadEntId = pPlate->m_xMkDimPoint.idCadEnt;
+	for (unsigned long *pId = pPlate->m_cloneEntIdList.GetFirst(); pId; pId = pPlate->m_cloneEntIdList.GetNext())
+	{
+		if (*pId==cloneMarkCadEntId)
+			continue;	//计算钢板区域时不算号料孔实体 wht 19-11-01
+		AcDbEntity *pEnt = NULL;
+		CAcDbObjLife entLife(pEnt);
+		acdbOpenObject(pEnt, MkCadObjId(*pId), AcDb::kForRead);
+		if (pEnt == NULL)
+			continue;
+		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
+			continue;	//计算钢板区域时不计算文字区域 wht 19-10-17
 		m_xEntIdList.append(MkCadObjId(*pId));
+	}
 	m_curRect=GetCadEntRect(m_xEntIdList);
 	m_origin.Set(m_curRect.topLeft.x,m_curRect.bottomRight.y);
 }

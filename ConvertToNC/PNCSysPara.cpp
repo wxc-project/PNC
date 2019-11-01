@@ -70,7 +70,9 @@ void CPNCSysPara::Init()
 	//默认过滤图层名
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
-	InsertRecogSchema("单行1", 0, "#", "Q", "-");
+	RECOG_SCHEMA *pSchema = InsertRecogSchema("单行1", 0, "#", "Q", "-");
+	if (pSchema)
+		pSchema->m_bEnable = TRUE;
 	InsertRecogSchema("单行2", 0, "#", "Q", "-", "件");
 	InsertRecogSchema("单行3", 0, "#", "Q", "-", "件", "正曲", "反曲");
 	InsertRecogSchema("单行4", 0, "#", "Q", "-", "件", "外曲", "内曲");
@@ -78,10 +80,10 @@ void CPNCSysPara::Init()
 	InsertRecogSchema("多行2", 1, "#", "Q", "-", "件");
 	InsertRecogSchema("多行3", 1, "#", "Q", "-", "件", "正曲", "反曲");
 	InsertRecogSchema("多行4", 1, "#", "Q", "-", "件", "外曲", "内曲");
-	InsertRecogSchema("多行5", 1, "件号:", "材质：", "板厚：");
-	InsertRecogSchema("多行6", 1, "件号:", "材质：", "板厚：", "件数");
-	InsertRecogSchema("多行7", 1, "件号:", "材质：", "板厚：", "件数", "正曲", "反曲");
-	InsertRecogSchema("多行8", 1, "件号:", "材质：", "板厚：", "件数", "外曲", "内曲");
+	InsertRecogSchema("多行5", 1, "件号:", "材质:", "板厚:");
+	InsertRecogSchema("多行6", 1, "件号:", "材质:", "板厚:", "件数");
+	InsertRecogSchema("多行7", 1, "件号:", "材质:", "板厚:", "件数", "正曲", "反曲");
+	InsertRecogSchema("多行8", 1, "件号:", "材质:", "板厚:", "件数", "外曲", "内曲");
 	
 #ifdef __PNC_
 	InitDrawingEnv();

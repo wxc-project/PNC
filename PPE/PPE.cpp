@@ -162,8 +162,40 @@ bool DetectSpecifiedHaspKeyFile(const char* default_file)
 		SetHaspLoginScope(scope_xmlstr);
 	return detected;
 }
+#include <DbgHelp.h>
+#pragma comment(lib,"DbgHelp.Lib")  //MiniDumpWriteDump链接时用到
+LONG WINAPI  PpeExceptionFilter(EXCEPTION_POINTERS *pExptInfo)
+{
+	// 程序崩溃时，将写入程序目录下的ExceptionDump.dmp文件  
+	CXhChar500 sAppPath;
+	GetSysPath(sAppPath);
+	CXhChar500 sExceptionFilePath("%s\\PpeException.dmp", (char*)sAppPath);
+	size_t size = sExceptionFilePath.GetLength();
+	if (size > 0)
+	{
+		HANDLE hFile = ::CreateFile(sExceptionFilePath, GENERIC_WRITE,
+			FILE_SHARE_WRITE, NULL, CREATE_NEW,
+			FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hFile != INVALID_HANDLE_VALUE)
+		{
+			MINIDUMP_EXCEPTION_INFORMATION exptInfo;
+			exptInfo.ThreadId = ::GetCurrentThreadId();
+			exptInfo.ExceptionPointers = pExptInfo;
+			//将内存堆栈dump到文件中
+			//MiniDumpWriteDump需引入dbghelp头文件
+			BOOL bOK = ::MiniDumpWriteDump(::GetCurrentProcess(),
+				::GetCurrentProcessId(), hFile, MiniDumpNormal,
+				&exptInfo, NULL, NULL);
+		}
+		return EXCEPTION_EXECUTE_HANDLER;
+	}
+	else
+		return 0;
+}
 BOOL CPPEApp::InitInstance()
 {
+	::SetUnhandledExceptionFilter(PpeExceptionFilter);	//设置未处理异常过滤器生成dmp文件 wht 19-04-09
+
 	CWinAppEx::InitInstance();
 	AfxEnableControlContainer();
 	EnableTaskbarInteraction(FALSE);

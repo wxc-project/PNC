@@ -174,6 +174,7 @@ public:
 	bool UpdateSteelSealPos(GEPOINT &pos);
 	void RefreshPlateNum();
 	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope=FALSE);
+	bool IsMarkPosCadEnt(int idCadEnt);
 };
 class CPlateReactorLife
 {	//钢板反应器生命周期控制类

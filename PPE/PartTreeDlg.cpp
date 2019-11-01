@@ -90,17 +90,17 @@ void CPartTreeDlg::OnRclickTreeCtrl(NMHDR* pNMHDR, LRESULT* pResult)
 }
 void CPartTreeDlg::OnTvnSelchangedTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 {
-	CLogErrorLife loglife;
 	LPNMTREEVIEW pNMTreeView = reinterpret_cast<LPNMTREEVIEW>(pNMHDR);
 	HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
 	if(hItem!=NULL)
 	{
 		TREEITEM_INFO *pInfo=(TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
 		CProcessPart *pPart=NULL;
-		if(pInfo&&(pInfo->itemType==TREEITEM_INFO::INFO_ANGLE||pInfo->itemType==TREEITEM_INFO::INFO_PLATE))
-			pPart=(CProcessPart*)pInfo->dwRefData;
+		if (pInfo && (pInfo->itemType == TREEITEM_INFO::INFO_ANGLE || pInfo->itemType == TREEITEM_INFO::INFO_PLATE))
+			pPart = (CProcessPart*)pInfo->dwRefData;
+		
 		CPPEView *pView = theApp.GetView();
-		if(pPart)
+		if (pPart)
 			pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());
 		else
 			pView->UpdateCurWorkPartByPartNo(NULL);
@@ -304,7 +304,7 @@ void CPartTreeDlg::InitTreeView(const char* cur_part_no/*=NULL*/)
 	if(angleSet.GetNodeNum()>0)
 	{
 		int nJgNum=angleSet.GetNodeNum();
-		m_hAngleParentItem=InsertTreeItem(m_treeCtrl,CXhChar50("실멀",nJgNum),IMG_ANGLE_SET,IMG_ANGLE_SET,TVI_ROOT,TREEITEM_INFO::INFO_ANGLESET);
+		m_hAngleParentItem=InsertTreeItem(m_treeCtrl,CXhChar50("실멀(%d)",nJgNum),IMG_ANGLE_SET,IMG_ANGLE_SET,TVI_ROOT,TREEITEM_INFO::INFO_ANGLESET);
 		for(CProcessAngle *pAngle=angleSet.GetFirst();pAngle;pAngle=angleSet.GetNext())
 		{
 			sText.Printf("%s#%s",(char*)pAngle->GetPartNo(),(char*)pAngle->GetSpec());
@@ -344,14 +344,14 @@ void CPartTreeDlg::InsertTreeItem(char* sText,CProcessPart *pPart)
 	if(pPart->m_cPartType==CProcessPart::TYPE_LINEANGLE)
 	{
 		if(m_hAngleParentItem==NULL)
-			m_hAngleParentItem=m_treeCtrl.InsertItem("실멀",TVI_ROOT);
+			m_hAngleParentItem = InsertTreeItem(m_treeCtrl, "실멀", IMG_ANGLE_SET, IMG_ANGLE_SET, TVI_ROOT, TREEITEM_INFO::INFO_ANGLESET);
 		hParentItem=m_hAngleParentItem;
 		hItem=InsertTreeItem(m_treeCtrl,sText,IMG_ANGLE,IMG_ANGLE_SEL,m_hAngleParentItem,TREEITEM_INFO::INFO_ANGLE,pPart);
 	}
 	else if(pPart->m_cPartType==CProcessPart::TYPE_PLATE)
 	{
 		if(m_hPlateParentItem==NULL)
-			m_hPlateParentItem=m_treeCtrl.InsertItem("멀겼",TVI_ROOT);
+			m_hPlateParentItem = InsertTreeItem(m_treeCtrl, "멀겼", IMG_PLATE_SET, IMG_PLATE_SET, TVI_ROOT, TREEITEM_INFO::INFO_PLATESET);
 		hParentItem=m_hPlateParentItem;
 		hItem=InsertTreeItem(m_treeCtrl,sText,IMG_PLATE,IMG_PLATE_SEL,m_hPlateParentItem,TREEITEM_INFO::INFO_PLATE,pPart);
 	}

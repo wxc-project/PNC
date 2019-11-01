@@ -151,8 +151,10 @@ BOOL CPartListDlg::UpdatePartList()
 		str_arr[3].Format("%d",pPlate->xPlate.feature);
 		int iItem=m_partList.InsertItemRecord(-1,str_arr);
 		m_partList.SetItemData(iItem,(DWORD)pPlate);
-		if(pPlate->xPlate.m_fThick<=0)
-			m_partList.SetItemTextColor(iItem,1,RGB(255,0,0));
+		if (pPlate->xPlate.m_fThick <= 0)
+			m_partList.SetItemTextColor(iItem, 1, RGB(255, 0, 0));
+		else
+			m_partList.SetItemTextColor(iItem, 1, RGB(0, 0, 0));
 	}
 	if(CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
 	{

@@ -1413,8 +1413,9 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 		m_pProcessPart=model.FromPartNo(part_no);
 	else
 		m_pProcessPart=NULL;
-	g_pPartEditor->ClearProcessParts();
-	if(m_pProcessPart==NULL)
+	if(g_pPartEditor)
+		g_pPartEditor->ClearProcessParts();
+	if (m_pProcessPart == NULL)
 		return;
 #ifdef __PNC_
 	if(m_pProcessPart->IsPlate())
@@ -1427,7 +1428,8 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 	CBuffer buffer;
 	m_pProcessPart->ToPPIBuffer(buffer);
 	buffer.SeekToBegin();
-	g_pPartEditor->AddProcessPart(buffer,m_pProcessPart->GetKey());
+	if(g_pPartEditor)
+		g_pPartEditor->AddProcessPart(buffer,m_pProcessPart->GetKey());
 	if(theApp.starter.IsCompareMode()&&model.PartCount()==2)
 	{	//构件对比模式，添加对比构件
 		for(CProcessPart *pPart=model.EnumPartFirst();pPart;pPart=model.EnumPartNext())
@@ -1436,7 +1438,8 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 				continue;
 			buffer.ClearContents();
 			pPart->ToPPIBuffer(buffer);
-			g_pPartEditor->AddProcessPart(buffer,pPart->GetKey());
+			if(g_pPartEditor)
+				g_pPartEditor->AddProcessPart(buffer,pPart->GetKey());
 		}
 	}
 }

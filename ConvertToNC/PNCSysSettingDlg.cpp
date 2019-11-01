@@ -879,7 +879,8 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_ctrlPropGroup.InsertItem(1, "文字识别");
 	m_ctrlPropGroup.InsertItem(2, "螺栓识别");
 	//
-	PNCSysSetImportDefault();
+	if (!m_bInernalStart)	//非内部启动时导入配置参数，否则选择的颜色将被冲掉 wht 19-10-30
+		PNCSysSetImportDefault();
 
 	long col_wide_arr[7] = { 80,80,80,80,80,80,80 };
 	m_listCtrlSysSetting.InitListCtrl(col_wide_arr);
@@ -892,11 +893,11 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_propList.SetDividerScale(0.45);
 	//
 	g_pncSysPara.InitPropHashtable();
+	DisplaySystemSetting();
 #ifdef __PNC_
 	if (m_bInernalStart)	//内部启动
 		FinishSelectObjOper();		//完成选择对象的后续操作
 #endif
-	DisplaySystemSetting();
 	//设置右键菜单回调函数
 	m_listCtrlSysSetting.SetContextMenuFunc(FireContextMenu);
 	return TRUE;

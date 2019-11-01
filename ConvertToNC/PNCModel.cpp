@@ -359,7 +359,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	int nInvalidCirCountForText = 0;
 	PreprocessorBoltEnt(hashInvalidBoltCirPtrSet, &nInvalidCirCountForText);
 	if (nInvalidCirCountForText > 0)
-		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！");
+		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！",(char*)xPlate.GetPartNo(),nInvalidCirCountForText);
 	//baseInfo应定义在For循环外，否则多行多次提取会导致之前的提取到的结果被冲掉 wht 19-10-22
 	BASIC_INFO baseInfo;
 	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
@@ -1953,7 +1953,13 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 	}
 	return scope;
 }
-
+bool CPlateProcessInfo::IsMarkPosCadEnt(int idCadEnt)
+{
+	if (idCadEnt == m_xMkDimPoint.idCadEnt)
+		return true;	//计算钢板区域时不算号料孔实体 wht 19-10-16
+	else
+		return false;
+}
 //////////////////////////////////////////////////////////////////////////
 //ExtractPlateInfo
 //ExtractPlateProfile

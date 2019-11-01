@@ -12,7 +12,7 @@ class CAdjustPlateMCS
 	bool IsConcavePt(BYTE ciEdgeIndex);
 	bool Rotation();
 public:
-	CAdjustPlateMCS(CPlateProcessInfo *pPlate, BOOL bDrawClonePlateBoard = TRUE);
+	CAdjustPlateMCS(CPlateProcessInfo *pPlate);
 	~CAdjustPlateMCS(void);
 
 	void AnticlockwiseRotation();
