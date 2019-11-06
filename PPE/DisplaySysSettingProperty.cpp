@@ -449,6 +449,11 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.plasmaCut.m_wEnlargedSpace=atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
 	}
+	else if (CSysPara::GetPropID("plasmaCut.m_bCutSpecialHole") == pItem->m_idProp)
+	{
+		g_sysPara.plasmaCut.m_bCutSpecialHole = atoi(valueStr);
+		g_sysPara.WriteSysParaToReg("plasmaCut.m_bCutSpecialHole");
+	}
 	else if (CSysPara::GetPropID("flameCut.m_sOutLineLen")==pItem->m_idProp)
 	{
 		g_sysPara.flameCut.m_sOutLineLen.Copy(valueStr);
@@ -473,6 +478,11 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	{
 		g_sysPara.flameCut.m_wEnlargedSpace=atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("flameCut.m_wEnlargedSpace");
+	}
+	else if (CSysPara::GetPropID("flameCut.m_bCutSpecialHole") == pItem->m_idProp)
+	{
+		g_sysPara.flameCut.m_bCutSpecialHole = atoi(valueStr);
+		g_sysPara.WriteSysParaToReg("flameCut.m_bCutSpecialHole");
 	}
 #endif
 	else if(CSysPara::GetPropID("holeIncrement.m_fDatum")==pItem->m_idProp)
@@ -824,6 +834,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbEditPropItem(pPropItem,"flameCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem,"flameCut.m_sOutLineLen");
 	oper.InsertEditPropItem(pPropItem,"flameCut.m_wEnlargedSpace");
+	oper.InsertCmbListPropItem(pPropItem, "flameCut.m_bCutSpecialHole");
 	pPropItem->m_bHideChildren=(g_sysPara.m_cDisplayCutType!=0);
 	//µÈÀë×ÓÇÐ¸î
 	pPropItem=oper.InsertButtonPropItem(pParentItem,"plasmaCut");
@@ -831,6 +842,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pPropItem,"plasmaCut.m_bCutPosInInitPos");
 	oper.InsertCmbEditPropItem(pPropItem,"plasmaCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem,"plasmaCut.m_sOutLineLen");
+	//oper.InsertCmbListPropItem(pPropItem, "plasmaCut.m_bCutSpecialHole");
 	pPropItem->m_bHideChildren=(g_sysPara.m_cDisplayCutType==0);
 #endif
 #ifndef __PNC_

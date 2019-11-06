@@ -589,70 +589,96 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			{
 				CXhChar100 sNotes, sTemp;
 				key_str.Copy(str_arr[i]);
+				CXhChar100 sPrevProp;
 				for (char *token = strtok(key_str, "&"); token; token = strtok(NULL, "&"))
 				{
 					if (stricmp(token, "设计单位") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sCompanyName);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sCompanyName);
 					}
 					else if (stricmp(token, "工程编号") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sPrjCode);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sPrjCode);
 					}
 					else if (stricmp(token, "工程名称") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sPrjName);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sPrjName);
 					}
 					else if (stricmp(token, "塔型") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sTaType);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sTaType);
 					}
 					else if (stricmp(token, "代号") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sTaAlias);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sTaAlias);
 					}
 					else if (stricmp(token, "钢印号") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sTaStampNo);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sTaStampNo);
 					}
 					else if (stricmp(token, "操作员") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sOperator);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sOperator);
 					}
 					else if (stricmp(token, "审核人") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sAuditor);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sAuditor);
 					}
 					else if (stricmp(token, "评审人") == 0)
 					{
-						sTemp.Printf("%s ", (char*)model.m_sCritic);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(model.m_sCritic);
 					}
 					else if (stricmp(token, "件号") == 0)
-					{
-						sTemp.Printf("%s ", (char*)tempPlate.GetPartNo());
-						sNotes.Append(sTemp);
+					{	//简化材质字符在件号之前不需要在件号前加空格 wht 19-11-05
+						if (!sPrevProp.EqualNoCase("简化材质字符")&&sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(tempPlate.GetPartNo());
 					}
 					else if (stricmp(token, "材质") == 0)
 					{
 						char steelmark[20] = "";
 						CProcessPart::QuerySteelMatMark(tempPlate.cMaterial, steelmark);
-						sTemp.Printf("%s ", steelmark);
-						sNotes.Append(sTemp);
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sNotes.Append(steelmark);
+					}
+					else if (stricmp(token, "简化材质字符") == 0)
+					{	//简化材质字符在件号之后不需要在简化字符前加空格 wht 19-11-05
+						char steelmark[20] = "";
+						CProcessPart::QuerySteelMatMark(tempPlate.cMaterial, steelmark);
+						if (stricmp(steelmark, "Q235") != 0)
+						{
+							if (!sPrevProp.EqualNoCase("件号") && sNotes.GetLength() > 0)
+								sNotes.Append(' ');
+							sNotes.Append(toupper(tempPlate.cMaterial));
+						}
 					}
 					else if (stricmp(token, "厚度") == 0)
 					{
-						sTemp.Printf("%.0f ", tempPlate.GetThick());
+						if (sNotes.GetLength() > 0)
+							sNotes.Append(' ');
+						sTemp.Printf("%.0f", tempPlate.GetThick());
 						sNotes.Append(sTemp);
 					}
+					sPrevProp.Copy(token);
 				}
 				sNoteArr.Add(sNotes);
 			}
@@ -735,6 +761,8 @@ void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate>
 						sFilePath.Append("Q235");
 					else if (pPlate->cMaterial == 'H')
 						sFilePath.Append("Q345");
+					else if (pPlate->cMaterial == 'h')
+						sFilePath.Append("Q355");
 					else if (pPlate->cMaterial == 'P')
 						sFilePath.Append("Q420");
 				}
@@ -770,6 +798,8 @@ void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate>
 						sFilePath.Append("Q235");
 					else if (pPlate->cMaterial == 'H')
 						sFilePath.Append("Q345");
+					else if (pPlate->cMaterial == 'h')
+						sFilePath.Append("Q355");
 					else if (pPlate->cMaterial == 'P')
 						sFilePath.Append("Q420");
 				}
@@ -804,6 +834,8 @@ void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate>
 						sFilePath.Append("Q235");
 					else if (pPlate->cMaterial == 'H')
 						sFilePath.Append("Q345");
+					else if (pPlate->cMaterial == 'h')
+						sFilePath.Append("Q355");
 					else if (pPlate->cMaterial == 'P')
 						sFilePath.Append("Q420");
 				}
@@ -1686,13 +1718,15 @@ void CNCPart::CreatePlatePmzFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &pl
 }
 bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 {
+	BOOL bCutSpecialHole = FALSE;
 	int nInLineLen=-1,nOutLineLen=-1;
 	if(CPPEModel::sysPara!=NULL)
 	{
 		nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_PLASMA_CUT);
 		nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_PLASMA_CUT);
+		bCutSpecialHole = CPPEModel::sysPara->IsCutSpecialHole(ISysPara::TYPE_PLASMA_CUT);
 	}
-	CNCPlate ncPlate(pPlate,GEPOINT(0,0,0),0,0,false,nInLineLen,nOutLineLen);
+	CNCPlate ncPlate(pPlate,GEPOINT(0,0,0),0,0,false,nInLineLen,nOutLineLen,0,0,0,bCutSpecialHole);
 	return ncPlate.CreatePlateTxtFile(file_path);
 }
 
@@ -1818,6 +1852,8 @@ void CNCPart::CreatePlateFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plate
 					sFilePath.Append("Q235");
 				else if (pPlate->cMaterial == 'H')
 					sFilePath.Append("Q345");
+				else if (pPlate->cMaterial == 'h')
+					sFilePath.Append("Q355");
 				else if (pPlate->cMaterial == 'P')
 					sFilePath.Append("Q420");
 				else if (pPlate->cMaterial == 'T')

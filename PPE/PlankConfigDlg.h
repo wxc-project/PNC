@@ -29,6 +29,7 @@ public:
 	BOOL m_bAuditor;	//审核人
 	BOOL m_bCritic;		//评审人
 	BOOL m_bPartNo;		//件号
+	BOOL m_bBriefMat;	//简化材质
 	BOOL m_bMaterial;	//材质
 	BOOL m_bThick;		//厚度
 protected:
@@ -51,4 +52,5 @@ protected:
 	afx_msg void OnChkPartNo();
 	afx_msg void OnChkMaterial();
 	afx_msg void OnChkThick();
+	afx_msg void OnChkBriefMat();
 };

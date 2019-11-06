@@ -206,7 +206,7 @@ void CPNCDlg::OnSize(UINT nType, int cx, int cy)
 		rect.right=cx-m_nRightMargin;
 		pWnd->MoveWindow(&rect);
 	}
-	pWnd=GetDlgItem(IDOK);
+	/*pWnd=GetDlgItem(IDOK);
 	if(pWnd->GetSafeHwnd()!=NULL)
 	{
 		pWnd->GetWindowRect(&rect);
@@ -215,7 +215,7 @@ void CPNCDlg::OnSize(UINT nType, int cx, int cy)
 		rect.left=(long)((cx-nLen)*0.5);
 		rect.right=(long)((cx+nLen)*0.5);
 		pWnd->MoveWindow(&rect);
-	}
+	}*/
 	CDialog::OnSize(nType, cx, cy);
 }
 //

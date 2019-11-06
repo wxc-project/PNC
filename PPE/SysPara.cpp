@@ -85,6 +85,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("plasmaCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点","初始点","0.靠近原点|1.远离原点"));
 	AddPropItem("plasmaCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点位置","切入点位置","0.在指定轮廓点|1.始终在初始点"));
 	AddPropItem("plasmaCut.m_wEnlargedSpace",PROPLIST_ITEM(id++,"轮廓边增大值","轮廓边增大值"));
+	AddPropItem("plasmaCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "输出特殊孔", "输出切割数据时输出特殊孔切割路径"));
 	//火焰切割显示
 	AddPropItem("flameCut",PROPLIST_ITEM(id++,"火焰切割"));
 	AddPropItem("flameCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
@@ -92,6 +93,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("flameCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点","初始点","0.靠近原点|1.远离原点"));
 	AddPropItem("flameCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点位置","切入点位置","0.在指定轮廓点|1.始终在初始点"));
 	AddPropItem("flameCut.m_wEnlargedSpace",PROPLIST_ITEM(id++,"轮廓边增大值","轮廓边增大值"));
+	AddPropItem("flameCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "输出特殊孔", "输出切割数据时输出特殊孔切割路径", "是|否"));
 	//输出设置
 	AddPropItem("OutPutSet", PROPLIST_ITEM(id++, "输出设置"));
 	AddPropItem("nc.m_iDxfMode", PROPLIST_ITEM(id++, "按厚度分类", "生成DXF是否进行分类", "是|否"));
@@ -238,12 +240,14 @@ CSysPara::CSysPara(void)
 	plasmaCut.m_bCutPosInInitPos=TRUE;
 	plasmaCut.m_bInitPosFarOrg=TRUE;
 	plasmaCut.m_wEnlargedSpace=0;
+	plasmaCut.m_bCutSpecialHole = FALSE;
 	//火焰切割
 	flameCut.m_sOutLineLen.Copy("4");
 	flameCut.m_sIntoLineLen.Copy("4");
 	flameCut.m_bCutPosInInitPos=TRUE;
 	flameCut.m_bInitPosFarOrg=TRUE;
 	flameCut.m_wEnlargedSpace=0;
+	flameCut.m_bCutSpecialHole = FALSE;
 	//
 	holeIncrement.m_fDatum=1.5;
 	holeIncrement.m_fM12=1.5;
@@ -308,7 +312,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.3");
+	CString version("2.4");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -348,12 +352,14 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar<<(WORD)plasmaCut.m_bInitPosFarOrg;
 	ar<<(WORD)plasmaCut.m_bCutPosInInitPos;
 	ar<<plasmaCut.m_wEnlargedSpace;
+	ar<<(WORD)plasmaCut.m_bCutSpecialHole;
 	//火焰切割
 	ar<<CString(flameCut.m_sOutLineLen);
 	ar<<CString(flameCut.m_sIntoLineLen);
 	ar<<(WORD)flameCut.m_bInitPosFarOrg;
 	ar<<(WORD)flameCut.m_bCutPosInInitPos;
 	ar<<flameCut.m_wEnlargedSpace;
+	ar<<(WORD)flameCut.m_bCutSpecialHole;
 	ar<<font.fDimTextSize;
 	ar<<jgDrawing.iDimPrecision;
 	ar<<jgDrawing.fRealToDraw;
@@ -455,11 +461,13 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("flameCut.m_sIntoLineLen");
 	WriteSysParaToReg("flameCut.m_sOutLineLen");
 	WriteSysParaToReg("flameCut.m_wEnlargedSpace");
+	WriteSysParaToReg("flameCut.m_bCutSpecialHole");
 	WriteSysParaToReg("plasmaCut.m_bCutPosInInitPos");
 	WriteSysParaToReg("plasmaCut.m_bInitPosFarOrg");
 	WriteSysParaToReg("plasmaCut.m_sIntoLineLen");
 	WriteSysParaToReg("plasmaCut.m_sOutLineLen");
 	WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
+	WriteSysParaToReg("plasmaCut.m_bCutSpecialHole");
 	WriteSysParaToReg("nc.LaserPara.m_bOutputBendLine");
 	WriteSysParaToReg("nc.LaserPara.m_bOutputBendType");
 	WriteSysParaToReg("PbjMode");
@@ -531,12 +539,16 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar>>w;plasmaCut.m_bInitPosFarOrg=w;
 		ar>>w;plasmaCut.m_bCutPosInInitPos=w;
 		ar>>w;plasmaCut.m_wEnlargedSpace=w;
+		if (fVersion >= 2.4)
+			ar >> w; plasmaCut.m_bCutSpecialHole = w;
 		//火焰切割
 		ar>>sValue;flameCut.m_sOutLineLen.Copy(sValue);
 		ar>>sValue;flameCut.m_sIntoLineLen.Copy(sValue);
 		ar>>w;flameCut.m_bInitPosFarOrg=w;
 		ar>>w; flameCut.m_bCutPosInInitPos=w;
 		ar>>w;flameCut.m_wEnlargedSpace=w;
+		if (fVersion >= 2.4)
+			ar >> w; flameCut.m_bCutSpecialHole = w;
 	}
 	else if(fVersion>=1.7)
 	{	//等离子切割
@@ -670,11 +682,13 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("flameCut.m_sIntoLineLen");
 	ReadSysParaFromReg("flameCut.m_sOutLineLen");
 	ReadSysParaFromReg("flameCut.m_wEnlargedSpace");
+	ReadSysParaFromReg("flameCut.m_bCutSpecialHole");
 	ReadSysParaFromReg("plasmaCut.m_bCutPosInInitPos");
 	ReadSysParaFromReg("plasmaCut.m_bInitPosFarOrg");
 	ReadSysParaFromReg("plasmaCut.m_sIntoLineLen");
 	ReadSysParaFromReg("plasmaCut.m_sOutLineLen");
 	ReadSysParaFromReg("plasmaCut.m_wEnlargedSpace");
+	ReadSysParaFromReg("plasmaCut.m_bCutSpecialHole");
 	ReadSysParaFromReg("nc.LaserPara.m_bOutputBendLine");
 	ReadSysParaFromReg("nc.LaserPara.m_bOutputBendType");
 	ReadSysParaFromReg("PbjMode");
@@ -771,6 +785,8 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue,flameCut.m_sOutLineLen);
 		else if(stricmp(lpszEntry,"flameCut.m_wEnlargedSpace")==0)
 			sprintf(sValue,"%d",flameCut.m_wEnlargedSpace);
+		else if (stricmp(lpszEntry, "flameCut.m_bCutSpecialHole") == 0)
+			sprintf(sValue, "%d", flameCut.m_bCutSpecialHole);
 		//
 		else if(stricmp(lpszEntry,"plasmaCut.m_bCutPosInInitPos")==0)
 			sprintf(sValue,"%d",plasmaCut.m_bCutPosInInitPos);
@@ -782,6 +798,8 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			strcpy(sValue,plasmaCut.m_sOutLineLen);
 		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
 			sprintf(sValue,"%d",plasmaCut.m_wEnlargedSpace);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bCutSpecialHole") == 0)
+			sprintf(sValue, "%d", plasmaCut.m_bCutSpecialHole);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendLine") == 0)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendLine);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendType") == 0)
@@ -901,6 +919,8 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			flameCut.m_sOutLineLen.Copy(sValue);
 		else if(stricmp(lpszEntry,"flameCut.m_wEnlargedSpace")==0)
 			flameCut.m_wEnlargedSpace=atoi(sValue);
+		else if (stricmp(lpszEntry, "flameCut.m_bCutSpecialHole") == 0)
+			flameCut.m_bCutSpecialHole = atoi(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_bInitPosFarOrg")==0)
 			plasmaCut.m_bInitPosFarOrg=atoi(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_bCutPosInInitPos")==0)
@@ -911,6 +931,8 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			plasmaCut.m_sOutLineLen.Copy(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
 			plasmaCut.m_wEnlargedSpace=atoi(sValue);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bCutSpecialHole") == 0)
+			plasmaCut.m_bCutSpecialHole = atoi(sValue);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendLine") == 0)
 			nc.m_xLaserPara.m_bOutputBendLine = atoi(sValue);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendType") == 0)
@@ -1215,6 +1237,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("plasmaCut.m_wEnlargedSpace")==id)
 		sText.Printf("%d",plasmaCut.m_wEnlargedSpace);
+	else if (GetPropID("plasmaCut.m_bCutSpecialHole") == id)
+	{
+		if (plasmaCut.m_bCutSpecialHole)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
+	}
 	//火焰切割
 	else if(GetPropID("flameCut.m_sOutLineLen")==id)
 		sText.Copy(flameCut.m_sOutLineLen);
@@ -1236,6 +1265,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("flameCut.m_wEnlargedSpace")==id)
 		sText.Printf("%d",flameCut.m_wEnlargedSpace);
+	else if (GetPropID("flameCut.m_bCutSpecialHole") == id)
+	{
+		if(flameCut.m_bCutSpecialHole)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
+	}
 #endif
 	else if(GetPropID("holeIncrement.m_fDatum")==id)
 	{
@@ -1604,7 +1640,15 @@ BOOL CSysPara::GetCutPosInInitPos(BYTE cType/*=-1*/)
 	else //if(TYPE_PLASMA_CUT==cType)
 		return g_sysPara.plasmaCut.m_bCutPosInInitPos;
 }
-
+BOOL CSysPara::IsCutSpecialHole(BYTE cType/*=-1*/)
+{
+	if (TYPE_FLAME_CUT == cType)
+		return g_sysPara.flameCut.m_bCutPosInInitPos;
+	else if(TYPE_PLASMA_CUT==cType)
+		return g_sysPara.plasmaCut.m_bCutPosInInitPos;
+	else
+		return FALSE;
+}
 void CSysPara::AngleDrawingParaToBuffer(CBuffer &buffer)
 {
 	buffer.WriteDouble(font.fDimTextSize);

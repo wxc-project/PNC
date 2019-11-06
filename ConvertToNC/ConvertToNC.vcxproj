@@ -396,7 +396,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'">
     <IntDir>UBOMDebugObj7\</IntDir>
-    <OutDir>UBOMDebug7\</OutDir>
+    <OutDir>..\bin\UBOMDebug7\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC07</TargetName>
@@ -692,7 +692,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>UBOMDebug7/PNC07.arx</OutputFile>
+      <OutputFile>$(OutDir)PNC07.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>.\Debug7/PNC.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>

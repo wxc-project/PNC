@@ -90,6 +90,7 @@ public:
 		BOOL m_bInitPosFarOrg;
 		BOOL m_bCutPosInInitPos;
 		WORD m_wEnlargedSpace;
+		BOOL m_bCutSpecialHole;
 	}flameCut,plasmaCut;
 	//孔径增大值
 	struct HOLE_INCREMENT{
@@ -172,6 +173,7 @@ public:
 	virtual int GetCutEnlargedSpaceLen(BYTE cType=-1);
 	virtual BOOL GetCutInitPosFarOrg(BYTE cType=-1);
 	virtual BOOL GetCutPosInInitPos(BYTE cType=-1);
+	virtual BOOL IsCutSpecialHole(BYTE cType=-1);
 	void AngleDrawingParaToBuffer(CBuffer &buffer);
 	//钢板NC模式设置
 	DWORD AddNcFlag(BYTE ciNcFlag) {

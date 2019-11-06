@@ -126,6 +126,8 @@ CXhChar16 QueryMatMarkByBriefMatMark(char cMat)
 	CXhChar16 sMat;
 	if('H'==cMat)
 		sMat.Copy("Q345");
+	else if('h'==cMat)	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
+		sMat.Copy("Q355");
 	else if('G'==cMat)
 		sMat.Copy("Q390");
 	else if('P'==cMat)

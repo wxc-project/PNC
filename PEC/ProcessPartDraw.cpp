@@ -26,6 +26,15 @@ BOOL CProcessPartDraw::m_bDispBoltOrder=FALSE;
 char CProcessPlateDraw::m_sPlateProcessCardPath[MAX_PATH]={0};
 char CProcessAngleDraw::m_sAngleProcessCardPath[MAX_PATH]={0};
 
+CXhChar16 LocalQuerySteelMark(char cMat)
+{
+	CXhChar16 sMat;
+	QuerySteelMatMark(cMat, sMat);
+	if (cMat == 'h'&&sMat.GetLength()<=0)
+		sMat.Copy("Q355");	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
+	return sMat;
+}
+
 CProcessPartDraw::CProcessPartDraw(void)
 {
 	m_pPart=NULL;
@@ -837,8 +846,8 @@ f2dRect CProcessAngleDraw::InsertDataByGridData(IDrawing *pDarwing,CProcessAngle
 			sGridText.Copy("");
 		else if(grid_data.type_id==ITEM_TYPE_SUM_WEIGHT)	//总重
 			sGridText.Copy("");
-		else if(grid_data.type_id==ITEM_TYPE_DES_MAT)		//设计材质
-			QuerySteelMatMark(pAngle->cMaterial,sGridText);
+		else if (grid_data.type_id == ITEM_TYPE_DES_MAT)		//设计材质
+			sGridText.Copy(LocalQuerySteelMark(pAngle->cMaterial));
 		else if(grid_data.type_id==ITEM_TYPE_REPL_GUIGE)	//代用规格
 		{
 			if(pAngle->IsReplacePart())
@@ -1573,7 +1582,7 @@ int GetLineLenFromExpression(double fThick,const char* sValue)
 }
 
 static void GetCutParamFromReg(BYTE cType,double fThick,int *pnIntoLineLen,int *pnOutLineLen,int *pnEnlargedSpace,
-							   BOOL *pbInitPosFarOrg=NULL,BOOL *pbCutPosInInitPos=NULL)
+							   BOOL *pbInitPosFarOrg = NULL, BOOL *pbCutPosInInitPos = NULL, BOOL *pbCutSpecialHole=NULL)
 {
 	CXhChar100 sValue;
 	if(cType==0xFF&&CPEC::GetSysParaFromReg("m_cDisplayCutType",sValue))
@@ -1592,6 +1601,8 @@ static void GetCutParamFromReg(BYTE cType,double fThick,int *pnIntoLineLen,int *
 			*pbInitPosFarOrg=atoi(sValue);
 		if(pbCutPosInInitPos&&CPEC::GetSysParaFromReg("flameCut.m_bCutPosInInitPos",sValue))
 			*pbCutPosInInitPos=atoi(sValue);	
+		if (pbCutSpecialHole&&CPEC::GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
+			*pbCutSpecialHole = atoi(sValue);
 	}
 	else
 	{
@@ -1605,6 +1616,8 @@ static void GetCutParamFromReg(BYTE cType,double fThick,int *pnIntoLineLen,int *
 			*pbInitPosFarOrg=atoi(sValue);
 		if(pbCutPosInInitPos&&CPEC::GetSysParaFromReg("plasmaCut.m_bCutPosInInitPos",sValue))
 			*pbCutPosInInitPos=atoi(sValue);
+		if (pbCutSpecialHole&&CPEC::GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
+			*pbCutSpecialHole = atoi(sValue);
 	}
 }
 static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolidSet,COLORREF color,BOOL bDrawCutPt=FALSE)
@@ -1836,9 +1849,8 @@ static void DrawNcBackGraphic(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet
 	//3.绘制构件明细
 	if(pPlate->vertex_list.GetNodeNum()>=3)
 	{
-		char matStr[20]="";
-		QuerySteelMatMark(pPlate->cMaterial,matStr);
-		CXhChar200 sValue,sPartInfo("编号:%s  板厚:%dmm 材质%s",(char*)pPlate->GetPartNo(),(int)pPlate->m_fThick,matStr);
+		CXhChar16 matStr = LocalQuerySteelMark(pPlate->cMaterial);
+		CXhChar200 sValue,sPartInfo("编号:%s  板厚:%dmm 材质%s",(char*)pPlate->GetPartNo(),(int)pPlate->m_fThick,(char*)matStr);
 		double fTextHeight=30;
 		if(CPEC::GetSysParaFromReg("TextHeight",sValue))
 			fTextHeight=atof(sValue);	//普通文字字高
@@ -1868,9 +1880,8 @@ void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 	else
 	{	//绘制第2块钢板的标注信息
 		color=RGB(0,255,255);
-		char matStr[20]="";
-		QuerySteelMatMark(tempPlate.cMaterial,matStr);
-		CXhChar200 sValue,sPartInfo("编号:%s  板厚:%dmm 材质%s",(char*)tempPlate.GetPartNo(),(int)tempPlate.m_fThick,matStr);
+		CXhChar16 matStr=LocalQuerySteelMark(tempPlate.cMaterial);
+		CXhChar200 sValue,sPartInfo("编号:%s  板厚:%dmm 材质%s",(char*)tempPlate.GetPartNo(),(int)tempPlate.m_fThick,(char*)matStr);
 		double fTextHeight=30;
 		if(CPEC::GetSysParaFromReg("TextHeight",sValue))
 			fTextHeight=atof(sValue);	//普通文字字高
@@ -1952,30 +1963,34 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 	//if(((CProcessPlate*)m_pPart)->mcsFlg.ciOverturn)
 	//	bClockwise=!bClockwise;	//绘制钢板时已考虑过反转此处应根据是否反转调整bClockwise
 	CXhChar100 sValue;
+	BOOL bCutSpecialHole = FALSE;
 	int nEnlargedSpace=0,nIntoLineLen=-1,nOutLineLen=-1;
-	GetCutParamFromReg(bClockwise?1:0,m_pPart->m_fThick,&nIntoLineLen,&nOutLineLen,&nEnlargedSpace);
-	CNCPlate ncPlate((CProcessPlate*)m_pPart,GEPOINT(0,0),0,0,bClockwise,nIntoLineLen,nOutLineLen,0,0,nEnlargedSpace);
+	GetCutParamFromReg(bClockwise?1:0,m_pPart->m_fThick,&nIntoLineLen,&nOutLineLen,&nEnlargedSpace,FALSE,FALSE,&bCutSpecialHole);
+	CNCPlate ncPlate((CProcessPlate*)m_pPart,GEPOINT(0,0),0,0,bClockwise,nIntoLineLen,nOutLineLen,0,0,nEnlargedSpace,bCutSpecialHole);
 	GEPOINT startPt=ncPlate.m_ptCutter,endPt=startPt+ncPlate.m_cutPt.vertex;
 	GEPOINT drawStartPt=startPt,drawEndPt=endPt;
 	AppendDbLine(pDrawing,drawStartPt,drawEndPt,0,PS_SOLID,otherLineClr,3);
 	AppendDbPoint(pDrawing,drawEndPt,0,PS_SOLID,ptClr,8);
 	p2dDraw->RenderDrawing();
 	Sleep(ftol(interval*1000));
-	for (CNCPlate::CUT_PT *pCutPt = ncPlate.m_xCutHoleList.GetFirst(); pCutPt; pCutPt = ncPlate.m_xCutHoleList.GetNext())
+	if (bCutSpecialHole)
 	{
-		startPt = endPt;
-		endPt = startPt + pCutPt->vertex;
-		drawStartPt = startPt, drawEndPt = endPt;
-		GEPOINT center(endPt.x - pCutPt->radius, endPt.y);
-		AppendDbCircle(pDrawing, center, GEPOINT(0, 0, 1), pCutPt->radius, 0, PS_SOLID, ptClr, 3);
-		/*
-		fprintf(fp, "G00 %s\n", (char*)PointToString(pCutPt->vertex, true));//移动刀头至圆孔外侧切点
-		fprintf(fp, "G41\n");						//刀径左向补齐
-		fprintf(fp, "M04\n");						//主轴反转  
-		fprintf(fp, "G03 I-%.1f\n", pCutPt->radius);	//绘制半径为35的整圆,因切入点在右侧，圆心在左侧
-		fprintf(fp, "M03\n");						//主轴正转
-		fprintf(fp, "G40\n");						//取消刀径补齐
-		*/
+		for (CNCPlate::CUT_PT *pCutPt = ncPlate.m_xCutHoleList.GetFirst(); pCutPt; pCutPt = ncPlate.m_xCutHoleList.GetNext())
+		{
+			startPt = endPt;
+			endPt = startPt + pCutPt->vertex;
+			drawStartPt = startPt, drawEndPt = endPt;
+			GEPOINT center(endPt.x - pCutPt->radius, endPt.y);
+			AppendDbCircle(pDrawing, center, GEPOINT(0, 0, 1), pCutPt->radius, 0, PS_SOLID, ptClr, 3);
+			/*
+			fprintf(fp, "G00 %s\n", (char*)PointToString(pCutPt->vertex, true));//移动刀头至圆孔外侧切点
+			fprintf(fp, "G41\n");						//刀径左向补齐
+			fprintf(fp, "M04\n");						//主轴反转
+			fprintf(fp, "G03 I-%.1f\n", pCutPt->radius);	//绘制半径为35的整圆,因切入点在右侧，圆心在左侧
+			fprintf(fp, "M03\n");						//主轴正转
+			fprintf(fp, "G40\n");						//取消刀径补齐
+			*/
+		}
 	}
 	//
 	for(CNCPlate::CUT_PT *pPt=ncPlate.m_xCutPtList.GetFirst();pPt;pPt=ncPlate.m_xCutPtList.GetNext())

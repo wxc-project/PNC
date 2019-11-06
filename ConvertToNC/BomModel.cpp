@@ -1725,6 +1725,8 @@ CXhChar16 CBomModel::QuerySteelMatMark(char cMat,char* matStr/*=NULL*/)
 	CXhChar16 sMatMark;
 	if('H'==cMat)
 		sMatMark.Copy("Q345");
+	else if('h'==cMat)	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
+		sMatMark.Copy("Q355");
 	else if('G'==cMat)
 		sMatMark.Copy("Q390");
 	else if('P'==cMat)
@@ -1744,6 +1746,8 @@ char CBomModel::QueryBriefMatMark(const char* sMatMark)
 		cMat='S';
 	else if(strstr(sMatMark,"Q345"))
 		cMat='H';
+	else if (strstr(sMatMark, "Q355"))
+		cMat = 'h';	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
 	else if(strstr(sMatMark,"Q390"))
 		cMat='G';
 	else if(strstr(sMatMark,"Q420"))

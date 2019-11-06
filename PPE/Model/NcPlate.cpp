@@ -82,7 +82,8 @@ BOOL GetSysParaFromReg(const char* sEntry, char* sValue)
 BOOL GetSysParaFromReg(const char* sEntry, char* sValue);	//From NcPart.cpp
 #endif
 CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE cCSMode/*=0*/,bool bClockwise/*=true*/,
-				   int nInLineLen/*=-1*/,int nOutLineLen/*=-1*/,int nExtraInLen/*=0*/,int nExtraOutLen/*=0*/,int nEnlargedSpace/*=0*/)
+				   int nInLineLen/*=-1*/,int nOutLineLen/*=-1*/,int nExtraInLen/*=0*/,int nExtraOutLen/*=0*/,int nEnlargedSpace/*=0*/,
+				   BOOL bCutSpecialHole /*= FALSE*/)
 {
 	if(pPlate==NULL||!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
 		return;
@@ -164,21 +165,23 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE c
 		curPt+=(next_norm*nEnlargedSpace);
 	m_cutPt.vertex=ProcessPoint(curPt-prevPt,cCSMode);
 	prevPt=curPt;
-	//在切入点之后，初始化切大孔 wht 19-10-22
-	for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
-	{
-		double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
-		if (hole_d < fSpecialD)
-			continue;
-		CUT_PT *pCutPt = m_xCutHoleList.append(); 
-		pCutPt->radius = hole_d * 0.5;
-		pCutPt->cByte = CUT_PT::HOLE_CIR;
-		pCutPt->bClockwise = FALSE;
-		f3dPoint cir_center(pBoltInfo->posX, pBoltInfo->posY);
-		curPt.Set(cir_center.x + pCutPt->radius, cir_center.y);
-		pCutPt->vertex = ProcessPoint(curPt - prevPt, cCSMode);
-		pCutPt->centerPt = ProcessPoint(cir_center - GEPOINT(prevPt), cCSMode);
-		prevPt = curPt;
+	if (bCutSpecialHole)
+	{	//在切入点之后，初始化切大孔 wht 19-10-22
+		for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
+		{
+			double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
+			if (hole_d < fSpecialD)
+				continue;
+			CUT_PT *pCutPt = m_xCutHoleList.append();
+			pCutPt->radius = hole_d * 0.5;
+			pCutPt->cByte = CUT_PT::HOLE_CIR;
+			pCutPt->bClockwise = FALSE;
+			f3dPoint cir_center(pBoltInfo->posX, pBoltInfo->posY);
+			curPt.Set(cir_center.x + pCutPt->radius, cir_center.y);
+			pCutPt->vertex = ProcessPoint(curPt - prevPt, cCSMode);
+			pCutPt->centerPt = ProcessPoint(cir_center - GEPOINT(prevPt), cCSMode);
+			prevPt = curPt;
+		}
 	}
 	//4.初始化轮廓点信息
 	iCurVertex=0;

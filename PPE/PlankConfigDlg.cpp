@@ -26,6 +26,7 @@ CPlankConfigDlg::CPlankConfigDlg(CWnd* pParent /*=nullptr*/)
 	m_bPartNo = FALSE;
 	m_bMaterial = FALSE;
 	m_bThick = FALSE;
+	m_bBriefMat = FALSE;
 	m_sEditLine = "";
 }
 
@@ -47,6 +48,7 @@ void CPlankConfigDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHK_AUDITOR, m_bAuditor);
 	DDX_Check(pDX, IDC_CHK_CRITIC, m_bCritic);
 	DDX_Check(pDX, IDC_CHK_PARTNO, m_bPartNo);
+	DDX_Check(pDX, IDC_CHK_BRIEF_MAT, m_bBriefMat);
 	DDX_Check(pDX, IDC_CHK_MAT, m_bMaterial);
 	DDX_Check(pDX, IDC_CHK_THICK, m_bThick);
 }
@@ -68,6 +70,7 @@ BEGIN_MESSAGE_MAP(CPlankConfigDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_PARTNO, OnChkPartNo)
 	ON_BN_CLICKED(IDC_CHK_MAT, OnChkMaterial)
 	ON_BN_CLICKED(IDC_CHK_THICK, OnChkThick)
+	ON_BN_CLICKED(IDC_CHK_BRIEF_MAT, &CPlankConfigDlg::OnChkBriefMat)
 END_MESSAGE_MAP()
 
 
@@ -138,6 +141,9 @@ void CPlankConfigDlg::UpdateCheckStateByName(const char *sName, BOOL bValue)
 		m_bMaterial = bValue;
 	else if (stricmp(sName, "厚度") == 0)
 		m_bThick = bValue;
+	else if (stricmp(sName, "简化材质字符") == 0)
+		m_bBriefMat = bValue;
+
 	UpdateData(FALSE);
 }
 
@@ -153,6 +159,7 @@ void CPlankConfigDlg::UpdateCheckBoxEnableState()
 	GetDlgItem(IDC_CHK_AUDITOR)->EnableWindow(!m_bAuditor);
 	GetDlgItem(IDC_CHK_CRITIC)->EnableWindow(!m_bCritic);
 	GetDlgItem(IDC_CHK_PARTNO)->EnableWindow(!m_bPartNo);
+	GetDlgItem(IDC_CHK_BRIEF_MAT)->EnableWindow(!m_bBriefMat);
 	GetDlgItem(IDC_CHK_MAT)->EnableWindow(!m_bMaterial);
 	GetDlgItem(IDC_CHK_THICK)->EnableWindow(!m_bThick);
 }
@@ -292,6 +299,16 @@ void CPlankConfigDlg::OnChkPartNo()
 		m_sEditLine += "&件号";
 	else
 		m_sEditLine = "件号";
+	GetDlgItem(IDC_E_EDIT_LINE)->SetWindowText(m_sEditLine);
+}
+
+void CPlankConfigDlg::OnChkBriefMat()
+{
+	GetDlgItem(IDC_CHK_BRIEF_MAT)->EnableWindow(FALSE);
+	if (m_sEditLine.GetLength() > 0)
+		m_sEditLine += "&简化材质字符";
+	else
+		m_sEditLine = "简化材质字符";
 	GetDlgItem(IDC_E_EDIT_LINE)->SetWindowText(m_sEditLine);
 }
 

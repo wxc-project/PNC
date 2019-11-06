@@ -12,6 +12,7 @@ struct ISysPara
 	virtual int GetCutEnlargedSpaceLen(BYTE cType=-1)=0;
 	virtual int GetCutInitPosFarOrg(BYTE cType=-1)=0;
 	virtual int GetCutPosInInitPos(BYTE cType=-1)=0;
+	virtual BOOL IsCutSpecialHole(BYTE cType=-1)=0;
 };
 
 class CPPEModel

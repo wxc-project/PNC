@@ -39,7 +39,8 @@ public:
 	 * nEnlargedSpace: ÂÖÀª±ßÔö´óÖµ
 	 */
 	CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo=0,BYTE cCSMode=0,bool bClockwise=false,
-			 int nInLineLen=0,int nOutLineLen=0,int nExtraInLen=0,int nExtraOutLen=0,int nEnlargedSpace=0);
+			 int nInLineLen=0,int nOutLineLen=0,int nExtraInLen=0,int nExtraOutLen=0,int nEnlargedSpace=0,
+			 BOOL bCutSpecialHole=FALSE);
 	bool CreatePlateTxtFile(const char* file_path);
 	bool CreatePlateNcFile(const char* file_path);
 	static GEPOINT ProcessPoint(const double* coord,BYTE cCSMode=0);

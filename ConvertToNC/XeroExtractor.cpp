@@ -299,6 +299,9 @@ char CPlateExtractor::QueryBriefMatMark(const char* sMatMark)
 	char cMat='S';
 	if(strstr(sMatMark,"Q345"))
 		cMat='H';
+	//用小写h标识Q355 wht 19-11-05
+	else if(strstr(sMatMark,"Q355"))
+		cMat='h';
 	else if(strstr(sMatMark,"Q390"))
 		cMat='G';
 	else if(strstr(sMatMark,"Q420"))
@@ -487,8 +490,6 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat)
 	CString str(sValue);
 	if (strstr(str, "Q") == NULL)	//材质标识中没有Q时才需要将关键字替换为Q wht 19-10-22
 		str.Replace(m_sMatKey, " Q");
-	else
-		str.Replace(m_sMatKey, " ");
 	sValue.Copy(str);
 	//for(char* sKey=strtok(sValue," \t\\P");sKey;sKey=strtok(NULL," \t\\P"))
 	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))

@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ generated include file.
-// Used by PPE.rc
+// Microsoft Visual C++ 生成的包含文件。
+// 供 PPE.rc 使用
 //
 #define IDD_ABOUTBOX                    100
 #define ID_WORKSPACE_LEFT               101
@@ -85,6 +85,8 @@
 #define IDC_CHK_PARTNO                  1029
 #define IDC_CHK_MAT                     1030
 #define IDC_CHK_THICK                   1031
+#define IDC_CHK_MAT2                    1032
+#define IDC_CHK_BRIEF_MAT               1032
 #define IDC_RADIO13                     1058
 #define IDC_RADIO14                     1059
 #define IDC_TAB_GROUP                   1080
