@@ -1553,6 +1553,11 @@ bool CPlateProcessInfo::InitLayoutVertexByBottomEdgeIndex(f2dRect &rect)
 		int n = vertexList.GetNodeNum();
 		if (n < 3)
 			return false;
+		int iCurIndex = xPlate.mcsFlg.ciBottomEdge;
+		if (iCurIndex == 0xFF)
+		{	//轮廓边未初始化,无法继续 wht 19-11-11
+			return false;
+		}
 		SCOPE_STRU scope;
 		DYN_ARRAY<VERTEX*> vertex_arr;
 		vertex_arr.Resize(vertexList.GetNodeNum());
@@ -1564,7 +1569,6 @@ bool CPlateProcessInfo::InitLayoutVertexByBottomEdgeIndex(f2dRect &rect)
 			vertex_arr[index] = pVertex;
 		GECS tmucs;
 		tmucs.axis_z.Set(0, 0, 1);
-		int iCurIndex = xPlate.mcsFlg.ciBottomEdge;
 		tmucs.axis_x = vertex_arr[(iCurIndex + 1) % n]->pos - vertex_arr[iCurIndex]->pos;
 		if (tmucs.axis_x.IsZero())
 			return false;	//接近重点

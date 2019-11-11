@@ -811,8 +811,9 @@ BOOL CPlateExtractor::RecogArcEdge(AcDbEntity* pEnt,f3dArcLine& arcLine,BYTE& ci
 		Cpy_Pnt(norm,pArc->normal());
 		double radius=pArc->radius();
 		double angle=(pArc->endAngle()-pArc->startAngle());
-		if(radius>0 && fabs(angle)>0)
+		if(radius>0 && fabs(angle)>0&&DISTANCE(startPt,endPt)>EPS)
 		{	//过滤错误的圆弧(例如：有时pEnt是一个点,但是属性显示为圆弧)
+			//保证startPt-endPt不重叠 wht 19-11-11
 			ciEdgeType=2;
 			return arcLine.CreateMethod3(startPt,endPt,norm,radius,center);
 		}
