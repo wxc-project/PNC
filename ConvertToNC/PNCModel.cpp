@@ -31,6 +31,7 @@ CPlateProcessInfo::CPlateProcessInfo()
 	m_bEnableReactor = TRUE;
 	m_bNeedExtract = FALSE;
 }
+double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord, double scale); //From XeroExtractor.cpp
 CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 {
 	if(pEnt==NULL)
@@ -77,7 +78,48 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbMText::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_MTEXT;
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
+		{
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_BLOCKREF;
+			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+			AcDbObjectId blockId = pReference->blockTableRecord();
+			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+			if (pTempBlockTableRecord)
+			{
+				pTempBlockTableRecord->close();
+				CXhChar50 sName;
+#ifdef _ARX_2007
+				ACHAR* sValue = new ACHAR[50];
+				pTempBlockTableRecord->getName(sValue);
+				sName.Copy((char*)_bstr_t(sValue));
+				delete[] sValue;
+#else
+				char *sValue = new char[50];
+				pTempBlockTableRecord->getName(sValue);
+				sName.Copy(sValue);
+				delete[] sValue;
+#endif
+				BOLT_BLOCK* pBoltD = g_pncSysPara.hashBoltDList.GetValue(sName);
+				if (pBoltD)
+				{
+					strcpy(pRelaEnt->sText, sName);
+					pRelaEnt->pos.x = (float)pReference->position().x;
+					pRelaEnt->pos.y = (float)pReference->position().y;
+					if (pBoltD->diameter > 0)
+						pRelaEnt->m_fSize = (BYTE)pBoltD->diameter + 1.5;
+					else if (pBoltD->hole_d > 0)
+						pRelaEnt->m_fSize = pBoltD->hole_d;
+					else
+					{	//根据块内图元识别孔径 wht 19-10-16
+						double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+						if (fHoleD > 0)
+							pRelaEnt->m_fSize = fHoleD;
+						else
+							pRelaEnt->m_fSize = 0;
+					}
+				}
+			}
+		}
 		else
 			pRelaEnt->ciEntType=RELA_ACADENTITY::TYPE_OTHER;
 	}
@@ -254,9 +296,20 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 {	//合并圆心相同的圆，同一圆心只保留直径最大的圆
 	CHashStrList<CAD_ENTITY*> hashEntPtrByCenterStr;	//记录圆心对应的直径最大的螺栓实体
 	hashInvalidBoltCirPtrSet.Empty();
+	BOOL bFilterHoleBlockRef=TRUE;
 	for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
 	{
-		if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_CIRCLE)//&&pEnt->ciEntType != CAD_ENT::TYPE_POLYLINE_ARC)
+		if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_BLOCKREF)
+		{
+			if (bFilterHoleBlockRef)
+			{	//同一个位置有多个螺栓图符时，取直径最大的螺栓图符，避免添加重叠螺栓 wht 19-11-25
+				if (pEnt->m_fSize == 0 || strlen(pEnt->sText) <= 0)
+					continue;
+			}
+			else
+				continue;
+		}
+		else if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_CIRCLE)//&&pEnt->ciEntType != CAD_ENT::TYPE_POLYLINE_ARC)
 			continue;
 		CXhChar50 sKey("%.2f,%.2f,%.2f", pEnt->pos.x, pEnt->pos.y, pEnt->pos.z);
 		CAD_ENTITY **ppEntPtr = hashEntPtrByCenterStr.GetValue(sKey);

@@ -1269,7 +1269,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 			{
 				fprintf(fp, "MK\n");		//写入MK
 				coord_trans(tempPlate.mkpos, mcs, FALSE);
-				fprintf(fp, "X%g Y%g\n", tempPlate.mkpos.x, tempPlate.mkpos.y);//写入MK坐标
+				fprintf(fp, "X%.1f Y%.1f\n", tempPlate.mkpos.x, tempPlate.mkpos.y);//写入MK坐标
 			}
 			fprintf(fp, "M30\n");
 			if (bIncVertex)
@@ -1278,7 +1278,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 				{
 					double x = pVer->vertex.x < EPS ? 0 : pVer->vertex.x;
 					double y = pVer->vertex.y < EPS ? 0 : pVer->vertex.y;
-					fprintf(fp, "X%g Y%g\n", x, y);
+					fprintf(fp, "X%.1f Y%.1f\n", x, y);
 				}
 			}
 			fprintf(fp, "END");//写入结束标示
@@ -1330,7 +1330,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 					{
 						fprintf(fp, "T2\n");
 						for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-							fprintf(fp, "X%g Y%g\n", pBolt->posX, pBolt->posY);
+							fprintf(fp, "X%.1f Y%.1f\n", pBolt->posX, pBolt->posY);
 					}
 					//T3螺栓孔
 					pDrillBolt = hashDrillBoltByD.GetValue(ftoi(holeDList[i] * 10));
@@ -1338,7 +1338,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 					{
 						fprintf(fp, "T3\n");
 						for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-							fprintf(fp, "X%g Y%g\n", pBolt->posX, pBolt->posY);
+							fprintf(fp, "X%.1f Y%.1f\n", pBolt->posX, pBolt->posY);
 					}
 				}
 				else
@@ -1357,7 +1357,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 						fprintf(fp, "T3\n");
 					}
 					for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-						fprintf(fp, "X%g Y%g\n", pBolt->posX, pBolt->posY);
+						fprintf(fp, "X%.1f Y%.1f\n", pBolt->posX, pBolt->posY);
 				}
 				//
 				if (tempPlate.IsDisplayMK())
@@ -1365,7 +1365,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 					fprintf(fp, "MK\n");		//写入MK
 					GEPOINT mk_pt = tempPlate.mkpos;
 					coord_trans(mk_pt, mcs, FALSE);
-					fprintf(fp, "X%g Y%g\n", mk_pt.x, mk_pt.y);//写入MK坐标
+					fprintf(fp, "X%.1f Y%.1f\n", mk_pt.x, mk_pt.y);//写入MK坐标
 				}
 				fprintf(fp, "M30\n");
 				if (bIncVertex)
@@ -1374,7 +1374,7 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 					{
 						double x = pVer->vertex.x < EPS ? 0 : pVer->vertex.x;
 						double y = pVer->vertex.y < EPS ? 0 : pVer->vertex.y;
-						fprintf(fp, "X%g Y%g\n", x, y);
+						fprintf(fp, "X%.1f Y%.1f\n", x, y);
 					}
 				}
 				fprintf(fp, "END");//写入结束标示
@@ -1474,13 +1474,14 @@ bool CNCPart::CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path)
 			fprintf(fp, "W: %g\n", tempPlate.GetWidth());      //写入W:宽度
 			fprintf(fp, "D%g\n", pDrillBolt->fHoleD);
 			for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-				fprintf(fp, "X%g Y%g\n", pBolt->posX, pBolt->posY);
+				fprintf(fp, "X%.1f Y%.1f\n", pBolt->posX, pBolt->posY);
+				//fprintf(fp, "X%g Y%g\n", pBolt->posX, pBolt->posY);
 			fprintf(fp, "M30\n");
 			//暂时不需要显示轮廓点坐标
 			if (bIncVertex)
 			{
 				for (PROFILE_VER* pVer = tempPlate.vertex_list.GetFirst(); pVer; pVer = tempPlate.vertex_list.GetNext())  //写plat轮廓点坐标
-					fprintf(fp,"X%g Y%g\n",pVer->vertex.x,pVer->vertex.y);
+					fprintf(fp,"X%.1f Y%.1f\n",pVer->vertex.x,pVer->vertex.y);
 			}
 			fprintf(fp, "END");//写入结束标示
 			fclose(fp);
@@ -1499,16 +1500,17 @@ bool CNCPart::CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path)
 		{
 			if (!bNeedSH&&fSpecialD > 0 && pDrillBolt->fHoleD >= fSpecialD)
 				continue;
-			fprintf(fp, "D%g\n", pDrillBolt->fHoleD);
+			fprintf(fp, "D%.1f\n", pDrillBolt->fHoleD);
 			for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-				fprintf(fp, "  X%g     Y%g\n", pBolt->posX, pBolt->posY);
+				fprintf(fp, "  X%.1f     Y%.1f\n", pBolt->posX, pBolt->posY);
+				//fprintf(fp, "  X%g     Y%g\n", pBolt->posX, pBolt->posY);
 		}
 		fprintf(fp, "M30\n");
 		//轮廓点坐标
 		if (bIncVertex)
 		{
 			for (PROFILE_VER* pVer = tempPlate.vertex_list.GetFirst(); pVer; pVer = tempPlate.vertex_list.GetNext())  //写plat轮廓点坐标
-				fprintf(fp, "  X%g     Y%g\n", pVer->vertex.x, pVer->vertex.y);
+				fprintf(fp, "  X%.1f     Y%.1f\n", pVer->vertex.x, pVer->vertex.y);
 		}
 		fprintf(fp, "END");//写入结束标示
 		fclose(fp);
@@ -1550,9 +1552,9 @@ bool CNCPart::CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_pa
 		{
 			//if (!bNeedSH&&fSpecialD > 0 && pDrillBolt->fHoleD >= fSpecialD)
 			//	continue;
-			fprintf(fp, "D%g\n", pDrillBolt->fHoleD);
+			fprintf(fp, "D%.1f\n", pDrillBolt->fHoleD);
 			for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-				fprintf(fp, "  X%g     Y%g\n", pBolt->posX, pBolt->posY);
+				fprintf(fp, "  X%.1f     Y%.1f\n", pBolt->posX, pBolt->posY);
 		}
 	}
 	else
@@ -1660,9 +1662,9 @@ bool CNCPart::CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_pa
 		{
 			//if (!bNeedSH&&fSpecialD > 0 && pDrillBolt->fHoleD >= fSpecialD)
 			//	continue;
-			fprintf(fp, "D%g\n", pDrillBolt->fHoleD);
+			fprintf(fp, "D%.1f\n", pDrillBolt->fHoleD);
 			for (BOLT_INFO* pBolt = pDrillBolt->boltList.GetFirst(); pBolt; pBolt = pDrillBolt->boltList.GetNext())
-				fprintf(fp, "  X%g     Y%g\n", pBolt->posX, pBolt->posY);
+				fprintf(fp, "  X%.1f     Y%.1f\n", pBolt->posX, pBolt->posY);
 		}
 	}
 	fprintf(fp, "M30\n");
@@ -1670,7 +1672,7 @@ bool CNCPart::CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_pa
 	if (bIncVertex)
 	{
 		for (PROFILE_VER* pVer = tempPlate.vertex_list.GetFirst(); pVer; pVer = tempPlate.vertex_list.GetNext())  //写plat轮廓点坐标
-			fprintf(fp, "  X%g     Y%g\n", pVer->vertex.x, pVer->vertex.y);
+			fprintf(fp, "  X%.1f     Y%.1f\n", pVer->vertex.x, pVer->vertex.y);
 	}
 	fprintf(fp, "END");//写入结束标示
 	fclose(fp);
