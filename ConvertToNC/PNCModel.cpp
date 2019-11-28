@@ -105,20 +105,39 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 					strcpy(pRelaEnt->sText, sName);
 					pRelaEnt->pos.x = (float)pReference->position().x;
 					pRelaEnt->pos.y = (float)pReference->position().y;
-					if (pBoltD->diameter > 0)
+					//根据块内图元识别孔径 wht 19-10-16
+					//优化根据螺栓图块识别孔径尺寸，方便后续对比提取尺寸与设置尺寸是否一致 wht 19-11-28
+					double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+					if (fHoleD > 0)
+						pRelaEnt->m_fSize = fHoleD;
+					else if (pBoltD->diameter > 0)
 						pRelaEnt->m_fSize = (BYTE)pBoltD->diameter + 1.5;
 					else if (pBoltD->hole_d > 0)
 						pRelaEnt->m_fSize = pBoltD->hole_d;
 					else
-					{	//根据块内图元识别孔径 wht 19-10-16
-						double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-						if (fHoleD > 0)
-							pRelaEnt->m_fSize = fHoleD;
-						else
-							pRelaEnt->m_fSize = 0;
-					}
+						pBoltD->hole_d = pBoltD->diameter = 0;
+					
 				}
 			}
+		}
+		else if (pEnt->isKindOf(AcDbDiametricDimension::desc()))
+		{
+			AcDbDiametricDimension *pDimD = (AcDbDiametricDimension*)pEnt;
+			CXhChar50 sDimText;
+#ifdef _ARX_2007
+			sDimText.Copy((char*)_bstr_t(pDimD->dimensionText()));
+#else
+			sDimText.Copy(pDimD->dimensionText());
+#endif
+			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_DIM_D;
+			strcpy(pRelaEnt->sText,sDimText);
+			double fD = 0;
+			pDimD->measurement(fD);
+			pRelaEnt->m_fSize = fD;
+			if (strlen(pRelaEnt->sText) <= 0 && pRelaEnt->m_fSize > 0)
+				sprintf(pRelaEnt->sText, "Φ%f", pRelaEnt->m_fSize);
+			pRelaEnt->pos.x = pDimD->textPosition().x;
+			pRelaEnt->pos.y = pDimD->textPosition().y;
 		}
 		else
 			pRelaEnt->ciEntType=RELA_ACADENTITY::TYPE_OTHER;
@@ -339,7 +358,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 			//标注字符串中包含"钻孔或冲孔"，
 			if (strstr(pEnt->sText, "钻") != NULL || strstr(pEnt->sText, "冲") != NULL ||
 				strstr(pEnt->sText, "Φ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
-				strstr(pEnt->sText, "焊") != NULL)
+				strstr(pEnt->sText, "%%c") != NULL|| strstr(pEnt->sText, "焊") != NULL)
 				continue;
 			//排除件号标注圆圈
 			SCOPE_STRU scope;
@@ -457,14 +476,20 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			pBoltInfo->hole_d_increment=boltInfo.increment;
 			pBoltInfo->cFuncType=(boltInfo.ciSymbolType==1)?2:0;
 			//在螺栓空周围搜索孔径标注，识别孔径 wht 18-12-30
-			if(pBoltInfo->bolt_d==0)
+			//有文字孔径标注的螺栓图形为螺栓图符时也需要根据文字标注更新孔径 wht 19-11-28
+			double hole_d = boltInfo.d + boltInfo.increment;
+			if( pBoltInfo->bolt_d==0||
+				(pRelaObj->m_fSize&&fabs(hole_d-pRelaObj->m_fSize)>EPS2))
 			{	
 				int nPush=m_xHashRelaEntIdList.push_stack();
 				for(CAD_ENTITY *pRelaObj=m_xHashRelaEntIdList.GetFirst();pRelaObj;pRelaObj=m_xHashRelaEntIdList.GetNext())
 				{
-					if(pRelaObj->ciEntType!=RELA_ACADENTITY::TYPE_TEXT)
+					if( pRelaObj->ciEntType!=RELA_ACADENTITY::TYPE_TEXT &&
+						pRelaObj->ciEntType!= RELA_ACADENTITY::TYPE_DIM_D)
 						continue;
-					if(strlen(pRelaObj->sText)<=0||(strstr(pRelaObj->sText,"%%C")==NULL&&strstr(pRelaObj->sText,"%%c")==NULL))
+					if( strlen(pRelaObj->sText)<=0||
+						(strstr(pRelaObj->sText,"%%C")==NULL&&strstr(pRelaObj->sText,"%%c")==NULL&&
+						 strstr(pRelaObj->sText,"Φ") == NULL))
 						continue;
 					if(DISTANCE(pRelaObj->pos,GEPOINT(boltInfo.posX,boltInfo.posY))<50)
 					{
@@ -473,20 +498,13 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 							pBoltInfo->cFlag=1;
 						ss.Replace("%%C","");
 						ss.Replace("%%c","");
+						ss.Replace("Φ", "");
 						ss.Replace("钻","");
 						ss.Replace("孔","");
 						ss.Replace("冲","");
 						double hole_d=atof(ss);
-						if(ss.Find(".")>0)
-						{
-							pBoltInfo->bolt_d=(int)(hole_d-1.5);
-							pBoltInfo->hole_d_increment=1.5;
-						}
-						else 
-						{
-							pBoltInfo->bolt_d=(int)hole_d;
-							pBoltInfo->hole_d_increment=0;
-						}
+						pBoltInfo->bolt_d=hole_d;
+						pBoltInfo->hole_d_increment=0;
 						pBoltInfo->cFuncType=2;
 						break;
 					}

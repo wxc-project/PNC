@@ -108,6 +108,7 @@ struct RELA_ACADENTITY{
 	static const BYTE TYPE_TEXT		=6;
 	static const BYTE TYPE_MTEXT	=7;
 	static const BYTE TYPE_BLOCKREF =8;
+	static const BYTE TYPE_DIM_D	=9;
 	BYTE ciEntType;
 	AcDbObjectId idCadEnt;
 	RELA_ACADENTITY(){ciEntType=0;}
