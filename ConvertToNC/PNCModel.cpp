@@ -136,8 +136,10 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 			pRelaEnt->m_fSize = fD;
 			if (strlen(pRelaEnt->sText) <= 0 && pRelaEnt->m_fSize > 0)
 				sprintf(pRelaEnt->sText, "Φ%f", pRelaEnt->m_fSize);
-			pRelaEnt->pos.x = pDimD->textPosition().x;
-			pRelaEnt->pos.y = pDimD->textPosition().y;
+			AcGePoint3d farChordPt = pDimD->farChordPoint();
+			AcGePoint3d chordPt = pDimD->chordPoint();
+			pRelaEnt->pos.x = (chordPt.x + farChordPt.x)*0.5;
+			pRelaEnt->pos.y = (chordPt.y + farChordPt.y)*0.5;
 		}
 		else
 			pRelaEnt->ciEntType=RELA_ACADENTITY::TYPE_OTHER;
@@ -477,23 +479,24 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			pBoltInfo->cFuncType=(boltInfo.ciSymbolType==1)?2:0;
 			//在螺栓空周围搜索孔径标注，识别孔径 wht 18-12-30
 			//有文字孔径标注的螺栓图形为螺栓图符时也需要根据文字标注更新孔径 wht 19-11-28
-			double hole_d = boltInfo.d + boltInfo.increment;
+			double cur_hole_d = boltInfo.d + boltInfo.increment;
 			if( pBoltInfo->bolt_d==0||
-				(pRelaObj->m_fSize&&fabs(hole_d-pRelaObj->m_fSize)>EPS2))
+				(pRelaObj->m_fSize>0&&fabs(cur_hole_d -pRelaObj->m_fSize)>EPS2))
 			{	
+				BOOL bFind = FALSE;
 				int nPush=m_xHashRelaEntIdList.push_stack();
-				for(CAD_ENTITY *pRelaObj=m_xHashRelaEntIdList.GetFirst();pRelaObj;pRelaObj=m_xHashRelaEntIdList.GetNext())
+				for(CAD_ENTITY *pOtherRelaObj=m_xHashRelaEntIdList.GetFirst(); pOtherRelaObj; pOtherRelaObj =m_xHashRelaEntIdList.GetNext())
 				{
-					if( pRelaObj->ciEntType!=RELA_ACADENTITY::TYPE_TEXT &&
-						pRelaObj->ciEntType!= RELA_ACADENTITY::TYPE_DIM_D)
+					if( pOtherRelaObj->ciEntType!=RELA_ACADENTITY::TYPE_TEXT &&
+						pOtherRelaObj->ciEntType!= RELA_ACADENTITY::TYPE_DIM_D)
 						continue;
-					if( strlen(pRelaObj->sText)<=0||
-						(strstr(pRelaObj->sText,"%%C")==NULL&&strstr(pRelaObj->sText,"%%c")==NULL&&
-						 strstr(pRelaObj->sText,"Φ") == NULL))
+					if( strlen(pOtherRelaObj->sText)<=0||
+						(strstr(pOtherRelaObj->sText,"%%C")==NULL&&strstr(pOtherRelaObj->sText,"%%c")==NULL&&
+						 strstr(pOtherRelaObj->sText,"Φ") == NULL))
 						continue;
-					if(DISTANCE(pRelaObj->pos,GEPOINT(boltInfo.posX,boltInfo.posY))<50)
+					if(DISTANCE(pOtherRelaObj->pos,GEPOINT(boltInfo.posX,boltInfo.posY))<50)
 					{
-						CString ss(pRelaObj->sText);
+						CString ss(pOtherRelaObj->sText);
 						if(ss.Find("钻")>=0)
 							pBoltInfo->cFlag=1;
 						ss.Replace("%%C","");
@@ -506,10 +509,17 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 						pBoltInfo->bolt_d=hole_d;
 						pBoltInfo->hole_d_increment=0;
 						pBoltInfo->cFuncType=2;
+						bFind = FALSE;
 						break;
 					}
 				}
 				m_xHashRelaEntIdList.pop_stack(nPush);
+				if (!bFind && (pRelaObj->m_fSize > 0 && fabs(cur_hole_d - pRelaObj->m_fSize) > EPS2))
+				{	//未找到合适文字标注时根据块实际尺寸修订螺栓孔径 wht 19-11-28
+					pBoltInfo->bolt_d = pRelaObj->m_fSize;
+					pBoltInfo->hole_d_increment = 0;
+					pBoltInfo->cFuncType = 2;
+				}
 			}
 			//对于特殊孔进行代孔处理
 			if (g_pncSysPara.m_bReplaceSH && pBoltInfo->cFuncType == 2)
