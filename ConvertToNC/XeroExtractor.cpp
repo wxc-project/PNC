@@ -319,7 +319,7 @@ int CPlateExtractor::GetPnKeyNum(const char* dim_str)
 	CXhChar100 sValue(dim_str);
 	sValue.Replace(" ","");	//È¡Ïû¿Õ¸ñ
 	int n=0;
-	if(m_sPnKey.GetLength()>1)
+	if(m_sPnKey.GetLength()==1)
 	{
 		for(int i=0;i<(int)strlen(dim_str);i++)
 		{
