@@ -16,6 +16,7 @@ CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 		CAcDbObjLife entLife(pEnt);
 		if (pEnt == NULL)
 			continue;
+		CAcDbObjLife entLife(pEnt);
 		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
 			continue;	//计算钢板区域时不计算文字区域 wht 19-10-17
 		m_xEntIdList.append(MkCadObjId(*pId));
