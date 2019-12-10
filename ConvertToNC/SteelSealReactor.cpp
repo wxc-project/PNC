@@ -49,12 +49,12 @@ void CSteelSealReactor::modified(const AcDbObject* dbObj)
 		//通过块位置更新数据点的位置
 		AcDbEntity *pEnt = NULL;
 		acdbOpenAcDbEntity(pEnt, AcDbObjectId((AcDbStub*)pPlateInfo->m_xMkDimPoint.idCadEnt),AcDb::kForWrite);
+		CAcDbObjLife objLife(pEnt);
 		if (pEnt == NULL||!pEnt->isKindOf(AcDbPoint::desc()))
 			return;
 		AcDbPoint *pPoint = (AcDbPoint*)pEnt;
 		AcGePoint3d pos=pRectBlockRef->position();
 		pPoint->setPosition(pos);
-		pEnt->close();
 		//更新字盒子位置之后，同步更新PPI文件中钢印号位置
 		pPlateInfo->SyncSteelSealPos();
 		//更新PPI文件

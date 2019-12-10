@@ -12,8 +12,8 @@ CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 		if (*pId==cloneMarkCadEntId)
 			continue;	//计算钢板区域时不算号料孔实体 wht 19-11-01
 		AcDbEntity *pEnt = NULL;
-		CAcDbObjLife entLife(pEnt);
 		acdbOpenObject(pEnt, MkCadObjId(*pId), AcDb::kForRead);
+		CAcDbObjLife entLife(pEnt);
 		if (pEnt == NULL)
 			continue;
 		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))

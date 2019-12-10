@@ -367,6 +367,8 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 			for (CAD_ENTITY **ppCirEnt = hashEntPtrByCenterStr.GetFirst(); ppCirEnt; ppCirEnt = hashEntPtrByCenterStr.GetNext())
 			{
 				CAD_ENTITY *pCirEnt = *ppCirEnt;
+				if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_BLOCKREF)
+					continue;	//螺栓图符内有文字时不需要过滤 wht 19-12-10
 				scope.ClearScope();
 				double r = pCirEnt->m_fSize*0.5;
 				scope.fMinX = pCirEnt->pos.x - r;
@@ -1882,7 +1884,11 @@ bool CPlateProcessInfo::SyncSteelSealPos()
 	{
 		Acad::ErrorStatus es=acdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForRead);
 		if (es != Acad::eOk)
+		{
+			if (pEnt)
+				pEnt->close();
 			return false;
+		}
 	}
 	CAcDbObjLife life(pEnt);
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPoint::desc()))
@@ -1924,9 +1930,9 @@ bool CPlateProcessInfo::GetSteelSealPos(GEPOINT &pos)
 {
 	AcDbEntity* pEnt = NULL;
 	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForRead);
+	CAcDbObjLife objLife(pEnt);
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPoint::desc()))
 		return false;
-	pEnt->close();
 	AcDbPoint *pPoint = (AcDbPoint*)pEnt;
 	m_xMkDimPoint.pos.Set(pPoint->position().x, pPoint->position().y, 0);
 	pos = m_xMkDimPoint.pos;
@@ -1937,9 +1943,9 @@ bool CPlateProcessInfo::UpdateSteelSealPos(GEPOINT &pos)
 {
 	AcDbEntity* pEnt = NULL;
 	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
+	CAcDbObjLife life(pEnt);
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPoint::desc()))
 		return false;
-	CAcDbObjLife life(pEnt);
 	AcDbPoint *pPoint = (AcDbPoint*)pEnt;
 	pPoint->setPosition(AcGePoint3d(pos.x, pos.y, pos.z));
 	m_xMkDimPoint.pos.Set(pos.x, pos.y, 0);
@@ -2130,8 +2136,10 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	for(AcDbObjectId objId=selectedEntIdSet.GetFirst();objId;objId=selectedEntIdSet.GetNext())
 	{
 		acdbOpenAcDbEntity(pEnt,objId,AcDb::kForRead);
-		if(pEnt)
+		if (pEnt)
 			pEnt->close();
+		else
+			continue;
 		if(pEnt->isKindOf(AcDbSpline::desc()))
 		{
 			AcGePoint3d pt;

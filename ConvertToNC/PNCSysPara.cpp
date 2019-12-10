@@ -395,7 +395,11 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 		AcDbPolyline *pPline=(AcDbPolyline*)pEnt;
 		if(pPline==NULL||pPline->numVerts()!=nNum)
 		{
-			if(pPline){pPline->erase(Adesk::kTrue);pPline->close();}
+			if(pPline)
+			{
+				pPline->erase(Adesk::kTrue);
+				pPline->close();
+			}
 			return FALSE;
 		}
 		AcGePoint3d location;
