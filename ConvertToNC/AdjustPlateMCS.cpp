@@ -13,7 +13,6 @@ CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 			continue;	//计算钢板区域时不算号料孔实体 wht 19-11-01
 		AcDbEntity *pEnt = NULL;
 		acdbOpenObject(pEnt, MkCadObjId(*pId), AcDb::kForRead);
-		CAcDbObjLife entLife(pEnt);
 		if (pEnt == NULL)
 			continue;
 		CAcDbObjLife entLife(pEnt);
