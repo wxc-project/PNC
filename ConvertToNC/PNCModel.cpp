@@ -367,7 +367,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 			for (CAD_ENTITY **ppCirEnt = hashEntPtrByCenterStr.GetFirst(); ppCirEnt; ppCirEnt = hashEntPtrByCenterStr.GetNext())
 			{
 				CAD_ENTITY *pCirEnt = *ppCirEnt;
-				if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_BLOCKREF)
+				if (pCirEnt->ciEntType == RELA_ACADENTITY::TYPE_BLOCKREF)
 					continue;	//螺栓图符内有文字时不需要过滤 wht 19-12-10
 				scope.ClearScope();
 				double r = pCirEnt->m_fSize*0.5;
