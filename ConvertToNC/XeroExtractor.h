@@ -159,6 +159,7 @@ public:
 	//
 	virtual BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
 	virtual BOOL IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
+	static const int MAX_BOLT_HOLE = 100;	//×î´óµÄÂÝË¨¿×¾¶ wht 19-12-21
 	virtual BOOL RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole);
 	virtual BOOL RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo);
 	virtual BOOL RecogArcEdge(AcDbEntity* pEnt,f3dArcLine& arcLine,BYTE& ciEdgeType);

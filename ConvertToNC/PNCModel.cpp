@@ -59,7 +59,16 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbSpline::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_SPLINE;
 		else if (pEnt->isKindOf(AcDbEllipse::desc()))
+		{
+			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+			AcGePoint3d center = pEllipse->center();
+			AcGeVector3d minorAxis = pEllipse->minorAxis();
+			double radiusRatio = pEllipse->radiusRatio();
+			GEPOINT axis(minorAxis.x, minorAxis.y, minorAxis.z);
+			pRelaEnt->m_fSize = axis.mod()*2;
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_ELLIPSE;
+			pRelaEnt->pos.Set(center.x, center.y, center.z);
+		}
 		else if (pEnt->isKindOf(AcDbText::desc()))
 		{
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_TEXT;
@@ -330,8 +339,14 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 			else
 				continue;
 		}
-		else if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_CIRCLE)//&&pEnt->ciEntType != CAD_ENT::TYPE_POLYLINE_ARC)
+		else if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_CIRCLE && //&&pEnt->ciEntType != CAD_ENT::TYPE_POLYLINE_ARC)
+			pEnt->ciEntType != RELA_ACADENTITY::TYPE_ELLIPSE)
 			continue;
+		if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_ELLIPSE)
+		{	//椭圆孔最大支持100，大于100的椭圆时不按螺栓孔处理 wht 19-12-01
+			if (pEnt->m_fSize<0 && pEnt->m_fSize>CPlateExtractor::MAX_BOLT_HOLE)
+				continue;
+		}
 		CXhChar50 sKey("%.2f,%.2f,%.2f", pEnt->pos.x, pEnt->pos.y, pEnt->pos.z);
 		CAD_ENTITY **ppEntPtr = hashEntPtrByCenterStr.GetValue(sKey);
 		if (ppEntPtr)
@@ -362,6 +377,22 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 				strstr(pEnt->sText, "Φ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
 				strstr(pEnt->sText, "%%c") != NULL|| strstr(pEnt->sText, "焊") != NULL)
 				continue;
+			int nLen = strlen(pEnt->sText);
+			if (nLen < 3)
+			{
+				bool bDigit = true;
+				for (int i = 0; i < nLen; i++)
+				{
+					if (!isdigit(pEnt->sText[i]))
+					{
+						bDigit = false;
+						break;
+					}
+				}
+				if (bDigit)
+					continue;	//文字为小于100的数字，不可能为件号 wht 19-12-11
+			}
+
 			//排除件号标注圆圈
 			SCOPE_STRU scope;
 			for (CAD_ENTITY **ppCirEnt = hashEntPtrByCenterStr.GetFirst(); ppCirEnt; ppCirEnt = hashEntPtrByCenterStr.GetNext())
@@ -933,8 +964,17 @@ BOOL CPlateProcessInfo::InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEnt
 				break;
 			}
 		}
-		if(pLine==NULL)
+		if (pLine == NULL)
+		{	//缩放至问题节点附近 wht 19-12-21
+			SCOPE_STRU scope;
+			scope.fMinX = endPt.x - 10;
+			scope.fMaxX = endPt.x + 10;
+			scope.fMinY = endPt.y - 10;
+			scope.fMaxY = endPt.y + 10;
+			scope.fMinZ = scope.fMaxZ = 0;
+			ZoomAcadView(scope, 10);
 			break;
+		}
 	}
 	if(bFinish==FALSE)
 		return FALSE;

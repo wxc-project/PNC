@@ -693,6 +693,23 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		hole.ciSymbolType=1;	//默认挂线孔
 		return TRUE;
 	}
+	else if (pEnt->isKindOf(AcDbEllipse::desc()))
+	{
+		AcDbEllipse* pEllipse = (AcDbEllipse*)pEnt;
+		double radiusRatio = pEllipse->radiusRatio();
+		AcGeVector3d minorAxis = pEllipse->minorAxis();
+		hole.posX = (float)pEllipse->center().x;
+		hole.posY = (float)pEllipse->center().y;
+		GEPOINT axis(minorAxis.x, minorAxis.y, minorAxis.z);
+		hole.d = axis.mod() * 2;
+		//if (fabs(radiusRatio - 1) > EPS2)
+		//	return FALSE;
+		hole.ciSymbolType = 1;	//默认挂线孔
+		if (hole.d > MAX_BOLT_HOLE)
+			return FALSE;
+		else
+			return TRUE;
+	}
 	return FALSE;
 }
 BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)

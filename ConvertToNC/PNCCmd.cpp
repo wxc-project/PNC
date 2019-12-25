@@ -486,11 +486,24 @@ void ManualExtractPlate()
 		logerr.Log("件号%s板提取有误",(char*)plate.GetPartNo());
 		return;
 	}
+	//在模型列表中添加钢板信息 wht 19-12-21
+	CPlateProcessInfo *pExistPlate = model.GetPlateInfo(plate.GetPartNo());
+	if (pExistPlate == NULL)
+		pExistPlate = model.AppendPlate(plate.GetPartNo());
+	pExistPlate->InitProfileBySelEnts(selectedEntList);
+	pExistPlate->ExtractPlateRelaEnts();
+	pExistPlate->UpdatePlateInfo(TRUE);
+
 	//生成PPI文件,保存到到当前工作路径下
 	CString file_path;
 	GetCurWorkPath(file_path);
-	if(plate.vertexList.GetNodeNum()>3)
-		plate.CreatePPiFile(file_path);
+	if(pExistPlate->vertexList.GetNodeNum()>3)
+		pExistPlate->CreatePPiFile(file_path);
+	//绘制提取的钢板外形--支持排版
+	model.LayoutPlates(g_pncSysPara.m_bAutoLayout);
+	//
+	UpdatePartList();
+	/*
 	//绘制钢板外形及螺栓，便于查看提取是否正确
 	DRAGSET.ClearEntSet();
 	plate.DrawPlate(NULL);
@@ -501,6 +514,7 @@ void ManualExtractPlate()
 	base[Y] = scope.fMaxY;
 	base[Z] = 0;
 	DragEntSet(base,"请点取构件图的插入点");
+	*/
 }
 
 #ifndef __UBOM_ONLY_
