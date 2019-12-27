@@ -3,8 +3,9 @@
 #include "resource.h"
 #include "XhListCtrl.h"
 #include "DrawDamBoard.h"
-// CPartListDlg 对话框
 
+#ifndef __UBOM_ONLY_
+// CPartListDlg 对话框
 #ifdef __SUPPORT_DOCK_UI_
 class CPartListDlg : public CAcUiDialog
 #else
@@ -52,3 +53,4 @@ public:
 };
 extern CPartListDlg *g_pPartListDlg;
 extern CPartListDlg g_xPartListDlg;
+#endif

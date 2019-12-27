@@ -9,6 +9,7 @@ CAcUiDialogPanel *g_pPartListDockBar = NULL;	//¿ÉÍ£¿¿´°¿Ú
 #endif
 BOOL IsShowDisplayPartListDockBar()
 {
+#ifndef __UBOM_ONLY_
 #ifdef __SUPPORT_DOCK_UI_
 	if (g_pPartListDockBar == NULL)
 		return FALSE;
@@ -19,6 +20,9 @@ BOOL IsShowDisplayPartListDockBar()
 		return FALSE;
 	else
 		return g_pPartListDlg->IsWindowVisible();
+#endif
+#else
+	return FALSE;
 #endif
 }
 
@@ -76,6 +80,7 @@ void HidePartListDockBar()
 }
 void DestoryPartListDockBar()
 {
+#ifndef __UBOM_ONLY_
 #ifdef __SUPPORT_DOCK_UI_
 	if (g_pPartListDockBar)
 	{
@@ -91,7 +96,9 @@ void DestoryPartListDockBar()
 		g_pPartListDlg = NULL;
 	}
 #endif
+#endif
 }
+#ifndef __UBOM_ONLY_
 CPartListDlg* GetPartListDlgPtr()
 {
 	if (!IsShowDisplayPartListDockBar())
@@ -103,3 +110,4 @@ CPartListDlg* GetPartListDlgPtr()
 #endif
 	return pPartListDlg;
 }
+#endif

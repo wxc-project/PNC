@@ -7,6 +7,7 @@
 #include "SquareTree.h"
 #include "ArrayList.h"
 
+//////////////////////////////////////////////////////////////////////////
 class CStraightLine : public ICurveLine
 {
 public:
@@ -24,8 +25,9 @@ public:
 	bool IsIntersWith(ICurveLine* pCurveLine,DWORD cbFilterFlag=0);		//通过标记符号识别火曲线
 	bool IsWeldingAlongSide(ICurveLine* pCurveLine);	//焊缝线识别
 };
-//开放给用户的钢板识别定制化接口函数
+
 //////////////////////////////////////////////////////////////////////////
+//开放给用户的钢板识别定制化接口函数
 class CPlateObject
 {
 	POLYGON region;
@@ -118,7 +120,9 @@ struct RECOG_SCHEMA{
 	BOOL m_bEnable;
 	RECOG_SCHEMA() { id = 0; m_iDimStyle = 0; m_bEditable = FALSE; m_bEnable = FALSE; }
 };
-class CPlateExtractor : public IPlateExtractor
+//////////////////////////////////////////////////////////////////////////
+//开放给用户的识别定制化接口函数
+class CPlateExtractor
 {
 public:
 	ATOM_LIST<RECOG_SCHEMA> m_recogSchemaList;
@@ -138,7 +142,6 @@ protected:
 public:
 	CPlateExtractor();
 	virtual ~CPlateExtractor();
-	static char QueryBriefMatMark(const char* sMatMark);
 	//
 	int GetKeyMemberNum();	//标注成员数
 	BOOL IsMatchPNRule(const char* sText);
@@ -163,4 +166,28 @@ public:
 	virtual BOOL RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole);
 	virtual BOOL RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo);
 	virtual BOOL RecogArcEdge(AcDbEntity* pEnt,f3dArcLine& arcLine,BYTE& ciEdgeType);
+};
+//////////////////////////////////////////////////////////////////////////
+//开放给用户的角钢识别定制化接口函数
+class CJgCardExtractor
+{
+public:
+	f2dRect part_no_rect;
+	f2dRect mat_rect;
+	f2dRect guige_rect;
+	f2dRect length_rect;
+	f2dRect piece_weight_rect;
+	f2dRect danji_num_rect;
+	f2dRect jiagong_num_rect;
+	f2dRect note_rect;
+	f2dRect sum_weight_rect;
+	double fMaxX, fMaxY, fMinX, fMinY;
+	double fTextHigh;
+	double fPnDistX, fPnDistY;
+public:
+	CJgCardExtractor();
+	~CJgCardExtractor();
+	//
+	bool InitJgCardInfo(const char* sFileName);
+	f3dPoint GetJgCardOrigin(f3dPoint partNo_pt);
 };

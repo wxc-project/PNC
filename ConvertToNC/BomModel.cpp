@@ -8,6 +8,7 @@
 #include "CadToolFunc.h"
 #include "BomTblTitleCfg.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 CBomModel g_xUbomModel;
 //TMA_BOM EXCEL 列标题
 const int TMA_EXCEL_COL_COUNT				= 20;
@@ -88,7 +89,7 @@ CBomFile::~CBomFile()
 {
 
 }
-void CBomFile::ImPortBomFile(const char* sFileName,BOOL bLoftBom)
+void CBomFile::ImportBomFile(const char* sFileName,BOOL bLoftBom)
 {
 	if(strlen(sFileName)<=0)
 		return;
@@ -218,8 +219,6 @@ BOOL CBomFile::ParseTmaSheetContentCore(CVariant2dArray &sheetContentMap, CHashS
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sTempSpec = VariantToString(value);
-			
-
 		}
 		//长度
 		float fLength=0;
@@ -276,7 +275,7 @@ BOOL CBomFile::ParseTmaSheetContentCore(CVariant2dArray &sheetContentMap, CHashS
 			pProPart->SetPartNo(sPartNo);
 			pProPart->SetSpec(sSpec);
 			pProPart->SetNotes(sNote);
-			pProPart->cMaterial = CBomModel::QueryBriefMatMark(sMaterial);
+			pProPart->cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
 			if (sMaterial.GetLength() == 5)	//初始化质量等级 wht 19-09-15
 				pProPart->cQuality = toupper(sMaterial.At(4));
 			if (pProPart->cMaterial == 'A')	//非标准材质库，m_sRelatePartNo记录材质
@@ -285,7 +284,7 @@ BOOL CBomFile::ParseTmaSheetContentCore(CVariant2dArray &sheetContentMap, CHashS
 			pProPart->m_fWeight = (float)fWeight;
 			pProPart->m_fSumWeight = (float)fSumWeight;
 			int nWidth = 0, nThick = 0;
-			CBomModel::RestoreSpec(sSpec, &nWidth, &nThick);
+			CProcessPart::RestoreSpec(sSpec, &nWidth, &nThick);
 			pProPart->m_fWidth = (float)nWidth;
 			pProPart->m_fThick = (float)nThick;
 		}
@@ -299,7 +298,7 @@ BOOL CBomFile::ParseTmaSheetContentCore(CVariant2dArray &sheetContentMap, CHashS
 //导入放样料单EXCEL文件
 BOOL CBomFile::ImportTmaExcelFile()
 {
-	if(m_sFileName.Length<=0)
+	if(m_sFileName.GetLength()<=0)
 		return FALSE;
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
@@ -319,7 +318,6 @@ BOOL CBomFile::ImportTmaExcelFile()
 	int index=1;
 	int nValidSheetCount = 0;
 	m_hashPartByPartNo.Empty();
-
 	int iAngleSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, "角钢下料");
 	BOOL bRetCode = FALSE;
 	if (iAngleSheet > 0)
@@ -336,32 +334,11 @@ BOOL CBomFile::ImportTmaExcelFile()
 	{
 		for (int iSheet = 1; iSheet <= nSheetNum; iSheet++)
 		{
-			/*LPDISPATCH pWorksheet=excel_sheets.GetItem(COleVariant((short) iSheet));
-			_Worksheet  excel_sheet;
-			excel_sheet.AttachDispatch(pWorksheet);
-			excel_sheet.Select();
-			//1.获取Excel指定Sheet内容存储至sheetContentMap
-			Range excel_usedRange,excel_range;
-			excel_usedRange.AttachDispatch(excel_sheet.GetUsedRange());
-			excel_range.AttachDispatch(excel_usedRange.GetRows());
-			long nRowNum = excel_range.GetCount();
-			excel_range.AttachDispatch(excel_usedRange.GetColumns());
-			long nColNum = excel_range.GetCount();
-			if(nColNum<TMA_EXCEL_COL_COUNT || strstr(excel_sheet.GetName(),"表头"))
-				continue;
-			char cell[20]="";
-			sprintf(cell,"%C%d",'A'+TMA_EXCEL_COL_COUNT-1,nRowNum+2);
-			LPDISPATCH pRange = excel_sheet.GetRange(COleVariant("A1"),COleVariant(cell));
-			excel_range.AttachDispatch(pRange,FALSE);
-			CVariant2dArray sheetContentMap(1,1);
-			sheetContentMap.var=excel_range.GetValue();
-			excel_range.ReleaseDispatch();*/
 			CVariant2dArray sheetContentMap(1, 1);
 			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet);
 			//2、解析数据
 			if (ParseTmaSheetContent(sheetContentMap))
 				nValidSheetCount++;
-			//excel_sheet.ReleaseDispatch();
 		}
 	}
 	excel_sheets.ReleaseDispatch();
@@ -469,7 +446,7 @@ BOOL CBomFile::ImportErpExcelFile()
 		pProPart->SetPartNo(sPartNo);
 		pProPart->SetSpec(sSpec);
 		pProPart->SetNotes(sNote);
-		pProPart->cMaterial=CBomModel::QueryBriefMatMark(sMaterial);
+		pProPart->cMaterial=CProcessPart::QueryBriefMatMark(sMaterial);
 		if (sMaterial.GetLength() == 5)	//初始化质量等级 wht 19-09-15
 			pProPart->cQuality = toupper(sMaterial.At(4));
 		if(pProPart->cMaterial=='A')
@@ -477,7 +454,7 @@ BOOL CBomFile::ImportErpExcelFile()
 		pProPart->m_wLength=(WORD)fLength;
 		pProPart->m_fWeight=fWeight;
 		int nWidth=0,nThick=0;
-		CBomModel::RestoreSpec(sSpec,&nWidth,&nThick);
+		CProcessPart::RestoreSpec(sSpec,&nWidth,&nThick);
 		pProPart->m_fWidth=(float)nWidth;
 		pProPart->m_fThick=(float)nThick;
 	}
@@ -568,12 +545,12 @@ void CProjectTowerType::InitBomInfo(const char* sFileName,BOOL bLoftBom)
 	if(bLoftBom)
 	{
 		m_xLoftBom.SetBelongModel(this);
-		m_xLoftBom.ImPortBomFile(sFileName,bLoftBom);
+		m_xLoftBom.ImportBomFile(sFileName,bLoftBom);
 	}
 	else
 	{	
 		m_xOrigBom.SetBelongModel(this);
-		m_xOrigBom.ImPortBomFile(sFileName,bLoftBom);
+		m_xOrigBom.ImportBomFile(sFileName,bLoftBom);
 	}
 }
 //比对BOM信息 0.相同 1.不同 2.文件有误
@@ -1308,7 +1285,7 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 	for(int i=1;i<=sheetContentMap.RowsCount();i++)
 	{
 		VARIANT value;
-		CXhChar16 sPartNo,sMeterial,sNewPartNo;
+		CXhChar16 sPartNo,sMaterial,sNewPartNo;
 		//件号
 		sheetContentMap.GetValueAt(i,iPartNoCol,value);
 		if(value.vt==VT_EMPTY)
@@ -1316,9 +1293,9 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 		sPartNo=VariantToString(value);
 		//材质
 		sheetContentMap.GetValueAt(i,iMartCol,value);
-		sMeterial=VariantToString(value);
+		sMaterial =VariantToString(value);
 		//更新件号数据
-		if(strstr(sMeterial,"Q345") && strstr(sPartNo,"H")==NULL)
+		if(strstr(sMaterial,"Q345") && strstr(sPartNo,"H")==NULL)
 		{
 			if(ciMatCharPosType==0)
 				sNewPartNo.Printf("H%s",(char*)sPartNo);
@@ -1327,7 +1304,16 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 			CExcelOper::SetRangeValue(excel_sheet,iPartNoCol,i+1,sNewPartNo);
 			m_xOrigBom.UpdateProcessPart(sPartNo,sNewPartNo);
 		}
-		if(strstr(sMeterial,"Q420") && strstr(sPartNo,"P")==NULL)
+		if(strstr(sMaterial,"Q355") && strstr(sPartNo, "H") == NULL)
+		{
+			if (ciMatCharPosType == 0)
+				sNewPartNo.Printf("H%s", (char*)sPartNo);
+			else if (ciMatCharPosType == 1)
+				sNewPartNo.Printf("%sH", (char*)sPartNo);
+			CExcelOper::SetRangeValue(excel_sheet, iPartNoCol, i + 1, sNewPartNo);
+			m_xOrigBom.UpdateProcessPart(sPartNo, sNewPartNo);
+		}
+		if(strstr(sMaterial,"Q420") && strstr(sPartNo,"P")==NULL)
 		{	
 			if(ciMatCharPosType==0)
 				sNewPartNo.Printf("P%s",(char*)sPartNo);
@@ -1353,9 +1339,17 @@ BOOL CProjectTowerType::ModifyTmaBomPartNo(BYTE ciMatCharPosType)
 	{
 		sPartNo = partPtrList[i]->GetPartNo();
 		cMaterial = partPtrList[i]->cMaterial;
-		sMaterial = CBomModel::QuerySteelMatMark(cMaterial);
+		sMaterial = CProcessPart::QuerySteelMatMark(cMaterial);
 		//更新件号数据
 		if (strstr(sMaterial, "Q345") && strstr(sPartNo, "H") == NULL)
+		{
+			if (ciMatCharPosType == 0)
+				sNewPartNo.Printf("H%s", (char*)sPartNo);
+			else if (ciMatCharPosType == 1)
+				sNewPartNo.Printf("%sH", (char*)sPartNo);
+			m_xLoftBom.UpdateProcessPart(sPartNo, sNewPartNo);
+		}
+		if (strstr(sMaterial, "Q355") && strstr(sPartNo, "H") == NULL)
 		{
 			if (ciMatCharPosType == 0)
 				sNewPartNo.Printf("H%s", (char*)sPartNo);
@@ -1401,293 +1395,6 @@ CAngleProcessInfo *CProjectTowerType::FindAngleInfoByPartNo(const char* sPartNo)
 	return pAngleInfo;
 }
 //////////////////////////////////////////////////////////////////////////
-//
-CIdentifyManager::CIdentifyManager()
-{
-	fMaxX=0;
-	fMaxY=0;
-	fMinX=0;
-	fMinY=0;
-	fTextHigh=0;
-	fPnDistX=0;
-	fPnDistY=0;
-}
-CIdentifyManager::~CIdentifyManager()
-{
-	
-}
-BOOL CIdentifyManager::IsMatchPNRule(const char* sText)
-{
-	if(strlen(sText)<=0)
-		return FALSE;
-	if(strstr(sText,m_sPartNoKey)==NULL)
-		return FALSE;
-	CXhChar100 sValue(sText);
-	sValue.Replace("　"," ");
-	int nNum=0,nKeyNum=0;
-	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
-	{	
-		nNum++;
-		if(strstr(sKey,m_sPartNoKey))
-			nKeyNum++;
-	}
-	if(nKeyNum>1)
-		return FALSE;
-	return TRUE;
-}
-void CIdentifyManager::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
-{
-	CXhChar100 str,sValue(sText);
-	sValue.Replace("　"," ");	 //将全角空格换成半角空格以便统一处理
-	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
-	{
-		if(strstr(sKey,m_sPartNoKey))
-		{	//提取件号
-			str.Copy(sKey);
-			str.Replace(m_sPartNoKey,"");
-			sPartNo.Copy(str);
-		}
-	}
-}
-BOOL CIdentifyManager::IsMatchThickRule(const char* sText)
-{
-	if(strlen(sText)<=0)
-		return FALSE;
-	if(strstr(sText,m_sThickKey)==NULL)
-		return FALSE;
-	if(strstr(sText,m_sPartNoKey))
-		return FALSE;
-	if(strstr(sText,"Q")==NULL)
-		return FALSE;
-	return TRUE;
-}
-BOOL CIdentifyManager::IsMatchMatRule(const char* sText)
-{
-	if(strstr(sText,"Q235"))
-		return TRUE;
-	if(strstr(sText,"Q345"))
-		return TRUE;
-	if(strstr(sText,"Q390"))
-		return TRUE;
-	if(strstr(sText,"Q420"))
-		return TRUE;
-	if(strstr(sText,"Q460"))
-		return TRUE;
-	return FALSE;
-}
-//提取钢板厚度
-void CIdentifyManager::ParseThickText(const char* sText,int& nThick)
-{
-	CXhChar100 str,sValue(sText);
-	sValue.Replace("　"," ");	 //将全角空格换成半角空格以便统一处理
-	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
-	{
-		if(strstr(sKey,m_sThickKey))
-		{
-			str.Copy(sKey);
-			if(strstr(str,"mm"))
-				str.Replace("mm","");
-			str.Replace(m_sThickKey,"");
-			nThick=atoi(str);
-			return;
-		}
-	}
-}
-//提取钢板材质
-void CIdentifyManager::ParseMatText(const char* sText,char& cMat)
-{
-	CXhChar100 str,sValue(sText);
-	sValue.Replace("　"," ");	 //将全角空格换成半角空格以便统一处理
-	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
-	{
-		if(strstr(sKey,"Q"))
-		{
-			cMat=CBomModel::QueryBriefMatMark(sKey);
-			return;
-		}
-	}
-}
-//提取钢板件数
-void CIdentifyManager::ParseNumText(const char* sText,int& nNum)
-{
-	CXhChar100 str,sValue(sText);
-	sValue.Replace("　"," ");	 //将全角空格换成半角空格以便统一处理
-	if(strstr(sValue,m_sThickKey))
-	{	//板厚+材质+件数
-		for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
-		{
-			if(strstr(sKey,m_sNumKey1) || strstr(sKey,m_sNumKey2))
-			{
-				str.Copy(sKey);
-				str.Replace(m_sNumKey1,"");
-				str.Replace(m_sNumKey2,"");
-				nNum=atoi(str);
-				return;
-			}
-		}
-	}
-	else
-	{	//钢板件数单独一行
-		sValue.Replace(" ","");
-		sValue.Replace(m_sNumKey1,"");
-		sValue.Replace(m_sNumKey2,"");
-		sValue.Replace("各","");
-		nNum=atoi(sValue);
-	}
-}
-bool CIdentifyManager::InitJgCardInfo(const char* sFileName)
-{
-	if(strlen(sFileName)<=0)
-		return false;
-	f3dPoint startPt, endPt;
-	char APP_PATH[MAX_PATH],dwg_file[MAX_PATH];
-	GetAppPath(APP_PATH);
-	sprintf(dwg_file,"%s%s",APP_PATH,sFileName);
-	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
-	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
-#ifdef _ARX_2007
-	if(blkDb.readDwgFile((ACHAR*)_bstr_t(dwg_file),_SH_DENYRW,true)==Acad::eOk)
-#else
-	if(blkDb.readDwgFile(dwg_file,_SH_DENYRW,true)==Acad::eOk)
-#endif
-	{
-		AcDbEntity *pEnt;
-		AcDbBlockTable *pTempBlockTable;
-		blkDb.getBlockTable(pTempBlockTable,AcDb::kForRead);
-		//获得当前图形块表记录指针
-		AcDbBlockTableRecord *pTempBlockTableRecord;//定义块表记录指针
-		//以写方式打开模型空间，获得块表记录指针
-		pTempBlockTable->getAt(ACDB_MODEL_SPACE,pTempBlockTableRecord,AcDb::kForRead);
-		pTempBlockTable->close();//关闭块表
-		AcDbBlockTableRecordIterator *pIterator=NULL;
-		pTempBlockTableRecord->newIterator( pIterator);
-		SCOPE_STRU scope;
-		CXhChar50 sText;
-		int nPartLabelCount = 0;
-		for(;!pIterator->done();pIterator->step())
-		{
-			pIterator->getEntity(pEnt,AcDb::kForRead);
-			pEnt->close();
-			if(pEnt->isKindOf(AcDbLine::desc()))
-			{
-				AcDbLine* pLine=(AcDbLine*)pEnt;
-				Cpy_Pnt(startPt,pLine->startPoint());
-				Cpy_Pnt(endPt,pLine->endPoint());
-				scope.VerifyVertex(startPt);
-				scope.VerifyVertex(endPt);
-				continue;
-			}
-			if(pEnt->isKindOf(AcDbMText::desc()))
-			{
-				AcDbMText* pMText=(AcDbMText*)pEnt;
-#ifdef _ARX_2007
-				sText.Copy(_bstr_t(pMText->contents()));
-#else
-				sText.Copy(pMText->contents());
-#endif
-				if ((strstr(sText, "件") == NULL && strstr(sText, "编") == NULL) || strstr(sText, "号") == NULL)
-					continue;
-				if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
-					continue;
-				double fPosX = pMText->location().x;
-				double fPosY = pMText->location().y;
-				if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
-				{
-					fPnDistX = fPosX;
-					fPnDistY = fPosY;
-				}
-				nPartLabelCount++;
-				continue;
-			}
-			if(pEnt->isKindOf(AcDbText::desc()))
-			{
-				AcDbText* pText=(AcDbText*)pEnt;
-#ifdef _ARX_2007
-				sText.Copy(_bstr_t(pText->textString()));
-#else
-				sText.Copy(pText->textString());
-#endif
-				if ((strstr(sText, "件") == NULL && strstr(sText, "编") == NULL) || strstr(sText, "号") == NULL)
-					continue;
-				if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
-					continue;
-				double fPosX = pText->position().x;
-				double fPosY = pText->position().y;
-				if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
-				{
-					fPnDistX = fPosX;
-					fPnDistY = fPosY;
-				}
-				nPartLabelCount++;
-				continue;
-			}
-			if(!pEnt->isKindOf(AcDbPoint::desc()))
-				continue;
-			GRID_DATA_STRU grid_data;
-			if(!GetGridKey((AcDbPoint*)pEnt,&grid_data))
-				continue;
-			if(grid_data.type_id==ITEM_TYPE_PART_NO)		//件号
-			{
-				part_no_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				part_no_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-			else if(grid_data.type_id==ITEM_TYPE_DES_MAT)	//设计材质
-			{
-				mat_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				mat_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-			else if(grid_data.type_id==ITEM_TYPE_DES_GUIGE)	//设计规格
-			{
-				guige_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				guige_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-			else if(grid_data.type_id==ITEM_TYPE_LENGTH)	//长度
-			{
-				length_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				length_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-			else if(grid_data.type_id==ITEM_TYPE_PIECE_WEIGHT)	//单重
-			{
-				piece_weight_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				piece_weight_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-			else if(grid_data.type_id==ITEM_TYPE_PART_NUM)	//单基数
-			{
-				danji_num_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				danji_num_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-			else if(grid_data.type_id==ITEM_TYPE_SUM_PART_NUM)	//加工数
-			{
-				jiagong_num_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				jiagong_num_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-				fTextHigh=grid_data.fTextHigh;
-			}
-			else if (grid_data.type_id == ITEM_TYPE_SUM_WEIGHT)	//加工总重量
-			{
-				sum_weight_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				sum_weight_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-				fTextHigh = grid_data.fTextHigh;
-			}
-			else if(grid_data.type_id==ITEM_TYPE_PART_NOTES)	//备注
-			{
-				note_rect.topLeft.Set(grid_data.min_x,grid_data.max_y);
-				note_rect.bottomRight.Set(grid_data.max_x,grid_data.min_y);
-			}
-		}
-		//工艺卡矩形区域
-		fMinX=scope.fMinX;
-		fMinY=scope.fMinY;
-		fMaxX=scope.fMaxX;
-		fMaxY=scope.fMaxY;
-		return true;
-	}
-	return false;
-}
-f3dPoint CIdentifyManager::GetJgCardOrigin(f3dPoint partNo_pt)
-{
-	return f3dPoint(partNo_pt.x-fPnDistX,partNo_pt.y-fPnDistY,0);
-}
-//////////////////////////////////////////////////////////////////////////
 //CBomModel
 CBomModel::CBomModel(void)
 {
@@ -1713,148 +1420,11 @@ CXhChar16 CBomModel::QueryMatMarkIncQuality(CProcessPart *pPart)
 	CXhChar16 sMatMark;
 	if (pPart)
 	{
-		sMatMark = QuerySteelMatMark(pPart->cMaterial, pPart->m_sRelatePartNo);
+		sMatMark = CProcessPart::QuerySteelMatMark(pPart->cMaterial, pPart->m_sRelatePartNo);
 		if (pPart->cQuality != 0 && !sMatMark.EqualNoCase(pPart->m_sRelatePartNo))
 			sMatMark.Append(pPart->cQuality);
 	}
 	return sMatMark;
-}
-//
-CXhChar16 CBomModel::QuerySteelMatMark(char cMat,char* matStr/*=NULL*/)
-{
-	CXhChar16 sMatMark;
-	if('H'==cMat)
-		sMatMark.Copy("Q345");
-	else if('h'==cMat)	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
-		sMatMark.Copy("Q355");
-	else if('G'==cMat)
-		sMatMark.Copy("Q390");
-	else if('P'==cMat)
-		sMatMark.Copy("Q420");
-	else if('T'==cMat)
-		sMatMark.Copy("Q460");
-	else if('S'==cMat || 0==cMat)
-		sMatMark.Copy("Q235");
-	else if(matStr)
-		sMatMark.Copy(matStr);
-	return sMatMark;
-}
-char CBomModel::QueryBriefMatMark(const char* sMatMark)
-{
-	char cMat='A';
-	if(strstr(sMatMark,"Q235")||strlen(sMatMark)==0)
-		cMat='S';
-	else if(strstr(sMatMark,"Q345"))
-		cMat='H';
-	else if (strstr(sMatMark, "Q355"))
-		cMat = 'h';	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
-	else if(strstr(sMatMark,"Q390"))
-		cMat='G';
-	else if(strstr(sMatMark,"Q420"))
-		cMat='P';
-	else if(strstr(sMatMark,"Q460"))
-		cMat='T';
-	return cMat;
-}
-bool CBomModel::InitBomModel()
-{
-	//读取配置文件，初始化识别规则
-	CLogErrorLife logErrLife;
-	char APP_PATH[MAX_PATH],cfg_file[MAX_PATH];
-	GetAppPath(APP_PATH);
-	sprintf(cfg_file,"%subom.cfg",APP_PATH);
-	if(strlen(cfg_file)<=0)
-	{
-		logerr.Log("配置文件读取失败!请确认是否存在%s文件。",cfg_file);
-		return false;
-	}
-	FILE *fp =fopen(cfg_file,"rt");
-	if(fp==NULL)
-	{
-		logerr.Log("配置文件读取失败!请确认是否存在%s文件。",cfg_file);
-		return false;
-	}
-	CXhChar200 line_txt,sLine;
-	BOOL bAngle=FALSE,bPlate=FALSE;
-	while(!feof(fp))
-	{
-		if(fgets(line_txt,200,fp)==NULL)
-			continue;
-		if(stricmp(line_txt,"END")==0)
-			break;
-		strcpy(sLine,line_txt);
-		sLine.Replace('=',' ');
-		char szTokens[]= " =\n" ;
-		char* skey=strtok(line_txt,szTokens);
-		if(skey&&stricmp(skey,"ANGLE_DWG_RULE")==0)
-		{
-			bAngle=TRUE;
-			bPlate=FALSE;
-			continue;
-		}
-		else if(skey&&stricmp(skey,"PLATE_DWG_RULE")==0)
-		{
-			bAngle=FALSE;
-			bPlate=TRUE;
-			continue;
-		}
-		if(bAngle)
-		{
-			if(skey&&stricmp(skey,"JG_CARD")==0)
-			{
-				skey=strtok(NULL,szTokens);
-				m_sJgCadName.Copy(skey);
-				manager.InitJgCardInfo(skey);
-			}
-		}
-		else if(bPlate)
-		{
-			if(skey&&stricmp(skey,"sPartNoKey")==0)
-			{
-				skey=strtok(NULL,szTokens);
-				manager.m_sPartNoKey.Copy(skey);
-			}
-			else if(skey&&stricmp(skey,"sThickKey")==0)
-			{
-				skey=strtok(NULL,szTokens);
-				manager.m_sThickKey.Copy(skey);
-			}
-			else if(skey&&stricmp(skey,"sNumKey")==0)
-			{
-				skey=strtok(NULL,szTokens);
-				sLine.Copy(skey);
-				sLine.Replace('|',' ');
-				sscanf(sLine,"%s%s",(char*)manager.m_sNumKey1,(char*)manager.m_sNumKey2);
-			}
-		}
-	}
-	fclose(fp);
-	return true;
-}
-void CBomModel::RestoreSpec(const char* spec,int *width,int *thick,char *matStr/*=NULL*/)
-{
-	char sMat[16]="",cMark1=' ',cMark2=' ';
-	if(strstr(spec,"Q")==(char*)spec)
-	{
-		if(strstr(spec,"L"))
-			sscanf(spec,"%[^L]%c%d%c%d",sMat,&cMark1,width,&cMark2,thick);
-		else if(strstr(spec,"-"))
-			sscanf(spec,"%[^-]%c%d",sMat,&cMark1,thick);
-	}
-	else if(strstr(spec,"L"))
-	{
-		CXhChar16 sSpec(spec);
-		sSpec.Replace("L","");
-		sSpec.Replace("*"," ");
-		sSpec.Replace("X"," ");
-		sscanf(sSpec,"%d%d",width,thick);
-	}
-	else if (strstr(spec,"-"))
-		sscanf(spec,"%c%d",sMat,thick);
-	//else if(spec,"φ")
-	//sscanf(spec,"%c%d%c%d",sMat,)
-	if(matStr)
-		strcpy(matStr,sMat);
 }
 void CBomModel::SendCommandToCad(CString sCmd)
 {
@@ -1866,3 +1436,4 @@ void CBomModel::SendCommandToCad(CString sCmd)
 	cmd_msg.lpData=sCmd.GetBuffer(sCmd.GetLength()+1);
 	SendMessage(adsw_acadMainWnd(),WM_COPYDATA,(WPARAM)adsw_acadMainWnd(),(LPARAM)&cmd_msg);
 }
+#endif

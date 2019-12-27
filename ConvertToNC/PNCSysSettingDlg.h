@@ -5,10 +5,14 @@
 #include "PropListItem.h"
 #include "CADCallBackDlg.h"
 #include "SuperGridCtrl.h"
+
+#ifdef __PNC_
 class CPNCSysSettingDlg : public CCADCallBackDlg
+#else
+class CPNCSysSettingDlg : public CDialog
+#endif
 {
 	DECLARE_DYNAMIC(CPNCSysSettingDlg)
-	void FinishSelectObjOper();				//完成选择对象的后续操作
 public:
 	CPNCSysSettingDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CPNCSysSettingDlg();
@@ -23,7 +27,10 @@ public:
 public:
 	void DisplaySystemSetting();
 	void OnPNCSysDel();
-	void SelectEntObj(int nResultEnt=1);				//选择对象节点或线
+#ifdef __PNC_
+	void SelectEntObj(int nResultEnt=1);	//选择对象节点或线
+	void FinishSelectObjOper();				//完成选择对象的后续操作
+#endif
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
 	// DDX/DDV 支持

@@ -490,9 +490,9 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 			if(baseInfo.m_sPartNo.GetLength()>0&&bRelatePN)
 			{
-				if(xPlate.GetPartNo().Length<=0)
+				if(xPlate.GetPartNo().GetLength()<=0)
 					xPlate.SetPartNo(baseInfo.m_sPartNo);
-				else if(m_sRelatePartNo.Length<=0)
+				else if(m_sRelatePartNo.GetLength()<=0)
 					m_sRelatePartNo.Copy(baseInfo.m_sPartNo);
 				else
 					m_sRelatePartNo.Append(CXhChar16(",%s",(char*)baseInfo.m_sPartNo));
@@ -1079,7 +1079,7 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 	if(xPlate.mcsFlg.ciBottomEdge==(BYTE)-1)
 		InitBtmEdgeIndex();
 	CXhChar100 sAllRelPart(xPlate.GetPartNo());
-	if(m_sRelatePartNo.Length>0)
+	if(m_sRelatePartNo.GetLength()>0)
 		sAllRelPart.Printf("%s,%s",(char*)xPlate.GetPartNo(),(char*)m_sRelatePartNo);
 	//设置当前工作路径
 	SetCurrentDirectory(file_path);
@@ -1114,7 +1114,7 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 	}
 	else if(g_pncSysPara.m_iPPiMode==1)
 	{//一板多号模式：一个PPI文件包括多个件号
-		if(m_sRelatePartNo.Length>0)
+		if(m_sRelatePartNo.GetLength()>0)
 			xPlate.m_sRelatePartNo.Copy(m_sRelatePartNo);
 		sAllRelPart.Replace(","," ");
 		CBuffer buffer;
@@ -2507,7 +2507,7 @@ void CPNCModel::MergeManyPartNo()
 		{
 			if(!pPlateProcess->IsInPlate(pTemPlate->dim_pos))
 				continue;
-			if(pPlateProcess->m_sRelatePartNo.Length<=0)
+			if(pPlateProcess->m_sRelatePartNo.GetLength()<=0)
 				pPlateProcess->m_sRelatePartNo.Copy(pTemPlate->GetPartNo());
 			else
 				pPlateProcess->m_sRelatePartNo.Append(CXhChar16(",%s",(char*)pTemPlate->GetPartNo()));
@@ -2518,6 +2518,7 @@ void CPNCModel::MergeManyPartNo()
 	}
 	m_hashPlateInfo.Clean();
 }
+
 void CPNCModel::LayoutPlates(BOOL bRelayout)
 {
 	if(m_hashPlateInfo.GetNodeNum()<=0)
@@ -2614,7 +2615,7 @@ void CPNCModel::LayoutPlates(BOOL bRelayout)
 			CXhChar16 sPartNo = pPlate->GetPartNo();
 			ParsePartNo(sPartNo, &curSegI, NULL, "SHPGT");
 			CXhChar16 sSegStr = curSegI.ToString();
-			if (sSegStr.Length > 3)
+			if (sSegStr.GetLength() > 3)
 			{	//段号字符串长度大于3时，再次从段号中提取一次分段号（处理5401-48类件号） wht 19-03-07
 				SEGI segI;
 				if (ParsePartNo(sSegStr, &segI, NULL, "SHPGT"))
@@ -2655,6 +2656,7 @@ void CPNCModel::LayoutPlates(BOOL bRelayout)
 			pPlate->DrawPlate(NULL);
 	}
 	//
+#ifdef __DRAG_ENT_
 	SCOPE_STRU scope;
 	DRAGSET.GetDragScope(scope);
 	ads_point base;
@@ -2662,6 +2664,7 @@ void CPNCModel::LayoutPlates(BOOL bRelayout)
 	base[Y] = scope.fMaxY;
 	base[Z] = 0;
 	DragEntSet(base, "请点取构件图的插入点");
+#endif
 	//
 	if (bRelayout == CPNCSysPara::LAYOUT_SEG)
 	{

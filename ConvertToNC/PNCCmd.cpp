@@ -7,6 +7,7 @@
 #include "InputMKRectDlg.h"
 #include "BomModel.h"
 #include "RevisionDlg.h"
+#include "LicFuncDef.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -98,6 +99,7 @@ void UpdatePartList()
 //////////////////////////////////////////////////////////////////////////
 void SmartExtractPlate()
 {
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	CDwgFileInfo *pDwgFile = NULL;
 	AcApDocument* pDoc = acDocManager->curDocument();
 	if (pDoc != NULL && g_pRevisionDlg != NULL)
@@ -109,6 +111,9 @@ void SmartExtractPlate()
 		SmartExtractPlate(pDwgFile->GetPncModel());
 	else
 		SmartExtractPlate(&model);
+#else
+	SmartExtractPlate(&model);
+#endif
 }
 
 void SmartExtractPlate(CPNCModel *pModel)
@@ -710,42 +715,10 @@ void InsertMKRect()
 	ads_command(RTSTR,"RE",RTNONE);
 #endif
 }
-
-#endif
-
 //////////////////////////////////////////////////////////////////////////
-//系统设置
-//EnvGeneralSet
+//通过读取Txt文件绘制外形
+//ReadVertexArrFromFile
 //////////////////////////////////////////////////////////////////////////
-void EnvGeneralSet()
-{
-	CAcModuleResourceOverride resOverride;
-	CLogErrorLife logErrLife;
-	CPNCSysSettingDlg dlg;
-	dlg.DoModal();
-}
-
-#include "RevisionDlg.h"
-#include "BomModel.h"
-#include "LicFuncDef.h"
-
-void RevisionPartProcess()
-{
-	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_UBOM))
-	{
-		CLogErrorLife logErrLife;
-		InitDrawingEnv();
-		if (!g_xUbomModel.InitBomModel())
-		{
-			logerr.Log("配置文件读取失败!");
-			return;
-		}
-		g_pRevisionDlg->InitRevisionDlg();
-	}
-	else
-		AfxMessageBox("无UBOM对料授权，请联系供应商！");  
-}
-
 bool ReadVertexArrFromFile(const char* filePath, fPtList &ptList)
 {
 	if (filePath == NULL)
@@ -815,3 +788,46 @@ void DrawProfileByTxtFile()
 	int retCode = DragEntSet(insert_pos, "输入插入点\n");
 #endif
 }
+#endif
+
+//////////////////////////////////////////////////////////////////////////
+//系统设置
+//EnvGeneralSet
+//////////////////////////////////////////////////////////////////////////
+void EnvGeneralSet()
+{
+	CAcModuleResourceOverride resOverride;
+	CLogErrorLife logErrLife;
+	CPNCSysSettingDlg dlg;
+	dlg.DoModal();
+}
+//////////////////////////////////////////////////////////////////////////
+//校审构件工艺信息
+//RevisionPartProcess
+//////////////////////////////////////////////////////////////////////////
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+void RevisionPartProcess()
+{
+#ifdef __PNC_
+	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_UBOM))
+	{
+		AfxMessageBox("无UBOM对料授权，请联系供应商！");
+		return;
+	}
+#else
+	if (!VerifyValidFunction(TMA_LICFUNC::FUNC_IDENTITY_UBOM))
+	{
+		AfxMessageBox("无UBOM对料授权，请联系供应商！");
+		return;
+	}
+#endif
+	CLogErrorLife logErrLife;
+	InitDrawingEnv();
+	if(!g_pncSysPara.InitJgCardInfo(g_pncSysPara.m_sJgCadName))
+	{
+		logerr.Log("角钢工艺卡读取失败!");
+		return;
+	}
+	g_pRevisionDlg->InitRevisionDlg();
+}
+#endif

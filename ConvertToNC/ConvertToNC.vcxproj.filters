@@ -87,9 +87,6 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\HiberarchyId.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ToolKits\TowerCad\LicFuncDef.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="ProcBarDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -97,12 +94,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="IdentifyInfoDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PNCSysSettingDlg.cpp">
@@ -195,9 +186,6 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\ProductFeature.cpp">
       <Filter>XhLicAgent\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
-      <Filter>XhLicAgent\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\SafeDecryptBuffer.cpp">
       <Filter>XhLicAgent\Source Files</Filter>
     </ClCompile>
@@ -217,9 +205,6 @@
       <Filter>XhLicAgent\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\XhLicAgent.cpp">
-      <Filter>XhLicAgent\Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp">
       <Filter>XhLicAgent\Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP">
@@ -312,6 +297,24 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\ExcelOper.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp">
+      <Filter>XhLicAgent\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\LicFuncDef.cpp">
+      <Filter>TowerCad</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DocData.h">
@@ -344,12 +347,6 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\HiberarchyId.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\ToolKits\TowerCad\LicFuncDef.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="TSPAlgorithm.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -360,12 +357,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="IdentifyInfoDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ToolKits\ToolCode\PropertyList.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PNCSysSettingDlg.h">
@@ -524,9 +515,6 @@
     <ClInclude Include="DockBarManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="InputAnValDlg.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
@@ -559,6 +547,18 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h">
       <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\LicFuncDef.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\PropertyList.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="InputAnValDlg.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -608,6 +608,9 @@
     </None>
     <None Include="res\il_file.bmp">
       <Filter>资源文件</Filter>
+    </None>
+    <None Include="UBOM.def">
+      <Filter>源文件</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

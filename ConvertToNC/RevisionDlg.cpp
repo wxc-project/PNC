@@ -18,6 +18,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 CRevisionDlg *g_pRevisionDlg;
 IMPLEMENT_DYNAMIC(CRevisionDlg, CDialog)
 //
@@ -182,14 +183,14 @@ BOOL CRevisionDlg::OnInitDialog()
 	CDialog::OnInitDialog();
 	//初始化列表框
 	m_xListReport.EmptyColumnHeader();
-	m_xListReport.AddColumnHeader("件号",78);	
+	m_xListReport.AddColumnHeader("件号",75);	
 	m_xListReport.AddColumnHeader("规格",70);	
-	m_xListReport.AddColumnHeader("材质",55);	
+	m_xListReport.AddColumnHeader("材质",50);	
 	m_xListReport.AddColumnHeader("长度",50);
-	m_xListReport.AddColumnHeader("加工数", 55);
-	m_xListReport.AddColumnHeader("单基数", 55);
+	m_xListReport.AddColumnHeader("加工数", 52);
+	m_xListReport.AddColumnHeader("单基数", 52);
 	m_xListReport.AddColumnHeader("备注", 100);
-	m_xListReport.AddColumnHeader("加工重量", 70);
+	m_xListReport.AddColumnHeader("加工重量", 65);
 	m_xListReport.InitListCtrl();
 	m_xListReport.EnableSortItems();
 	m_xListReport.SetCompareItemFunc(FireCompareItem);
@@ -772,6 +773,7 @@ void CRevisionDlg::OnImportBomFile()
 	dlg.m_ofn.lpstrTitle="选择TMA放样物料清单和生技科ERP物料清单";
 	if(dlg.DoModal()!=IDOK)
 		return;
+	CWaitCursor waitCursor;
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
 	POSITION pos=dlg.GetStartPosition();
 	int nFileCount = 0;
@@ -780,18 +782,20 @@ void CRevisionDlg::OnImportBomFile()
 	while(pos)
 	{
 		nFileCount++;
-		CString sFileName=dlg.GetNextPathName(pos);//获取文件名 
+		CString sFilePath=dlg.GetNextPathName(pos);//获取文件名 
+		char sFileName[MAX_PATH]="";
+		_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
 		if (nFileCount == 1)
-			sFirstFilePath = sFileName;
+			sFirstFilePath = sFilePath;
 		if (strstr(sFileName, "TMA") || strstr(sFileName, "tma"))
 		{
-			pProject->InitBomInfo(sFileName, TRUE);
-			bFindTmaBom = FALSE;
+			pProject->InitBomInfo(sFilePath, TRUE);
+			bFindTmaBom = TRUE;
 		}
 		else if (strstr(sFileName, "ERP") || strstr(sFileName, "erp"))
 		{
-			pProject->InitBomInfo(sFileName, FALSE);
-			bFindErpBom = FALSE;
+			pProject->InitBomInfo(sFilePath, FALSE);
+			bFindErpBom = TRUE;
 		}
 	}
 	if (nFileCount == 1 && bFindErpBom == FALSE && bFindTmaBom == FALSE)
@@ -1187,3 +1191,4 @@ void CRevisionDlg::OnDeleteItem()
 		}
 	}
 }
+#endif

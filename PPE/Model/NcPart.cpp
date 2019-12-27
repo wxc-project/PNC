@@ -756,15 +756,9 @@ void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate>
 					continue;
 				if (iDxfMode == 1)
 				{	//按厚度创建文件目录
-					sFilePath.Printf("%s\\厚度-%d-", (char*)sDxfWorkDir, pPlateGroup->thick);
-					if (pPlate->cMaterial == 'S')
-						sFilePath.Append("Q235");
-					else if (pPlate->cMaterial == 'H')
-						sFilePath.Append("Q345");
-					else if (pPlate->cMaterial == 'h')
-						sFilePath.Append("Q355");
-					else if (pPlate->cMaterial == 'P')
-						sFilePath.Append("Q420");
+					CXhChar16 sMat;
+					CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
+					sFilePath.Printf("%s\\厚度-%d-%s", (char*)sDxfWorkDir, pPlateGroup->thick,(char*)sMat);
 				}
 				else
 					sFilePath.Printf("%s", (char*)sDxfWorkDir);
@@ -793,15 +787,9 @@ void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate>
 					continue;
 				if (iDxfMode == 1)
 				{	//按厚度创建文件目录
-					sFilePath.Printf("%s\\厚度-%d-", (char*)sDxfWorkDir, pPlateGroup->thick);
-					if (pPlate->cMaterial == 'S')
-						sFilePath.Append("Q235");
-					else if (pPlate->cMaterial == 'H')
-						sFilePath.Append("Q345");
-					else if (pPlate->cMaterial == 'h')
-						sFilePath.Append("Q355");
-					else if (pPlate->cMaterial == 'P')
-						sFilePath.Append("Q420");
+					CXhChar16 sMat;
+					CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
+					sFilePath.Printf("%s\\厚度-%d-%s", (char*)sDxfWorkDir, pPlateGroup->thick, (char*)sMat);
 				}
 				else
 					sFilePath.Printf("%s", (char*)sDxfWorkDir);
@@ -829,15 +817,9 @@ void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate>
 					continue;
 				if (iDxfMode == 1)
 				{	//按厚度创建文件目录
-					sFilePath.Printf("%s\\厚度-%d-", (char*)sDxfWorkDir, pPlateGroup->thick);
-					if (pPlate->cMaterial == 'S')
-						sFilePath.Append("Q235");
-					else if (pPlate->cMaterial == 'H')
-						sFilePath.Append("Q345");
-					else if (pPlate->cMaterial == 'h')
-						sFilePath.Append("Q355");
-					else if (pPlate->cMaterial == 'P')
-						sFilePath.Append("Q420");
+					CXhChar16 sMat;
+					CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
+					sFilePath.Printf("%s\\厚度-%d-%s", (char*)sDxfWorkDir, pPlateGroup->thick,(char*)sMat);
 				}
 				else
 					sFilePath.Printf("%s", (char*)sDxfWorkDir);
@@ -1846,20 +1828,9 @@ void CNCPart::CreatePlateFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plate
 				continue;
 			if(iDxfMode==1)
 			{	//按厚度创建文件目录
-				sFilePath.Printf("%s\\厚度-%d-",(char*)sFileWorkDir,thick);
-				//CXhChar16 sMat;
-				//QuerySteelMatMark(pPlate->cMaterial, sMat);
-				//sFilePath.Append(sMat);
-				if (pPlate->cMaterial == 'S')
-					sFilePath.Append("Q235");
-				else if (pPlate->cMaterial == 'H')
-					sFilePath.Append("Q345");
-				else if (pPlate->cMaterial == 'h')
-					sFilePath.Append("Q355");
-				else if (pPlate->cMaterial == 'P')
-					sFilePath.Append("Q420");
-				else if (pPlate->cMaterial == 'T')
-					sFilePath.Append("Q460");
+				CXhChar16 sMat;
+				CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
+				sFilePath.Printf("%s\\厚度-%d-%s",(char*)sFileWorkDir,thick,(char*)sMat);
 			}
 			else
 				sFilePath.Printf("%s",(char*)sFileWorkDir);

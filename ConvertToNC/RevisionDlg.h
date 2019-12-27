@@ -3,6 +3,7 @@
 #include "supergridctrl.h"
 #include "XhTreeCtrl.h"
 #include "BomModel.h"
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 // CRevisionDlg 对话框
 enum TREEITEM_TYPE{
 	PROJECT_GROUP,		//工程塔形组
@@ -82,3 +83,4 @@ public:
 	void InitRevisionDlg();
 };
 extern CRevisionDlg *g_pRevisionDlg;
+#endif

@@ -50,28 +50,28 @@ BOOL CIdentifyInfoDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 	//件号识别
-	if(g_pncSysPara.m_sPnKey.Length>0)
+	if(g_pncSysPara.m_sPnKey.GetLength()>0)
 	{
 		m_arrIsCanUse[0]=TRUE;
 		m_sPnKey=g_pncSysPara.m_sPnKey;
 	}
 	((CEdit*)GetDlgItem(IDC_E_PARTNO))->SetReadOnly(!m_arrIsCanUse[0]);
 	//厚度识别
-	if(g_pncSysPara.m_sThickKey.Length>0)
+	if(g_pncSysPara.m_sThickKey.GetLength()>0)
 	{
 		m_arrIsCanUse[1]=TRUE;
 		m_sThickKey=g_pncSysPara.m_sThickKey;
 	}
 	((CEdit*)GetDlgItem(IDC_E_THICK))->SetReadOnly(!m_arrIsCanUse[1]);
 	//材质识别
-	if(g_pncSysPara.m_sMatKey.Length>0)
+	if(g_pncSysPara.m_sMatKey.GetLength()>0)
 	{
 		m_arrIsCanUse[2]=TRUE;
 		m_sMatKey=g_pncSysPara.m_sMatKey;
 	}
 	((CEdit*)GetDlgItem(IDC_E_MATERIAL))->SetReadOnly(!m_arrIsCanUse[2]);
 	//厚度识别
-	if(g_pncSysPara.m_sPnNumKey.Length>0)
+	if(g_pncSysPara.m_sPnNumKey.GetLength()>0)
 	{
 		m_arrIsCanUse[3]=TRUE;
 		m_sNumKey=g_pncSysPara.m_sPnNumKey;

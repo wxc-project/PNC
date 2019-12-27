@@ -4,6 +4,8 @@
 #include "XeroExtractor.h"
 #include "CadToolFunc.h"
 #include "LogFile.h"
+#include "DefCard.h"
+#include "ProcessPart.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -13,7 +15,8 @@ static char THIS_FILE[]=__FILE__;
 
 #define  LEN_SCALE		0.8
 #define  MIN_DISTANCE	25
-
+//////////////////////////////////////////////////////////////////////////
+//
 CStraightLine::CStraightLine(const double* _start,const double* _end)
 {
 	ciCurveType=STRAIGHT;
@@ -294,22 +297,6 @@ int CPlateExtractor::GetKeyMemberNum()
 		nNum++;
 	return nNum;
 }
-char CPlateExtractor::QueryBriefMatMark(const char* sMatMark)
-{
-	char cMat='S';
-	if(strstr(sMatMark,"Q345"))
-		cMat='H';
-	//用小写h标识Q355 wht 19-11-05
-	else if(strstr(sMatMark,"Q355"))
-		cMat='h';
-	else if(strstr(sMatMark,"Q390"))
-		cMat='G';
-	else if(strstr(sMatMark,"Q420"))
-		cMat='P';
-	else if(strstr(sMatMark,"Q460"))
-		cMat='T';
-	return cMat;
-}
 int CPlateExtractor::GetPnKeyNum(const char* dim_str)
 {
 	if(strlen(dim_str)<=0)
@@ -420,7 +407,7 @@ BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 			str.Replace("|", "");
 			str.Remove(' ');
 			//兼容件号中带空格的情况（比如：101 H,提取为101H） wht 19-07-22
-			if (str.Length == 1 && sPrevStr.GetLength() > 0)
+			if (str.GetLength() == 1 && sPrevStr.GetLength() > 0)
 				sPartNo.Printf("%s%s", (char*)sPrevStr, (char*)str);
 			else
 				sPartNo.Copy(str);
@@ -496,7 +483,7 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat)
 	{
 		if(strstr(sKey,"Q")&&strstr(sKey,"|")==NULL)
 		{
-			cMat=QueryBriefMatMark(sKey);
+			cMat=CProcessPart::QueryBriefMatMark(sKey);
 			return;
 		}
 	}
@@ -629,7 +616,7 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		sName.Copy(sValue);
 		delete[] sValue;
 #endif
-		if(sName.Length<=0)
+		if(sName.GetLength()<=0)
 			return FALSE;
 		BOLT_BLOCK* pBoltD=hashBoltDList.GetValue(sName);
 		if(pBoltD==NULL)
@@ -860,4 +847,172 @@ BOOL CPlateExtractor::RecogArcEdge(AcDbEntity* pEnt,f3dArcLine& arcLine,BYTE& ci
 		return arcLine.CreateEllipse(center,startPt,endPt,column_norm,work_norm,min_R);
 	}
 	return FALSE;
+}
+//////////////////////////////////////////////////////////////////////////
+//CJgCardExtractor
+CJgCardExtractor::CJgCardExtractor()
+{
+	fMaxX = 0;
+	fMaxY = 0;
+	fMinX = 0;
+	fMinY = 0;
+	fTextHigh = 0;
+	fPnDistX = 0;
+	fPnDistY = 0;
+}
+CJgCardExtractor::~CJgCardExtractor()
+{
+
+}
+bool CJgCardExtractor::InitJgCardInfo(const char* sFileName)
+{
+	if (strlen(sFileName) <= 0)
+		return false;
+	f3dPoint startPt, endPt;
+	char APP_PATH[MAX_PATH], dwg_file[MAX_PATH];
+	GetAppPath(APP_PATH);
+	sprintf(dwg_file, "%s%s", APP_PATH, sFileName);
+	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
+	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
+#ifdef _ARX_2007
+	if (blkDb.readDwgFile((ACHAR*)_bstr_t(dwg_file), _SH_DENYRW, true) == Acad::eOk)
+#else
+	if (blkDb.readDwgFile(dwg_file, _SH_DENYRW, true) == Acad::eOk)
+#endif
+	{
+		AcDbEntity *pEnt;
+		AcDbBlockTable *pTempBlockTable;
+		blkDb.getBlockTable(pTempBlockTable, AcDb::kForRead);
+		//获得当前图形块表记录指针
+		AcDbBlockTableRecord *pTempBlockTableRecord;//定义块表记录指针
+		//以写方式打开模型空间，获得块表记录指针
+		pTempBlockTable->getAt(ACDB_MODEL_SPACE, pTempBlockTableRecord, AcDb::kForRead);
+		pTempBlockTable->close();//关闭块表
+		AcDbBlockTableRecordIterator *pIterator = NULL;
+		pTempBlockTableRecord->newIterator(pIterator);
+		SCOPE_STRU scope;
+		CXhChar50 sText;
+		int nPartLabelCount = 0;
+		for (; !pIterator->done(); pIterator->step())
+		{
+			pIterator->getEntity(pEnt, AcDb::kForRead);
+			pEnt->close();
+			if (pEnt->isKindOf(AcDbLine::desc()))
+			{
+				AcDbLine* pLine = (AcDbLine*)pEnt;
+				Cpy_Pnt(startPt, pLine->startPoint());
+				Cpy_Pnt(endPt, pLine->endPoint());
+				scope.VerifyVertex(startPt);
+				scope.VerifyVertex(endPt);
+				continue;
+			}
+			if (pEnt->isKindOf(AcDbMText::desc()))
+			{
+				AcDbMText* pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+				sText.Copy(_bstr_t(pMText->contents()));
+#else
+				sText.Copy(pMText->contents());
+#endif
+				if ((strstr(sText, "件") == NULL && strstr(sText, "编") == NULL) || strstr(sText, "号") == NULL)
+					continue;
+				if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
+					continue;
+				double fPosX = pMText->location().x;
+				double fPosY = pMText->location().y;
+				if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
+				{
+					fPnDistX = fPosX;
+					fPnDistY = fPosY;
+				}
+				nPartLabelCount++;
+				continue;
+			}
+			if (pEnt->isKindOf(AcDbText::desc()))
+			{
+				AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+				sText.Copy(_bstr_t(pText->textString()));
+#else
+				sText.Copy(pText->textString());
+#endif
+				if ((strstr(sText, "件") == NULL && strstr(sText, "编") == NULL) || strstr(sText, "号") == NULL)
+					continue;
+				if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
+					continue;
+				double fPosX = pText->position().x;
+				double fPosY = pText->position().y;
+				if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
+				{
+					fPnDistX = fPosX;
+					fPnDistY = fPosY;
+				}
+				nPartLabelCount++;
+				continue;
+			}
+			if (!pEnt->isKindOf(AcDbPoint::desc()))
+				continue;
+			GRID_DATA_STRU grid_data;
+			if (!GetGridKey((AcDbPoint*)pEnt, &grid_data))
+				continue;
+			if (grid_data.type_id == ITEM_TYPE_PART_NO)		//件号
+			{
+				part_no_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				part_no_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_DES_MAT)	//设计材质
+			{
+				mat_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				mat_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_DES_GUIGE)	//设计规格
+			{
+				guige_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				guige_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_LENGTH)	//长度
+			{
+				length_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				length_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_PIECE_WEIGHT)	//单重
+			{
+				piece_weight_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				piece_weight_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_PART_NUM)	//单基数
+			{
+				danji_num_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				danji_num_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_SUM_PART_NUM)	//加工数
+			{
+				jiagong_num_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				jiagong_num_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+				fTextHigh = grid_data.fTextHigh;
+			}
+			else if (grid_data.type_id == ITEM_TYPE_SUM_WEIGHT)	//加工总重量
+			{
+				sum_weight_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				sum_weight_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+				fTextHigh = grid_data.fTextHigh;
+			}
+			else if (grid_data.type_id == ITEM_TYPE_PART_NOTES)	//备注
+			{
+				note_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				note_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+		}
+		//工艺卡矩形区域
+		fMinX = scope.fMinX;
+		fMinY = scope.fMinY;
+		fMaxX = scope.fMaxX;
+		fMaxY = scope.fMaxY;
+		return true;
+	}
+	return false;
+}
+f3dPoint CJgCardExtractor::GetJgCardOrigin(f3dPoint partNo_pt)
+{
+	return f3dPoint(partNo_pt.x - fPnDistX, partNo_pt.y - fPnDistY, 0);
 }

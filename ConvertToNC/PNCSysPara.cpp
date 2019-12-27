@@ -125,6 +125,7 @@ void CPNCSysPara::InitPropHashtable()
 	propStatusHashtable.CreateHashTable(STATUSHASHTABLESIZE);
 	//基本设置
 	AddPropItem("general_set",PROPLIST_ITEM(id++,"常规设置","常规设置"));
+	AddPropItem("m_sJgCadName", PROPLIST_ITEM(id++,"角钢工艺卡","当前使用的角钢工艺卡"));
 	AddPropItem("m_bIncDeformed",PROPLIST_ITEM(id++,"已考虑火曲变形","待提取的钢板图形已考虑火曲变形量","是|否"));
 	AddPropItem("m_bReplaceSH", PROPLIST_ITEM(id++, "启用特殊孔代孔", "将特殊功用类型的孔进行代孔处理", "是|否"));
 	AddPropItem("m_nReplaceHD", PROPLIST_ITEM(id++, "代孔直径", "进行代孔的螺栓直径", "12|16|20|24"));
@@ -175,6 +176,8 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else
 			sText.Copy("否");
 	}
+	else if (GetPropID("m_sJgCadName") == id)
+		sText = m_sJgCadName;
 	else if (GetPropID("m_bReplaceSH") == id)
 	{
 		if (g_pncSysPara.m_bReplaceSH)
@@ -273,6 +276,7 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("%d",g_pncSysPara.m_nMapWidth);
 	else if(GetPropID("m_nMinDistance")==id)
 		sText.Printf("%d",g_pncSysPara.m_nMinDistance);
+#ifndef __UBOM_ONLY_ 
 	else if(GetPropID("CDrawDamBoard::m_bDrawAllBamBoard")==id)
 	{
 		if(CDrawDamBoard::m_bDrawAllBamBoard)
@@ -282,6 +286,7 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if(GetPropID("CDrawDamBoard::BOARD_HEIGHT")==id)
 		sText.Printf("%d",CDrawDamBoard::BOARD_HEIGHT);
+#endif
 	else if (GetPropID("m_nMkRectWidth") == id)
 		sText.Printf("%d", g_pncSysPara.m_nMkRectWidth);
 	else if (GetPropID("m_nMkRectLen") == id)
@@ -472,15 +477,15 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 
 void PNCSysSetImportDefault()
 {
-	FILE *fp;
-	char file_name[MAX_PATH], line_txt[MAX_PATH], key_word[100];
-#ifdef __PNC_
+	char file_name[MAX_PATH]="", line_txt[MAX_PATH]="", key_word[100]="";
 	GetAppPath(file_name);
-#else
-	strcpy(file_name, "D:\\");
-#endif
+#ifndef __UBOM_ONLY_
 	strcat(file_name, "rule.set");
-	if ((fp = fopen(file_name, "rt")) == NULL)
+#else
+	strcat(file_name, "ubom.cfg");
+#endif
+	FILE *fp = fopen(file_name, "rt");
+	if (fp == NULL)
 		return;
 	int nTemp = 0;
 	g_pncSysPara.hashBoltDList.Empty();
@@ -642,7 +647,9 @@ void PNCSysSetImportDefault()
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectWidth);
 		else if (_stricmp(key_word, "m_nMkRectLen") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectLen);
-#ifdef __PNC_
+		else if (_stricmp(key_word, "JG_CARD") == 0)
+			sscanf(line_txt, "%s%s", key_word, (char*)g_pncSysPara.m_sJgCadName);
+#ifndef __UBOM_ONLY_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::BOARD_HEIGHT);
 		else if (_stricmp(key_word, "CDrawDamBoard::m_bDrawAllBamBoard") == 0)
@@ -651,6 +658,16 @@ void PNCSysSetImportDefault()
 	}
 	fclose(fp);
 	//加载配置文件后激活当前识别模型 wht 19-10-30
+	if (g_pncSysPara.m_recogSchemaList.GetNodeNum() <= 0)
+	{
+		RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
+		pSchema->m_iDimStyle = g_pncSysPara.m_iDimStyle;
+		pSchema->m_sPnKey.Copy(g_pncSysPara.m_sPnKey);
+		pSchema->m_sThickKey.Copy(g_pncSysPara.m_sThickKey);
+		pSchema->m_sMatKey.Copy(g_pncSysPara.m_sMatKey);
+		pSchema->m_sPnNumKey.Copy(g_pncSysPara.m_sPnNumKey);
+		pSchema->m_bEnable = TRUE;
+	}
 	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
 	{
 		if (pSchema->m_bEnable)
@@ -662,13 +679,13 @@ void PNCSysSetImportDefault()
 }
 void PNCSysSetExportDefault()
 {
-	char file_name[MAX_PATH];
-#ifdef __PNC_
+	char file_name[MAX_PATH]="";
 	GetAppPath(file_name);
-#else
-	strcpy(file_name, "D:\\");
-#endif
+#ifndef __UBOM_ONLY_
 	strcat(file_name, "rule.set");
+#else
+	strcat(file_name, "ubom.cfg");
+#endif
 	FILE *fp = fopen(file_name, "wt");
 	if (fp == NULL)
 	{
@@ -676,6 +693,7 @@ void PNCSysSetExportDefault()
 		return;
 	}
 	fprintf(fp, "基本设置\n");
+	fprintf(fp, "JG_CARD=%s\n", (char*)g_pncSysPara.m_sJgCadName);
 	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
 	fprintf(fp, "PPIMode=%d ;PPI文件模式\n", g_pncSysPara.m_iPPiMode);
 	fprintf(fp, "AutoLayout=%d ;自动排版\n", g_pncSysPara.m_bAutoLayout);
@@ -684,7 +702,7 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "MinDistance=%d ;最小间距\n", g_pncSysPara.m_nMinDistance);
 	fprintf(fp, "m_nMkRectWidth=%d ;字盒宽度\n", g_pncSysPara.m_nMkRectWidth);
 	fprintf(fp, "m_nMkRectLen=%d ;字盒长度\n", g_pncSysPara.m_nMkRectLen);
-#ifdef __PNC_
+#ifndef __UBOM_ONLY_
 	fprintf(fp, "CDrawDamBoard::BOARD_HEIGHT=%d ;档板高度\n", CDrawDamBoard::BOARD_HEIGHT);
 	fprintf(fp, "CDrawDamBoard::m_bDrawAllBamBoard=%d ;绘制所有档板\n", CDrawDamBoard::m_bDrawAllBamBoard);
 #endif
@@ -741,7 +759,7 @@ void CPNCSysPara::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
 		m_sPnKey.Copy(pSchema->m_sPnKey);
 		m_sMatKey.Copy(pSchema->m_sMatKey);
 		m_sThickKey.Copy(pSchema->m_sThickKey);
-		m_sPnNumKey.Copy(pSchema->m_sPnKey);
+		m_sPnNumKey.Copy(pSchema->m_sPnNumKey);
 		m_sFrontBendKey.Copy(pSchema->m_sFrontBendKey);
 		m_sReverseBendKey.Copy(pSchema->m_sReverseBendKey);
 		m_iDimStyle = pSchema->m_iDimStyle;

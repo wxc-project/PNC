@@ -4,7 +4,9 @@
 #include "CadToolFunc.h"
 #include "ArrayList.h"
 #include "PNCCmd.h"
+#include "PNCSysPara.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
 CAngleProcessInfo::CAngleProcessInfo()
@@ -21,16 +23,16 @@ void CAngleProcessInfo::CreateRgn()
 {
 	f3dPoint pt;
 	ARRAY_LIST<f3dPoint> profileVertexList;
-	pt=f3dPoint(g_xUbomModel.manager.fMinX,g_xUbomModel.manager.fMinY,0)+orig_pt;
+	pt=f3dPoint(g_pncSysPara.fMinX, g_pncSysPara.fMinY,0)+orig_pt;
 	profileVertexList.append(pt);
 	scope.VerifyVertex(pt);
-	pt=f3dPoint(g_xUbomModel.manager.fMaxX,g_xUbomModel.manager.fMinY,0)+orig_pt;
+	pt=f3dPoint(g_pncSysPara.fMaxX, g_pncSysPara.fMinY,0)+orig_pt;
 	profileVertexList.append(pt);
 	scope.VerifyVertex(pt);
-	pt=f3dPoint(g_xUbomModel.manager.fMaxX,g_xUbomModel.manager.fMaxY,0)+orig_pt;
+	pt=f3dPoint(g_pncSysPara.fMaxX, g_pncSysPara.fMaxY,0)+orig_pt;
 	profileVertexList.append(pt);
 	scope.VerifyVertex(pt);
-	pt=f3dPoint(g_xUbomModel.manager.fMinX,g_xUbomModel.manager.fMaxY,0)+orig_pt;
+	pt=f3dPoint(g_pncSysPara.fMinX, g_pncSysPara.fMaxY,0)+orig_pt;
 	profileVertexList.append(pt);
 	scope.VerifyVertex(pt);
 	region.CreatePolygonRgn(profileVertexList.m_pData,profileVertexList.GetSize());
@@ -49,25 +51,25 @@ f2dRect CAngleProcessInfo::GetAngleDataRect(BYTE data_type)
 	f2dRect rect;
 	if (data_type == ITEM_TYPE_PART_NO)
 	{	//有的件号过长，件号文字放到了方框下方，故需增大方框的区域
-		rect = g_xUbomModel.manager.part_no_rect;
-		rect.bottomRight.y -= g_xUbomModel.manager.part_no_rect.Height();
+		rect = g_pncSysPara.part_no_rect;
+		rect.bottomRight.y -= g_pncSysPara.part_no_rect.Height();
 	}
 	else if (data_type == ITEM_TYPE_DES_MAT)
-		rect = g_xUbomModel.manager.mat_rect;
+		rect = g_pncSysPara.mat_rect;
 	else if (data_type == ITEM_TYPE_DES_GUIGE)
-		rect = g_xUbomModel.manager.guige_rect;
+		rect = g_pncSysPara.guige_rect;
 	else if (data_type == ITEM_TYPE_LENGTH)
-		rect = g_xUbomModel.manager.length_rect;
+		rect = g_pncSysPara.length_rect;
 	else if (data_type == ITEM_TYPE_PIECE_WEIGHT)
-		rect = g_xUbomModel.manager.piece_weight_rect;
+		rect = g_pncSysPara.piece_weight_rect;
 	else if (data_type == ITEM_TYPE_SUM_PART_NUM)
-		rect = g_xUbomModel.manager.jiagong_num_rect;
+		rect = g_pncSysPara.jiagong_num_rect;
 	else if (data_type == ITEM_TYPE_PART_NUM)
-		rect = g_xUbomModel.manager.danji_num_rect;
+		rect = g_pncSysPara.danji_num_rect;
 	else if (data_type == ITEM_TYPE_PART_NOTES)
-		rect = g_xUbomModel.manager.note_rect;
+		rect = g_pncSysPara.note_rect;
 	else if (data_type == ITEM_TYPE_SUM_WEIGHT)
-		rect = g_xUbomModel.manager.sum_weight_rect;
+		rect = g_pncSysPara.sum_weight_rect;
 	rect.topLeft.x+=orig_pt.x;
 	rect.topLeft.y+=orig_pt.y;
 	rect.bottomRight.x+=orig_pt.x;
@@ -95,7 +97,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_MAT, data_pos))	//材质
 	{
-		m_xAngle.cMaterial = CBomModel::QueryBriefMatMark(sValue);
+		m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sValue);
 		if (strlen(sValue) == 5)	//初始化质量等级 wht 19-09-15
 			m_xAngle.cQuality = toupper(sValue[4]);
 		cType = ITEM_TYPE_DES_MAT;
@@ -111,20 +113,12 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		int nWidth=0,nThick=0;
 		//从规格中提取材质 wht 19-08-05
 		CXhChar16 sMaterial;
-		if (strstr(sSpec, "Q235B") != NULL || strstr(sSpec, "Q235") != NULL)
-			sMaterial = "Q235";
-		else if (strstr(sSpec, "Q345B") != NULL || strstr(sSpec, "Q345") != NULL)
-			sMaterial = "Q345";
-		else if (strstr(sSpec, "Q420B") != NULL || strstr(sSpec, "Q420C") != NULL ||
-			strstr(sSpec, "Q420D") != NULL || strstr(sSpec, "Q420") != NULL)
-			sMaterial = "Q420";
+		CProcessPart::RestoreSpec(sSpec,&nWidth,&nThick,sMaterial);
 		if (sMaterial.GetLength() > 0)
 		{
-			m_xAngle.cMaterial = CBomModel::QueryBriefMatMark(sMaterial);
-			if (sMaterial.GetLength() == 5)	//初始化质量等级 wht 19-09-15
-				m_xAngle.cQuality = toupper(sMaterial.At(4));
+			m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
+			m_xAngle.cQuality = CProcessPart::QueryBriefQuality(sMaterial);
 		}
-		CBomModel::RestoreSpec(sSpec,&nWidth,&nThick);
 		m_xAngle.m_fWidth=(float)nWidth;
 		m_xAngle.m_fThick=(float)nThick;
 		cType = ITEM_TYPE_DES_GUIGE;
@@ -185,7 +179,7 @@ void CAngleProcessInfo::RefreshAngleNum()
 			return;
 		}
 		DimText(pBlockTableRecord,data_pt,sPartNum,TextStyleTable::hzfs.textStyleId,
-			g_xUbomModel.manager.fTextHigh,0,AcDb::kTextCenter,AcDb::kTextVertMid);
+			g_pncSysPara.fTextHigh,0,AcDb::kTextCenter,AcDb::kTextVertMid);
 		pBlockTableRecord->close();//关闭块表
 		acDocManager->unlockDocument(curDoc());
 	}
@@ -231,7 +225,7 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 			return;
 		}
 		DimText(pBlockTableRecord, data_pt, sSumWeight, TextStyleTable::hzfs.textStyleId,
-			g_xUbomModel.manager.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
 		pBlockTableRecord->close();//关闭块表
 	}
 	else
@@ -284,39 +278,6 @@ BOOL CDwgFileInfo::InitDwgInfo(const char* sFileName,BOOL bJgDxf)
 //////////////////////////////////////////////////////////////////////////
 //钢板DWG操作
 //////////////////////////////////////////////////////////////////////////
-void CDwgFileInfo::CorrectPlates()
-{
-	//1.除去重复构件
-	/*
-	CHashStrList<long> hashPlateKeyList;
-	for(CPlateProcessInfo* pPlateInfo=m_xPncMode.EnumFirstPlate(FALSE);pPlateInfo;pPlateInfo= m_xPncMode.EnumFirstPlate(FALSE))
-	{
-		int nPush=m_xPncMode.PushPlateStack();
-		CXhChar16 sPartNo=pPlateInfo->xPlate.GetPartNo();
-		long *keyId=hashPlateKeyList.GetValue(sPartNo);
-		if(keyId==NULL)
-			hashPlateKeyList.SetValue(sPartNo,pPlateInfo->partNoId.handle());
-		else
-		{	//去重
-			if(pPlateInfo->xPlate.m_fThick>0)
-			{
-				m_hashPlateInfo.DeleteNode(*keyId);
-				hashPlateKeyList.SetValue(sPartNo,pPlateInfo->partNoId.handle());
-			}
-			else
-				m_hashPlateInfo.DeleteNode(pPlateInfo->partNoId.handle());
-		}
-		m_xPncMode.PopPlateStack();// m_hashPlateInfo.pop_stack(nPush);
-	}
-	m_hashPlateInfo.Clean();
-	//2.检查信息不完整的构件
-	for(CPlateProcessInfo* pPlateInfo=m_hashPlateInfo.GetFirst();pPlateInfo;pPlateInfo=m_hashPlateInfo.GetNext())
-	{
-		if(pPlateInfo->xPlate.m_fThick<=0)
-			logerr.Log("钢板%s信息提取失败!",(char*)pPlateInfo->xPlate.GetPartNo());
-	}
-	*/
-}
 //根据数据点坐标查找对应的钢板
 CPlateProcessInfo* CDwgFileInfo::FindPlateByPt(f3dPoint text_pos)
 {
@@ -539,7 +500,7 @@ BOOL CDwgFileInfo::RetrieveAngles()
 				continue;
 			if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
 				continue;
-			orig_pt=g_xUbomModel.manager.GetJgCardOrigin(f3dPoint(pText->position().x,pText->position().y,0));
+			orig_pt= g_pncSysPara.GetJgCardOrigin(f3dPoint(pText->position().x,pText->position().y,0));
 		}
 		else if(pEnt->isKindOf(AcDbMText::desc()))
 		{	//角钢工艺卡非块，根据"件号"文字提取角钢信息
@@ -554,7 +515,7 @@ BOOL CDwgFileInfo::RetrieveAngles()
 				continue;
 			if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
 				continue;
-			orig_pt=g_xUbomModel.manager.GetJgCardOrigin(f3dPoint(pMText->location().x,pMText->location().y,0));
+			orig_pt= g_pncSysPara.GetJgCardOrigin(f3dPoint(pMText->location().x,pMText->location().y,0));
 		}
 		else if(pEnt->isKindOf(AcDbBlockReference::desc()))
 		{	//根据角钢工艺卡块提取角钢信息
@@ -649,3 +610,4 @@ BOOL CDwgFileInfo::RetrieveAngles()
 	}
 	return TRUE;
 }
+#endif

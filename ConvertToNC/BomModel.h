@@ -7,6 +7,7 @@
 #include "FileIO.h"
 #include "..\ConvertToNC\PNCModel.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 class CProjectTowerType;
 class CBomFile
 {
@@ -38,7 +39,7 @@ public:
 	void SetBelongModel(CProjectTowerType *pProject){m_pProject=pProject;}
 	CProjectTowerType* BelongModel() const{return m_pProject;}
 	CXhChar500 GetFileName(){return m_sFileName;}
-	void ImPortBomFile(const char* sFileName,BOOL bLoftBom);
+	void ImportBomFile(const char* sFileName,BOOL bLoftBom);
 	void UpdateProcessPart(const char* sOldKey,const char* sNewKey);
 };
 //////////////////////////////////////////////////////////////////////////
@@ -69,42 +70,6 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 //
-struct LINE_OBJECT
-{
-	f3dPoint startPt;
-	f3dPoint endPt;
-	f3dPoint midPt;
-	BOOL bMatch;
-	LINE_OBJECT(){bMatch=FALSE;}
-};
-/*
-class CPlateProcessInfo
-{
-private:
-	POLYGON region;
-	SCOPE_STRU scope;
-public:
-	f3dPoint pn_dim_pos;
-	CXhChar16 sSecPartNo;
-	CProcessPlate m_xPlate;
-	AcDbObjectId partNumId,partNoId,secPnId;
-	ATOM_LIST<PROFILE_VER> vertexList;
-public:
-	CPlateProcessInfo();
-	~CPlateProcessInfo();
-	//
-	void CreateRgn();
-	bool PtInPlateRgn(const double* poscoord);
-	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntSet);
-	void InitProfileByBPolyCmd();
-	void UpdateVertexs(AcGeCircArc3d arc);
-	void RefreshPlateNum();
-	SCOPE_STRU GetCADEntScope(){return scope;}
-	void ClonePlateInfo(CPlateProcessInfo* pPlateInfo);
-	void DrawPlate();
-};*/
-//////////////////////////////////////////////////////////////////////////
-//
 class CDwgFileInfo 
 {
 private:
@@ -114,15 +79,13 @@ private:
 	AcDbObjectId m_idSolidLine;
 	CHashList<CAngleProcessInfo> m_hashJgInfo;
 	CPNCModel m_xPncMode;
-	//CHashList<CPlateProcessInfo> m_hashPlateInfo;
 	//
 	BOOL RetrieveAngles();
 	void CorrectAngles();
 	//
 	BOOL RetrievePlates();
-	//void ExtractPlateProfile();
+	//
 	int GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet);
-	void CorrectPlates();
 	AcDbObjectId GetEntLineTypeId(AcDbEntity *pEnt);
 public:
 	CDwgFileInfo();
@@ -206,56 +169,19 @@ public:
 	COMPARE_PART_RESULT* EnumFirstResult(){return m_hashCompareResultByPartNo.GetFirst();}
 	COMPARE_PART_RESULT* EnumNextResult(){return m_hashCompareResultByPartNo.GetNext();}
 };
-class CIdentifyManager
-{
-public:
-	//½Ç¸Ö
-	f2dRect part_no_rect;
-	f2dRect mat_rect;
-	f2dRect guige_rect;
-	f2dRect length_rect;
-	f2dRect piece_weight_rect;
-	f2dRect danji_num_rect;
-	f2dRect jiagong_num_rect;
-	f2dRect note_rect;
-	f2dRect sum_weight_rect;
-	double fMaxX,fMaxY,fMinX,fMinY;
-	double fTextHigh; 
-	double fPnDistX,fPnDistY;
-	//¸Ö°å
-	CXhChar16 m_sNumKey1,m_sNumKey2;
-	CXhChar16 m_sThickKey;
-	CXhChar16 m_sPartNoKey;
-	//
-	CIdentifyManager();
-	~CIdentifyManager();
-	bool InitJgCardInfo(const char* sFileName);
-	BOOL IsMatchPNRule(const char* sText);
-	BOOL IsMatchThickRule(const char* sText);
-	BOOL IsMatchMatRule(const char* sText);
-	BOOL IsMatchNumRule(const char* sText){return strstr(sText,m_sNumKey1)!=NULL||strstr(sText,m_sNumKey2)!=NULL;}
-	void ParsePartNoText(const char* sText,CXhChar16& sPartNo);
-	void ParseThickText(const char* sValue,int& nThick);
-	void ParseMatText(const char* sValue,char& cMat);
-	void ParseNumText(const char* sValue,int& nNum);
-	f3dPoint GetJgCardOrigin(f3dPoint partNo_pt);
-};
+//////////////////////////////////////////////////////////////////////////
+//
 class CBomModel
 {
 public:
-	CXhChar100 m_sJgCadName;
-	CIdentifyManager manager;
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 public:
 	CBomModel(void);
 	~CBomModel(void);
-	bool InitBomModel();
 	CDwgFileInfo *FindDwgFile(const char* file_path);
 	//
-	static char QueryBriefMatMark(const char* sMatMark);
 	static CXhChar16 QueryMatMarkIncQuality(CProcessPart *pPart);
-	static CXhChar16 QuerySteelMatMark(char cMat,char* matStr=NULL);
-	static void RestoreSpec(const char* spec,int *width,int *thick,char *matStr=NULL);
 	static void SendCommandToCad(CString sCmd);
 };
 extern CBomModel g_xUbomModel;
+#endif

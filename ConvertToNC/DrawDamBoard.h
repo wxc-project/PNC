@@ -1,6 +1,7 @@
 #pragma once
 #include "PNCModel.h"
 
+#ifndef __UBOM_ONLY_
 class CDrawDamBoard
 {
 	CPlateProcessInfo *m_pPlate;
@@ -38,3 +39,4 @@ public:
 	void DrawAllSteelSealRect(CPNCModel *pModel);
 	void EraseAllSteelSealRect();
 };
+#endif

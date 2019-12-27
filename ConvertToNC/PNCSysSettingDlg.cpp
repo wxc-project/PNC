@@ -38,13 +38,13 @@ void UpdateTxtDimProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 		return ;
 	CPropertyListOper<CPNCSysPara> oper(pPropList,&g_pncSysPara);
 	pPropList->DeleteAllSonItems(pParentItem);
-	if(g_pncSysPara.m_sPnKey.Length>0)
+	if(g_pncSysPara.m_sPnKey.GetLength()>0)
 		oper.InsertCmbEditPropItem(pParentItem,"m_sPnKey","","","",-1,TRUE);			//件号标识符
-	if(g_pncSysPara.m_sThickKey.Length>0)
+	if(g_pncSysPara.m_sThickKey.GetLength()>0)
 		oper.InsertCmbEditPropItem(pParentItem,"m_sThickKey", "", "", "", -1, TRUE);	//厚度标识符
-	if(g_pncSysPara.m_sMatKey.Length>0)
+	if(g_pncSysPara.m_sMatKey.GetLength()>0)
 		oper.InsertCmbEditPropItem(pParentItem,"m_sMatKey", "", "", "", -1, TRUE);		//材质标识符
-	if(g_pncSysPara.m_sPnNumKey.Length>0)
+	if(g_pncSysPara.m_sPnNumKey.GetLength()>0)
 		oper.InsertCmbEditPropItem(pParentItem,"m_sPnNumKey", "", "", "", -1, TRUE);	//件数标识符
 }
 void UpdateFilterLayerProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
@@ -180,6 +180,11 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		else
 			g_pncSysPara.m_bIncDeformed = false;
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_sJgCadName"))
+	{
+		g_pncSysPara.m_sJgCadName.Copy(valueStr);
+		g_pncSysPara.InitJgCardInfo(valueStr);
+	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bMKPos"))
 	{
 		if (valueStr.Compare("是") == 0)
@@ -278,6 +283,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_nMapLength=atoi(valueStr);
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMinDistance"))
 		g_pncSysPara.m_nMinDistance=atoi(valueStr);
+#ifndef __UBOM_ONLY_
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("CDrawDamBoard::BOARD_HEIGHT"))
 	{
 		CDrawDamBoard::BOARD_HEIGHT = atoi(valueStr);
@@ -293,6 +299,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		if (pPartListDlg&&g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
+#endif
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMkRectLen"))
 		g_pncSysPara.m_nMkRectLen = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMkRectWidth"))
@@ -448,6 +455,7 @@ BOOL FirePickColor(CPropertyList* pPropList, CPropTreeItem* pItem, COLORREF &clr
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iBendLineColorIndex") ||
 		pItem->m_idProp == CPNCSysPara::GetPropID("m_iProfileColorIndex"))
 	{
+#ifdef __PNC_
 		pParaDlg->m_idEventProp = pItem->m_idProp;	//记录触发事件的属性ID
 		pParaDlg->m_arrCmdPickPrompt.RemoveAll();
 #ifdef AFX_TARG_ENU_ENGLISH
@@ -456,6 +464,7 @@ BOOL FirePickColor(CPropertyList* pPropList, CPropTreeItem* pItem, COLORREF &clr
 		pParaDlg->m_arrCmdPickPrompt.Add("\n请选择一根直线拾取颜色<Enter确认>:\n");
 #endif
 		pParaDlg->SelectEntObj();
+#endif
 	}
 	return FALSE;
 }
@@ -879,9 +888,10 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_ctrlPropGroup.InsertItem(1, "文字识别");
 	m_ctrlPropGroup.InsertItem(2, "螺栓识别");
 	//
+#ifdef __PNC_
 	if (!m_bInernalStart)	//非内部启动时导入配置参数，否则选择的颜色将被冲掉 wht 19-10-30
 		PNCSysSetImportDefault();
-
+#endif
 	long col_wide_arr[7] = { 80,80,80,80,80,80,80 };
 	m_listCtrlSysSetting.InitListCtrl(col_wide_arr);
 	m_listCtrlSysSetting.SetDblclkDisplayCellCtrl(true);
@@ -1015,6 +1025,9 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	//常规设置
 	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
 	pGroupItem->m_dwPropGroup = GetSingleWord(GROUP_GENERAL);
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	oper.InsertEditPropItem(pGroupItem, "m_sJgCadName");
+#endif
 	oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");
 	if (g_pncSysPara.m_bReplaceSH)
@@ -1085,6 +1098,7 @@ void CPNCSysSettingDlg::OnBnClickedBtnDefault()
 	OnSelchangeTabGroup(NULL, NULL);
 }
 
+#ifdef __PNC_
 //选择对象节点或线
 void CPNCSysSettingDlg::SelectEntObj(int nResultEnt/*=1*/)
 {
@@ -1094,12 +1108,10 @@ void CPNCSysSettingDlg::SelectEntObj(int nResultEnt/*=1*/)
 	m_nResultEnt = nResultEnt;
 	CDialog::OnOK();
 }
-
 void CPNCSysSettingDlg::FinishSelectObjOper()
 {
 	if (!m_bInernalStart || m_iBreakType != 1)
 		return;
-#ifdef __PNC_
 	//由于选择实体内部重启
 	CAD_SCREEN_ENT *pCADEnt = resultList.GetFirst();
 	CPropTreeItem *pItem = m_propList.FindItemByPropId(m_idEventProp, NULL);
@@ -1126,5 +1138,5 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 		if (g_pncSysPara.GetPropValueStr(pItem->m_idProp, tem_str) > 0)
 			m_propList.SetItemPropValue(pItem->m_idProp, CString(tem_str));
 	}
-#endif
 }
+#endif

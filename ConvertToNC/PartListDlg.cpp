@@ -14,8 +14,8 @@
 #include "AcUiDialogPanel.h"
 #include "PNCSysPara.h"
 
+#ifndef __UBOM_ONLY_
 // CPartListDlg 对话框
-
 CPartListDlg *g_pPartListDlg=NULL;
 CPartListDlg g_xPartListDlg;
 #ifdef __SUPPORT_DOCK_UI_
@@ -121,24 +121,6 @@ BOOL CPartListDlg::OnInitDialog()
 	return TRUE;
 }
 
-CXhChar16 QueryMatMarkByBriefMatMark(char cMat)
-{
-	CXhChar16 sMat;
-	if('H'==cMat)
-		sMat.Copy("Q345");
-	else if('h'==cMat)	//用小写h表示Q355,输出简化材质字符时需要转大写 wht 19-11-05
-		sMat.Copy("Q355");
-	else if('G'==cMat)
-		sMat.Copy("Q390");
-	else if('P'==cMat)
-		sMat.Copy("Q420");
-	else if('T'==cMat)
-		sMat.Copy("Q460");
-	else 
-		sMat.Copy("Q235");
-	return sMat;
-}
-
 BOOL CPartListDlg::UpdatePartList()
 {
 	m_partList.DeleteAllItems();
@@ -149,7 +131,7 @@ BOOL CPartListDlg::UpdatePartList()
 	{
 		str_arr[0]=pPlate->xPlate.GetPartNo();
 		str_arr[1].Format("-%.f",pPlate->xPlate.m_fThick);
-		str_arr[2]=QueryMatMarkByBriefMatMark(pPlate->xPlate.cMaterial);
+		str_arr[2]=CProcessPart::QuerySteelMatMark(pPlate->xPlate.cMaterial);
 		str_arr[3].Format("%d",pPlate->xPlate.feature);
 		int iItem=m_partList.InsertItemRecord(-1,str_arr);
 		m_partList.SetItemData(iItem,(DWORD)pPlate);
@@ -465,3 +447,4 @@ void CPartListDlg::PreSubclassWindow()
 	CDialog::PreSubclassWindow();
 #endif
 }
+#endif

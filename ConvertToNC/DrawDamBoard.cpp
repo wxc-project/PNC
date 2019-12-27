@@ -4,6 +4,7 @@
 #include "PNCSysPara.h"
 #include "DragEntSet.h"
 
+#ifndef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 // CDrawDamBoard
 int CDrawDamBoard::BOARD_THICK =10;
@@ -218,3 +219,4 @@ void CDamBoardManager::EraseAllSteelSealRect()
 	}
 	m_hashBoardList.Clean();
 }
+#endif

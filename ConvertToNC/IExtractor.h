@@ -42,9 +42,9 @@ struct ISymbolRecognizer{
 	virtual bool IsWeldingAlongSide(ICurveLine* pCurveLine)=0;
 };
 //开放给用户的钢板识别定制化接口函数
-struct IPlateExtractor{
-	virtual BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL)=0;
-	virtual BOOL RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)=0;
-	virtual BOOL RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)=0;
-	virtual BOOL RecogArcEdge(AcDbEntity* pEnt,f3dArcLine& arcLine,BYTE& ciEdgeType)=0;
+struct IPlateExtractor {
+	virtual BOOL IsBendLine(AcDbLine* pAcDbLine, ISymbolRecognizer* pRecognizer = NULL) = 0;
+	virtual BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole) = 0;
+	virtual BOOL RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo) = 0;
+	virtual BOOL RecogArcEdge(AcDbEntity* pEnt, f3dArcLine& arcLine, BYTE& ciEdgeType) = 0;
 };

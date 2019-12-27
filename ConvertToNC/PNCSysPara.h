@@ -12,7 +12,7 @@
 #include "DockBarManager.h"
 //////////////////////////////////////////////////////////////////////////
 //
-class CPNCSysPara : public CPlateExtractor
+class CPNCSysPara : public CPlateExtractor , public CJgCardExtractor
 {
 public:
 	struct LAYER_ITEM{
@@ -58,6 +58,8 @@ public:
 	BYTE m_ciProfileColorIndex;
 	BYTE m_ciBendLineColorIndex;
 	CXhChar16 m_sProfileLineType;
+	//
+	CXhChar100 m_sJgCadName;	//Ω«∏÷π§“’ø®
 public:
 	CPNCSysPara();
 	~CPNCSysPara();

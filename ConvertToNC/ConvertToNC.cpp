@@ -77,6 +77,12 @@ void RegisterServerComponents ()
 		L"ReviseThePlate",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&ManualExtractPlate);            // Function pointer
+	//系统设置
+	acedRegCmds->addCommand(L"PNC-MENU",         // Group name 
+		L"EnvGeneralSet",          // Global function name
+		L"EnvGeneralSet",          // Local function name
+		ACRX_CMD_MODAL,      // Type
+		&EnvGeneralSet);
 #ifndef __UBOM_ONLY_
 	//钢板排版
 	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
@@ -96,20 +102,21 @@ void RegisterServerComponents ()
 		L"MK",
 		ACRX_CMD_MODAL,
 		&InsertMKRect);
+	//通过读取Txt文件绘制外形
+	acedRegCmds->addCommand( L"PNC-MENU",   // Group name
+		L"DrawByTxtFile",					// Global function name
+		L"DrawByTxtFile",					// Local function name
+		ACRX_CMD_MODAL,							// Type
+		&DrawProfileByTxtFile);				// Function pointer
 #endif
-	//系统设置
-	acedRegCmds->addCommand( L"PNC-MENU",         // Group name 
-		L"EnvGeneralSet",          // Global function name
-		L"EnvGeneralSet",          // Local function name
-		ACRX_CMD_MODAL,      // Type
-		&EnvGeneralSet);
-	// 智能提取板信息
-	acedRegCmds->addCommand(L"REVISION-MENU",   // Group name
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+//校审构件工艺信息
+	acedRegCmds->addCommand(L"PNC-MENU",   // Group name
 		L"RPP",					// Global function name
 		L"RPP",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&RevisionPartProcess);					// Function pointer
-
+#endif
 #else
 	// 智能提取板信息
 	acedRegCmds->addCommand( "PNC-MENU",           // Group name
@@ -123,6 +130,12 @@ void RegisterServerComponents ()
 		"ReviseThePlate",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&ManualExtractPlate);            // Function pointer
+	//系统设置
+	acedRegCmds->addCommand("PNC-MENU",         // Group name 
+		"EnvGeneralSet",          // Global function name
+		"EnvGeneralSet",          // Local function name
+		ACRX_CMD_MODAL,      // Type
+		&EnvGeneralSet);
 #ifndef __UBOM_ONLY_
 	//钢板排版
 	acedRegCmds->addCommand( "PNC-MENU",           // Group name
@@ -142,24 +155,21 @@ void RegisterServerComponents ()
 		"MK",
 		ACRX_CMD_MODAL,
 		&InsertMKRect);
-#endif
-	//系统设置
-	acedRegCmds->addCommand( "PNC-MENU",         // Group name 
-		"EnvGeneralSet",          // Global function name
-		"EnvGeneralSet",          // Local function name
-		ACRX_CMD_MODAL,      // Type
-		&EnvGeneralSet);
-	// 智能提取板信息
-	acedRegCmds->addCommand("REVISION-MENU",   // Group name
-		"RPP",					// Global function name
-		"RPP",					// Local function name
-		ACRX_CMD_MODAL,							// Type
-		&RevisionPartProcess);					// Function pointer
-	acedRegCmds->addCommand("REVISION-MENU",   // Group name
+	//通过读取Txt文件绘制外形
+	acedRegCmds->addCommand("PNC-MENU",   // Group name
 		"DrawByTxtFile",					// Global function name
 		"DrawByTxtFile",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&DrawProfileByTxtFile);				// Function pointer
+#endif
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	//校审构件工艺信息
+	acedRegCmds->addCommand("PNC-MENU",   // Group name
+		"RPP",					// Global function name
+		"RPP",					// Local function name
+		ACRX_CMD_MODAL,							// Type
+		&RevisionPartProcess);					// Function pointer
+#endif
 #endif
 }
 #if !defined(__AFTER_ARX_2007)
@@ -212,15 +222,28 @@ void InitApplication()
 	pByteVer[1]=2;
 	pByteVer[2]=0;
 	pByteVer[3]=0;
-	char lic_file[MAX_PATH];
+	char lic_file[MAX_PATH]="";
+	BYTE cProductType = PRODUCT_PNC;
 	GetLicFile(lic_file);
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	//UBOM模块授权单独安装时使用PNC.lic，与放样软件辅助使用时使用TMA.lic
+#ifndef __PNC_
+	char lic_file2[MAX_PATH] = "";
+	cProductType = PRODUCT_TMA;
+	if (GetLicFile(lic_file) == FALSE)
+	{
+		GetLicFile2(lic_file2);
+		strcpy(lic_file, lic_file2);
+	}
+#endif
+#endif
 	char key_file[MAX_PATH];
 	strcpy(key_file, lic_file);
 	//查找是否存在指定加密锁号的文件 wht-2017.06.07
 	char* separator = SearchChar(key_file, '.', true);
 	strcpy(separator, ".key");
 	DetectSpecifiedHaspKeyFile(key_file);
-	ULONG retCode=ImportLicFile(lic_file,PRODUCT_PNC,version);
+	ULONG retCode = ImportLicFile(lic_file, cProductType, version);
 	if(retCode!=0)
 	{
 		CXhChar500 errormsgstr;
@@ -270,7 +293,7 @@ void InitApplication()
 		else
 		{	//卸载PNC，不退出cad
 			//kLoadDwgMsg中不能调用sendStringToExecute和acedCommand,acDocManager->curDocument()==NULL,无法执行 wht 18-12-25
-#ifdef __UBOM_
+#ifdef __UBOM_ONLY_
 #ifdef _ARX_2007
 			ads_queueexpr(L"(command\"arx\" \"u\" \"UBOM.arx\")");
 #else
@@ -286,17 +309,25 @@ void InitApplication()
 			return;
 		}
 	}
+#ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_BASIC))
 	{
 		AfxMessageBox("软件缺少合法使用授权!");
 		exit(0);
 	}
+#endif
 	HWND hWnd = adsw_acadMainWnd();
+#ifdef __UBOM_ONLY_
+	::SetWindowText(hWnd, "UBOM");
+#else
 	::SetWindowText(hWnd,"PNC");
+#endif
 	RegisterServerComponents();
 	//
 	//创建对话框
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	g_pRevisionDlg = new CRevisionDlg();
+#endif
 	PNCSysSetImportDefault();
 }
 void UnloadApplication()
@@ -317,11 +348,13 @@ void UnloadApplication()
 		strcpy(separator,".rx");
 		::DeleteFile(cad_path);
 	}
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	if (g_pRevisionDlg)
 	{
 		delete g_pRevisionDlg;
 		g_pRevisionDlg = NULL;
 	}
+#endif
 }
 
 //-----------------------------------------------------------------------------
