@@ -223,18 +223,17 @@ void InitApplication()
 	pByteVer[2]=0;
 	pByteVer[3]=0;
 	char lic_file[MAX_PATH]="";
+	char lic_file2[MAX_PATH] = "";
 	BYTE cProductType = PRODUCT_PNC;
 	GetLicFile(lic_file);
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	//UBOM模块授权单独安装时使用PNC.lic，与放样软件辅助使用时使用TMA.lic
 #ifndef __PNC_
-	char lic_file2[MAX_PATH] = "";
 	cProductType = PRODUCT_TMA;
-	if (GetLicFile(lic_file) == FALSE)
-	{
-		GetLicFile2(lic_file2);
+	GetLicFile(lic_file);
+	GetLicFile2(lic_file2);
+	if (strlen(lic_file)==0)
 		strcpy(lic_file, lic_file2);
-	}
 #endif
 #endif
 	char key_file[MAX_PATH];
@@ -244,6 +243,16 @@ void InitApplication()
 	strcpy(separator, ".key");
 	DetectSpecifiedHaspKeyFile(key_file);
 	ULONG retCode = ImportLicFile(lic_file, cProductType, version);
+	if (retCode != 0 && strlen(lic_file2) > 0 && stricmp(lic_file, lic_file2) != 0)
+	{	//导入证书lic_file失败时，尝试导入lic_file2
+		//lic_file为TMAV4.1证书路径，lic_file2为TMAV5.1证书路径 wht 19-12-27
+		strcpy(key_file, lic_file2);
+		separator = SearchChar(key_file, '.', true);
+		strcpy(separator, ".key");
+		DetectSpecifiedHaspKeyFile(key_file);
+		retCode = ImportLicFile(lic_file2, cProductType, version);
+		strcpy(lic_file, lic_file2);
+	}
 	if(retCode!=0)
 	{
 		CXhChar500 errormsgstr;

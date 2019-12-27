@@ -22,9 +22,12 @@
     <ProjectGuid>{41DB49B9-E6BE-4666-89A9-D159A9A9CACB}</ProjectGuid>
     <RootNamespace>PNC</RootNamespace>
     <Keyword>MFCProj</Keyword>
-    <SccProjectName>"$/PNC", ZJMAAAAA</SccProjectName>
-    <SccLocalPath>.</SccLocalPath>
-    <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>
+    <SccProjectName>
+    </SccProjectName>
+    <SccLocalPath>
+    </SccLocalPath>
+    <SccProvider>
+    </SccProvider>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

@@ -89,6 +89,22 @@
       <Configuration>UBOMDebug7</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="UBOMForTMADebug05|Win32">
+      <Configuration>UBOMForTMADebug05</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="UBOMForTMADebug05|x64">
+      <Configuration>UBOMForTMADebug05</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="UBOMForTMARelease05|Win32">
+      <Configuration>UBOMForTMARelease05</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="UBOMForTMARelease05|x64">
+      <Configuration>UBOMForTMARelease05</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="UBOMRelease05|Win32">
       <Configuration>UBOMRelease05</Configuration>
       <Platform>Win32</Platform>
@@ -165,6 +181,15 @@
     <CLRSupport>false</CLRSupport>
     <PlatformToolset>v70</PlatformToolset>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+    <PlatformToolset>v70</PlatformToolset>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -176,6 +201,16 @@
     <PlatformToolset>v70</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+    <PlatformToolset>v70</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>false</WholeProgramOptimization>
@@ -290,6 +325,13 @@
     <UseOfAtl>false</UseOfAtl>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release05|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
@@ -298,6 +340,13 @@
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <UseOfMfc>Dynamic</UseOfMfc>
@@ -371,10 +420,16 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release10|Win32'" Label="PropertySheets">
@@ -435,6 +490,13 @@
     <TargetExt>.arx</TargetExt>
     <TargetName>UBOM</TargetName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">
+    <IntDir>UBOMForTMADebug05\</IntDir>
+    <OutDir>..\UBOMForTMADebug05\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetExt>.arx</TargetExt>
+    <TargetName>UBOM</TargetName>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'">
     <IntDir>Release05\</IntDir>
     <OutDir>..\Release\</OutDir>
@@ -448,7 +510,15 @@
     <OutDir>..\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
-    <TargetName>PNC05</TargetName>
+    <TargetName>UBOM</TargetName>
+    <GenerateManifest>false</GenerateManifest>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|Win32'">
+    <IntDir>UBOMForTMA05\</IntDir>
+    <OutDir>..\UBOMForTMA05\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetExt>.arx</TargetExt>
+    <TargetName>UBOM</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release10|Win32'">
@@ -532,12 +602,22 @@
     <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|x64'">
+    <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
+    <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release05|x64'">
     <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
     <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|x64'">
+    <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
+    <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|x64'">
     <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
     <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
     <LinkIncremental>true</LinkIncremental>
@@ -787,6 +867,47 @@
       <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;_DEBUG;__PNC_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
+      <MinimalRebuild>true</MinimalRebuild>
+      <StringPooling>false</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__TMA_FILE_;__DRAG_ENT_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ObjectARX 2005\inc</AdditionalIncludeDirectories>
+      <PrecompiledHeaderOutputFile>$(IntDir)PNC.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)UBOM.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <ProgramDatabaseFile>$(OutDir)PNC.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\ObjectARX 2005\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>acdb16.lib;acge16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_alg_fun.lib;f_ent.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>.\UBOM.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;_DEBUG;__PNC_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -850,7 +971,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__PNC__;__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
@@ -861,7 +982,54 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>$(outdir)PNC05.arx</OutputFile>
+      <OutputFile>$(outdir)UBOM.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <ProgramDatabaseFile>
+      </ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
+      <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:\ObjectARX 2005\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <RandomizedBaseAddress>false</RandomizedBaseAddress>
+      <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;_AFXDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+    <PreBuildEvent>
+      <Command>py.exe $(ProjectDir)addVersionNum05.py</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <Optimization>Full</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>__TMA_FILE_;__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <OutputFile>$(outdir)UBOM.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>
       </ProgramDatabaseFile>
@@ -1356,6 +1524,37 @@
       <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|x64'">
+    <ClCompile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WarningLevel>Level1</WarningLevel>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <StringPooling>false</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>_WIN64;_WINDOWS;CONVERTTONC_MODULE;_AFXEXT;_ACRXAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>c:\Program Files\AutoCAD 2011\;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(outdir)/XHConvertToNC.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)/ConvertToNC.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)/ConvertToNC.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ModuleDefinitionFile>PNC.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release05|x64'">
     <ClCompile>
       <DebugInformationFormat>
@@ -1390,6 +1589,39 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|x64'">
+    <ClCompile>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <WarningLevel>Level1</WarningLevel>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <Optimization>MaxSpeed</Optimization>
+      <MinimalRebuild>false</MinimalRebuild>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>_WIN64;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>c:\Program Files\AutoCAD 2011\;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(outdir)/XHConvertToNC.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <ProgramDatabaseFile>
+      </ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)/ConvertToNC.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ModuleDefinitionFile>PNC.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|x64'">
     <ClCompile>
       <DebugInformationFormat>
       </DebugInformationFormat>
@@ -1658,22 +1890,27 @@
     <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\EntList\f_ent_list.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\Ent\f_ent.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\PartLib.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\AcUiDialogPanel.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.cpp" />
@@ -1691,11 +1928,13 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\MsgBox.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\PathManager.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp" />
@@ -1717,83 +1956,103 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\ProductFeature.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\SegI.cpp" />
     <ClCompile Include="..\..\XhLmd\AES\aes.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\DES\DES.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\RSA\BigInt.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLdsLm\ClassDef.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLdsLm\CryptLdsCode.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLdsLm\ToolKits.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLdsLm\XhLdsLm.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\AgentCoreClassDef.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\Computer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAgent.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\DogAPI.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\LegacyDogDataCryptKey.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\LicBuffer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\SafeDecryptBuffer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\XhLicAgent.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="AddBoltBlockDlg.cpp" />
     <ClCompile Include="AdjustPlateMCS.cpp" />
@@ -1822,8 +2081,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release10|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease10|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseZrx19|Win32'">Create</PrecompiledHeader>
@@ -1836,8 +2097,10 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release10|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMRelease10|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseZrx19|x64'">Create</PrecompiledHeader>
@@ -1853,6 +2116,7 @@
     <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\AcUiDialogPanel.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\ArrayList.h" />
@@ -1907,14 +2171,17 @@
     <ClInclude Include="..\..\XhLmd\DogDrvs\GSMH.H">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\DogDrvs\hasp_api.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\DogDrvs\NetDogAPI.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\RSA\BigInt.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -1928,22 +2195,27 @@
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Computer.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\hardcomm.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Ident.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\IdentityRouter.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAgent.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -2003,10 +2275,12 @@
     <Object Include="..\..\XhLmd\DogDrvs\MHWIN32C.OBJ">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </Object>
     <Object Include="..\..\XhLmd\DogDrvs\UNHWIN32C.OBJ">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </Object>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
