@@ -389,7 +389,7 @@ AcDbObjectId CDwgFileInfo::GetEntLineTypeId(AcDbEntity *pEnt)
 //提取板的轮廓边,确定闭合区域
 BOOL CDwgFileInfo::RetrievePlates()
 {
-	//SmartExtractPlate();
+	SmartExtractPlate(&m_xPncMode);
 	return TRUE;
 }
 

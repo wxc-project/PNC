@@ -61,6 +61,9 @@
     <Filter Include="UBOM">
       <UniqueIdentifier>{51eb1555-8f5b-49c1-b9b0-0396451674dd}</UniqueIdentifier>
     </Filter>
+    <Filter Include="PNC">
+      <UniqueIdentifier>{6c32be16-96b4-4c06-94e5-996a16da9de6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConvertToNC.cpp">
@@ -87,15 +90,6 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\HiberarchyId.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="ProcBarDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AddBoltBlockDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="IdentifyInfoDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="PNCSysSettingDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -103,9 +97,6 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PNCCmd.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DrawUnit.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="PNCModel.cpp">
@@ -210,9 +201,6 @@
     <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP">
       <Filter>XhLicAgent\DogDrvs</Filter>
     </ClCompile>
-    <ClCompile Include="InputMKRectDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\TSPAlgorithm.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
@@ -227,15 +215,6 @@
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\AcUiDialogPanel.cpp">
       <Filter>ToolCode</Filter>
-    </ClCompile>
-    <ClCompile Include="DrawDamBoard.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="AdjustPlateMCS.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="SteelSealReactor.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\DragEntSet.cpp">
       <Filter>ToolCode</Filter>
@@ -254,12 +233,6 @@
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\DimStyle.cpp">
       <Filter>TowerCad</Filter>
-    </ClCompile>
-    <ClCompile Include="PartListDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="DockBarManager.cpp">
-      <Filter>头文件</Filter>
     </ClCompile>
     <ClCompile Include="InputAnValDlg.cpp">
       <Filter>源文件</Filter>
@@ -315,11 +288,29 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\LicFuncDef.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
+    <ClCompile Include="PartListDlg.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawDamBoard.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="SteelSealReactor.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="InputMKRectDlg.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="DockBarManager.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="DrawUnit.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="AdjustPlateMCS.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="DocData.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="Resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -350,15 +341,6 @@
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="ProcBarDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AddBoltBlockDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="IdentifyInfoDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="PNCSysSettingDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -366,9 +348,6 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PNCCmd.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="DrawUnit.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="PNCModel.h">
@@ -464,14 +443,8 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\ProductFeature.h">
       <Filter>XhLicAgent\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="InputMKRectDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\TSPAlgorithm.h">
       <Filter>ToolCode</Filter>
-    </ClInclude>
-    <ClInclude Include="PartListDlg.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="CadHighlightEntManager.h">
       <Filter>头文件</Filter>
@@ -479,16 +452,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\AcUiDialogPanel.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
-    <ClInclude Include="DrawDamBoard.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="AdjustPlateMCS.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="CADCallBackDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="SteelSealReactor.h">
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\DragEntSet.h">
@@ -560,6 +524,24 @@
     <ClInclude Include="InputAnValDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="PartListDlg.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawDamBoard.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="SteelSealReactor.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="InputMKRectDlg.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="DrawUnit.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="AdjustPlateMCS.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ConvertToNC.rc">
@@ -567,9 +549,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="PNC.def">
-      <Filter>源文件</Filter>
-    </None>
     <None Include="icon1.ico">
       <Filter>资源文件</Filter>
     </None>
@@ -600,9 +579,6 @@
     <None Include="res\Move.bmp">
       <Filter>资源文件</Filter>
     </None>
-    <None Include="PNC-ZRX.def">
-      <Filter>源文件</Filter>
-    </None>
     <None Include="res\MoveMK.bmp">
       <Filter>资源文件</Filter>
     </None>
@@ -610,7 +586,13 @@
       <Filter>资源文件</Filter>
     </None>
     <None Include="UBOM.def">
-      <Filter>源文件</Filter>
+      <Filter>UBOM</Filter>
+    </None>
+    <None Include="PNC.def">
+      <Filter>PNC</Filter>
+    </None>
+    <None Include="PNC-ZRX.def">
+      <Filter>PNC</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

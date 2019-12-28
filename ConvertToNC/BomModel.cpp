@@ -1426,14 +1426,4 @@ CXhChar16 CBomModel::QueryMatMarkIncQuality(CProcessPart *pPart)
 	}
 	return sMatMark;
 }
-void CBomModel::SendCommandToCad(CString sCmd)
-{
-	if(strlen(sCmd)<=0)
-		return;
-	COPYDATASTRUCT cmd_msg;
-	cmd_msg.dwData=(DWORD)1;
-	cmd_msg.cbData=(DWORD)_tcslen(sCmd)+1;
-	cmd_msg.lpData=sCmd.GetBuffer(sCmd.GetLength()+1);
-	SendMessage(adsw_acadMainWnd(),WM_COPYDATA,(WPARAM)adsw_acadMainWnd(),(LPARAM)&cmd_msg);
-}
 #endif

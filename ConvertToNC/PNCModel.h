@@ -158,7 +158,7 @@ public:
 	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
 	f2dRect GetMinWrapRect(double minDistance=0, fPtList *pVertexList=NULL);
 	CXhChar16 GetPartNo(){return xPlate.GetPartNo();}
-	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern);//通过bpoly命令提取钢板信息
+	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
 	void ExtractPlateRelaEnts();
 	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
@@ -223,6 +223,7 @@ public:
 	CPlateProcessInfo* AppendPlate(char* sPartNo){return m_hashPlateInfo.Add(sPartNo);}
 	CPlateProcessInfo* GetPlateInfo(char* sPartNo){return m_hashPlateInfo.GetValue(sPartNo);}
 	CPlateProcessInfo* GetPlateInfo(AcDbObjectId partNoEntId);
+	CPlateProcessInfo* GetPlateInfo(GEPOINT text_pos);
 	CPlateProcessInfo* EnumFirstPlate(BOOL bOnlyNewExtractedPlate)
 	{
 		if (bOnlyNewExtractedPlate)

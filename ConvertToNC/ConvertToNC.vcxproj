@@ -2054,7 +2054,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="AddBoltBlockDlg.cpp" />
     <ClCompile Include="AdjustPlateMCS.cpp" />
     <ClCompile Include="BomModel.cpp" />
     <ClCompile Include="CADCallBackDlg.cpp" />
@@ -2065,7 +2064,6 @@
     <ClCompile Include="DrawUnit.cpp" />
     <ClCompile Include="DwgFile.cpp" />
     <ClCompile Include="FilterLayerDlg.cpp" />
-    <ClCompile Include="IdentifyInfoDlg.cpp" />
     <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="InputMKRectDlg.cpp" />
     <ClCompile Include="PartListDlg.cpp" />
@@ -2073,7 +2071,6 @@
     <ClCompile Include="PNCModel.cpp" />
     <ClCompile Include="PNCSysPara.cpp" />
     <ClCompile Include="PNCSysSettingDlg.cpp" />
-    <ClCompile Include="ProcBarDlg.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -2227,14 +2224,11 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
-    <ClInclude Include="AddBoltBlockDlg.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
-    <ClInclude Include="DocData.h" />
     <ClInclude Include="DockBarManager.h" />
     <ClInclude Include="DrawDamBoard.h" />
     <ClInclude Include="DrawUnit.h" />
     <ClInclude Include="FilterLayerDlg.h" />
-    <ClInclude Include="IdentifyInfoDlg.h" />
     <ClInclude Include="IExtractor.h" />
     <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="InputMKRectDlg.h" />
@@ -2243,7 +2237,6 @@
     <ClInclude Include="PNCModel.h" />
     <ClInclude Include="PNCSysPara.h" />
     <ClInclude Include="PNCSysSettingDlg.h" />
-    <ClInclude Include="ProcBarDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RevisionDlg.h" />
     <ClInclude Include="StdAfx.h" />

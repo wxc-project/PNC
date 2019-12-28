@@ -181,7 +181,6 @@ public:
 	CDwgFileInfo *FindDwgFile(const char* file_path);
 	//
 	static CXhChar16 QueryMatMarkIncQuality(CProcessPart *pPart);
-	static void SendCommandToCad(CString sCmd);
 };
 extern CBomModel g_xUbomModel;
 #endif

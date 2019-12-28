@@ -363,7 +363,7 @@ BOOL CPlateExtractor::IsMatchMatRule(const char* sText)
 		return FALSE;
 	if(m_iDimStyle==0)
 		return IsMatchPNRule(sText);
-	if(strstr(sText,m_sMatKey)&&(strstr(sText,"Q3")||strstr(sText,"Q4")))
+	if(strstr(sText,m_sMatKey)&&(strstr(sText, "Q2")||strstr(sText,"Q3")||strstr(sText,"Q4")))
 		return TRUE;
 	else
 		return FALSE;
@@ -465,10 +465,13 @@ void CPlateExtractor::ParseThickText(const char* sText,int& nThick)
 		if(strstr(str,"mm"))
 			str.Replace("mm","");
 		str.Replace(m_sThickKey,"| ");
-		sscanf(str,"%s%d",(char*)sValue,&nThick);
+		int nValue = 0;
+		sscanf(str,"%s%d",(char*)sValue,&nValue);
+		if (nValue > 0)
+			nThick = nValue;
 	}
 }
-void CPlateExtractor::ParseMatText(const char* sText,char& cMat)
+void CPlateExtractor::ParseMatText(const char* sText,char& cMat,char& cQuality)
 {
 	CXhChar100 sValue(sText);
 	sValue.Replace("¡¡"," ");
@@ -483,7 +486,8 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat)
 	{
 		if(strstr(sKey,"Q")&&strstr(sKey,"|")==NULL)
 		{
-			cMat=CProcessPart::QueryBriefMatMark(sKey);
+			cMat = CProcessPart::QueryBriefMatMark(sKey);
+			cQuality = CProcessPart::QueryBriefQuality(sKey);
 			return;
 		}
 	}
@@ -754,7 +758,7 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 			}
 			if (IsMatchMatRule(sTemp))
 			{
-				ParseMatText(sTemp, basicInfo.m_cMat);
+				ParseMatText(sTemp, basicInfo.m_cMat,basicInfo.m_cQuality);
 				bRet = TRUE;
 			}
 			if (IsMatchNumRule(sTemp))
@@ -780,7 +784,7 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 		}
 		if (IsMatchMatRule(sText))
 		{
-			ParseMatText(sText, basicInfo.m_cMat);
+			ParseMatText(sText, basicInfo.m_cMat,basicInfo.m_cQuality);
 			bRet = TRUE;
 		}
 		if (IsMatchNumRule(sText))
