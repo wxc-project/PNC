@@ -50,6 +50,7 @@ protected:
 	virtual void OnCancel();
 	//
 	DECLARE_MESSAGE_MAP()
+	afx_msg void OnClose();
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMRClickTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult);

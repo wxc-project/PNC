@@ -112,6 +112,18 @@ void SmartExtractPlate()
 	else
 		SmartExtractPlate(&model);
 #else
+	CString file_path;
+	GetCurWorkPath(file_path);
+	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+	{	//下料预审模式，保留上次提取的钢板信息，避免重复提取
+		if (!model.m_sWorkPath.EqualNoCase(file_path))
+		{
+			model.Empty();
+			model.m_sWorkPath.Copy(file_path);
+		}
+	}
+	else
+		model.Empty();
 	SmartExtractPlate(&model);
 #endif
 }
@@ -121,20 +133,9 @@ void SmartExtractPlate(CPNCModel *pModel)
 	if (pModel == NULL)
 		return;
 	CLogErrorLife logErrLife;
-	CString file_path;
-	GetCurWorkPath(file_path);
-	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-	{	//下料预审模式，保留上次提取的钢板信息，避免重复提取
-		if (!pModel->m_sWorkPath.EqualNoCase(file_path))
-		{
-			pModel->Empty();
-			pModel->m_sWorkPath.Copy(file_path);
-		}
-	}
-	else
-		pModel->Empty();
 	AcDbObjectId entId;
 	AcDbEntity *pEnt=NULL;
+	CHashSet<AcDbObjectId> selectedEntList;
 	//默认选择所有的图形，方便后期的过滤使用
 	ads_name ent_sel_set,entname;
 #ifdef _ARX_2007
@@ -142,7 +143,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 #else
 	acedSSGet("ALL",NULL,NULL,NULL,ent_sel_set);
 #endif
-	long ll;
+	long ll=0;
 	acedSSLength(ent_sel_set,&ll);
 	for(long i=0;i<ll;i++)
 	{	//初始化实体集合
@@ -151,12 +152,12 @@ void SmartExtractPlate(CPNCModel *pModel)
 		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
 		if(pEnt==NULL)
 			continue;
+		CAcDbObjLife objLife(pEnt);
 		pModel->m_xAllEntIdSet.SetValue(entId.asOldId(),entId);
-		pEnt->close();
+		selectedEntList.SetValue(entId.asOldId(), entId);
 	}
-	//从框选信息中提取中钢板的标识
-	ATOM_LIST<GEPOINT> holePosList;
-	CHashSet<AcDbObjectId> selectedEntList;
+#ifndef __UBOM_ONLY_
+	//进行手动框选
 	int retCode=0;
 #ifdef _ARX_2007
 	retCode=acedSSGet(L"",NULL,NULL,NULL,ent_sel_set);
@@ -170,215 +171,216 @@ void SmartExtractPlate(CPNCModel *pModel)
 	}
 	else
 	{	
-		long ll;
-		BOLT_HOLE hole;
+		selectedEntList.Empty();
 		acedSSLength(ent_sel_set,&ll);
 		for(long i=0;i<ll;i++)
 		{	//根据文字说明初始化点集合
 			acedSSName(ent_sel_set,i,entname);
 			acdbGetObjectId(entId,entname);
-			acdbOpenAcDbEntity(pEnt,entId,AcDb::kForWrite);
+			acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
 			if(pEnt==NULL)
 				continue;
 			CAcDbObjLife objLife(pEnt);
-			//某些文件中entId.handle()均为-1，应使用asOldId()取代handle() wht 19-03-18
-			//handle():返回与对象ID关联的对象句柄，可能为-1
-			//asOldId():将AcDbObjectId以long返回
 			selectedEntList.SetValue(entId.asOldId(),entId);
-			if(!pEnt->isKindOf(AcDbText::desc())&&!pEnt->isKindOf(AcDbMText::desc())&&!pEnt->isKindOf(AcDbBlockReference::desc()))
-				continue;
-			bool bValidAttrBlock=false;
-			BASIC_INFO baseInfo;
-			f3dPoint dim_pos,dim_vec;
-			CXhChar500 sText;
-			if(pEnt->isKindOf(AcDbText::desc()))
-			{
-				AcDbText* pText=(AcDbText*)pEnt;
-#ifdef _ARX_2007
-				sText.Copy(_bstr_t(pText->textString()));
-#else
-				sText.Copy(pText->textString());
-#endif
-				//TMA生成钢板大样图之后，框选从一个文件复制到另外一个文件时，会导致position与alignmentPoint不一致
-				//位置不一致，修改属性后会触发adjustAlignment,导致所有文字位置偏移，此处调用adjustAlignment调整pos位置，
-				//再根据原始的position位置重设alignmentPoint wht 19-01-12
-				AcGePoint3d org_txt_pos=pText->position();//alignmentPoint();
-				AcGePoint3d org_align_pos=pText->alignmentPoint();
-				pText->adjustAlignment();	//调用adjustAlignment调整pos与alignmentPoint一致
-				AcGePoint3d txt_pos=pText->position();//alignmentPoint();
-				AcGePoint3d align_pos=pText->alignmentPoint();
-				AcGePoint3d offset_pos;
-				Sub_Pnt(offset_pos,align_pos,txt_pos);
-				pText->setPosition(org_txt_pos);
-				Add_Pnt(align_pos,org_txt_pos,offset_pos);
-				pText->setAlignmentPoint(align_pos);
-				//
-				if(!g_pncSysPara.IsMatchPNRule(sText))
-					continue;
-				//
-				double fTestH=pText->height();
-				double fWidth=TestDrawTextLength(sText,fTestH,pText->textStyle());
-				AcDb::TextHorzMode  horzMode=pText->horizontalMode();
-				AcDb::TextVertMode  vertMode=pText->verticalMode();
-				//获取AcDbText插入点 wht 18-12-20
-				//If vertical mode is AcDb::kTextBase and horizontal mode is either AcDb::kTextLeft, AcDb::kTextAlign, or AcDb::kTextFit,
-				//then the position point is the insertion point for the text object and, for AcDb::kTextLeft, 
-				//the alignment point (DXF group code 11) is automatically calculated based on the other parameters in the text object.
-				if(vertMode==AcDb::kTextBase)
-				{
-					if (horzMode==AcDb::kTextLeft||horzMode==AcDb::kTextAlign||horzMode==AcDb::kTextFit)
-						txt_pos = pText->position();
-					else
-						txt_pos = pText->alignmentPoint();
-				}
-				else
-					txt_pos = pText->alignmentPoint();
-
-				dim_vec.Set(cos(pText->rotation()),sin(pText->rotation()));
-				dim_pos.Set(txt_pos.x,txt_pos.y,txt_pos.z);
-				//
-				if(horzMode==AcDb::kTextLeft)
-					dim_pos+=dim_vec*(fWidth*0.5);
-				else if(horzMode==AcDb::kTextRight)
-					dim_pos-=dim_vec*(fWidth*0.5);
-				/*if(vertMode==AcDb::kTextTop)
-					dim_pos-=fTestH*0.5;
-				else if(vertMode==AcDb::kTextBottom)
-					dim_pos+=fTestH*0.5;*/	
-			}
-			else if(pEnt->isKindOf(AcDbMText::desc()))
-			{
-				AcDbMText* pMText=(AcDbMText*)pEnt;
-#ifdef _ARX_2007
-				sText.Copy(_bstr_t(pMText->contents()));
-#else
-				sText.Copy(pMText->contents());
-#endif			
-				//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
-				if (sText.GetLength() > 0)
-				{
-					CXhChar500 sNewText;
-					char cPreChar = sText.At(0);
-					sNewText.Append(cPreChar);
-					for (int i = 1; i < sText.GetLength(); i++)
-					{
-						char cCurChar = sText.At(i);
-						if (cPreChar == '\\'&&cCurChar == 'P')
-							sNewText.Append('W');
-						else
-							sNewText.Append(cCurChar);
-						cPreChar = cCurChar;
-					}
-					sText.Copy(sNewText);
-				}
-				ATOM_LIST<CXhChar200> lineTextList;
-				for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
-				{
-					CXhChar200 sTemp(sKey);
-					sTemp.Replace("\\W", "");
-					lineTextList.append(sTemp);
-				}
-				if (lineTextList.GetNodeNum() > 0)
-				{
-					BOOL bFindPartNo = FALSE;
-					for (CXhChar200 *pLineText = lineTextList.GetFirst(); pLineText; pLineText = lineTextList.GetNext())
-					{
-						if (g_pncSysPara.IsMatchPNRule(*pLineText))
-						{
-							sText.Copy(*pLineText);
-							bFindPartNo = TRUE;
-							break;
-						}
-					}
-					if(!bFindPartNo)
-						continue;
-				}
-				else
-				{
-					if (!g_pncSysPara.IsMatchPNRule(sText))
-						continue;
-				}
-				AcGePoint3d txt_pos=pMText->location();
-				double fTestH=pMText->actualHeight();
-				double fWidth=pMText->actualWidth();
-				dim_pos.Set(txt_pos.x,txt_pos.y,txt_pos.z);
-				dim_vec.Set(cos(pMText->rotation()),sin(pMText->rotation()));
-
-				AcDbMText::AttachmentPoint align_type=pMText->attachment();
-				if(align_type==AcDbMText::kTopLeft||align_type==AcDbMText::kMiddleLeft||align_type==AcDbMText::kBottomLeft)
-					dim_pos+=dim_vec*(fWidth*0.5);
-				else if(align_type==AcDbMText::kTopRight||align_type==AcDbMText::kMiddleRight||align_type==AcDbMText::kBottomRight)
-					dim_pos-=dim_vec*(fWidth*0.5);
-				/*if(align_type==AcDbMText::kTopLeft||align_type==AcDbMText::kTopCenter||align_type==AcDbMText::kTopRight)
-					txt_pos.y-=fTestH*0.5;
-				else if(align_type==AcDbMText::kBottomLeft||align_type==AcDbMText::kBottomCenter||align_type==AcDbMText::kBottomRight)
-					txt_pos.y+=fTestH*0.5;*/
-			}
-			else if(pEnt->isKindOf(AcDbBlockReference::desc()))
-			{	//从块中解析钢板信息
-				AcDbBlockReference *pBlockRef=(AcDbBlockReference*)pEnt;
-				if(RecogBaseInfoFromBlockRef(pBlockRef,baseInfo))
-				{
-					AcGePoint3d txt_pos=pBlockRef->position();
-					dim_pos.Set(txt_pos.x,txt_pos.y,txt_pos.z);
-					dim_vec.Set(cos(pBlockRef->rotation()),sin(pBlockRef->rotation()));
-					bValidAttrBlock=true;
-				}
-				else 
-				{
-					if(g_pncSysPara.RecogBoltHole(pEnt,hole))
-						holePosList.append(GEPOINT(hole.posX,hole.posY));
-					continue;
-				}
-			}
-			CXhChar16 sPartNo;
-			if(bValidAttrBlock)
-				sPartNo.Copy(baseInfo.m_sPartNo);
-			else
-			{
-				BYTE ciRetCode=g_pncSysPara.ParsePartNoText(sText, sPartNo);
-				if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)
-					continue;	//当前件号为焊接子件件号 wht 19-07-22
-			}
-			CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(sPartNo);
-			if( strlen(sPartNo)<=0||
-				(pExistPlate!=NULL&&!(pExistPlate->partNoId==entId||pExistPlate->plateInfoBlockRefId==entId)))
-			{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
-				if(strlen(sPartNo)<=0)
-					logerr.Log("钢板信息%s,识别机制不能识别!",(char*)sText);
-				else //件号相同但是钢板对应的entId不同，需要提醒用户 wht 19-04-24
-					logerr.Log("钢板%s,件号重复请确认!",(char*)sText);
-				continue;
-			}
-			CPlateProcessInfo* pPlateProcess=pModel->AppendPlate(sPartNo);
-			pPlateProcess->m_bNeedExtract = TRUE;	//选择CAD实体包括当前件号时设置位需要提取
-			pPlateProcess->dim_pos=dim_pos;
-			pPlateProcess->dim_vec=dim_vec;
-			if(bValidAttrBlock)
-			{
-				pPlateProcess->plateInfoBlockRefId=entId;
-				pPlateProcess->xPlate.SetPartNo(sPartNo);
-				pPlateProcess->xPlate.cMaterial=baseInfo.m_cMat;
-				pPlateProcess->xPlate.m_fThick=(float)baseInfo.m_nThick;
-				pPlateProcess->xPlate.feature=baseInfo.m_nNum;
-				pPlateProcess->xPlate.mkpos=dim_pos;
-				pPlateProcess->xPlate.mkVec=dim_vec;
-				if(pModel->m_sTaStampNo.GetLength()<=0&&baseInfo.m_sTaStampNo.GetLength()>0)
-					pModel->m_sTaStampNo.Copy(baseInfo.m_sTaStampNo);
-				if(pModel->m_sTaType.GetLength()<=0&&baseInfo.m_sTaType.GetLength()>0)
-					pModel->m_sTaType.Copy(baseInfo.m_sTaType);
-				if(pModel->m_sPrjCode.GetLength()<=0&&baseInfo.m_sPrjCode.GetLength()>0)
-					pModel->m_sPrjCode.Copy(baseInfo.m_sPrjCode);
-			}
-			else
-			{
-				pPlateProcess->partNoId=entId;
-				pPlateProcess->xPlate.SetPartNo(sPartNo);
-				pPlateProcess->xPlate.cMaterial='S';
-			}
 		}
 	}
 	acedSSFree(ent_sel_set);
+#endif
+	//从框选信息中提取中钢板的标识，统计钢板集合
+	CHashSet<AcDbObjectId> textIdHash;
+	ATOM_LIST<GEPOINT> holePosList;
+	BOLT_HOLE hole;
+	for (entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext())
+	{
+		acdbOpenAcDbEntity(pEnt, entId, AcDb::kForRead);
+		if(pEnt==NULL)
+			continue;
+		CAcDbObjLife objLife(pEnt);
+		if (!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()) && !pEnt->isKindOf(AcDbBlockReference::desc()))
+			continue;
+		textIdHash.SetValue(entId.asOldId(), entId);
+		bool bValidAttrBlock = false;
+		BASIC_INFO baseInfo;
+		f3dPoint dim_pos, dim_vec;
+		CXhChar500 sText;
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{
+			AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+			sText.Copy(_bstr_t(pText->textString()));
+#else
+			sText.Copy(pText->textString());
+#endif
+			//TMA生成钢板大样图之后，框选从一个文件复制到另外一个文件时，会导致position与alignmentPoint不一致
+			//位置不一致，修改属性后会触发adjustAlignment,导致所有文字位置偏移，此处调用adjustAlignment调整pos位置，
+			//再根据原始的position位置重设alignmentPoint wht 19-01-12
+			//AcGePoint3d org_txt_pos = pText->position();//alignmentPoint();
+			//AcGePoint3d org_align_pos = pText->alignmentPoint();
+			//pText->adjustAlignment();	//调用adjustAlignment调整pos与alignmentPoint一致
+			AcGePoint3d txt_pos = pText->position();//alignmentPoint();
+			AcGePoint3d align_pos = pText->alignmentPoint();
+			//AcGePoint3d offset_pos;
+			//Sub_Pnt(offset_pos, align_pos, txt_pos);
+			//pText->setPosition(org_txt_pos);
+			//Add_Pnt(align_pos, org_txt_pos, offset_pos);
+			//pText->setAlignmentPoint(align_pos);
+			//
+			if (!g_pncSysPara.IsMatchPNRule(sText))
+				continue;
+			//
+			double fTestH = pText->height();
+			double fWidth = TestDrawTextLength(sText, fTestH, pText->textStyle());
+			AcDb::TextHorzMode  horzMode = pText->horizontalMode();
+			AcDb::TextVertMode  vertMode = pText->verticalMode();
+			//获取AcDbText插入点 wht 18-12-20
+			//If vertical mode is AcDb::kTextBase and horizontal mode is either AcDb::kTextLeft, AcDb::kTextAlign, or AcDb::kTextFit,
+			//then the position point is the insertion point for the text object and, for AcDb::kTextLeft, 
+			//the alignment point (DXF group code 11) is automatically calculated based on the other parameters in the text object.
+			if (vertMode == AcDb::kTextBase)
+			{
+				if (horzMode == AcDb::kTextLeft || horzMode == AcDb::kTextAlign || horzMode == AcDb::kTextFit)
+					txt_pos = pText->position();
+				else
+					txt_pos = pText->alignmentPoint();
+			}
+			else
+				txt_pos = pText->alignmentPoint();
+
+			dim_vec.Set(cos(pText->rotation()), sin(pText->rotation()));
+			dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
+			//
+			if (horzMode == AcDb::kTextLeft)
+				dim_pos += dim_vec * (fWidth*0.5);
+			else if (horzMode == AcDb::kTextRight)
+				dim_pos -= dim_vec * (fWidth*0.5);
+		}
+		else if (pEnt->isKindOf(AcDbMText::desc()))
+		{
+			AcDbMText* pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+			sText.Copy(_bstr_t(pMText->contents()));
+#else
+			sText.Copy(pMText->contents());
+#endif			
+			//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
+			if (sText.GetLength() > 0)
+			{
+				CXhChar500 sNewText;
+				char cPreChar = sText.At(0);
+				sNewText.Append(cPreChar);
+				for (int i = 1; i < sText.GetLength(); i++)
+				{
+					char cCurChar = sText.At(i);
+					if (cPreChar == '\\'&&cCurChar == 'P')
+						sNewText.Append('W');
+					else
+						sNewText.Append(cCurChar);
+					cPreChar = cCurChar;
+				}
+				sText.Copy(sNewText);
+			}
+			ATOM_LIST<CXhChar200> lineTextList;
+			for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
+			{
+				CXhChar200 sTemp(sKey);
+				sTemp.Replace("\\W", "");
+				lineTextList.append(sTemp);
+			}
+			if (lineTextList.GetNodeNum() > 0)
+			{
+				BOOL bFindPartNo = FALSE;
+				for (CXhChar200 *pLineText = lineTextList.GetFirst(); pLineText; pLineText = lineTextList.GetNext())
+				{
+					if (g_pncSysPara.IsMatchPNRule(*pLineText))
+					{
+						sText.Copy(*pLineText);
+						bFindPartNo = TRUE;
+						break;
+					}
+				}
+				if (!bFindPartNo)
+					continue;
+			}
+			else
+			{
+				if (!g_pncSysPara.IsMatchPNRule(sText))
+					continue;
+			}
+			AcGePoint3d txt_pos = pMText->location();
+			double fTestH = pMText->actualHeight();
+			double fWidth = pMText->actualWidth();
+			dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
+			dim_vec.Set(cos(pMText->rotation()), sin(pMText->rotation()));
+
+			AcDbMText::AttachmentPoint align_type = pMText->attachment();
+			if (align_type == AcDbMText::kTopLeft || align_type == AcDbMText::kMiddleLeft || align_type == AcDbMText::kBottomLeft)
+				dim_pos += dim_vec * (fWidth*0.5);
+			else if (align_type == AcDbMText::kTopRight || align_type == AcDbMText::kMiddleRight || align_type == AcDbMText::kBottomRight)
+				dim_pos -= dim_vec * (fWidth*0.5);
+		}
+		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
+		{	//从块中解析钢板信息
+			AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
+			if (RecogBaseInfoFromBlockRef(pBlockRef, baseInfo))
+			{
+				AcGePoint3d txt_pos = pBlockRef->position();
+				dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
+				dim_vec.Set(cos(pBlockRef->rotation()), sin(pBlockRef->rotation()));
+				bValidAttrBlock = true;
+			}
+			else
+			{
+				if (g_pncSysPara.RecogBoltHole(pEnt, hole))
+					holePosList.append(GEPOINT(hole.posX, hole.posY));
+				continue;
+			}
+		}
+		CXhChar16 sPartNo;
+		if (bValidAttrBlock)
+			sPartNo.Copy(baseInfo.m_sPartNo);
+		else
+		{
+			BYTE ciRetCode = g_pncSysPara.ParsePartNoText(sText, sPartNo);
+			if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)
+				continue;	//当前件号为焊接子件件号 wht 19-07-22
+		}
+		CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(sPartNo);
+		if (strlen(sPartNo) <= 0 ||
+			(pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId)))
+		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
+			if (strlen(sPartNo) <= 0)
+				logerr.Log("钢板信息%s,识别机制不能识别!", (char*)sText);
+			else //件号相同但是钢板对应的entId不同，需要提醒用户 wht 19-04-24
+				logerr.Log("钢板%s,件号重复请确认!", (char*)sText);
+			continue;
+		}
+		CPlateProcessInfo* pPlateProcess = pModel->AppendPlate(sPartNo);
+		pPlateProcess->m_bNeedExtract = TRUE;	//选择CAD实体包括当前件号时设置位需要提取
+		pPlateProcess->dim_pos = dim_pos;
+		pPlateProcess->dim_vec = dim_vec;
+		if (bValidAttrBlock)
+		{
+			pPlateProcess->plateInfoBlockRefId = entId;
+			pPlateProcess->xPlate.SetPartNo(sPartNo);
+			pPlateProcess->xPlate.cMaterial = baseInfo.m_cMat;
+			pPlateProcess->xPlate.m_fThick = (float)baseInfo.m_nThick;
+			pPlateProcess->xPlate.feature = baseInfo.m_nNum;
+			pPlateProcess->xPlate.mkpos = dim_pos;
+			pPlateProcess->xPlate.mkVec = dim_vec;
+			if (pModel->m_sTaStampNo.GetLength() <= 0 && baseInfo.m_sTaStampNo.GetLength() > 0)
+				pModel->m_sTaStampNo.Copy(baseInfo.m_sTaStampNo);
+			if (pModel->m_sTaType.GetLength() <= 0 && baseInfo.m_sTaType.GetLength() > 0)
+				pModel->m_sTaType.Copy(baseInfo.m_sTaType);
+			if (pModel->m_sPrjCode.GetLength() <= 0 && baseInfo.m_sPrjCode.GetLength() > 0)
+				pModel->m_sPrjCode.Copy(baseInfo.m_sPrjCode);
+		}
+		else
+		{
+			pPlateProcess->partNoId = entId;
+			pPlateProcess->xPlate.SetPartNo(sPartNo);
+			pPlateProcess->xPlate.cMaterial = 'S';
+		}
+	}
 	if(pModel->GetPlateNum()<=0)
 	{
 		logerr.Log("识别机制不能识别该文件的钢板信息!");
@@ -400,6 +402,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	}
 	//提取钢板的轮廓边
 	pModel->ExtractPlateProfile(selectedEntList);
+#ifndef __UBOM_ONLY_
 	//处理钢板一板多号的情况
 	pModel->MergeManyPartNo();
 	//根据轮廓闭合区域更新钢板的基本信息+螺栓信息+轮廓边信息
@@ -413,8 +416,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 			nValid++;
 	}
 	//将提取的钢板信息导出到中性文件中
-	//CString file_path;
-	//GetCurWorkPath(file_path);
+	CString file_path;
+	GetCurWorkPath(file_path);
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE))
 	{	//生成PPI文件,保存到到当前工作路径下
 		if(pPlateProcess->vertexList.GetNodeNum()>3)
@@ -435,6 +438,54 @@ void SmartExtractPlate(CPNCModel *pModel)
 	UpdatePartList();
 	//
 	AfxMessageBox(CXhChar100("共提取钢板%d个，成功%d个，失败%d!",nSum,nValid,nSum-nValid));
+#else
+	//UBOM只需要更新钢板的基本信息
+	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
+	{
+		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
+		CAcDbObjLife objLife(pEnt);
+		if (pEnt == NULL)
+			continue;
+		if (!pEnt->isKindOf(AcDbText::desc()))
+			continue;
+		BASIC_INFO baseInfo;
+		if (!g_pncSysPara.RecogBasicInfo(pEnt, baseInfo))
+			continue;
+		GEPOINT txt_pos;
+		CXhChar500 sText;
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{
+			AcDbText* pText = (AcDbText*)pEnt;
+			txt_pos.Set(pText->position().x, pText->position().y, 0);
+			sText.Copy(pText->textString());
+		}
+		else if (pEnt->isKindOf(AcDbMText::desc()))
+		{
+			AcDbMText* pMText = (AcDbMText*)pEnt;
+			txt_pos.Set(pMText->location().x, pMText->location().y, 0);
+		}
+		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(txt_pos);
+		if (pPlateInfo)
+		{
+			CXhChar16 sPartNo = pPlateInfo->xPlate.GetPartNo();
+			if (baseInfo.m_cMat > 0)
+				pPlateInfo->xPlate.cMaterial = baseInfo.m_cMat;
+			if (baseInfo.m_cQuality > 0)
+				pPlateInfo->xPlate.cQuality = baseInfo.m_cQuality;
+			if (baseInfo.m_nThick > 0)
+				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
+			if (baseInfo.m_nNum > 0)
+				pPlateInfo->xPlate.feature = baseInfo.m_nNum;
+			if (baseInfo.m_idCadEntNum != 0)
+				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
+		}
+	}
+	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))
+	{
+		if (pPlateInfo->xPlate.m_fThick <= 0)
+			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xPlate.GetPartNo());
+	}
+#endif
 }
 
 //////////////////////////////////////////////////////////////////////////

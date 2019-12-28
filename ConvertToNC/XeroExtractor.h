@@ -33,6 +33,7 @@ class CPlateObject
 	POLYGON region;
 public:
 	struct VERTEX{
+		GEPOINT pos;
 		char ciEdgeType;	//1:普通直边 2:圆弧 3:椭圆弧
 		bool m_bWeldEdge;
 		bool m_bRollEdge;
@@ -47,11 +48,6 @@ public:
 			double fSectAngle;	//指定扇形角(圆弧需要)
 			GEPOINT center,work_norm,column_norm;
 		}arc;
-		struct GEPOINTEX : public GEPOINT{
-			GEPOINTEX(const double* coord3d=NULL):GEPOINT(coord3d){;}
-			GEPOINT operator =(GEPOINT& pt){x=pt.x;y=pt.y;z=pt.z;return *this;}
-			bool IsEqual(const double* pos,double epsilong=eps) const{return GEPOINT::IsEqual(pos[0],pos[1],pos[2],epsilong);}
-		}pos;
 		VERTEX(){ciEdgeType=1;m_bWeldEdge=m_bRollEdge=false;manu_space=0;arc.radius=tag.dwParam=0;}
 	};
 	struct CAD_ENTITY{
@@ -155,7 +151,7 @@ public:
 	static const int PART_LABEL_WELD  = 2;	//焊接件号
 	BYTE ParsePartNoText(const char* sText,CXhChar16& sPartNo);
 	void ParseThickText(const char* sText,int& nThick);
-	void ParseMatText(const char* sText,char& cMat);
+	void ParseMatText(const char* sText,char& cMat,char& cQuality);
 	void ParseNumText(const char* sText,int& nNum);
 	void ParseBendText(const char* sText,double &degree,BOOL &bFrontBend);
 	virtual void Init();

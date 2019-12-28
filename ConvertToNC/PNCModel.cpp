@@ -153,10 +153,6 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else
 			pRelaEnt->ciEntType=RELA_ACADENTITY::TYPE_OTHER;
 	}
-	else
-	{
-		int a = 10;
-	}
 	return pRelaEnt;
 }
 int CPlateProcessInfo::GetRelaEntIdList(ARRAY_LIST<AcDbObjectId> &entIdList)
@@ -692,7 +688,7 @@ void CALLBACK EXPORT CloseBoundaryPopupWnd(HWND hWnd, UINT nMsg, UINT nIDEvent, 
 	}
 }
 
-void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern)
+void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand /*= FALSE*/)
 {
 	if (!m_bNeedExtract)
 		return;
@@ -732,18 +728,26 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			base_pnt[Y]=cur_dim_pos.y;
 			base_pnt[Z]=cur_dim_pos.z;
 			int nTimer=SetTimer(hMainWnd,1,100,CloseBoundaryPopupWnd);
-			int resCode=0;
-	#ifdef _ARX_2007
-			if(m_bIslandDetection)
-				resCode=acedCommand(RTSTR,L"-boundary",RTPOINT,base_pnt,RTSTR,L"",RTNONE);
+			int resCode= RTNORM;
+			if (bSendCommand)
+			{
+				CXhChar50 sCmd("-boundary %.2f,%.2f\n ", cur_dim_pos.x, cur_dim_pos.y);
+				SendCommandToCad(CString(sCmd));
+			}
 			else
-				resCode=acedCommand(RTSTR,L"-boundary",RTSTR,L"a",RTSTR,L"i",RTSTR,L"n",RTSTR,L"",RTSTR,L"",RTPOINT,base_pnt,RTSTR,L"",RTNONE);
-	#else
-			if(m_bIslandDetection)
-				resCode=acedCommand(RTSTR,"-boundary",RTPOINT,base_pnt,RTSTR,"",RTNONE);
-			else
-				resCode=acedCommand(RTSTR,"-boundary",RTSTR,"a",RTSTR,"i",RTSTR,"n",RTSTR,"",RTSTR,"",RTPOINT,base_pnt,RTSTR,"",RTNONE);
-	#endif		
+			{
+#ifdef _ARX_2007
+				if (m_bIslandDetection)
+					resCode = acedCommand(RTSTR, L"-boundary", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
+				else
+					resCode = acedCommand(RTSTR, L"-boundary", RTSTR, L"a", RTSTR, L"i", RTSTR, L"n", RTSTR, L"", RTSTR, L"", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
+#else
+				if (m_bIslandDetection)
+					resCode = acedCommand(RTSTR, "-boundary", RTPOINT, base_pnt, RTSTR, "", RTNONE);
+				else
+					resCode = acedCommand(RTSTR, "-boundary", RTSTR, "a", RTSTR, "i", RTSTR, "n", RTSTR, "", RTSTR, "", RTPOINT, base_pnt, RTSTR, "", RTNONE);
+#endif
+			}
 			if(nTimer==1)
 				KillTimer(hMainWnd,nTimer);
 			if(resCode!=RTNORM)
@@ -762,7 +766,10 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 
 	if (initLastObjId == plineId)
 	{	//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
-		acedCommand(RTSTR, "");
+		if (bSendCommand)
+			SendCommandToCad(CString(" \n "));
+		else
+			acedCommand(RTSTR, "");
 		return;	//执行boundary未新增实体(即未找到有效的封闭区域)
 	}
 	AcDbEntity *pEnt = NULL;
@@ -772,7 +779,10 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		if(pEnt)
 			pEnt->close();
 		//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
-		acedCommand(RTSTR, "");
+		if (bSendCommand)
+			SendCommandToCad(CString(" \n "));
+		else
+			acedCommand(RTSTR, "");
 		return;
 	}
 	//
@@ -2077,10 +2087,15 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 		for (unsigned long *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
 			VerifyVertexByCADEntId(scope, MkCadObjId(*pId));
 	}
-	else
+	else if(m_xHashRelaEntIdList.GetNodeNum()>0)
 	{
 		for (CPlateObject::CAD_ENTITY *pEnt = EnumFirstEnt(); pEnt; pEnt = EnumNextEnt())
 			VerifyVertexByCADEntId(scope, MkCadObjId(pEnt->idCadEnt));
+	}
+	else
+	{
+		for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+			scope.VerifyVertex(pVer->pos);
 	}
 	return scope;
 }
@@ -2162,6 +2177,7 @@ bool GetLineTypeIdByLineType(const char* line_type,AcDbObjectId &lineTypeId)
 void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 {
 	//添加一个特定图层
+	acDocManager->lockDocument(curDoc(), AcAp::kWrite, NULL, NULL, true);
 	CXhChar16 sNewLayer("pnc_layer"),sLineType=g_pncSysPara.m_sProfileLineType;
 	CreateNewLayer(sNewLayer, sLineType,AcDb::kLnWt013,1,m_idNewLayer,m_idSolidLine);
 	m_hashSolidLineTypeId.SetValue(m_idSolidLine.asOldId(),m_idSolidLine);
@@ -2466,9 +2482,13 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		}
 	}
 	//2、初始化钢板轮廓边信息
-	CShieldCadLayer shieldLayer(sNewLayer,TRUE);	//屏蔽不需要的图层
-	for(CPlateProcessInfo* pInfo=m_hashPlateInfo.GetFirst();pInfo;pInfo=m_hashPlateInfo.GetNext())
-		pInfo->InitProfileByBPolyCmd(fMinEdge,fMaxEdge);
+	BOOL bSendCommand = FALSE;
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	bSendCommand = TRUE;
+#endif
+	CShieldCadLayer shieldLayer(sNewLayer, TRUE, bSendCommand);	//屏蔽不需要的图层
+	for (CPlateProcessInfo* pInfo = m_hashPlateInfo.GetFirst(); pInfo; pInfo = m_hashPlateInfo.GetNext())
+		pInfo->InitProfileByBPolyCmd(fMinEdge, fMaxEdge, bSendCommand);
 	//删除辅助小圆
 	for(AcDbObjectId objId=xAssistCirSet.GetFirst();objId;objId=xAssistCirSet.GetNext())
 	{
@@ -2493,6 +2513,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 #endif
 		pEnt->close();
 	}
+	acDocManager->unlockDocument(curDoc());
 }
 //处理钢板一板多号的情况
 void CPNCModel::MergeManyPartNo()
@@ -2689,6 +2710,17 @@ CPlateProcessInfo* CPNCModel::GetPlateInfo(AcDbObjectId partNoEntId)
 			return pPlate;
 	}
 	return NULL;
+}
+
+CPlateProcessInfo* CPNCModel::GetPlateInfo(GEPOINT text_pos)
+{
+	CPlateProcessInfo* pPlateInfo = NULL;
+	for (pPlateInfo = m_hashPlateInfo.GetFirst(); pPlateInfo; pPlateInfo = m_hashPlateInfo.GetNext())
+	{
+		if (pPlateInfo->IsInPlate(text_pos))
+			break;
+	}
+	return pPlateInfo;
 }
 
 void CPNCModel::WritePrjTowerInfoToCfgFile(const char* cfg_file_path)

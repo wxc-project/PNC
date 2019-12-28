@@ -149,19 +149,6 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_iProfileColorIndex",PROPLIST_ITEM(id++,"轮廓边颜色","钢板外轮廓边颜色"));
 	AddPropItem("m_iBendLineColorIndex",PROPLIST_ITEM(id++,"火曲线颜色","钢板制弯线颜色"));
 	AddPropItem("layer_mode",PROPLIST_ITEM(id++,"图层处理方式","轮廓边图层处理方式","0.指定轮廓边图层|1.过滤默认图层"));
-	//文字识别设置
-	AddPropItem("text_dim_set",PROPLIST_ITEM(id++,"文字识别","文字标注识别设置"));
-	AddPropItem("m_iDimStyle",PROPLIST_ITEM(id++,"标注类型","文字标注类型","0.单行标注|1.多行标注"));
-	AddPropItem("m_nMember",PROPLIST_ITEM(id++,"标注成员","标注成员"));
-	AddPropItem("m_sPnKey",PROPLIST_ITEM(id++,"件号标识符","件号标识符","#|件号:|件号：|"));
-	AddPropItem("m_sThickKey",PROPLIST_ITEM(id++,"厚度标识符","厚度标识符","-|板厚:|板厚：|厚度:|厚度：|"));
-	AddPropItem("m_sMatKey",PROPLIST_ITEM(id++,"材质标识符","材质标识符","Q|材质:|材质：|"));
-	AddPropItem("m_sPnNumKey",PROPLIST_ITEM(id++,"件数标识符","件数标识符","件数:|件数：|数量:|数量：|"));
-	//螺栓直径设置
-	AddPropItem("bolt_dim_set",PROPLIST_ITEM(id++,"螺栓识别","螺栓识别设置"));
-	AddPropItem("block_name",PROPLIST_ITEM(id++,"图块名称","图块名称"));
-	AddPropItem("bolt_d",PROPLIST_ITEM(id++,"螺栓直径","螺栓直径"));
-	AddPropItem("hole_d",PROPLIST_ITEM(id++,"孔径","螺栓直径为0时，使用孔径；直径孔径均为0时根据直径标注提取孔径。"));
 	//图纸比例设置
 	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"比例识别","图纸比例设置"));
 	AddPropItem("m_fMapScale",PROPLIST_ITEM(id++,"缩放比例","绘图缩放比例"));
@@ -203,23 +190,6 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else if(g_pncSysPara.m_iAxisXCalType==2)
 			sText.Copy("2.焊接边优先");
 	}
-	else if(GetPropID("m_iDimStyle")==id)
-	{
-		if(g_pncSysPara.m_iDimStyle==0)
-			sText.Copy("0.单行标注");
-		else
-			sText.Copy("1.多行标注");
-	}
-	else if(GetPropID("m_nMember")==id)
-		sText.Printf("%d",g_pncSysPara.GetKeyMemberNum());
-	else if(GetPropID("m_sPnKey")==id)
-		sText.Copy(g_pncSysPara.m_sPnKey);
-	else if(GetPropID("m_sThickKey")==id)
-		sText.Copy(g_pncSysPara.m_sThickKey);
-	else if(GetPropID("m_sMatKey")==id)
-		sText.Copy(g_pncSysPara.m_sMatKey);
-	else if(GetPropID("m_sPnNumKey")==id)
-		sText.Copy(g_pncSysPara.m_sPnNumKey);
 	else if(GetPropID("m_bMKPos")==id)
 	{
 		if(g_pncSysPara.m_bMKPos)
@@ -229,33 +199,6 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if(GetPropID("m_fMapScale")==id)
 		sText.Printf("%.f",g_pncSysPara.m_fMapScale);
-	else if(GetPropID("block_name")==id)
-	{
-		if(pItem&&pItem->m_pParent)
-		{
-			BOLT_BLOCK *pBoltD=(BOLT_BLOCK*)pItem->m_pParent->m_idProp;
-			if(pBoltD)
-				sText.Copy(pBoltD->sBlockName);
-		}
-	}
-	else if(GetPropID("bolt_d")==id)
-	{
-		if(pItem&&pItem->m_pParent)
-		{
-			BOLT_BLOCK *pBoltD=(BOLT_BLOCK*)pItem->m_pParent->m_idProp;
-			if(pBoltD)
-				sText.Printf("%d",pBoltD->diameter);
-		}
-	}
-	else if(GetPropID("hole_d")==id)
-	{
-		if(pItem&&pItem->m_pParent)
-		{
-			BOLT_BLOCK *pBoltD=(BOLT_BLOCK*)pItem->m_pParent->m_idProp;
-			if(pBoltD)
-				sText.Printf("%.1f",pBoltD->hole_d);
-		}
-	}
 	else if(GetPropID("m_bAutoLayout1")==id)
 	{
 		if(m_bAutoLayout==CPNCSysPara::LAYOUT_PRINT)

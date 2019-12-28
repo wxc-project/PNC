@@ -157,6 +157,7 @@ void CRevisionDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_WM_SIZE()
 	ON_WM_MOVE()
+	ON_WM_CLOSE()
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_CONTRL, &OnNMRClickTreeCtrl)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_CONTRL, &OnTvnSelchangedTreeContrl)
 	ON_COMMAND(ID_NEW_ITEM,OnNewItem)
@@ -226,9 +227,11 @@ BOOL CRevisionDlg::OnInitDialog()
 }
 void CRevisionDlg::OnOK()
 {
-	DestroyWindow();
 }
 void CRevisionDlg::OnCancel()
+{	
+}
+void CRevisionDlg::OnClose()
 {
 	DestroyWindow();
 }
@@ -1015,9 +1018,9 @@ void CRevisionDlg::OnRefreshPartNum()
 	else
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
-	CBomModel::SendCommandToCad(CString(L"RE "));
+	SendCommandToCad(CString(L"RE "));
 #else
-	CBomModel::SendCommandToCad(CString("RE "));
+	SendCommandToCad(CString("RE "));
 #endif
 	RefreshListCtrl(hSelItem);
 }

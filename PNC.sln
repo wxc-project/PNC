@@ -1016,11 +1016,4 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {BB115EF1-E0B5-4AF8-98CF-B49D0E0E7302}
 	EndGlobalSection
-	GlobalSection(SourceCodeControl) = preSolution
-		SccNumberOfProjects = 1
-		SccProjectUniqueName0 = PNC\\PNC.vcxproj
-		SccProjectName0 = \u0022$/PNC\u0022,\u0020ZJMAAAAA
-		SccLocalPath0 = PNC
-		SccProvider0 = MSSCCI:Microsoft\u0020Visual\u0020SourceSafe
-	EndGlobalSection
 EndGlobal
