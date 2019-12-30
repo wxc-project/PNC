@@ -877,9 +877,9 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;
 #ifdef _ARX_2007
-	if ((retCode=blkDb.readDwgFile((ACHAR*)_bstr_t(dwg_file), _SH_DENYRW, true)) == Acad::eOk)
+	if ((retCode=blkDb.readDwgFile((ACHAR*)_bstr_t(sJgCardPath), _SH_DENYRW, true)) == Acad::eOk)
 #else
-	if ((retCode=blkDb.readDwgFile(dwg_file, _SH_DENYRW, true)) == Acad::eOk)
+	if ((retCode=blkDb.readDwgFile(sJgCardPath, _SH_DENYRW, true)) == Acad::eOk)
 #endif
 	{
 		AcDbEntity *pEnt;
