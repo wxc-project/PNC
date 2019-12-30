@@ -878,10 +878,11 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sFileName)
 	sprintf(dwg_file, "%s%s", APP_PATH, sFileName);
 	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
+	Acad::ErrorStatus retCode;
 #ifdef _ARX_2007
-	if (blkDb.readDwgFile((ACHAR*)_bstr_t(dwg_file), _SH_DENYRW, true) == Acad::eOk)
+	if ((retCode=blkDb.readDwgFile((ACHAR*)_bstr_t(dwg_file), _SH_DENYRW, true)) == Acad::eOk)
 #else
-	if (blkDb.readDwgFile(dwg_file, _SH_DENYRW, true) == Acad::eOk)
+	if ((retCode=blkDb.readDwgFile(dwg_file, _SH_DENYRW, true)) == Acad::eOk)
 #endif
 	{
 		AcDbEntity *pEnt;
