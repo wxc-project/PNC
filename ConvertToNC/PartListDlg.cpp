@@ -154,22 +154,33 @@ void CPartListDlg::SelectPart(int iCurSel)
 	if(pPlate==NULL)
 		return;
 	//选中钢板关联实体
-	ARRAY_LIST<AcDbObjectId> entIdList;
-	/*for(CPlateObject::CAD_ENTITY *pEnt=pPlate->EnumFirstEnt();pEnt;pEnt=pPlate->EnumNextEnt())
-		entIdList.append(MkCadObjId(pEnt->idCadEnt));*/
-	for(unsigned long *pId=pPlate->m_cloneEntIdList.GetFirst();pId;pId=pPlate->m_cloneEntIdList.GetNext())
-		entIdList.append(MkCadObjId(*pId));
-	f2dRect rect=GetCadEntRect(entIdList);
-	f2dPoint leftBtm(rect.topLeft.x,rect.bottomRight.y);
-	rect.topLeft.Set(leftBtm.x,leftBtm.y+CDrawDamBoard::BOARD_HEIGHT);
-	rect.bottomRight.Set(leftBtm.x+CDrawDamBoard::BOARD_HEIGHT,leftBtm.y);
-	ZoomAcadView(rect,100);
-	//CCadHighlightEntManager::ReleaseHighlightEnts();
-	//CCadHighlightEntManager::SetEntSetHighlight(entIdList);
-	CLockDocumentLife lock;
-	if(!CDrawDamBoard::m_bDrawAllBamBoard)
-		m_xDamBoardManager.EraseAllDamBoard();
-	m_xDamBoardManager.DrawDamBoard(pPlate);
+	if (pPlate->vertexList.GetNodeNum()>3)
+	{	//钢板提取成功，显示
+		SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
+		f2dPoint leftBtm(scope.fMinX, scope.fMinY);
+		f2dRect rect;
+		rect.topLeft.Set(leftBtm.x, leftBtm.y + CDrawDamBoard::BOARD_HEIGHT);
+		rect.bottomRight.Set(leftBtm.x + CDrawDamBoard::BOARD_HEIGHT, leftBtm.y);
+		ZoomAcadView(rect, 100);
+		//
+		CLockDocumentLife lock;
+		if (!CDrawDamBoard::m_bDrawAllBamBoard)
+			m_xDamBoardManager.EraseAllDamBoard();
+		m_xDamBoardManager.DrawDamBoard(pPlate);
+	}
+	else
+	{	//钢板提取失败，显示
+		GEPOINT dimPt = pPlate->dim_pos;
+		GEPOINT dimVecH = pPlate->dim_vec;
+		GEPOINT dimVecV = dimVecH;
+		RotateVectorAroundVector(dimVecV, 3.14159*0.5, GEPOINT(0, 0, 1));
+		SCOPE_STRU scope;
+		scope.VerifyVertex(GEPOINT(dimPt + dimVecV * 15 - dimVecH * 30));
+		scope.VerifyVertex(GEPOINT(dimPt - dimVecV * 15 - dimVecH * 30));
+		scope.VerifyVertex(GEPOINT(dimPt - dimVecV * 15 + dimVecH * 30));
+		scope.VerifyVertex(GEPOINT(dimPt + dimVecV * 15 + dimVecH * 30));
+		ZoomAcadView(scope, 20);
+	}
 	//修改视图位置后需要及时更新界面,否则acedSSGet()可能不能获取正确的实体集 wht 11-06-25
 	actrTransactionManager->flushGraphics();
 	acedUpdateDisplay();

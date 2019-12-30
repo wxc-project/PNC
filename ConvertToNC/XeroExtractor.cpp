@@ -868,14 +868,11 @@ CJgCardExtractor::~CJgCardExtractor()
 {
 
 }
-bool CJgCardExtractor::InitJgCardInfo(const char* sFileName)
+bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 {
-	if (strlen(sFileName) <= 0)
+	if (strlen(sJgCardPath) <= 0)
 		return false;
 	f3dPoint startPt, endPt;
-	char APP_PATH[MAX_PATH], dwg_file[MAX_PATH];
-	GetAppPath(APP_PATH);
-	sprintf(dwg_file, "%s%s", APP_PATH, sFileName);
 	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;
