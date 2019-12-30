@@ -184,6 +184,6 @@ public:
 	CJgCardExtractor();
 	~CJgCardExtractor();
 	//
-	bool InitJgCardInfo(const char* sFileName);
+	bool InitJgCardInfo(const char* sJgCardPath);
 	f3dPoint GetJgCardOrigin(f3dPoint partNo_pt);
 };

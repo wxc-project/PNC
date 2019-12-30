@@ -874,9 +874,12 @@ void RevisionPartProcess()
 #endif
 	CLogErrorLife logErrLife;
 	InitDrawingEnv();
-	if(!g_pncSysPara.InitJgCardInfo(g_pncSysPara.m_sJgCadName))
+	char APP_PATH[MAX_PATH]="", sJgCardPath[MAX_PATH]="";
+	GetAppPath(APP_PATH);
+	sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
+	if(!g_pncSysPara.InitJgCardInfo(sJgCardPath))
 	{
-		logerr.Log("½Ç¸Ö¹¤ÒÕ¿¨¶ÁÈ¡Ê§°Ü!");
+		logerr.Log(CXhChar200("½Ç¸Ö¹¤ÒÕ¿¨¶ÁÈ¡Ê§°Ü(%s)!",sJgCardPath));
 		return;
 	}
 	g_pRevisionDlg->InitRevisionDlg();

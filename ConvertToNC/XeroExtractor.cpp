@@ -868,20 +868,17 @@ CJgCardExtractor::~CJgCardExtractor()
 {
 
 }
-bool CJgCardExtractor::InitJgCardInfo(const char* sFileName)
+bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 {
-	if (strlen(sFileName) <= 0)
+	if (strlen(sJgCardPath) <= 0)
 		return false;
 	f3dPoint startPt, endPt;
-	char APP_PATH[MAX_PATH], dwg_file[MAX_PATH];
-	GetAppPath(APP_PATH);
-	sprintf(dwg_file, "%s%s", APP_PATH, sFileName);
 	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 #ifdef _ARX_2007
-	if (blkDb.readDwgFile((ACHAR*)_bstr_t(dwg_file), _SH_DENYRW, true) == Acad::eOk)
+	if (blkDb.readDwgFile((ACHAR*)_bstr_t(sJgCardPath), _SH_DENYRW, true) == Acad::eOk)
 #else
-	if (blkDb.readDwgFile(dwg_file, _SH_DENYRW, true) == Acad::eOk)
+	if (blkDb.readDwgFile(sJgCardPath, _SH_DENYRW, true) == Acad::eOk)
 #endif
 	{
 		AcDbEntity *pEnt;
