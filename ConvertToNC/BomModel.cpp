@@ -303,18 +303,7 @@ BOOL CBomFile::ImportTmaExcelFile()
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
 		return FALSE;
-	LPDISPATCH pWorksheets=excelobj.GetWorksheets();
-	if(pWorksheets==NULL)
-		return FALSE;
-	ASSERT(pWorksheets != NULL);
-	Sheets       excel_sheets;	//工作表集合
-	excel_sheets.AttachDispatch(pWorksheets);
-	int nSheetNum=excel_sheets.GetCount();
-	if(nSheetNum<1)
-	{
-		excel_sheets.ReleaseDispatch();
-		return FALSE;
-	}
+	int nSheetNum = excelobj.GetWorkSheetCount();
 	int index=1;
 	int nValidSheetCount = 0;
 	m_hashPartByPartNo.Empty();
@@ -341,7 +330,6 @@ BOOL CBomFile::ImportTmaExcelFile()
 				nValidSheetCount++;
 		}
 	}
-	excel_sheets.ReleaseDispatch();
 	if (nValidSheetCount == 0)
 	{
 		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
@@ -353,9 +341,10 @@ BOOL CBomFile::ImportTmaExcelFile()
 //导入ERP料单EXCEL文件
 BOOL CBomFile::ImportErpExcelFile()
 {
-	//1.获取Excel内容存储至sheetContentMap中,建立列标题与列索引映射表hashColIndexByColTitle
 	CVariant2dArray sheetContentMap(1,1);
-	if(!CExcelOper::GetExcelContentOfSpecifySheet(m_sFileName,sheetContentMap,1))
+	//最大支持52行，不设置最大列数时如果整行设置背景色会导致自动获取到的列数过大，加载Excel速度慢 wht 19-12-30
+	if(!CExcelOper::GetExcelContentOfSpecifySheet(m_sFileName,sheetContentMap,1,52))
+	//if (!CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, 1,52))
 		return false;
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	for(int i=0;i<ERP_EXCEL_COL_COUNT;i++)
@@ -1276,7 +1265,7 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 	CVariant2dArray sheetContentMap(1,1);
 	CXhChar50 cell=CExcelOper::GetCellPos(nColNum,nRowNum);
 	LPDISPATCH pRange = excel_sheet.GetRange(COleVariant("A1"),COleVariant(cell));
-	excel_range.AttachDispatch(pRange,FALSE);
+	excel_range.AttachDispatch(pRange);
 	sheetContentMap.var=excel_range.GetValue();
 	excel_usedRange.ReleaseDispatch();
 	excel_range.ReleaseDispatch();
