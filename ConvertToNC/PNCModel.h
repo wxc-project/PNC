@@ -6,6 +6,8 @@
 #include "ProcessPart.h"
 #include "ArrayList.h"
 #include "CadToolFunc.h"
+#include "XhMath.h"
+#include "BOM.h"
 
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
@@ -14,70 +16,36 @@ struct VERTEX_TAG{
 	long nLsNum;
 	VERTEX_TAG(){nDist=0;nLsNum=0;}
 };
-struct ACAD_LINEID{
-	AcDbObjectId m_lineId;
+struct ACAD_LINEID {
+	BYTE m_ciSerial;
+	long m_lineId;
 	double m_fLen;
-	GEPOINT m_ptStart,m_ptEnd;
+	GEPOINT m_ptStart, m_ptEnd;
+	GEPOINT vertex;
 	BOOL m_bReverse;
-	ACAD_LINEID(){
-		m_lineId=0;
-		m_fLen=0;
-		m_bReverse=FALSE;
-	}
-	ACAD_LINEID(AcDbObjectId id,double len){
-		m_fLen=len;
-		m_lineId=id;
-		m_bReverse=FALSE;
-	}
-	ACAD_LINEID(AcDbObjectId id,GEPOINT &start,GEPOINT &end){
-		Init(id,start,end);
-	}
-	void Init(AcDbObjectId id,GEPOINT &start,GEPOINT &end){
-		m_lineId=id;
-		m_ptStart=start;
-		m_ptEnd=end;
-		m_fLen=DISTANCE(m_ptStart,m_ptEnd);
-		m_bReverse=FALSE;
-	}
-	BOOL UpdatePos(){
-		AcDbEntity *pEnt=NULL;
-		acdbOpenAcDbEntity(pEnt,m_lineId,AcDb::kForRead);
-		CAcDbObjLife life(pEnt);
-		if(pEnt==NULL)
-			return FALSE;
-		if (pEnt->isKindOf(AcDbLine::desc()))
-		{
-			AcDbLine *pLine = (AcDbLine*)pEnt;
-			m_ptStart.Set(pLine->startPoint().x, pLine->startPoint().y, 0);
-			m_ptEnd.Set(pLine->endPoint().x, pLine->endPoint().y, 0);
-		}
-		else if (pEnt->isKindOf(AcDbArc::desc()))
-		{
-			AcDbArc* pArc = (AcDbArc*)pEnt;
-			AcGePoint3d startPt, endPt;
-			pArc->getStartPoint(startPt);
-			pArc->getEndPoint(endPt);
-			m_ptStart.Set(startPt.x, startPt.y, 0);
-			m_ptEnd.Set(endPt.x, endPt.y, 0);
-		}
-		else if (pEnt->isKindOf(AcDbEllipse::desc()))
-		{
-			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
-			AcGePoint3d startPt, endPt;
-			pEllipse->getStartPoint(startPt);
-			pEllipse->getEndPoint(endPt);
-			m_ptStart.Set(startPt.x, startPt.y, 0);
-			m_ptEnd.Set(endPt.x, endPt.y, 0);
-		}
+	BOOL m_bMatch;
+public:
+	ACAD_LINEID(long lineId = 0);
+	ACAD_LINEID(AcDbObjectId id, double len);
+	ACAD_LINEID(AcDbObjectId id, GEPOINT &start, GEPOINT &end) { Init(id, start, end); }
+	void Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end);
+	BOOL UpdatePos();
+	//
+	static int compare_func(const ACAD_LINEID& obj1, const ACAD_LINEID& obj2)
+	{
+		if (obj1.m_bMatch && !obj2.m_bMatch)
+			return -1;
+		else if (!obj1.m_bMatch && obj2.m_bMatch)
+			return 1;
 		else
-			return FALSE;
-		if(m_bReverse)
 		{
-			GEPOINT temp=m_ptStart;
-			m_ptStart=m_ptEnd;
-			m_ptEnd=temp;
+			if (obj1.m_ciSerial > obj2.m_ciSerial)
+				return 1;
+			else if (obj1.m_ciSerial < obj2.m_ciSerial)
+				return -1;
+			else
+				return 0;
 		}
-		return TRUE;
 	}
 };
 struct ACAD_CIRCLE{
@@ -130,6 +98,7 @@ private:
 public:
 	BOOL m_bEnableReactor;
 	CProcessPlate xPlate;
+	PART_PLATE xBomPlate;
 	AcDbObjectId partNoId;
 	AcDbObjectId partNumId;
 	AcDbObjectId plateInfoBlockRefId;
@@ -160,6 +129,9 @@ public:
 	CXhChar16 GetPartNo(){return xPlate.GetPartNo();}
 	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
+	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);
+	BOOL InitProfileByAcdbLineList(ARRAY_LIST<ACAD_LINEID>& xLineArr);
+	BOOL InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_LIST<ACAD_LINEID>& xLineArr);
 	void ExtractPlateRelaEnts();
 	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
 	f2dRect GetPnDimRect();
@@ -200,6 +172,7 @@ class CPNCModel
 	CHashSet<AcDbObjectId> m_hashSolidLineTypeId;	//记录有效的实体线型id wht 19-01-03
 public:
 	CHashSet<AcDbObjectId> m_xAllEntIdSet;
+	CHashSet<AcDbObjectId> m_xAllLineHash;
 	CXhChar100 m_sCompanyName;	//设计单位
 	CXhChar100 m_sPrjCode;		//工程编号
 	CXhChar100 m_sPrjName;		//工程名称
@@ -210,8 +183,12 @@ public:
 public:
 	CPNCModel(void);
 	~CPNCModel(void);
+	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
+	//
 	void Empty();
 	void ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet);
+	void ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet);
+	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
 	void LayoutPlates(BOOL bRelayout);
 	AcDbObjectId GetEntLineTypeId(AcDbEntity *pEnt,char* sLayer=NULL);

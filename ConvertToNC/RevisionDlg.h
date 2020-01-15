@@ -33,7 +33,7 @@ class CRevisionDlg : public CDialog
 public:
 	CImageList m_imageList;
 	ATOM_LIST<TREEITEM_INFO>itemInfoList;
-	CString m_sCurFile;	// 当前显示文件
+	CString m_sCurFile;		// 当前显示文件
 	CString m_sRecordNum;	// 显示记录数
 public:
 	CRevisionDlg(CWnd* pParent = NULL);   // 标准构造函数
@@ -67,7 +67,6 @@ protected:
 	afx_msg void OnRefreshPartNum();
 	afx_msg void OnModifyErpFile();
 	afx_msg void OnModifyTmaFile();
-	afx_msg void OnReviseThePlate();
 	afx_msg void OnRetrievedAngles();
 	afx_msg void OnRetrievedPlates();
 	afx_msg void OnDeleteItem();

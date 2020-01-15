@@ -309,6 +309,21 @@
     <ClCompile Include="AdjustPlateMCS.cpp">
       <Filter>PNC</Filter>
     </ClCompile>
+    <ClCompile Include="PolygonObject.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="ProcBarDlg.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MonoImage.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BOM.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -541,6 +556,21 @@
     </ClInclude>
     <ClInclude Include="AdjustPlateMCS.h">
       <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="PolygonObject.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="ProcBarDlg.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="MonoImage.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BOM.h">
+      <Filter>UBOM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

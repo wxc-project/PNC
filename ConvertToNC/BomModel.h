@@ -1,10 +1,11 @@
 #pragma once
 #include "HashTable.h"
 #include "XhCharString.h"
-#include "ProcessPart.h"
+#include "BOM.h"
 #include "Variant.h"
 #include "LogFile.h"
 #include "FileIO.h"
+#include "BomTblTitleCfg.h"
 #include "..\ConvertToNC\PNCModel.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
@@ -15,12 +16,13 @@ private:
 	BOOL m_bLoftBom;
 	CXhChar500 m_sFileName;		//文件名称
 	CProjectTowerType* m_pProject;
-	CSuperHashStrList<CProcessPart> m_hashPartByPartNo;
-	//
+	CSuperHashStrList<BOMPART> m_hashPartByPartNo;
+public:
+	CHashStrList<DWORD> m_hashColIndexByColTitle;
+protected:
 	BOOL ImportTmaExcelFile();
 	BOOL ImportErpExcelFile();
-	BOOL ParseTmaSheetContent(CVariant2dArray &sheetContentMap);
-	BOOL ParseTmaSheetContentCore(CVariant2dArray &sheetContentMap, CHashStrList<DWORD> &hashColIndexByColTitle, int iStartRow);
+	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap);
 public:
 	CBomFile();
 	~CBomFile();
@@ -30,9 +32,9 @@ public:
 		m_hashPartByPartNo.Empty();
 		m_sFileName.Empty();
 	}
-	CProcessPart* EnumFirstPart(){return m_hashPartByPartNo.GetFirst();}
-	CProcessPart* EnumNextPart(){return m_hashPartByPartNo.GetNext();}
-	CProcessPart* FindPart(const char* sKey){return m_hashPartByPartNo.GetValue(sKey);}
+	BOMPART* EnumFirstPart(){return m_hashPartByPartNo.GetFirst();}
+	BOMPART* EnumNextPart(){return m_hashPartByPartNo.GetNext();}
+	BOMPART* FindPart(const char* sKey){return m_hashPartByPartNo.GetValue(sKey);}
 	int GetPartNum(){return m_hashPartByPartNo.GetNodeNum();}
 	CString GetPartNumStr();
 	BOOL IsLoftBom(){return m_bLoftBom;}
@@ -51,7 +53,7 @@ private:
 	POLYGON region;
 	SCOPE_STRU scope;
 public:
-	CProcessAngle m_xAngle;
+	PART_ANGLE m_xAngle;
 	AcDbObjectId keyId,partNumId,sumWeightId;
 public:
 	CAngleProcessInfo();
@@ -76,17 +78,14 @@ private:
 	CXhChar100 m_sFileName;	//文件名称
 	BOOL m_bJgDwgFile;
 	CProjectTowerType* m_pProject;
-	AcDbObjectId m_idSolidLine;
 	CHashList<CAngleProcessInfo> m_hashJgInfo;
 	CPNCModel m_xPncMode;
 	//
 	BOOL RetrieveAngles();
-	void CorrectAngles();
 	//
 	BOOL RetrievePlates();
 	//
 	int GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet);
-	AcDbObjectId GetEntLineTypeId(AcDbEntity *pEnt);
 public:
 	CDwgFileInfo();
 	~CDwgFileInfo();
@@ -104,38 +103,40 @@ public:
 	CPlateProcessInfo* FindPlateByPt(f3dPoint text_pos);
 	CPlateProcessInfo* FindPlateByPartNo(const char* sPartNo);
 	void ModifyPlateDwgPartNum();
-	BOOL ReviseThePlate(const char* sPartNo);
 	CPNCModel *GetPncModel() { return &m_xPncMode; }
 	//
 	void SetBelongModel(CProjectTowerType *pProject){m_pProject=pProject;}
 	CProjectTowerType* BelongModel() const{return m_pProject;}
 	CXhChar100 GetFileName(){return m_sFileName;}
 	BOOL IsJgDwgInfo(){return m_bJgDwgFile;}
-	BOOL InitDwgInfo(const char* sFileName,BOOL bJgDxf);
+	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf);
 };
+//////////////////////////////////////////////////////////////////////////
+//CProjectTowerType
 class CProjectTowerType
 {
 public:
+	//用于标记比较类型
+	static const int COMPARE_BOM_FILE = 1;
+	static const int COMPARE_ANGLE_DWG = 2;
+	static const int COMPARE_PLATE_DWG = 3;
+	static const int COMPARE_ANGLE_DWGS = 4;
+	static const int COMPARE_PLATE_DWGS = 5;
+	//
 	struct COMPARE_PART_RESULT
 	{
-		CProcessPart *pOrgPart;
-		CProcessPart *pLoftPart;
+		BOMPART *pOrgPart;
+		BOMPART *pLoftPart;
 		CHashStrList<BOOL> hashBoolByPropName;
 		COMPARE_PART_RESULT(){pOrgPart = NULL;pLoftPart = NULL;};
 	};
-	//
-	static const int COMPARE_BOM_FILE	= 1;
-	static const int COMPARE_ANGLE_DWG	= 2;
-	static const int COMPARE_PLATE_DWG	= 3;
-	static const int COMPARE_ANGLE_DWGS	= 4;
-	static const int COMPARE_PLATE_DWGS	= 5;
-
 private:
-	CDwgFileInfo* FindDwgFile(const char* sFileName,BOOL bAngleFile=FALSE){return NULL;}
-	void AddBomResultSheet(LPDISPATCH pSheet,int index);
-	void AddAngleResultSheet(LPDISPATCH pSheet,int index);
-	void AddPlateResultSheet(LPDISPATCH pSheet,int index);
+	void CompareData(BOMPART* pLoftPart, BOMPART* pDesPart, CHashStrList<BOOL> &hashBoolByPropName);
+	void AddBomResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhChar16>& keyStrArr);
+	void AddAngleResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhChar16>& keyStrArr);
+	void AddPlateResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhChar16>& keyStrArr);
 	void AddDwgLackPartSheet(LPDISPATCH pSheet);
+	void AddCompareResultSheet(LPDISPATCH pSheet, int index, int iCompareType);
 public:
 	DWORD key;
 	CXhChar100 m_sProjName;
@@ -145,6 +146,7 @@ public:
 public:
 	CProjectTowerType();
 	~CProjectTowerType();
+	//
 	void SetKey(DWORD keyID){key=keyID;}
 	void ReadProjectFile(CString sFilePath);
 	void WriteProjectFile(CString sFilePath);
@@ -170,17 +172,26 @@ public:
 	COMPARE_PART_RESULT* EnumNextResult(){return m_hashCompareResultByPartNo.GetNext();}
 };
 //////////////////////////////////////////////////////////////////////////
-//
+//CBomModel
 class CBomModel
 {
 public:
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
+	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg;
 public:
 	CBomModel(void);
 	~CBomModel(void);
-	CDwgFileInfo *FindDwgFile(const char* file_path);
 	//
-	static CXhChar16 QueryMatMarkIncQuality(CProcessPart *pPart);
+	void InitBomTblCfg();
+	CDwgFileInfo *FindDwgFile(const char* file_path);
+public:
+	static const BYTE ID_AnHui_HongYuan		= 1;	//安徽宏源
+	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳
+	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔
+	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电
+	static UINT m_uiCustomizeSerial;
+	//
+	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };
 extern CBomModel g_xUbomModel;
 #endif

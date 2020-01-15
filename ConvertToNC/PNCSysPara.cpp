@@ -67,6 +67,7 @@ void CPNCSysPara::Init()
 	m_ciProfileColorIndex = 1;		//红色
 	m_ciBendLineColorIndex = 190;	//紫色
 	m_sProfileLineType.Copy("CONTINUOUS");
+	m_fPixelScale = 0.8;
 	//默认过滤图层名
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
@@ -86,7 +87,7 @@ void CPNCSysPara::Init()
 	InsertRecogSchema("多行8", 1, "件号:", "材质:", "板厚:", "件数", "外曲", "内曲");
 	
 #ifdef __PNC_
-	InitDrawingEnv();
+	//InitDrawingEnv();
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName, LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName, 1));//不可见轮廓线
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltSymbolLayer.layerName, LAYER_ITEM(LayerTable::BoltSymbolLayer.layerName, 1));		//螺栓图符
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::BendLineLayer.layerName, LAYER_ITEM(LayerTable::BendLineLayer.layerName, 1));		//角钢火曲、钢板火曲
@@ -144,11 +145,12 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_ciBoltRecogMode", PROPLIST_ITEM(id++, "螺栓识别模式", "螺栓识别模式", "0.默认|1.不过滤件号圆圈"));
 	//图层设置
 	AddPropItem("layer_set",PROPLIST_ITEM(id++,"识别模式","识别模式"));
-	AddPropItem("m_iRecogMode",PROPLIST_ITEM(id++,"识别模式","钢板识别模式","0.按线型识别|1.按图层识别|2.按颜色识别"));
+	AddPropItem("m_iRecogMode",PROPLIST_ITEM(id++,"识别模式","钢板识别模式"));
 	AddPropItem("m_iProfileLineTypeName", PROPLIST_ITEM(id++, "轮廓边线型", "钢板外轮廓边线型", "CONTINUOUS|HIDDEN|DASHDOT2X|DIVIDE|ZIGZAG"));
 	AddPropItem("m_iProfileColorIndex",PROPLIST_ITEM(id++,"轮廓边颜色","钢板外轮廓边颜色"));
 	AddPropItem("m_iBendLineColorIndex",PROPLIST_ITEM(id++,"火曲线颜色","钢板制弯线颜色"));
 	AddPropItem("layer_mode",PROPLIST_ITEM(id++,"图层处理方式","轮廓边图层处理方式","0.指定轮廓边图层|1.过滤默认图层"));
+	AddPropItem("m_fPixelScale", PROPLIST_ITEM(id++, "处理像素比例"));
 	//图纸比例设置
 	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"比例识别","图纸比例设置"));
 	AddPropItem("m_fMapScale",PROPLIST_ITEM(id++,"缩放比例","绘图缩放比例"));
@@ -243,19 +245,26 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if(GetPropID("m_iRecogMode")==id)
 	{
-		if(m_ciRecogMode==FILTER_BY_LINETYPE)
+		if (m_ciRecogMode == FILTER_BY_LINETYPE)
 			sText.Copy("0.按线型识别");
 		else if (m_ciRecogMode == FILTER_BY_LAYER)
 			sText.Copy("1.按图层识别");
-		else if(m_ciRecogMode==FILTER_BY_COLOR)
+		else if (m_ciRecogMode == FILTER_BY_COLOR)
 			sText.Copy("2.按颜色识别");
+		else if (m_ciRecogMode == FILTER_BY_PIXEL)
+			sText.Copy("3.按像素识别");
+	}
+	else if (GetPropID("m_fPixelScale") == id)
+	{
+		sText.Printf("%f", g_pncSysPara.m_fPixelScale);
+		SimplifiedNumString(sText);
 	}
 	else if (GetPropID("m_ciBoltRecogMode") == id)
 	{
-	if (m_ciBoltRecogMode == BOLT_RECOG_NO_FILTER_PARTNO_CIR)
-		sText.Copy("1.不过滤件号圆圈");
-	else //if (m_ciBoltRecogMode == BOLT_RECOG_DEFAULT)
-		sText.Copy("0.默认");
+		if (m_ciBoltRecogMode == BOLT_RECOG_NO_FILTER_PARTNO_CIR)
+			sText.Copy("1.不过滤件号圆圈");
+		else //if (m_ciBoltRecogMode == BOLT_RECOG_DEFAULT)
+			sText.Copy("0.默认");
 	}
 	else if(GetPropID("m_iProfileColorIndex")==id)
 		sText.Printf("RGB%X",GetColorFromIndex(m_ciProfileColorIndex));
@@ -624,11 +633,7 @@ void PNCSysSetExportDefault()
 {
 	char file_name[MAX_PATH]="";
 	GetAppPath(file_name);
-#ifndef __UBOM_ONLY_
 	strcat(file_name, "rule.set");
-#else
-	strcat(file_name, "ubom.cfg");
-#endif
 	FILE *fp = fopen(file_name, "wt");
 	if (fp == NULL)
 	{
