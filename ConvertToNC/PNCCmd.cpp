@@ -8,6 +8,7 @@
 #include "BomModel.h"
 #include "RevisionDlg.h"
 #include "LicFuncDef.h"
+#include "ProcBarDlg.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -15,6 +16,34 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+CProcBarDlg *pProcDlg = NULL;
+static int prevPercent = -1;
+void DisplayProcess(int percent, char *sTitle)
+{
+	if (percent >= 100)
+	{
+		if (pProcDlg != NULL)
+		{
+			pProcDlg->DestroyWindow();
+			delete pProcDlg;
+			pProcDlg = NULL;
+		}
+		return;
+	}
+	else if (pProcDlg == NULL)
+		pProcDlg = new CProcBarDlg(NULL);
+	if (pProcDlg->GetSafeHwnd() == NULL)
+		pProcDlg->Create();
+	if (percent == prevPercent)
+		return;	//跟上次进度一致不需要更新
+	else
+		prevPercent = percent;
+	if (sTitle)
+		pProcDlg->SetTitle(CString(sTitle));
+	else
+		pProcDlg->SetTitle("进度");
+	pProcDlg->Refresh(percent);
+}
 static BOOL RecogBaseInfoFromBlockRef(AcDbBlockReference *pBlockRef,BASIC_INFO &baseInfo)
 {
 	if(pBlockRef==NULL)
@@ -132,6 +161,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 {
 	if (pModel == NULL)
 		return;
+	pModel->DisplayProcess = DisplayProcess;
 	CLogErrorLife logErrLife;
 	AcDbObjectId entId;
 	AcDbEntity *pEnt=NULL;
@@ -401,7 +431,10 @@ void SmartExtractPlate(CPNCModel *pModel)
 		}
 	}
 	//提取钢板的轮廓边
-	pModel->ExtractPlateProfile(selectedEntList);
+	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
+		pModel->ExtractPlateProfileEx(selectedEntList);
+	else
+		pModel->ExtractPlateProfile(selectedEntList);
 #ifndef __UBOM_ONLY_
 	//处理钢板一板多号的情况
 	pModel->MergeManyPartNo();
@@ -448,42 +481,93 @@ void SmartExtractPlate(CPNCModel *pModel)
 			continue;
 		if (!pEnt->isKindOf(AcDbText::desc()))
 			continue;
-		BASIC_INFO baseInfo;
-		if (!g_pncSysPara.RecogBasicInfo(pEnt, baseInfo))
-			continue;
-		GEPOINT txt_pos;
+		GEPOINT dim_pos;
 		CXhChar500 sText;
 		if (pEnt->isKindOf(AcDbText::desc()))
 		{
 			AcDbText* pText = (AcDbText*)pEnt;
-			txt_pos.Set(pText->position().x, pText->position().y, 0);
+#ifdef _ARX_2007
+			sText.Copy(_bstr_t(pText->textString()));
+#else
 			sText.Copy(pText->textString());
+#endif
+			double fTestH = pText->height();
+			double fWidth = TestDrawTextLength(sText, fTestH, pText->textStyle());
+			AcDb::TextHorzMode  horzMode = pText->horizontalMode();
+			AcDb::TextVertMode  vertMode = pText->verticalMode();
+			AcGePoint3d txt_pos;
+			if (vertMode == AcDb::kTextBase)
+			{
+				if (horzMode == AcDb::kTextLeft || horzMode == AcDb::kTextAlign || horzMode == AcDb::kTextFit)
+					txt_pos = pText->position();
+				else
+					txt_pos = pText->alignmentPoint();
+			}
+			else
+				txt_pos = pText->alignmentPoint();
+			GEPOINT vec(cos(pText->rotation()), sin(pText->rotation()));
+			dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
+			if (horzMode == AcDb::kTextLeft)
+				dim_pos += vec * (fWidth*0.5);
+			else if (horzMode == AcDb::kTextRight)
+				dim_pos -= vec * (fWidth*0.5);
 		}
 		else if (pEnt->isKindOf(AcDbMText::desc()))
 		{
 			AcDbMText* pMText = (AcDbMText*)pEnt;
-			txt_pos.Set(pMText->location().x, pMText->location().y, 0);
+#ifdef _ARX_2007
+			sText.Copy(_bstr_t(pMText->contents()));
+#else
+			sText.Copy(pMText->contents());
+#endif
+			double fTestH = pMText->actualHeight();
+			double fWidth = pMText->actualWidth();
+			GEPOINT vec(cos(pMText->rotation()), sin(pMText->rotation()));
+			AcDbMText::AttachmentPoint align_type = pMText->attachment();
+			dim_pos.Set(pMText->location().x, pMText->location().y, 0);
+			if (align_type == AcDbMText::kTopLeft || align_type == AcDbMText::kMiddleLeft || align_type == AcDbMText::kBottomLeft)
+				dim_pos += vec * (fWidth*0.5);
+			else if (align_type == AcDbMText::kTopRight || align_type == AcDbMText::kMiddleRight || align_type == AcDbMText::kBottomRight)
+				dim_pos -= vec * (fWidth*0.5);
 		}
-		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(txt_pos);
+		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos),*pTemPlate=NULL;
 		if (pPlateInfo)
 		{
-			CXhChar16 sPartNo = pPlateInfo->xPlate.GetPartNo();
-			if (baseInfo.m_cMat > 0)
-				pPlateInfo->xPlate.cMaterial = baseInfo.m_cMat;
-			if (baseInfo.m_cQuality > 0)
-				pPlateInfo->xPlate.cQuality = baseInfo.m_cQuality;
-			if (baseInfo.m_nThick > 0)
-				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
-			if (baseInfo.m_nNum > 0)
-				pPlateInfo->xPlate.feature = baseInfo.m_nNum;
-			if (baseInfo.m_idCadEntNum != 0)
-				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
+			BASIC_INFO baseInfo;
+			if (g_pncSysPara.RecogBasicInfo(pEnt, baseInfo))
+			{
+				if (baseInfo.m_sPartNo.GetLength() > 0&&
+					(pTemPlate = pModel->GetPlateInfo(baseInfo.m_sPartNo)))
+				{
+					pPlateInfo = pTemPlate;
+					pPlateInfo->xBomPlate.sPartNo = baseInfo.m_sPartNo;
+				}
+				if (baseInfo.m_cMat > 0)
+					pPlateInfo->xBomPlate.cMaterial = baseInfo.m_cMat;
+				if (baseInfo.m_cQuality > 0)
+					pPlateInfo->xBomPlate.cQualityLevel = baseInfo.m_cQuality;
+				if (baseInfo.m_nThick > 0)
+					pPlateInfo->xBomPlate.thick = (float)baseInfo.m_nThick;
+				if (baseInfo.m_nNum > 0)
+					pPlateInfo->xBomPlate.SetPartNum(baseInfo.m_nNum);
+				if (baseInfo.m_idCadEntNum != 0)
+					pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
+			}
+			else
+			{
+				if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))
+					pPlateInfo->xBomPlate.siZhiWan = 1;
+				if (strstr(sText,"焊接"))
+					pPlateInfo->xBomPlate.bWeldPart = TRUE;
+			}
 		}
 	}
 	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))
 	{
-		if (pPlateInfo->xPlate.m_fThick <= 0)
+		if (pPlateInfo->xBomPlate.thick <= 0)
 			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xPlate.GetPartNo());
+		else
+			pPlateInfo->xBomPlate.sSpec.Printf("-%.f", pPlateInfo->xBomPlate.thick);
 	}
 #endif
 }
@@ -873,7 +957,6 @@ void RevisionPartProcess()
 	}
 #endif
 	CLogErrorLife logErrLife;
-	InitDrawingEnv();
 	char APP_PATH[MAX_PATH]="", sJgCardPath[MAX_PATH]="";
 	GetAppPath(APP_PATH);
 	sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
@@ -882,6 +965,7 @@ void RevisionPartProcess()
 		logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!",sJgCardPath));
 		return;
 	}
+	g_xUbomModel.InitBomTblCfg();
 	g_pRevisionDlg->InitRevisionDlg();
 }
 #endif

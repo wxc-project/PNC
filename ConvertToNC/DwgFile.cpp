@@ -70,6 +70,32 @@ f2dRect CAngleProcessInfo::GetAngleDataRect(BYTE data_type)
 		rect = g_pncSysPara.note_rect;
 	else if (data_type == ITEM_TYPE_SUM_WEIGHT)
 		rect = g_pncSysPara.sum_weight_rect;
+	else if(data_type== ITEM_TYPE_PART_NOTES)
+		rect = g_pncSysPara.note_rect;
+	else if (data_type == ITEM_TYPE_CUT_ANGLE_S_X)
+		rect = g_pncSysPara.cut_angle_SX_rect;
+	else if (data_type == ITEM_TYPE_CUT_ANGLE_S_Y)
+		rect = g_pncSysPara.cut_angle_SY_rect;
+	else if (data_type == ITEM_TYPE_CUT_ANGLE_E_X)
+		rect = g_pncSysPara.cut_angle_EX_rect;
+	else if (data_type == ITEM_TYPE_CUT_ANGLE_E_Y)
+		rect = g_pncSysPara.cut_angle_EY_rect;
+	else if (data_type == ITEM_TYPE_HUOQU_FST)
+		rect = g_pncSysPara.huoqu_fst_rect;
+	else if (data_type == ITEM_TYPE_HUOQU_SEC)
+		rect = g_pncSysPara.huoqu_sec_rect;
+	else if (data_type == ITEM_TYPE_CUT_ROOT)
+		rect = g_pncSysPara.cut_root_rect;
+	else if (data_type == ITEM_TYPE_CUT_BER)
+		rect = g_pncSysPara.cut_ber_rect;
+	else if (data_type == ITEM_TYPE_PUSH_FLAT)
+		rect = g_pncSysPara.push_flat_rect;
+	else if (data_type == ITEM_TYPE_WELD)
+		rect = g_pncSysPara.weld_rect;
+	else if (data_type == ITEM_TYPE_KAIJIAO)
+		rect = g_pncSysPara.kai_jiao_rect;
+	else if (data_type == ITEM_TYPE_HEJIAO)
+		rect = g_pncSysPara.he_jiao_rect;
 	rect.topLeft.x+=orig_pt.x;
 	rect.topLeft.y+=orig_pt.y;
 	rect.bottomRight.x+=orig_pt.x;
@@ -92,14 +118,13 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	BYTE cType = 0;
 	if (PtInDataRect(ITEM_TYPE_PART_NO, data_pos))	//件号
 	{
-		m_xAngle.SetPartNo(sValue);
+		m_xAngle.sPartNo.Copy(sValue);
 		cType = ITEM_TYPE_PART_NO;
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_MAT, data_pos))	//材质
 	{
 		m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sValue);
-		if (strlen(sValue) == 5)	//初始化质量等级 wht 19-09-15
-			m_xAngle.cQuality = toupper(sValue[4]);
+		m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sValue);
 		cType = ITEM_TYPE_DES_MAT;
 	}
 	else if(PtInDataRect(ITEM_TYPE_DES_GUIGE,data_pos))	//规格
@@ -107,9 +132,13 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		CXhChar50 sSpec(sValue);
 		if(strstr(sSpec,"∠"))
 			sSpec.Replace("∠","L");
-		if(strstr(sSpec,"×"))
-			sSpec.Replace("×","*");
-		m_xAngle.SetSpec(sSpec);
+		if (strstr(sSpec, "×"))
+			sSpec.Replace("×", "*");
+		if (strstr(sSpec, "x"))
+			sSpec.Replace("x", "*");
+		if (strstr(sSpec, "X"))
+			sSpec.Replace("X", "*");
+		m_xAngle.sSpec.Copy(sSpec);
 		int nWidth=0,nThick=0;
 		//从规格中提取材质 wht 19-08-05
 		CXhChar16 sMaterial;
@@ -117,41 +146,90 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		if (sMaterial.GetLength() > 0)
 		{
 			m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
-			m_xAngle.cQuality = CProcessPart::QueryBriefQuality(sMaterial);
+			m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sMaterial);
 		}
-		m_xAngle.m_fWidth=(float)nWidth;
-		m_xAngle.m_fThick=(float)nThick;
+		m_xAngle.wide=(float)nWidth;
+		m_xAngle.thick=(float)nThick;
 		cType = ITEM_TYPE_DES_GUIGE;
 	}
 	else if (PtInDataRect(ITEM_TYPE_LENGTH, data_pos))	//长度
 	{
-		m_xAngle.m_wLength = atoi(sValue);
+		m_xAngle.length = atof(sValue);
 		cType = ITEM_TYPE_LENGTH;
 	}
 	else if (PtInDataRect(ITEM_TYPE_PIECE_WEIGHT, data_pos))	//单重
 	{
-		m_xAngle.m_fWeight = (float)atof(sValue);
+		m_xAngle.fMapSumWeight = (float)atof(sValue);
 		cType = ITEM_TYPE_PIECE_WEIGHT;
 	}
 	else if (PtInDataRect(ITEM_TYPE_PART_NUM, data_pos))	//单基数
 	{
-		m_xAngle.m_nDanJiNum = atoi(sValue);
+		m_xAngle.SetPartNum(atoi(sValue));
 		cType = ITEM_TYPE_PART_NUM;
 	}
 	else if(PtInDataRect(ITEM_TYPE_SUM_PART_NUM,data_pos))	//加工数
 	{
-		m_xAngle.feature=atoi(sValue);
+		m_xAngle.feature1=atoi(sValue);
 		cType = ITEM_TYPE_SUM_PART_NUM;
 	}
 	else if (PtInDataRect(ITEM_TYPE_PART_NOTES, data_pos))	//备注
 	{
-		m_xAngle.SetNotes(sValue);
+		strcpy(m_xAngle.sNotes,sValue);
+		if (strstr(m_xAngle.sNotes, "脚钉"))
+			m_xAngle.bHasFootNail = TRUE;
 		cType = ITEM_TYPE_PART_NOTES;
 	}
 	else if (PtInDataRect(ITEM_TYPE_SUM_WEIGHT, data_pos))	//总重
 	{
-		m_xAngle.m_fSumWeight = (float)atof(sValue);
+		m_xAngle.fSumWeight = (float)atof(sValue);
 		cType = ITEM_TYPE_SUM_WEIGHT;
+	}
+	else if (PtInDataRect(ITEM_TYPE_CUT_ANGLE_S_X, data_pos)||
+			PtInDataRect(ITEM_TYPE_CUT_ANGLE_S_Y, data_pos)||
+			PtInDataRect(ITEM_TYPE_CUT_ANGLE_E_X, data_pos)||
+			PtInDataRect(ITEM_TYPE_CUT_ANGLE_E_Y, data_pos))
+	{
+		if(!m_xAngle.bCutAngle)
+			m_xAngle.bCutAngle = strlen(sValue) > 0;
+		cType = ITEM_TYPE_CUT_ANGLE_S_X;
+	}
+	else if (PtInDataRect(ITEM_TYPE_HUOQU_FST, data_pos) ||
+			PtInDataRect(ITEM_TYPE_HUOQU_FST, data_pos))
+	{
+		if (m_xAngle.siZhiWan == 0)
+			m_xAngle.siZhiWan = (strlen(sValue) > 0) ? 1 : 0;
+		cType = ITEM_TYPE_HUOQU_FST;
+	}
+	else if (PtInDataRect(ITEM_TYPE_CUT_ROOT, data_pos))
+	{
+		m_xAngle.bCutRoot = strlen(sValue) > 0;
+		cType = ITEM_TYPE_CUT_ROOT;
+	}
+	else if (PtInDataRect(ITEM_TYPE_CUT_BER, data_pos))
+	{
+		m_xAngle.bCutBer = strlen(sValue) > 0;
+		cType = ITEM_TYPE_CUT_BER;
+	}
+	else if (PtInDataRect(ITEM_TYPE_PUSH_FLAT, data_pos))
+	{
+		if (m_xAngle.nPushFlat == 0)
+			m_xAngle.nPushFlat = (strlen(sValue) > 0) ? 1 : 0;
+		cType = ITEM_TYPE_PUSH_FLAT;
+	}
+	else if (PtInDataRect(ITEM_TYPE_WELD, data_pos))
+	{
+		m_xAngle.bWeldPart = strlen(sValue) > 0;
+		cType = ITEM_TYPE_WELD;
+	}
+	else if (PtInDataRect(ITEM_TYPE_KAIJIAO, data_pos))
+	{
+		m_xAngle.bKaiJiao = strlen(sValue) > 0;
+		cType = ITEM_TYPE_KAIJIAO;
+	}
+	else if (PtInDataRect(ITEM_TYPE_HEJIAO, data_pos))
+	{
+		m_xAngle.bHeJiao = strlen(sValue) > 0;
+		cType = ITEM_TYPE_HEJIAO;
 	}
 	return cType;
 }
@@ -168,7 +246,7 @@ void CAngleProcessInfo::RefreshAngleNum()
 {
 	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	f3dPoint data_pt=GetAngleDataPos(ITEM_TYPE_SUM_PART_NUM);
-	CXhChar16 sPartNum("%d",m_xAngle.feature);
+	CXhChar16 sPartNum("%d",m_xAngle.feature1);
 	if(partNumId==NULL)
 	{	//添加角钢加工数
 		acDocManager->lockDocument(curDoc(),AcAp::kWrite,NULL,NULL,true);
@@ -214,7 +292,7 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 {
 	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_SUM_WEIGHT);
-	CXhChar16 sSumWeight("%.f", m_xAngle.m_fSumWeight);
+	CXhChar16 sSumWeight("%.f", m_xAngle.fSumWeight);
 	CLockDocumentLife lockDoc;
 	if (sumWeightId == NULL)
 	{	//添加角钢总重
@@ -264,7 +342,7 @@ CDwgFileInfo::~CDwgFileInfo()
 
 }
 //初始化DWG文件信息
-BOOL CDwgFileInfo::InitDwgInfo(const char* sFileName,BOOL bJgDxf)
+BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf)
 {
 	if(strlen(sFileName)<=0)
 		return FALSE;
@@ -354,37 +432,6 @@ int CDwgFileInfo::GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet)
 	acedSSFree(ent_sel_set);
 	return entSet.GetNodeNum();
 }
-//获取实体的线性ID
-AcDbObjectId CDwgFileInfo::GetEntLineTypeId(AcDbEntity *pEnt)
-{
-	if (pEnt == NULL)
-		return NULL;
-	CXhChar50 sLineTypeName;
-#ifdef _ARX_2007
-	ACHAR* sValue = new ACHAR[50];
-	sValue = pEnt->linetype();
-	sLineTypeName.Copy((char*)_bstr_t(sValue));
-	delete[] sValue;
-#else
-	char *sValue = new char[50];
-	sValue = pEnt->linetype();
-	sLineTypeName.Copy(sValue);
-	delete[] sValue;
-#endif
-	AcDbObjectId linetypeId;
-	if (stricmp(sLineTypeName, "ByLayer") == 0)
-	{	//线型随层
-		AcDbLayerTableRecord *pLayerTableRecord;
-		acdbOpenObject(pLayerTableRecord, pEnt->layerId(), AcDb::kForRead);
-		pLayerTableRecord->close();
-		linetypeId = pLayerTableRecord->linetypeObjectId();
-	}
-	else if (stricmp(sLineTypeName, "ByBlock") == 0)
-		linetypeId = m_idSolidLine;		//如果图元的线型类型为ByBlock,则线型就是实线
-	else
-		linetypeId = pEnt->linetypeId();
-	return linetypeId;
-}
 
 //提取板的轮廓边,确定闭合区域
 BOOL CDwgFileInfo::RetrievePlates()
@@ -392,27 +439,9 @@ BOOL CDwgFileInfo::RetrievePlates()
 	SmartExtractPlate(&m_xPncMode);
 	return TRUE;
 }
-
-BOOL CDwgFileInfo::ReviseThePlate(const char* sPartNo)
-{
-	return TRUE;
-}
 //////////////////////////////////////////////////////////////////////////
 //角钢DWG文件操作
 //////////////////////////////////////////////////////////////////////////
-void CDwgFileInfo::CorrectAngles()
-{
-	CAngleProcessInfo* pJgInfo=NULL;
-	for(pJgInfo=m_hashJgInfo.GetFirst();pJgInfo;pJgInfo=m_hashJgInfo.GetNext())
-	{
-		CXhChar16 sPartNo=pJgInfo->m_xAngle.GetPartNo();
-		if(sPartNo.GetLength()<=0)
-			m_hashJgInfo.DeleteNode(pJgInfo->keyId.handle());
-		if (pJgInfo->m_xAngle.cMaterial == 0)
-			pJgInfo->m_xAngle.cMaterial = 'S';
-	}
-	m_hashJgInfo.Clean();
-}
 //根据数据点坐标查找所对应角钢
 CAngleProcessInfo* CDwgFileInfo::FindAngleByPt(f3dPoint data_pos)
 {
@@ -430,7 +459,7 @@ CAngleProcessInfo* CDwgFileInfo::FindAngleByPartNo(const char* sPartNo)
 	CAngleProcessInfo* pJgInfo=NULL;
 	for(pJgInfo=m_hashJgInfo.GetFirst();pJgInfo;pJgInfo=m_hashJgInfo.GetNext())
 	{
-		if(stricmp(pJgInfo->m_xAngle.GetPartNo(),sPartNo)==0)
+		if(stricmp(pJgInfo->m_xAngle.sPartNo,sPartNo)==0)
 			break;
 	}
 	return pJgInfo;
@@ -441,20 +470,20 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 	if(m_hashJgInfo.GetNodeNum()<=0)
 		return;
 	CAngleProcessInfo* pJgInfo=NULL;
-	CProcessAngle* pProcessJg=NULL;
+	BOMPART* pBomJg=NULL;
 	BOOL bFinish=TRUE;
 	for(pJgInfo=EnumFirstJg();pJgInfo;pJgInfo=EnumNextJg())
 	{
-		CXhChar16 sPartNo=pJgInfo->m_xAngle.GetPartNo();
-		pProcessJg=(CProcessAngle*)m_pProject->m_xLoftBom.FindPart(sPartNo);
-		if(pProcessJg==NULL)
+		CXhChar16 sPartNo=pJgInfo->m_xAngle.sPartNo;
+		pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if(pBomJg ==NULL)
 		{	
 			bFinish=FALSE;
 			logerr.Log("TMA材料表中没有%s角钢",(char*)sPartNo);
 			continue;
 		}
-		pJgInfo->m_xAngle.feature=pProcessJg->feature;	//加工数
-		pJgInfo->m_xAngle.m_fSumWeight = pProcessJg->m_fSumWeight;
+		pJgInfo->m_xAngle.feature1= pBomJg->feature1;	//加工数
+		pJgInfo->m_xAngle.fSumWeight = pBomJg->fSumWeight;
 		pJgInfo->RefreshAngleNum();
 		pJgInfo->RefreshAngleSumWeight();
 	}
@@ -548,7 +577,6 @@ BOOL CDwgFileInfo::RetrieveAngles()
 		CAngleProcessInfo* pJgInfo=NULL;
 		pJgInfo=m_hashJgInfo.Add(entId.handle());
 		pJgInfo->keyId=entId;
-		pJgInfo->m_xAngle.cMaterial='S';
 		pJgInfo->SetOrig(orig_pt);
 		pJgInfo->CreateRgn();
 	}
@@ -602,7 +630,20 @@ BOOL CDwgFileInfo::RetrieveAngles()
 		}
 	}
 	//对提取的角钢信息进行合理性检查
-	CorrectAngles();
+	CHashStrList<BOOL> hashJgByPartNo;
+	for (CAngleProcessInfo* pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())
+	{
+		if (pJgInfo->m_xAngle.sPartNo.GetLength() <= 0)
+			m_hashJgInfo.DeleteNode(pJgInfo->keyId.handle());
+		else
+		{
+			if (hashJgByPartNo.GetValue(pJgInfo->m_xAngle.sPartNo))
+				logerr.Log("件号(%s)重复", (char*)pJgInfo->m_xAngle.sPartNo);
+			else
+				hashJgByPartNo.SetValue(pJgInfo->m_xAngle.sPartNo, TRUE);
+		}
+	}
+	m_hashJgInfo.Clean();
 	if(m_hashJgInfo.GetNodeNum()<=0)
 	{	
 		logerr.Log("%s文件提取角钢失败",(char*)m_sFileName);

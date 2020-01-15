@@ -217,7 +217,13 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		{	//按线型识别
 			oper.InsertCmbListPropItem(pItem, "m_iProfileLineTypeName", "", "", "", -1, TRUE);
 		}
+		else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
+		{
+			oper.InsertEditPropItem(pItem, "m_fPixelScale", "", "", -1, TRUE);
+		}
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fPixelScale"))
+		g_pncSysPara.m_fPixelScale = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iProfileLineTypeName"))
 		g_pncSysPara.m_sProfileLineType.Copy(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iProfileColorIndex") ||
@@ -699,14 +705,12 @@ void CPNCSysSettingDlg::OnPNCSysAdd()
 		}
 		if (pParentItem == NULL)
 			return;
-
 		CListCtrlItemInfo* lpInfoItem = new CListCtrlItemInfo();
 		lpInfoItem->SetSubItemText(1, _T(""));
 		lpInfoItem->SetSubItemText(2, _T(""));
 		lpInfoItem->SetSubItemText(3, _T(""));
 		lpInfoItem->SetCheck(TRUE);
 		CSuperGridCtrl::CTreeItem* pItem = m_listCtrlSysSetting.InsertItem(pParentItem, lpInfoItem, -1, true);
-		m_listCtrlSysSetting.SelectItem(pItem, 1, true, true);
 	}
 }
 void CPNCSysSettingDlg::OnPNCSysGroupDel()
@@ -870,6 +874,11 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	//图层设置
 	pGroupItem = oper.InsertPropItem(pRootItem, "layer_set");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
+#ifdef __PIXEL_RECOG_
+	pPropItem->m_lpNodeInfo->m_cmbItems = "0.按线型识别|1.按图层识别|2.按颜色识别|3.按像素识别";
+#else
+	pPropItem->m_lpNodeInfo->m_cmbItems = "0.按线型识别|1.按图层识别|2.按颜色识别";
+#endif
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
 	{	//按颜色识别
 		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");
@@ -883,6 +892,10 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 	{	//按线型识别
 		oper.InsertCmbListPropItem(pPropItem, "m_iProfileLineTypeName");
+	}
+	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
+	{	//按像素识别
+		oper.InsertEditPropItem(pPropItem, "m_fPixelScale");
 	}
 	//绘图比例
 	pGroupItem = oper.InsertPropItem(pRootItem, "map_scale_set");

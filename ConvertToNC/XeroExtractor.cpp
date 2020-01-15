@@ -1004,6 +1004,66 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 				note_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
 				note_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
 			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_S_X)
+			{
+				cut_angle_SX_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_angle_SX_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_S_Y)
+			{
+				cut_angle_SY_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_angle_SY_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_E_X)
+			{
+				cut_angle_EX_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_angle_EX_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_E_Y)
+			{
+				cut_angle_EY_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_angle_EY_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_HUOQU_FST)
+			{
+				huoqu_fst_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				huoqu_fst_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_HUOQU_SEC)
+			{
+				huoqu_sec_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				huoqu_sec_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_ROOT)	//刨根
+			{
+				cut_root_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_root_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_BER)	//铲背
+			{
+				cut_ber_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_ber_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_PUSH_FLAT)	//压扁
+			{
+				push_flat_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				push_flat_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_WELD)		//焊接
+			{
+				weld_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				weld_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_KAIJIAO)	//开角
+			{
+				kai_jiao_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				kai_jiao_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_HEJIAO)		//合角
+			{
+				he_jiao_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				he_jiao_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
 		}
 		//工艺卡矩形区域
 		fMinX = scope.fMinX;

@@ -54,7 +54,10 @@
 #define IDC_TREE_CONTRL                 141
 #define IDC_E_FILE_NAME                 142
 #define IDC_E_NUM                       143
+#define IDD_PROC_BAR_DLG                287
 #define IDC_LIST_REPORT                 1025
+#define IDC_PROGRESS_BAR                1185
+#define IDC_NUMERIC_PROC                1186
 #define ID_MODIFY_TMA_FILE              32766
 #define ID_MARK_FILTER                  32767
 #define ID_CANCEL_FILTER                32768

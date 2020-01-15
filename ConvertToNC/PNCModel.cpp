@@ -5,7 +5,9 @@
 #include "XeroExtractor.h"
 #include "DrawUnit.h"
 #include "DragEntSet.h"
+#include "SortFunc.h"
 #include "CadToolFunc.h"
+#include "PolygonObject.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -16,6 +18,76 @@ static char THIS_FILE[]=__FILE__;
 #define  ASSIST_RADIUS	2
 
 CPNCModel model;
+
+//////////////////////////////////////////////////////////////////////////
+//ACAD_LINEID
+ACAD_LINEID::ACAD_LINEID(long lineId /*= 0*/)
+{
+	m_ciSerial = 0;
+	m_lineId = lineId;
+	m_fLen = 0;
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+ACAD_LINEID::ACAD_LINEID(AcDbObjectId id, double len)
+{
+	m_ciSerial = 0;
+	m_fLen = len;
+	m_lineId = id.asOldId();
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+void ACAD_LINEID::Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end)
+{
+	m_ciSerial = 0;
+	m_lineId = id.asOldId();
+	m_ptStart = start;
+	m_ptEnd = end;
+	m_fLen = DISTANCE(m_ptStart, m_ptEnd);
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+BOOL ACAD_LINEID::UpdatePos()
+{
+	AcDbEntity *pEnt = NULL;
+	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_lineId), AcDb::kForRead);
+	CAcDbObjLife life(pEnt);
+	if (pEnt == NULL)
+		return FALSE;
+	if (pEnt->isKindOf(AcDbLine::desc()))
+	{
+		AcDbLine *pLine = (AcDbLine*)pEnt;
+		m_ptStart.Set(pLine->startPoint().x, pLine->startPoint().y, 0);
+		m_ptEnd.Set(pLine->endPoint().x, pLine->endPoint().y, 0);
+	}
+	else if (pEnt->isKindOf(AcDbArc::desc()))
+	{
+		AcDbArc* pArc = (AcDbArc*)pEnt;
+		AcGePoint3d startPt, endPt;
+		pArc->getStartPoint(startPt);
+		pArc->getEndPoint(endPt);
+		m_ptStart.Set(startPt.x, startPt.y, 0);
+		m_ptEnd.Set(endPt.x, endPt.y, 0);
+	}
+	else if (pEnt->isKindOf(AcDbEllipse::desc()))
+	{
+		AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+		AcGePoint3d startPt, endPt;
+		pEllipse->getStartPoint(startPt);
+		pEllipse->getEndPoint(endPt);
+		m_ptStart.Set(startPt.x, startPt.y, 0);
+		m_ptEnd.Set(endPt.x, endPt.y, 0);
+	}
+	else
+		return FALSE;
+	if (m_bReverse)
+	{
+		GEPOINT temp = m_ptStart;
+		m_ptStart = m_ptEnd;
+		m_ptEnd = temp;
+	}
+	return TRUE;
+}
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
 AcDbObjectId MkCadObjId(unsigned long idOld){ return AcDbObjectId((AcDbStub*)idOld); }
@@ -190,7 +262,7 @@ void CPlateProcessInfo::InternalExtractPlateRelaEnts()
 	}
 	pList->rbnext=NULL;	
 	//初始化归属于钢板的图元集合
-	if(!dim_pos.IsZero())
+	if(!dim_pos.IsZero() && g_pncSysPara.m_ciRecogMode!=CPNCSysPara::FILTER_BY_PIXEL)
 	{	//根据标注位置进行缩放
 		f2dRect rect=GetPnDimRect();
 		ZoomAcadView(rect,m_fZoomScale);
@@ -877,119 +949,298 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		ReverseVertexs();
 	CreateRgn();
 }
-struct LINE_OBJECT
-{
-	static const BYTE STRAIGHT	=0x01;
-	static const BYTE ARCLINE	=0x02;
-	static const BYTE ELLIPSE	=0x03;
-	char ciEdgeType;
-	AcDbObjectId idCadEnt;
-	f3dPoint startPt;
-	f3dPoint endPt;
-	BOOL bMatch;
-	LINE_OBJECT(){bMatch=FALSE;}
-};
 BOOL CPlateProcessInfo::InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntSet)
 {	//1.根据选中实体初始化直线列表
-	ATOM_LIST<LINE_OBJECT> objectLineList;
-	for(AcDbObjectId objId=selectedEntSet.GetFirst();objId;objId=selectedEntSet.GetNext())
+	if (selectedEntSet.GetNodeNum() <= 0)
+		return FALSE;
+	ARRAY_LIST<ACAD_LINEID> objectLineArr;
+	objectLineArr.SetSize(0, selectedEntSet.GetNodeNum());
+	for (AcDbObjectId objId = selectedEntSet.GetFirst(); objId; objId = selectedEntSet.GetNext())
 	{
-		AcDbEntity *pEnt=NULL;
-		acdbOpenAcDbEntity(pEnt,objId,AcDb::kForRead);
-		if(pEnt==NULL)
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
+		if (pEnt == NULL)
 			continue;
 		pEnt->close();
-		if(!pEnt->isKindOf(AcDbLine::desc())&&!pEnt->isKindOf(AcDbArc::desc())&&!pEnt->isKindOf(AcDbEllipse::desc()))
+		if (!pEnt->isKindOf(AcDbLine::desc()) &&
+			!pEnt->isKindOf(AcDbArc::desc()) &&
+			!pEnt->isKindOf(AcDbEllipse::desc()) &&
+			!pEnt->isKindOf(AcDbPolyline::desc()))
 			continue;
-		AcDbCurve* pCurve=(AcDbCurve*)pEnt;
-		f3dPoint startPt,endPt;
-		AcGePoint3d pt;
-		pCurve->getStartPoint(pt);
-		Cpy_Pnt(startPt,pt);
-		pCurve->getEndPoint(pt);
-		Cpy_Pnt(endPt,pt);
-		//
-		LINE_OBJECT* pLine=NULL;
-		for(pLine=objectLineList.GetFirst();pLine;pLine=objectLineList.GetNext())
-		{	//过滤始终点重合的线段
-			if((pLine->startPt.IsEqual(startPt,EPS2)&&pLine->endPt.IsEqual(endPt,EPS2))||
-				(pLine->startPt.IsEqual(endPt,EPS2)&&pLine->endPt.IsEqual(startPt,EPS2)))
-				break;
-		}
-		if(pLine==NULL)
+		if (pEnt->isKindOf(AcDbPolyline::desc()))	//多段线直接提取轮廓点
+			return InitProfileByAcdbPolyLine(objId);
+		else
 		{
-			pLine=objectLineList.append();
-			pLine->startPt=startPt;
-			pLine->endPt=endPt;
-			if(pEnt->isKindOf(AcDbLine::desc()))
-				pLine->ciEdgeType=LINE_OBJECT::STRAIGHT;
-			else if(pEnt->isKindOf(AcDbArc::desc()))
-				pLine->ciEdgeType=LINE_OBJECT::ARCLINE;
-			else if(pEnt->isKindOf(AcDbEllipse::desc()))
-				pLine->ciEdgeType=LINE_OBJECT::ELLIPSE;
-		}
-	}
-	if(objectLineList.GetNodeNum()<3)
-		return FALSE;
-	//2.初始化钢板轮廓边(提取有序的轮廓点）
-	vertexList.Empty();
-	VERTEX xVertex;
-	LINE_OBJECT* pFirLine=objectLineList.GetFirst();
-	f3dPoint startPt,endPt;
-	BOOL bFinish=FALSE;
-	for(;;)
-	{
-		if(pFirLine&&pFirLine->bMatch==FALSE)
-		{
-			pFirLine->bMatch=TRUE;
-			startPt=pFirLine->startPt;
-			endPt=pFirLine->endPt;
-			xVertex.pos=(double*)endPt;
-			vertexList.append(xVertex);
-		}
-		if(fabs(DISTANCE(startPt,endPt))<EPS2)
-		{
-			bFinish=TRUE;
-			break;
-		}
-		LINE_OBJECT* pLine=NULL;
-		for(pLine=objectLineList.GetFirst();pLine;pLine=objectLineList.GetNext())
-		{
-			if(pLine->bMatch)
-				continue;
-			if(fabs(DISTANCE(pLine->startPt,endPt))<EPS2)
+			AcDbCurve* pCurve = (AcDbCurve*)pEnt;
+			AcGePoint3d acad_pt;
+			pCurve->getStartPoint(acad_pt);
+			GEPOINT ptS, ptE;
+			Cpy_Pnt(ptS, acad_pt);
+			pCurve->getEndPoint(acad_pt);
+			Cpy_Pnt(ptE, acad_pt);
+			//
+			ACAD_LINEID* pLine = NULL;
+			for (pLine = objectLineArr.GetFirst(); pLine; pLine = objectLineArr.GetNext())
+			{	//过滤始终点重合的线段
+				if ((pLine->m_ptStart.IsEqual(ptS, EPS2) && pLine->m_ptEnd.IsEqual(ptE, EPS2)) ||
+					(pLine->m_ptStart.IsEqual(ptE, EPS2) && pLine->m_ptEnd.IsEqual(ptS, EPS2)))
+					break;
+			}
+			if (pLine == NULL)
 			{
-				endPt=pLine->endPt;
-				pLine->bMatch=TRUE;
-				xVertex.pos=(double*)pLine->endPt;
-				vertexList.append(xVertex);
-				break;
-			}
-			else if(fabs(DISTANCE(pLine->endPt,endPt))<EPS2)
-			{	//
-				endPt=pLine->startPt;
-				pLine->bMatch=TRUE;
-				xVertex.pos=(double*)pLine->startPt;
-				vertexList.append(xVertex);
-				break;
+				pLine = objectLineArr.append();
+				pLine->m_ptStart = ptS;
+				pLine->m_ptEnd = ptE;
+				pLine->m_lineId = objId.asOldId();
 			}
 		}
-		if (pLine == NULL)
-		{	//缩放至问题节点附近 wht 19-12-21
-			SCOPE_STRU scope;
-			scope.fMinX = endPt.x - 10;
-			scope.fMaxX = endPt.x + 10;
-			scope.fMinY = endPt.y - 10;
-			scope.fMaxY = endPt.y + 10;
-			scope.fMinZ = scope.fMaxZ = 0;
-			ZoomAcadView(scope, 10);
+	}
+	if (objectLineArr.GetSize() > 3)
+		return InitProfileByAcdbLineList(objectLineArr);
+	return FALSE;
+}
+BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
+{
+	AcDbEntity *pEnt = NULL;
+	acdbOpenAcDbEntity(pEnt, idAcdbPline, AcDb::kForRead);
+	CAcDbObjLife acdbObjLife(pEnt);
+	if (pEnt == NULL || !pEnt->isKindOf(AcDbPolyline::desc()))
+		return FALSE;
+	ATOM_LIST<VERTEX> tem_vertes;
+	AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+	int nVertNum = pPline->numVerts();
+	for (int iVertIndex = 0; iVertIndex < nVertNum; iVertIndex++)
+	{
+		AcGePoint3d location;
+		pPline->getPointAt(iVertIndex, location);
+		if (IsHasVertex(tem_vertes, GEPOINT(location.x, location.y, location.z)))
+			continue;
+		GEPOINT ptS, ptE;
+		if (pPline->segType(iVertIndex) == AcDbPolyline::kLine)
+		{
+			AcGeLineSeg3d acgeLine;
+			pPline->getLineSegAt(iVertIndex, acgeLine);
+			Cpy_Pnt(ptS, acgeLine.startPoint());
+			Cpy_Pnt(ptE, acgeLine.endPoint());
+			VERTEX* pVer = tem_vertes.append();
+			pVer->pos.Set(location.x, location.y, location.z);
+		}
+		else if (pPline->segType(iVertIndex) == AcDbPolyline::kArc)
+		{
+			AcGeCircArc3d acgeArc;
+			pPline->getArcSegAt(iVertIndex, acgeArc);
+			GEPOINT center, norm;
+			Cpy_Pnt(ptS, acgeArc.startPoint());
+			Cpy_Pnt(ptE, acgeArc.endPoint());
+			Cpy_Pnt(center, acgeArc.center());
+			Cpy_Pnt(norm, acgeArc.normal());
+			VERTEX* pVer = tem_vertes.append();
+			pVer->pos.Set(location.x, location.y, location.z);
+			pVer->ciEdgeType = 2;
+			pVer->arc.center = center;
+			pVer->arc.work_norm = norm;
+			pVer->arc.radius = acgeArc.radius();
+		}
+	}
+	//
+	vertexList.Empty();
+	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
+	{
+		VERTEX* pCur = tem_vertes.GetByIndex(i);
+		VERTEX* pNewVer = vertexList.append(*pCur);
+		if (pNewVer->ciEdgeType == 2)
+		{	//将圆弧简化为多条线段，减小钢板轮廓区域误差
+			pNewVer->ciEdgeType = 1;
+			VERTEX* pNext = tem_vertes.GetByIndex((i + 1) % tem_vertes.GetNodeNum());
+			GEPOINT startPt = pCur->pos, endPt = pNext->pos;
+			double len = 0.5*DISTANCE(startPt, endPt);
+			if (len < EPS2)
+				continue;
+			f3dArcLine arcLine;
+			if (arcLine.CreateMethod3(startPt, endPt, pCur->arc.work_norm, pCur->arc.radius, pCur->arc.center))
+			{
+				int nSlices = CalArcResolution(arcLine.Radius(), arcLine.SectorAngle(), 1.0, 5.0, 18);
+				double angle = arcLine.SectorAngle() / nSlices;
+				for (int i = 1; i < nSlices; i++)
+				{
+					VERTEX *pProVer = vertexList.append();
+					pProVer->pos = arcLine.PositionInAngle(angle*i);
+					pProVer->tag.lParam = -1;
+				}
+			}
+		}
+	}
+	if (!IsValidVertexs())
+		ReverseVertexs();
+	CreateRgn();
+	return TRUE;
+}
+BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ARRAY_LIST<ACAD_LINEID>& xLineArr)
+{
+	if (xLineArr.GetSize() <= 0)
+		return FALSE;
+	return InitProfileByAcdbLineList(xLineArr[0], xLineArr);
+}
+BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_LIST<ACAD_LINEID>& xLineArr)
+{
+	if (xLineArr.GetSize() <= 0)
+		return FALSE;
+	//查找起始轮廓线
+	ACAD_LINEID *pLine = NULL, *pFirLine = NULL;
+	for (pLine = xLineArr.GetFirst(); pLine; pLine = xLineArr.GetNext())
+	{
+		if (pLine->m_ptStart.IsEqual(startLine.m_ptStart) &&
+			pLine->m_ptEnd.IsEqual(startLine.m_ptEnd))
+		{
+			pFirLine = pLine;
 			break;
 		}
 	}
-	if(bFinish==FALSE)
+	if (pFirLine == NULL)
+		pFirLine = xLineArr.GetFirst();
+	//遍历匹配闭合轮廓边
+	GEPOINT ptS, ptE, vec;
+	BYTE ciSerial = 1;
+	BOOL bFinish = FALSE;
+	ATOM_LIST<VERTEX> tem_vertes;
+	for (;;)
+	{
+		if (pFirLine&&pFirLine->m_bMatch == FALSE)
+		{
+			pFirLine->m_bMatch = TRUE;
+			pFirLine->m_ciSerial = ciSerial++;
+			pFirLine->vertex = pFirLine->m_ptStart;
+			ptS = pFirLine->m_ptStart;
+			ptE = pFirLine->m_ptEnd;
+			vec = (ptE - ptS).normalized();
+		}
+		if (fabs(DISTANCE(ptS, ptE)) < EPS2)
+		{
+			bFinish = TRUE;
+			break;
+		}
+		ATOM_LIST<ACAD_LINEID*> linkLineList;
+		ACAD_LINEID* pLine = NULL;
+		for (pLine = xLineArr.GetFirst(); pLine; pLine = xLineArr.GetNext())
+		{
+			if (pLine->m_bMatch)
+				continue;
+			if (pLine->m_ptStart.IsEqual(ptE, EPS2))
+				linkLineList.append(pLine);
+			else if (pLine->m_ptEnd.IsEqual(ptE, EPS2))
+				linkLineList.append(pLine);
+		}
+		if (linkLineList.GetNodeNum() <= 0)
+			break;	//没有找到相连线段
+		if (linkLineList.GetNodeNum() == 1)
+		{	//只有一根相连线段
+			pLine = linkLineList[0];
+			pLine->m_bMatch = TRUE;
+			pLine->m_ciSerial = ciSerial++;
+			if (pLine->m_ptStart.IsEqual(ptE, EPS2))
+			{
+				pLine->vertex = pLine->m_ptStart;
+				ptE = pLine->m_ptEnd;
+			}
+			else
+			{
+				pLine->vertex = pLine->m_ptEnd;
+				ptE = pLine->m_ptStart;
+			}
+			vec = (ptE - pLine->vertex).normalized();
+		}
+		else
+		{	//含有多根相连线段
+			CMaxDouble maxValue;
+			for (int i = 0; i < linkLineList.GetNodeNum(); i++)
+			{
+				GEPOINT cur_vec;
+				if (linkLineList[i]->m_ptStart.IsEqual(ptE, EPS2))
+					cur_vec = (linkLineList[i]->m_ptEnd - linkLineList[i]->m_ptStart).normalized();
+				else
+					cur_vec = (linkLineList[i]->m_ptStart - linkLineList[i]->m_ptEnd).normalized();
+				double fCosa = vec * cur_vec;
+				maxValue.Update(fCosa, linkLineList[i]);
+			}
+			pLine = (ACAD_LINEID*)maxValue.m_pRelaObj;
+			pLine->m_bMatch = TRUE;
+			pLine->m_ciSerial = ciSerial++;
+			if (pLine->m_ptStart.IsEqual(ptE, EPS2))
+			{
+				pLine->vertex = pLine->m_ptStart;
+				ptE = pLine->m_ptEnd;
+			}
+			else
+			{
+				pLine->vertex = pLine->m_ptEnd;
+				ptE = pLine->m_ptStart;
+			}
+			vec = (ptE - pLine->vertex).normalized();
+		}
+	}
+	if (bFinish == FALSE)
 		return FALSE;
-	//3.对轮廓点进行合理性检查(是否按逆时针排序)，并初始化钢板区域
-	if(!IsValidVertexs())
+	//初始化钢板轮廓点
+	CQuickSort<ACAD_LINEID>::QuickSort(xLineArr.m_pData, xLineArr.GetSize(), ACAD_LINEID::compare_func);
+	for (int i = 0; i < xLineArr.GetSize(); i++)
+	{
+		ACAD_LINEID objItem = xLineArr[i];
+		if (!objItem.m_bMatch)
+			continue;
+		VERTEX* pVer = tem_vertes.append();
+		pVer->pos = objItem.vertex;
+		//记录圆弧信息
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, MkCadObjId(objItem.m_lineId), AcDb::kForRead);
+		CAcDbObjLife objLife(pEnt);
+		if (pEnt && pEnt->isKindOf(AcDbArc::desc()))
+		{
+			AcDbArc* pArc = (AcDbArc*)pEnt;
+			GEPOINT ptS, ptE, center, norm;
+			ptS = (objItem.vertex.IsEqual(objItem.m_ptStart)) ? objItem.m_ptStart : objItem.m_ptEnd;
+			ptE = (objItem.vertex.IsEqual(objItem.m_ptStart)) ? objItem.m_ptEnd : objItem.m_ptStart;
+			Cpy_Pnt(center, pArc->center());
+			Cpy_Pnt(norm, pArc->normal());
+			if (objItem.vertex.IsEqual(objItem.m_ptEnd))
+				norm *= -1;
+			double radius = pArc->radius();
+			if (radius <= 0 || DISTANCE(ptS, ptE) < EPS)
+				continue;	//不合理圆弧
+			pVer->ciEdgeType = 2;
+			pVer->arc.center = center;
+			pVer->arc.work_norm = norm;
+			pVer->arc.radius = radius;
+		}
+	}
+	//初始化钢板轮廓点
+	vertexList.Empty();
+	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
+	{
+		VERTEX* pCur = tem_vertes.GetByIndex(i);
+		VERTEX* pNewVer = vertexList.append(*pCur);
+		if (pNewVer->ciEdgeType == 2)
+		{	//将圆弧简化为多条线段，减小钢板轮廓区域误差
+			pNewVer->ciEdgeType = 1;
+			VERTEX* pNext = tem_vertes.GetByIndex((i + 1) % tem_vertes.GetNodeNum());
+			GEPOINT startPt = pCur->pos, endPt = pNext->pos;
+			double len = 0.5*DISTANCE(startPt, endPt);
+			if (len < EPS2)
+				continue;
+			f3dArcLine arcLine;
+			if (arcLine.CreateMethod3(startPt, endPt, pCur->arc.work_norm, pCur->arc.radius, pCur->arc.center))
+			{
+				int nSlices = CalArcResolution(arcLine.Radius(), arcLine.SectorAngle(), 1.0, 5.0, 18);
+				double angle = arcLine.SectorAngle() / nSlices;
+				for (int i = 1; i < nSlices; i++)
+				{
+					VERTEX *pProVer = vertexList.append();
+					pProVer->pos = arcLine.PositionInAngle(angle*i);
+					pProVer->tag.lParam = -1;
+				}
+			}
+		}
+	}
+	if (!IsValidVertexs())
 		ReverseVertexs();
 	CreateRgn();
 	return TRUE;
@@ -1847,7 +2098,7 @@ void CPlateProcessInfo::InitEdgeEntIdMap()
 		GEPOINT start=pCurVertex->pos,end=pNextVertex->pos;
 		for(ACAD_LINEID *pLineId=lineIdList.GetFirst();pLineId;pLineId=lineIdList.GetNext())
 		{
-			ULONG *pCloneEntId=m_hashColneEntIdBySrcId.GetValue(pLineId->m_lineId.asOldId());
+			ULONG *pCloneEntId=m_hashColneEntIdBySrcId.GetValue(pLineId->m_lineId);
 			ACAD_LINEID *pCloneLineId=pCloneEntId?hashCloneEntIdByLineId.GetValue(*pCloneEntId):NULL;
 			if(pCloneLineId==NULL)
 				continue;
@@ -1889,9 +2140,9 @@ bool CPlateProcessInfo::SyncSteelSealPos()
 	for (ULONG *pId = m_hashColneEntIdBySrcId.GetFirst(); pId; pId = m_hashColneEntIdBySrcId.GetNext())
 	{
 		long idSrcEnt= m_hashColneEntIdBySrcId.GetCursorKey();
-		if (*pId == pFirstLineId->m_lineId.asOldId())
+		if (*pId == pFirstLineId->m_lineId)
 			srcFirstId = MkCadObjId(idSrcEnt);
-		else if (*pId == pSecondLineId->m_lineId.asOldId())
+		else if (*pId == pSecondLineId->m_lineId)
 			srcSecondId = MkCadObjId(idSrcEnt);
 		if (srcFirstId.asOldId() != 0 && srcSecondId.asOldId() != 0)
 			break;
@@ -1913,10 +2164,10 @@ bool CPlateProcessInfo::SyncSteelSealPos()
 	normalize(clone_ucs.axis_y);
 	//
 	ACAD_LINEID srcFirstLineId, srcSecondLineId;
-	srcFirstLineId.m_lineId = srcFirstId;
+	srcFirstLineId.m_lineId = srcFirstId.asOldId();
 	srcFirstLineId.m_bReverse = pFirstLineId->m_bReverse;
 	srcFirstLineId.UpdatePos();
-	srcSecondLineId.m_lineId = srcSecondId;
+	srcSecondLineId.m_lineId = srcSecondId.asOldId();
 	srcSecondLineId.m_bReverse = pSecondLineId->m_bReverse;
 	srcSecondLineId.UpdatePos();
 	src_ucs.origin = srcFirstLineId.m_ptEnd;
@@ -2112,6 +2363,7 @@ bool CPlateProcessInfo::IsMarkPosCadEnt(int idCadEnt)
 CPNCModel::CPNCModel()
 {
 	Empty();
+	DisplayProcess = NULL;
 }
 CPNCModel::~CPNCModel()
 {
@@ -2294,7 +2546,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			continue;
 		ACAD_LINEID *pLineId=pList->GetFirst();
 		if(pLineId&&pLineId->m_fLen<WELD_MAX_HEIGHT)
-			selectedEntIdSet.DeleteNode(pLineId->m_lineId.asOldId());
+			selectedEntIdSet.DeleteNode(pLineId->m_lineId);
 	}
 	selectedEntIdSet.Clean();
 	//在圆弧或椭圆弧处添加辅助图元
@@ -2514,6 +2766,267 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		pEnt->close();
 	}
 	acDocManager->unlockDocument(curDoc());
+}
+//通过像素模拟进行提取钢板轮廓
+void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
+{
+	CLogErrorLife logErrLife;
+	//根据Spline提取火曲线特征信息(分段线段集合)
+	CSymbolRecoginzer symbols;
+	AcDbEntity *pEnt = NULL;
+	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
+	{
+		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
+		if (pEnt)
+			pEnt->close();
+		if (pEnt->isKindOf(AcDbSpline::desc()))
+		{
+			AcGePoint3d pt;
+			AcDbSpline* pSpline = (AcDbSpline*)pEnt;
+			CSymbolEntity* pSymbol = symbols.listSymbols.AttachObject();
+			for (int i = 0; i < pSpline->numFitPoints() - 1; i++)
+			{
+				CSymbolEntity::LINE* pLine = pSymbol->listSonlines.AttachObject();
+				pSymbol->ciSymbolType = 1;	//暂默认为火曲线S型符号
+				pSpline->getFitPointAt(i, pt);
+				Cpy_Pnt(pLine->start, pt);
+				pSpline->getFitPointAt(i + 1, pt);
+				Cpy_Pnt(pLine->end, pt);
+			}
+		}
+	}
+	//根据框选图元提取轮廓边元素,记录框选区域
+	SCOPE_STRU scope;
+	CHashSet<AcDbObjectId> hashScreenProfileId;
+	ATOM_LIST<f3dArcLine> arrArcLine;
+	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
+	{
+		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
+		if (pEnt)
+			pEnt->close();
+		if (pEnt->isKindOf(AcDbLine::desc()) && g_pncSysPara.IsBendLine((AcDbLine*)pEnt, &symbols))
+			continue;	//过滤火曲线
+		GEPOINT ptS, ptE, ptC, norm;
+		f3dArcLine arc_line;
+		AcGePoint3d acad_pt;
+		if (pEnt->isKindOf(AcDbLine::desc()))
+		{
+			AcDbLine *pLine = (AcDbLine*)pEnt;
+			pLine->getStartPoint(acad_pt);
+			Cpy_Pnt(ptS, acad_pt);
+			pLine->getEndPoint(acad_pt);
+			Cpy_Pnt(ptE, acad_pt);
+			arc_line = f3dArcLine(f3dLine(ptS, ptE));
+			arc_line.feature = objId.asOldId();
+			arrArcLine.append(arc_line);
+			//
+			scope.VerifyVertex(ptS);
+			scope.VerifyVertex(ptE);
+			m_xAllLineHash.SetValue(objId.asOldId(), objId);
+		}
+		else if (pEnt->isKindOf(AcDbArc::desc()))
+		{
+			AcDbArc* pArc = (AcDbArc*)pEnt;
+			pArc->getStartPoint(acad_pt);
+			Cpy_Pnt(ptS, acad_pt);
+			pArc->getEndPoint(acad_pt);
+			Cpy_Pnt(ptE, acad_pt);
+			Cpy_Pnt(ptC, pArc->center());
+			Cpy_Pnt(norm, pArc->normal());
+			double radius = pArc->radius();
+			double angle = (pArc->endAngle() - pArc->startAngle());
+			if (radius <= 0 || fabs(angle) <= 0 || DISTANCE(ptS, ptE) < EPS)
+				continue;	//不合理圆弧
+			if (arc_line.CreateMethod3(ptS, ptE, norm, radius, ptC))
+			{
+				arc_line.feature = objId.asOldId();
+				arrArcLine.append(arc_line);
+				scope.VerityArcLine(arc_line);
+				m_xAllLineHash.SetValue(objId.asOldId(), objId);
+			}
+			else
+				logerr.Log("error");
+		}
+		else if (pEnt->isKindOf(AcDbEllipse::desc()))
+		{	//更新钢板顶点参数(椭圆)
+			AcDbEllipse* pEllipse = (AcDbEllipse*)pEnt;
+			pEllipse->getStartPoint(acad_pt);
+			Cpy_Pnt(ptS, acad_pt);
+			pEllipse->getEndPoint(acad_pt);
+			Cpy_Pnt(ptE, acad_pt);
+			Cpy_Pnt(ptC, pEllipse->center());
+			Cpy_Pnt(norm, pEllipse->normal());
+			GEPOINT min_vec, maj_vec, column_norm;
+			Cpy_Pnt(min_vec, pEllipse->minorAxis());
+			Cpy_Pnt(maj_vec, pEllipse->majorAxis());
+			double min_R = min_vec.mod();
+			double maj_R = maj_vec.mod();
+			double cosa = min_R / maj_R;
+			double sina = SQRT(1 - cosa * cosa);
+			column_norm = norm;
+			RotateVectorAroundVector(column_norm, sina, cosa, min_vec);
+			if (min_R <= 0 || DISTANCE(ptS, ptE) < EPS)
+				continue;
+			if (arc_line.CreateEllipse(ptC, ptS, ptE, column_norm, norm, min_R))
+			{
+				arc_line.feature = objId.asOldId();
+				arrArcLine.append(arc_line);
+				scope.VerityArcLine(arc_line);
+				m_xAllLineHash.SetValue(objId.asOldId(), objId);
+			}
+			else
+				logerr.Log("error");
+		}
+		else if (pEnt->isKindOf(AcDbPolyline::desc()))
+		{	//多段线
+			hashScreenProfileId.SetValue(objId.asOldId(), objId);
+		}
+		else if (pEnt->isKindOf(AcDbRegion::desc()))
+		{	//面域
+
+		}
+	}
+	//初始化坐标系,将轮廓线绘制到虚拟画布
+	double fSacle = 0.6, fGap = 1 / fSacle;
+	GECS ocs;
+	ocs.origin.Set(scope.fMinX - fGap, scope.fMaxY + fGap, 0);
+	ocs.axis_x.Set(1, 0, 0);
+	ocs.axis_y.Set(0, -1, 0);
+	ocs.axis_z.Set(0, 0, -1);
+	CVectorMonoImage xImage;
+	xImage.DisplayProcess = DisplayProcess;
+	xImage.SetOCS(ocs, fSacle);
+	if (DisplayProcess)
+		DisplayProcess(0, "初始化工作进行中......");
+	int nNum = arrArcLine.GetNodeNum();
+	for (int i = 0; i < arrArcLine.GetNodeNum(); i++)
+	{
+		if (DisplayProcess)
+			DisplayProcess(int(100 * i / nNum), "初始化工作进行中......");
+		xImage.DrawArcLine(arrArcLine[i], arrArcLine[i].feature);
+	}
+	if (DisplayProcess)
+		DisplayProcess(100, "初始化工作完成");
+	//识别钢板外轮廓边
+	xImage.DetectProfilePixelsByVisit();
+	//xImage.DetectProfilePixelsByTrack();
+	//提取钢板轮廓点集合
+	for (OBJECT_ITEM* pItem = xImage.m_hashRelaObj.GetFirst(); pItem; pItem = xImage.m_hashRelaObj.GetNext())
+	{
+		if (pItem->m_nPixelNum > 1)
+			hashScreenProfileId.SetValue(pItem->m_idRelaObj, MkCadObjId(pItem->m_idRelaObj));
+	}
+	InitPlateVextexs(hashScreenProfileId);
+}
+void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
+{
+	CHashSet<AcDbObjectId> acdbPolylineSet;
+	CHashSet<AcDbObjectId> acdbArclineSet;
+	AcDbObjectId objId;
+	for (objId = hashProfileEnts.GetFirst(); objId; objId = hashProfileEnts.GetNext())
+	{
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
+		CAcDbObjLife acdbObjLife(pEnt);
+		if (pEnt == NULL)
+			continue;
+		if (pEnt->isKindOf(AcDbPolyline::desc()))
+			acdbPolylineSet.SetValue(objId.asOldId(), objId);
+		else
+			acdbArclineSet.SetValue(objId.asOldId(), objId);
+	}
+	//根据多段线提取钢板轮廓点
+	if (DisplayProcess)
+		DisplayProcess(0, "提取钢板轮廓点");
+	int nStep = 0, nNum = acdbPolylineSet.GetNodeNum() + acdbArclineSet.GetNodeNum();
+	for (objId = acdbPolylineSet.GetFirst(); objId; objId = acdbPolylineSet.GetNext(), nStep++)
+	{
+		if (DisplayProcess)
+			DisplayProcess(int(100 * nStep / nNum), "提取钢板轮廓点");
+		CPlateProcessInfo tem_plate;
+		if (!tem_plate.InitProfileByAcdbPolyLine(objId))
+			continue;
+		CPlateProcessInfo* pCurPlateInfo = NULL;
+		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
+		{
+			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+				continue;
+			pCurPlateInfo->vertexList.Empty();
+			for (CPlateObject::VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
+				pVer = tem_plate.vertexList.GetNext())
+				pCurPlateInfo->vertexList.append(*pVer);
+			break;
+		}
+	}
+	//根据轮廓直线提取钢板轮廓点(两次提取)
+	CHashList<ACAD_LINEID> hashUnmatchLine;
+	for (int index = 0; index < 2; index++)
+	{
+		ARRAY_LIST<ACAD_LINEID> line_arr;
+		if (index == 0)
+		{	//第一次从筛选的轮廓图元中提取闭合外形
+			line_arr.SetSize(0, acdbArclineSet.GetNodeNum());
+			for (objId = acdbArclineSet.GetFirst(); objId; objId = acdbArclineSet.GetNext())
+				line_arr.append(ACAD_LINEID(objId.asOldId()));
+		}
+		else
+		{	//第二次从所有轮廓图元中提取剩余的闭合外形
+			line_arr.SetSize(0, m_xAllLineHash.GetNodeNum());
+			for (objId = m_xAllLineHash.GetFirst(); objId; objId = m_xAllLineHash.GetNext())
+				line_arr.append(ACAD_LINEID(objId.asOldId()));
+		}
+		for (int i = 0; i < line_arr.GetSize(); i++)
+			line_arr[i].UpdatePos();
+		int nSize = (index == 0) ? line_arr.GetSize() : hashUnmatchLine.GetNodeNum();
+		while (nSize > 0)
+		{
+			if (DisplayProcess)
+				DisplayProcess(int(100 * nStep / nNum), "提取钢板轮廓点");
+			ACAD_LINEID* pStartLine = line_arr.GetFirst();
+			if (index != 0)
+				pStartLine = hashUnmatchLine.GetFirst();
+			CPlateProcessInfo tem_plate;
+			BOOL bSucceed = tem_plate.InitProfileByAcdbLineList(*pStartLine, line_arr);
+			if (bSucceed)
+			{	//匹配成功,将轮廓点放入对应的钢板内
+				CPlateProcessInfo* pCurPlateInfo = NULL;
+				for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
+				{
+					if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+						continue;
+					pCurPlateInfo->vertexList.Empty();
+					for (CPlateObject::VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
+						pVer = tem_plate.vertexList.GetNext())
+						pCurPlateInfo->vertexList.append(*pVer);
+					break;
+				}
+			}
+			//删除已处理过的直线图元
+			int nCount = line_arr.GetSize();
+			for (int i = 0; i < nCount; i++)
+			{
+				if (!line_arr[i].m_bMatch)
+					continue;
+				if (index == 0)
+				{	//记录第一次提取匹配失败的轮廓线
+					if (bSucceed)
+						m_xAllLineHash.DeleteNode(line_arr[i].m_lineId);
+					else
+						hashUnmatchLine.SetValue(line_arr[i].m_lineId, line_arr[i]);
+				}
+				else
+					hashUnmatchLine.DeleteNode(line_arr[i].m_lineId);
+				//删除处理过的图元
+				line_arr.RemoveAt(i);
+				nCount--;
+				i--;
+				nStep++;
+			}
+			nSize = (index == 0) ? line_arr.GetSize() : hashUnmatchLine.GetNodeNum();
+		}
+	}
+	if (DisplayProcess)
+		DisplayProcess(100, "提取钢板轮廓点");
 }
 //处理钢板一板多号的情况
 void CPNCModel::MergeManyPartNo()
