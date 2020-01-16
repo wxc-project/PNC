@@ -12,36 +12,31 @@
 class CProjectTowerType;
 class CBomFile
 {
-private:
-	BOOL m_bLoftBom;
-	CXhChar500 m_sFileName;		//文件名称
 	CProjectTowerType* m_pProject;
 	CSuperHashStrList<BOMPART> m_hashPartByPartNo;
 public:
-	CHashStrList<DWORD> m_hashColIndexByColTitle;
+	CXhChar500 m_sFileName;		//文件名称
+	CXhChar100 m_sBomName;
 protected:
-	BOOL ImportTmaExcelFile();
-	BOOL ImportErpExcelFile();
-	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap);
+	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
 public:
 	CBomFile();
 	~CBomFile();
 	//
-	void Empty()
-	{
+	void Empty(){
 		m_hashPartByPartNo.Empty();
 		m_sFileName.Empty();
 	}
+	void SetBelongModel(CProjectTowerType *pProject) {m_pProject = pProject; }
+	CProjectTowerType* BelongModel() const { return m_pProject; }
+	int GetPartNum() { return m_hashPartByPartNo.GetNodeNum(); }
 	BOMPART* EnumFirstPart(){return m_hashPartByPartNo.GetFirst();}
 	BOMPART* EnumNextPart(){return m_hashPartByPartNo.GetNext();}
 	BOMPART* FindPart(const char* sKey){return m_hashPartByPartNo.GetValue(sKey);}
-	int GetPartNum(){return m_hashPartByPartNo.GetNodeNum();}
+	//
+	BOOL ImportTmaExcelFile();
+	BOOL ImportErpExcelFile();
 	CString GetPartNumStr();
-	BOOL IsLoftBom(){return m_bLoftBom;}
-	void SetBelongModel(CProjectTowerType *pProject){m_pProject=pProject;}
-	CProjectTowerType* BelongModel() const{return m_pProject;}
-	CXhChar500 GetFileName(){return m_sFileName;}
-	void ImportBomFile(const char* sFileName,BOOL bLoftBom);
 	void UpdateProcessPart(const char* sOldKey,const char* sNewKey);
 };
 //////////////////////////////////////////////////////////////////////////
@@ -75,16 +70,16 @@ public:
 class CDwgFileInfo 
 {
 private:
-	CXhChar100 m_sFileName;	//文件名称
 	BOOL m_bJgDwgFile;
 	CProjectTowerType* m_pProject;
 	CHashList<CAngleProcessInfo> m_hashJgInfo;
 	CPNCModel m_xPncMode;
-	//
+public:
+	CXhChar100 m_sDwgName;
+	CXhChar500 m_sFileName;	//文件名称
+protected:
 	BOOL RetrieveAngles();
-	//
 	BOOL RetrievePlates();
-	//
 	int GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet);
 public:
 	CDwgFileInfo();
@@ -107,7 +102,6 @@ public:
 	//
 	void SetBelongModel(CProjectTowerType *pProject){m_pProject=pProject;}
 	CProjectTowerType* BelongModel() const{return m_pProject;}
-	CXhChar100 GetFileName(){return m_sFileName;}
 	BOOL IsJgDwgInfo(){return m_bJgDwgFile;}
 	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf);
 };
@@ -155,6 +149,8 @@ public:
 	CPlateProcessInfo *FindPlateInfoByPartNo(const char* sPartNo);
 	CAngleProcessInfo *FindAngleInfoByPartNo(const char* sPartNo);
 	//初始化操作
+	BOOL IsTmaBomFile(const char* sFileName);
+	BOOL IsErpBomFile(const char* sFileName);
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
 	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName,BOOL bJgDxf);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);

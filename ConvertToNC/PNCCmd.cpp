@@ -966,6 +966,7 @@ void RevisionPartProcess()
 		return;
 	}
 	g_xUbomModel.InitBomTblCfg();
+	g_pRevisionDlg->DisplayProcess = DisplayProcess;
 	g_pRevisionDlg->InitRevisionDlg();
 }
 #endif

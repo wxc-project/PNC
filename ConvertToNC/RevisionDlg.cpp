@@ -138,6 +138,7 @@ CRevisionDlg::CRevisionDlg(CWnd* pParent /*=NULL*/)
 	m_nRightMargin=0;
 	m_nBtmMargin=0;
 	m_iCompareMode=0;
+	DisplayProcess = NULL;
 }
 
 CRevisionDlg::~CRevisionDlg()
@@ -195,6 +196,8 @@ BOOL CRevisionDlg::OnInitDialog()
 		m_xListReport.AddColumnHeader("加工重量", 65);
 		m_xListReport.AddColumnHeader("备注", 150);
 	}
+	if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+		m_xListReport.AddColumnHeader("单基数", 52);
 	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{
 		m_xListReport.AddColumnHeader("加工数", 52);
@@ -352,6 +355,12 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("fSumWeight"))
 			lpInfo->SetSubItemColor(7, clr);
 	}
+	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+	{
+		lpInfo->SetSubItemText(4, CXhChar50("%d", pPart->GetPartNum()), TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("nSingNum"))
+			lpInfo->SetSubItemColor(4, clr);
+	}
 	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{	//成都铁塔BOM显示信息
 		//加工数
@@ -435,61 +444,75 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 	if(pInfo==NULL)
 		return;
 	CSuperGridCtrl::CTreeItem *pItem = NULL;
+	int index = 0, nNum = 0;
 	if(!bCompared)
 	{
-		CXhChar100 sName;
+		if (DisplayProcess)
+			DisplayProcess(0, "显示读取结果......");
 		if(pInfo->itemType==BOM_ITEM)
 		{
 			m_xListReport.DeleteAllItems();
 			CBomFile* pBom=(CBomFile*)pInfo->dwRefData;
-			for(BOMPART *pPart=pBom->EnumFirstPart();pPart;pPart=pBom->EnumNextPart())
+			nNum = pBom->GetPartNum();
+			for(BOMPART *pPart=pBom->EnumFirstPart();pPart;pPart=pBom->EnumNextPart(), index++)
 			{
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
 				pItem=InsertPartToList(m_xListReport,NULL,pPart,NULL);
 				pItem->m_idProp=(long)pPart;
 			}
-			_splitpath(pBom->GetFileName(),NULL,NULL,sName,NULL);
-			m_sCurFile.Format("%s",(char*)sName);
+			m_sCurFile.Format("%s",(char*)pBom->m_sBomName);
 			m_sRecordNum=pBom->GetPartNumStr();
 		}
 		else if(pInfo->itemType==ANGLE_DWG_ITEM)
 		{
 			m_xListReport.DeleteAllItems();
 			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			for(CAngleProcessInfo *pAngleInfo=pDwg->EnumFirstJg();pAngleInfo;pAngleInfo=pDwg->EnumNextJg())
+			nNum = pDwg->GetJgNum();
+			for(CAngleProcessInfo *pAngleInfo=pDwg->EnumFirstJg();pAngleInfo;pAngleInfo=pDwg->EnumNextJg(),index++)
 			{
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
 				pItem=InsertPartToList(m_xListReport,NULL,&pAngleInfo->m_xAngle,NULL);
 				pItem->m_idProp=(long)pAngleInfo;
 			}
-			_splitpath(pDwg->GetFileName(),NULL,NULL,sName,NULL);
-			m_sCurFile.Format("%s",(char*)sName);
+			m_sCurFile.Format("%s",(char*)pDwg->m_sDwgName);
 			m_sRecordNum.Format("%d",pDwg->GetJgNum());
 		}
 		else if(pInfo->itemType==PLATE_DWG_ITEM)
 		{
 			m_xListReport.DeleteAllItems();
 			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			for(CPlateProcessInfo *pPlateInfo=pDwg->EnumFirstPlate();pPlateInfo;pPlateInfo=pDwg->EnumNextPlate())
+			nNum = pDwg->GetPlateNum();
+			for(CPlateProcessInfo *pPlateInfo=pDwg->EnumFirstPlate();pPlateInfo;pPlateInfo=pDwg->EnumNextPlate(),index++)
 			{
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
 				pItem=InsertPartToList(m_xListReport,NULL,&pPlateInfo->xBomPlate,NULL);
 				pItem->m_idProp=(long)pPlateInfo;
 			}
-			_splitpath(pDwg->GetFileName(),NULL,NULL,sName,NULL);
-			m_sCurFile.Format("%s",(char*)sName);
+			m_sCurFile.Format("%s",(char*)pDwg->m_sDwgName);
 			m_sRecordNum.Format("%d", pDwg->GetPlateNum());
 		}
+		if (DisplayProcess)
+			DisplayProcess(100, "显示读取结果......");
 	}
 	else
 	{
+		if (DisplayProcess)
+			DisplayProcess(0, "显示校审结果......");
 		m_xListReport.DeleteAllItems();
 		CProjectTowerType::COMPARE_PART_RESULT *pResult=NULL;
 		CProjectTowerType* pProject=GetProject(hItem);
 		m_sRecordNum.Format("%d", pProject->GetResultCount());
-		CXhChar100 sName1,sName2;
-		_splitpath(pProject->m_xLoftBom.GetFileName(),NULL,NULL,sName1,NULL);
 		if(m_iCompareMode==CProjectTowerType::COMPARE_BOM_FILE)
 		{
-			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult())
-			{	//添加新行并设置背景色
+			nNum = pProject->GetResultCount();
+			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult(),index++)
+			{	
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				//添加新行并设置背景色
 				if (pResult->pOrgPart)
 				{
 					pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart);	
@@ -507,14 +530,16 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 					pItem->SetBkColor(RGB(128, 128, 255));
 				}
 			}
-			_splitpath(pProject->m_xOrigBom.GetFileName(),NULL,NULL,sName2,NULL);
-			m_sCurFile.Format("%s和%s校审",(char*)sName1,(char*)sName2);
+			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pProject->m_xOrigBom.m_sBomName);
 		}
 		else if(m_iCompareMode==CProjectTowerType::COMPARE_ANGLE_DWG)
 		{
 			CDwgFileInfo* pJgDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult())
+			nNum = pProject->GetResultCount();
+			for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult(),index++)
 			{
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
 				if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
 				{
 					CAngleProcessInfo *pAngleInfo=pJgDwg->FindAngleByPartNo(pResult->pOrgPart->sPartNo);
@@ -535,15 +560,16 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 					pItem->SetBkColor(RGB(128, 128, 255));
 				}
 			}
-			_splitpath(pJgDwg->GetFileName(),NULL,NULL,sName2,NULL);
-			m_sCurFile.Format("%s和%s校审",(char*)sName1,(char*)sName2);
+			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pJgDwg->m_sDwgName);
 		}
 		else if(m_iCompareMode==CProjectTowerType::COMPARE_PLATE_DWG)
 		{
 			CDwgFileInfo* pPlateDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			//输出没有对应大样板的角钢列表 wht 19-08-14
-			for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult())
+			nNum = pProject->GetResultCount();
+			for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult(), index++)
 			{
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
 				if (pResult->pOrgPart && pResult->pOrgPart->cPartType==BOMPART::PLATE)
 				{
 					CPlateProcessInfo *pPlateInfo = pPlateDwg->FindPlateByPartNo(pResult->pOrgPart->sPartNo);
@@ -565,8 +591,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 					pItem->SetBkColor(RGB(128, 128, 255));
 				}
 			}
-			_splitpath(pPlateDwg->GetFileName(),NULL,NULL,sName2,NULL);
-			m_sCurFile.Format("%s和%s校审",(char*)sName1,(char*)sName2);
+			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pPlateDwg->m_sDwgName);
 		}
 		else if(m_iCompareMode==CProjectTowerType::COMPARE_ANGLE_DWGS || 
 			m_iCompareMode==CProjectTowerType::COMPARE_PLATE_DWGS)
@@ -575,14 +600,19 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				m_sCurFile="已打开角钢DWG文件漏号检测";
 			else
 				m_sCurFile="已打开钢板DWG文件漏号检测";
-			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult())
+			nNum = pProject->GetResultCount();
+			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult(), index++)
 			{	//添加新行并设置背景色
+				if (DisplayProcess)
+					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
 				if(pResult->pOrgPart)
 					continue;
 				CSuperGridCtrl::CTreeItem *pItem=InsertPartToList(m_xListReport,NULL,pResult->pLoftPart);
 				pItem->SetBkColor(RGB(150,220,150));
 			}
 		}
+		if (DisplayProcess)
+			DisplayProcess(100, "显示校审结果......");
 	}
 	UpdateData(FALSE);
 }
@@ -608,21 +638,18 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 	TREEITEM_INFO* pItemInfo=itemInfoList.append(TREEITEM_INFO(PROJECT_ITEM,(DWORD)pProject));
 	pTreeCtrl->SetItemData(hProjItem,(DWORD)pItemInfo);
 	//料单节点
-	CXhChar100 sName;
 	hBomGroup=pTreeCtrl->InsertItem("料单文件组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
 	pItemInfo=itemInfoList.append(TREEITEM_INFO(BOM_GROUP,NULL));
 	pTreeCtrl->SetItemData(hBomGroup,(DWORD)pItemInfo);
 	if(pProject->m_xLoftBom.GetPartNum()>0)
 	{
-		_splitpath(pProject->m_xLoftBom.GetFileName(),NULL,NULL,sName,NULL);
-		hSonItem=pTreeCtrl->InsertItem(sName,PRJ_IMG_FILE,PRJ_IMG_FILE,hBomGroup);
+		hSonItem=pTreeCtrl->InsertItem(pProject->m_xLoftBom.m_sBomName,PRJ_IMG_FILE,PRJ_IMG_FILE,hBomGroup);
 		pItemInfo=itemInfoList.append(TREEITEM_INFO(BOM_ITEM,(DWORD)&(pProject->m_xLoftBom)));
 		pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
 	}
 	if(pProject->m_xOrigBom.GetPartNum()>0)
 	{
-		_splitpath(pProject->m_xOrigBom.GetFileName(),NULL,NULL,sName,NULL);
-		hSonItem=pTreeCtrl->InsertItem(sName,PRJ_IMG_FILE,PRJ_IMG_FILE,hBomGroup);
+		hSonItem=pTreeCtrl->InsertItem(pProject->m_xOrigBom.m_sBomName,PRJ_IMG_FILE,PRJ_IMG_FILE,hBomGroup);
 		pItemInfo=itemInfoList.append(TREEITEM_INFO(BOM_ITEM,(DWORD)&(pProject->m_xOrigBom)));
 		pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
 	}
@@ -637,15 +664,13 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 	{
 		if(pDwgInfo->IsJgDwgInfo())
 		{
-			_splitpath(pDwgInfo->GetFileName(),NULL,NULL,sName,NULL);
-			hSonItem=pTreeCtrl->InsertItem(sName,PRJ_IMG_FILE,PRJ_IMG_FILE,hJgGroup);
+			hSonItem=pTreeCtrl->InsertItem(pDwgInfo->m_sDwgName,PRJ_IMG_FILE,PRJ_IMG_FILE,hJgGroup);
 			pItemInfo=itemInfoList.append(TREEITEM_INFO(ANGLE_DWG_ITEM,(DWORD)pDwgInfo));
 			pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
 		}
 		else
 		{
-			_splitpath(pDwgInfo->GetFileName(),NULL,NULL,sName,NULL);
-			hSonItem=pTreeCtrl->InsertItem(sName,PRJ_IMG_FILE,PRJ_IMG_FILE,hPlateGroup);
+			hSonItem=pTreeCtrl->InsertItem(pDwgInfo->m_sDwgName,PRJ_IMG_FILE,PRJ_IMG_FILE,hPlateGroup);
 			pItemInfo=itemInfoList.append(TREEITEM_INFO(PLATE_DWG_ITEM,(DWORD)pDwgInfo));
 			pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
 		}
@@ -694,6 +719,11 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		{	//安徽宏源要求进行EPR和TMA的料单校审
 			pMenu->AppendMenu(MF_STRING, ID_MODIFY_ERP_FILE, "修正BOM数据");
 			//pMenu->AppendMenu(MF_STRING, ID_MODIFY_TMA_FILE, "修正放样数据");
+			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, "料单数据校审");
+			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出校审结果");
+		}
+		else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+		{	//江苏华电要求进行放样和图纸的料单校审
 			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, "料单数据校审");
 			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出校审结果");
 		}
@@ -771,7 +801,7 @@ void CRevisionDlg::OnTvnSelchangedTreeContrl(NMHDR *pNMHDR, LRESULT *pResult)
 #else
 			file_path.Copy(pDoc->fileName());
 #endif
-			if(strstr(file_path,pDwgInfo->GetFileName()))
+			if(strstr(file_path,pDwgInfo->m_sFileName))
 				break;
 		}
 		if(pDoc)
@@ -863,81 +893,80 @@ void CRevisionDlg::OnImportBomFile()
 		"BOM文件|*.xls;*.xlsx|Excel(*.xls)|*.xls|Excel(*.xlsx)|*.xlsx|所有文件(*.*)|*.*||");
 	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
 		dlg.m_ofn.lpstrTitle = "选择TMA放样物料清单和生技科ERP物料清单";
+	else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+		dlg.m_ofn.lpstrTitle = "选择放样出图构件清单和图纸构件清单";
 	else
 		dlg.m_ofn.lpstrTitle = "选择物料清单";
 	if(dlg.DoModal()!=IDOK)
 		return;
 	CWaitCursor waitCursor;
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan||
+		g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 	{	//安徽宏源需要导入TMA料单和ERP料单
+		//江苏华电需要导入放样料单和图纸料单
 		POSITION pos = dlg.GetStartPosition();
-		int nFileCount = 0;
-		BOOL bFindTmaBom = FALSE, bFindErpBom = FALSE;
-		CString sFirstFilePath;
 		while (pos)
 		{
-			nFileCount++;
-			CString sFilePath = dlg.GetNextPathName(pos);//获取文件名 
-			char sFileName[MAX_PATH] = "";
-			_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
-			if (nFileCount == 1)
-				sFirstFilePath = sFilePath;
-			if (strstr(sFileName, "TMA") || strstr(sFileName, "tma"))
-			{
+			CString sFilePath = dlg.GetNextPathName(pos);
+			if(pProject->IsTmaBomFile(sFilePath))
 				pProject->InitBomInfo(sFilePath, TRUE);
-				bFindTmaBom = TRUE;
-			}
-			else if (strstr(sFileName, "ERP") || strstr(sFileName, "erp"))
-			{
+			else if (pProject->IsErpBomFile(sFilePath))
 				pProject->InitBomInfo(sFilePath, FALSE);
-				bFindErpBom = TRUE;
-			}
 		}
 		//添加BOM树节点
-		CXhChar100 sName;
 		pTreeCtrl->Expand(hSelectedItem, TVE_EXPAND);
 		if (pProject->m_xLoftBom.GetPartNum() > 0)
 		{
-			_splitpath(pProject->m_xLoftBom.GetFileName(), NULL, NULL, sName, NULL);
-			hItem = FindTreeItem(hSelectedItem, sName);
+			hItem = FindTreeItem(hSelectedItem, pProject->m_xLoftBom.m_sBomName);
 			if (hItem)
 				pTreeCtrl->DeleteItem(hItem);
-			hItem = m_treeCtrl.InsertItem(sName, PRJ_IMG_FILE, PRJ_IMG_FILE, hSelectedItem);
+			hItem = m_treeCtrl.InsertItem(pProject->m_xLoftBom.m_sBomName, PRJ_IMG_FILE, PRJ_IMG_FILE, hSelectedItem);
 			pItemInfo = itemInfoList.append(TREEITEM_INFO(BOM_ITEM, (DWORD)&(pProject->m_xLoftBom)));
 			m_treeCtrl.SetItemData(hItem, (DWORD)pItemInfo);
 			m_treeCtrl.SelectItem(hItem);
 		}
 		else
-			logerr.Log("加载放样物料清单失败!");
+		{
+			if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+				logerr.Log("加载放样物料清单失败!");
+			else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+				logerr.Log("加载放样出图构件清单失败!");
+			else
+				logerr.Log("加载物料清单失败!");
+		}
 		//
 		if (pProject->m_xOrigBom.GetPartNum() > 0)
 		{
-			_splitpath(pProject->m_xOrigBom.GetFileName(), NULL, NULL, sName, NULL);
-			hItem = FindTreeItem(hSelectedItem, sName);
+			hItem = FindTreeItem(hSelectedItem, pProject->m_xOrigBom.m_sBomName);
 			if (hItem)
 				pTreeCtrl->DeleteItem(hItem);
-			hItem = m_treeCtrl.InsertItem(sName, PRJ_IMG_FILE, PRJ_IMG_FILE, hSelectedItem);
+			hItem = m_treeCtrl.InsertItem(pProject->m_xOrigBom.m_sBomName, PRJ_IMG_FILE, PRJ_IMG_FILE, hSelectedItem);
 			pItemInfo = itemInfoList.append(TREEITEM_INFO(BOM_ITEM, (DWORD)&(pProject->m_xOrigBom)));
 			m_treeCtrl.SetItemData(hItem, (DWORD)pItemInfo);
 			m_treeCtrl.SelectItem(hItem);
 		}
-		else if (nFileCount > 1 && bFindErpBom)
-			logerr.Log("加载ERP物料清单失败!");
+		else
+		{
+			if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+				logerr.Log("加载ERP物料清单失败!");
+			else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+				logerr.Log("加载图纸构件清单!");
+			else
+				logerr.Log("加载物料清单失败!");
+		}		
 	}
 	else
 	{	//只需导入一种料单
-		CXhChar100 sName;
 		CString sFilePath = dlg.GetPathName();//获取文件名 
 		pProject->InitBomInfo(sFilePath, TRUE);
-		_splitpath(sFilePath, NULL, NULL, sName, NULL);
 		pTreeCtrl->Expand(hSelectedItem, TVE_EXPAND);
 		if (pProject->m_xLoftBom.GetPartNum() > 0)
 		{
-			hItem = FindTreeItem(hSelectedItem, sName);
+			hItem = FindTreeItem(hSelectedItem, pProject->m_xLoftBom.m_sBomName);
 			if (hItem)
 				pTreeCtrl->DeleteItem(hItem);
-			hItem = m_treeCtrl.InsertItem(sName, PRJ_IMG_FILE, PRJ_IMG_FILE, hSelectedItem);
+			hItem = m_treeCtrl.InsertItem(pProject->m_xLoftBom.m_sBomName, PRJ_IMG_FILE, PRJ_IMG_FILE, hSelectedItem);
 			pItemInfo = itemInfoList.append(TREEITEM_INFO(BOM_ITEM, (DWORD)&(pProject->m_xLoftBom)));
 			m_treeCtrl.SetItemData(hItem, (DWORD)pItemInfo);
 			m_treeCtrl.SelectItem(hItem);
@@ -966,12 +995,10 @@ void CRevisionDlg::OnImportAngleDwg()
 	if(pJgDwgInfo==NULL)
 		return;
 	//添加角钢DWG文件数节点
-	CXhChar100 sName;
-	_splitpath(pJgDwgInfo->GetFileName(),NULL,NULL,sName,NULL);
-	hItem=FindTreeItem(hSelectedItem,sName);
+	hItem=FindTreeItem(hSelectedItem, pJgDwgInfo->m_sDwgName);
 	if(hItem==NULL)
 	{
-		hItem=m_treeCtrl.InsertItem(sName,PRJ_IMG_FILE,PRJ_IMG_FILE,hSelectedItem);
+		hItem=m_treeCtrl.InsertItem(pJgDwgInfo->m_sDwgName,PRJ_IMG_FILE,PRJ_IMG_FILE,hSelectedItem);
 		pItemInfo=itemInfoList.append(TREEITEM_INFO(ANGLE_DWG_ITEM,(DWORD)pJgDwgInfo));
 		m_treeCtrl.SetItemData(hItem,(DWORD)pItemInfo);
 	}
@@ -999,12 +1026,10 @@ void CRevisionDlg::OnImportPlateDwg()
 	if(pPlateDwgInfo==NULL)
 		return;
 	//添加钢板DWG文件数节点
-	CXhChar100 sName;
-	_splitpath(pPlateDwgInfo->GetFileName(),NULL,NULL,sName,NULL);
-	hItem=FindTreeItem(hSelectedItem,sName);
+	hItem=FindTreeItem(hSelectedItem, pPlateDwgInfo->m_sDwgName);
 	if(hItem==NULL)
 	{
-		hItem=m_treeCtrl.InsertItem(sName,PRJ_IMG_FILE,PRJ_IMG_FILE,hSelectedItem);
+		hItem=m_treeCtrl.InsertItem(pPlateDwgInfo->m_sDwgName,PRJ_IMG_FILE,PRJ_IMG_FILE,hSelectedItem);
 		pItemInfo=itemInfoList.append(TREEITEM_INFO(PLATE_DWG_ITEM,(DWORD)pPlateDwgInfo));
 		m_treeCtrl.SetItemData(hItem,(DWORD)pItemInfo);
 	}
@@ -1064,14 +1089,14 @@ void CRevisionDlg::OnCompareData()
 	{	//进行TMA料单和角钢DWG对比
 		m_iCompareMode=CProjectTowerType::COMPARE_ANGLE_DWG;
 		CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
-		if(pProject->CompareLoftAndAngleDwg(pDwgInfo->GetFileName())!=1)
+		if(pProject->CompareLoftAndAngleDwg(pDwgInfo->m_sFileName)!=1)
 			return;
 	}
 	else if(pItemInfo->itemType==PLATE_DWG_ITEM)
 	{	//进行TMA料单和钢板DWG对比
 		m_iCompareMode=CProjectTowerType::COMPARE_PLATE_DWG;
 		CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
-		if(pProject->CompareLoftAndPlateDwg(pDwgInfo->GetFileName())!=1)
+		if(pProject->CompareLoftAndPlateDwg(pDwgInfo->m_sFileName)!=1)
 			return;
 	}
 	else if(pItemInfo->itemType==BOM_GROUP)
@@ -1212,7 +1237,7 @@ void CRevisionDlg::OnRetrievedAngles()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo==NULL || !pDwgInfo->IsJgDwgInfo())
 		return;
-	pDwgInfo->ExtractDwgInfo(pDwgInfo->GetFileName(), TRUE);
+	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, TRUE);
 }
 void CRevisionDlg::OnRetrievedPlates()
 {
@@ -1225,7 +1250,7 @@ void CRevisionDlg::OnRetrievedPlates()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL || pDwgInfo->IsJgDwgInfo())
 		return;
-	pDwgInfo->ExtractDwgInfo(pDwgInfo->GetFileName(), FALSE);
+	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE);
 }
 
 void CRevisionDlg::OnDeleteItem()
