@@ -105,6 +105,8 @@ BOOL CPNCDlg::OnInitDialog()
 	pncRc.left = ppeBtnRc.left;
 	pncRc.right = pncRc.left + width;
 	GetDlgItem(IDOK)->MoveWindow(&pncRc);
+	//
+	SetWindowText("UBOM");
 #endif
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -225,7 +227,11 @@ void CPNCDlg::OnOK()
 	//启动CAD，并自动加载PNC.arx
 	char cadPath[MAX_PATH]="",cadName[MAX_PATH]="";
 	GetCadPath(cadPath);
+#ifdef __UBOM_ONLY_
+	if (StartCadAndLoadArx("UBOM", APP_PATH, cadPath, m_sRxFile, m_hWnd))
+#else
 	if (StartCadAndLoadArx("PNC", APP_PATH, cadPath, m_sRxFile, m_hWnd))
+#endif
 	{
 		//保存CAD路径到注册表中
 		char sSubKey[MAX_PATH]="Software\\Xerofox\\PNC\\Settings";

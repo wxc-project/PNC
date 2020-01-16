@@ -243,39 +243,46 @@ BOOL StartCadAndLoadArx(const char* productName, const char* APP_PATH,
 			fprintf(fp, "%s%s19.zrx\n", APP_PATH, productName);
 		fclose(fp);
 		//
-		//修改CAD注册表中菜单路径
-		CAD_PATH cad_path;
-		cad_path.sCadPath.Copy(cadPath);
-		int sonVersion = -1;
-		char sMenuPath[MAX_PATH] = "";
-		if (sProductVersion.Find("16.") == 0)
+		BOOL bLoadMenuFile = TRUE;
+#ifdef __UBOM_ONLY_
+		bLoadMenuFile = FALSE;
+#endif
+		if (bLoadMenuFile)
 		{
-			cad_path.sMinCadVersion.Copy("R16");
-			sprintf(sMenuPath, "%s%s.mnu", APP_PATH, productName);
-		}
-		else if (sProductVersion.Find("17.") == 0)
-		{
-			cad_path.sMinCadVersion.Copy("R17");
-			if (sProductVersion.Find("17.1") == 0)
+			//修改CAD注册表中菜单路径
+			CAD_PATH cad_path;
+			cad_path.sCadPath.Copy(cadPath);
+			int sonVersion = -1;
+			char sMenuPath[MAX_PATH] = "";
+			if (sProductVersion.Find("16.") == 0)
 			{
-				sonVersion = 1;
-				sprintf(sMenuPath, "%s%s08.cui", APP_PATH, productName);
+				cad_path.sMinCadVersion.Copy("R16");
+				sprintf(sMenuPath, "%s%s.mnu", APP_PATH, productName);
 			}
-			else
-				sprintf(sMenuPath, "%s%s07.cui", APP_PATH, productName);
+			else if (sProductVersion.Find("17.") == 0)
+			{
+				cad_path.sMinCadVersion.Copy("R17");
+				if (sProductVersion.Find("17.1") == 0)
+				{
+					sonVersion = 1;
+					sprintf(sMenuPath, "%s%s08.cui", APP_PATH, productName);
+				}
+				else
+					sprintf(sMenuPath, "%s%s07.cui", APP_PATH, productName);
+			}
+			else if (sProductVersion.Find("18.") == 0)
+			{
+				cad_path.sMinCadVersion.Copy("R18");
+				sprintf(sMenuPath, "%s%s10.cui", APP_PATH, productName);
+			}
+			else if (bZWCad)
+			{
+				cad_path.sCadName.Copy("ZWCAD 2019");
+				cad_path.sMinCadVersion.Copy("2019");
+				sprintf(sMenuPath, "%s%s-ZRX.cuix", APP_PATH, productName);
+			}
+			WriteMenuPathToReg(cad_path, sMenuPath, sonVersion);
 		}
-		else if (sProductVersion.Find("18.") == 0)
-		{
-			cad_path.sMinCadVersion.Copy("R18");
-			sprintf(sMenuPath, "%s%s10.cui", APP_PATH, productName);
-		}
-		else if (bZWCad)
-		{
-			cad_path.sCadName.Copy("ZWCAD 2019");
-			cad_path.sMinCadVersion.Copy("2019");
-			sprintf(sMenuPath, "%s%s-ZRX.cuix", APP_PATH, productName);
-		}
-		WriteMenuPathToReg(cad_path, sMenuPath, sonVersion);
 	}
 	//创建进程，启动CAD
 	STARTUPINFO startInfo;

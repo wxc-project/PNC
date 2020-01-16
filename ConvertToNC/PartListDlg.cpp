@@ -170,9 +170,9 @@ void CPartListDlg::SelectPart(int iCurSel)
 	}
 	else
 	{	//¸Ö°åÌáÈ¡Ê§°Ü£¬ÏÔÊ¾
-		GEPOINT dimPt = pPlate->dim_pos;
-		GEPOINT dimVecH = pPlate->dim_vec;
-		GEPOINT dimVecV = dimVecH;
+		f3dPoint dimPt = pPlate->dim_pos;
+		f3dPoint dimVecH = pPlate->dim_vec;
+		f3dPoint dimVecV = dimVecH;
 		RotateVectorAroundVector(dimVecV, 3.14159*0.5, GEPOINT(0, 0, 1));
 		SCOPE_STRU scope;
 		scope.VerifyVertex(GEPOINT(dimPt + dimVecV * 15 - dimVecH * 30));

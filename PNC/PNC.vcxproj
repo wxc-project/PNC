@@ -88,7 +88,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>.\UBOMRelease\</OutDir>
+    <OutDir>..\bin\UBOMRelease\</OutDir>
     <TargetName>UBOM</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -193,14 +193,14 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>__WXPAY_RENTAL_ONLINE_;WIN32;_WINDOWS;NDEBUG;__PNC_;__UBOM_ONLY_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
-      <AdditionalIncludeDirectories>..\..\ToolKits\ToolCode;..\..\XhLmd\XhLicAgent;..\..\ToolKits\TowerCad;..\..\XhLmd;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\ToolKits\ToolCode;..\..\XhLmd\XhLicAgent;..\..\ToolKits\TowerCad;..\..\XhLmd;..\..\XhLmd\XhLmd;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>..\..\XhLmd\XhLicAgent\Release2;..\..\XhLmd\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhLmd\XhLicAgent\Release2;..\..\XhLmd-dll\XhLmd\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>version.lib;XhLicAgent2.lib;XhLmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>

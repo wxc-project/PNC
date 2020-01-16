@@ -1130,7 +1130,7 @@ void CRevisionDlg::OnRefreshPartNum()
 	else
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
-	SendCommandToCad(CString(L"RE "));
+	SendCommandToCad(CStringW(L"RE "));
 #else
 	SendCommandToCad(CString("RE "));
 #endif

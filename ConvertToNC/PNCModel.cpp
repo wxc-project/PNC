@@ -804,7 +804,11 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			if (bSendCommand)
 			{
 				CXhChar50 sCmd("-boundary %.2f,%.2f\n ", cur_dim_pos.x, cur_dim_pos.y);
+#ifdef _ARX_2007
+				SendCommandToCad(CStringW(sCmd));
+#else
 				SendCommandToCad(CString(sCmd));
+#endif
 			}
 			else
 			{
@@ -839,7 +843,11 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	if (initLastObjId == plineId)
 	{	//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
 		if (bSendCommand)
+#ifdef _ARX_2007
+			SendCommandToCad(CStringW(" \n "));
+#else
 			SendCommandToCad(CString(" \n "));
+#endif
 		else
 			acedCommand(RTSTR, "");
 		return;	//执行boundary未新增实体(即未找到有效的封闭区域)
@@ -852,7 +860,11 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			pEnt->close();
 		//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
 		if (bSendCommand)
+#ifdef _ARX_2007
+			SendCommandToCad(CStringW(" \n "));
+#else
 			SendCommandToCad(CString(" \n "));
+#endif
 		else
 			acedCommand(RTSTR, "");
 		return;
@@ -1112,7 +1124,8 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			pFirLine->vertex = pFirLine->m_ptStart;
 			ptS = pFirLine->m_ptStart;
 			ptE = pFirLine->m_ptEnd;
-			vec = (ptE - ptS).normalized();
+			vec = (ptE - ptS);
+			normalize(vec);
 		}
 		if (fabs(DISTANCE(ptS, ptE)) < EPS2)
 		{
@@ -1147,7 +1160,8 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 				pLine->vertex = pLine->m_ptEnd;
 				ptE = pLine->m_ptStart;
 			}
-			vec = (ptE - pLine->vertex).normalized();
+			vec = (ptE - pLine->vertex);
+			normalize(vec);
 		}
 		else
 		{	//含有多根相连线段
@@ -1156,9 +1170,10 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			{
 				GEPOINT cur_vec;
 				if (linkLineList[i]->m_ptStart.IsEqual(ptE, EPS2))
-					cur_vec = (linkLineList[i]->m_ptEnd - linkLineList[i]->m_ptStart).normalized();
+					cur_vec = (linkLineList[i]->m_ptEnd - linkLineList[i]->m_ptStart);
 				else
-					cur_vec = (linkLineList[i]->m_ptStart - linkLineList[i]->m_ptEnd).normalized();
+					cur_vec = (linkLineList[i]->m_ptStart - linkLineList[i]->m_ptEnd);
+				normalize(cur_vec);
 				double fCosa = vec * cur_vec;
 				maxValue.Update(fCosa, linkLineList[i]);
 			}
@@ -1175,7 +1190,8 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 				pLine->vertex = pLine->m_ptEnd;
 				ptE = pLine->m_ptStart;
 			}
-			vec = (ptE - pLine->vertex).normalized();
+			vec = (ptE - pLine->vertex);
+			normalize(vec);
 		}
 	}
 	if (bFinish == FALSE)

@@ -541,10 +541,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease05|Win32'">
     <IntDir>UBOMRelease05\</IntDir>
-    <OutDir>..\UBOMRelease\</OutDir>
+    <OutDir>..\bin\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
-    <TargetName>UBOM</TargetName>
+    <TargetName>UBOM05</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05|Win32'">
@@ -565,10 +565,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease10|Win32'">
     <IntDir>UBOMRelease10\</IntDir>
-    <OutDir>..\UBOMRelease\</OutDir>
+    <OutDir>..\bin\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
-    <TargetName>PNC10</TargetName>
+    <TargetName>UBOM10</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseZrx19|Win32'">
@@ -597,10 +597,10 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">
     <IntDir>UBOMRelease07\</IntDir>
-    <OutDir>..\UBOMRelease\</OutDir>
+    <OutDir>..\bin\UBOMRelease\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
-    <TargetName>PNC07</TargetName>
+    <TargetName>UBOM07</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug2007|Win32'">
@@ -1052,7 +1052,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>__PNC__;__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__PNC_;__UBOM_ONLY_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__EXPORT_LOGFILE_;WIN32;_WINDOWS;CONVERTTONC_MODULE;NDEBUG;_AFXEXT;_ACRXAPP;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;D:\ObjectARX 2005\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
@@ -1063,7 +1063,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>$(outdir)UBOM.arx</OutputFile>
+      <OutputFile>$(outdir)UBOM05.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>
       </ProgramDatabaseFile>
@@ -1203,7 +1203,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>$(outdir)PNC10.arx</OutputFile>
+      <OutputFile>$(outdir)UBOM10.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>
       </ProgramDatabaseFile>
@@ -1386,7 +1386,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <OutputFile>$(outdir)PNC07.arx</OutputFile>
+      <OutputFile>$(outdir)UBOM07.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>
       </ProgramDatabaseFile>

@@ -282,7 +282,7 @@ BOOL CPNCApp::InitInstance()
 	}
 	if(!VerifyValidFunction(LICFUNC::FUNC_IDENTITY_BASIC))
 	{
-		AfxMessageBox("证书中无试组装平台软件的功能授权!");
+		AfxMessageBox("证书授权不完整!");
 		return FALSE;
 	}
 	//

@@ -118,6 +118,7 @@ void InitApplication()
 		if (nRetCode == IDYES)
 		{
 			CXhChar500 sPath(lic_file);
+			sPath.Replace("PNC.lic", "");	//移除UBOM.lic
 			sPath.Replace("UBOM.lic", "");	//移除UBOM.lic
 			sPath.Replace("TMA.lic", "");	//移除TMA.lic
 			ShellExecute(NULL, "open", NULL, NULL, sPath, SW_SHOW);
@@ -129,9 +130,9 @@ void InitApplication()
 		{	//卸载UBOM，不退出cad
 			//kLoadDwgMsg中不能调用sendStringToExecute和acedCommand,acDocManager->curDocument()==NULL,无法执行 wht 18-12-25
 #ifdef _ARX_2007
-			ads_queueexpr(L"(command\"arx\" \"u\" \"UBOM.arx\")");
+			ads_queueexpr(L"(command\"arx\" \"u\" \"UBOM07.arx\")");
 #else
-			ads_queueexpr("(command\"arx\" \"u\" \"UBOM.arx\")");
+			ads_queueexpr("(command\"arx\" \"u\" \"UBOM05.arx\")");
 #endif
 			return;
 		}
