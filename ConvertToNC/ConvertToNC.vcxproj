@@ -2432,6 +2432,10 @@
     <None Include="res\MoveMK.bmp" />
     <None Include="res\Right.bmp" />
     <None Include="res\Right.ico" />
+    <None Include="ubom(安徽宏源).cfg" />
+    <None Include="ubom(常规).cfg" />
+    <None Include="ubom(成都铁塔).cfg" />
+    <None Include="ubom(江苏华电).cfg" />
     <None Include="UBOM.def" />
   </ItemGroup>
   <ItemGroup>

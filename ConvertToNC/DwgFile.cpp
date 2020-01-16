@@ -346,8 +346,11 @@ BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf)
 {
 	if(strlen(sFileName)<=0)
 		return FALSE;
+	CXhChar100 sName;
+	_splitpath(sFileName, NULL, NULL, sName, NULL);
 	m_bJgDwgFile=bJgDxf;
 	m_sFileName.Copy(sFileName);
+	m_sDwgName.Copy(sName);
 	if (m_bJgDwgFile)
 		return RetrieveAngles();
 	else

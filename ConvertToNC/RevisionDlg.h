@@ -81,6 +81,8 @@ public:
 	//
 	BOOL Create();
 	void InitRevisionDlg();
+	//
+	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
 };
 extern CRevisionDlg *g_pRevisionDlg;
 #endif
