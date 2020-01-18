@@ -51,6 +51,4 @@ public:
 	virtual void PreSubclassWindow();
 	BOOL m_bEditMK;
 };
-extern CPartListDlg *g_pPartListDlg;
-extern CPartListDlg g_xPartListDlg;
 #endif

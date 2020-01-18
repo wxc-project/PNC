@@ -1669,7 +1669,8 @@ CAngleProcessInfo *CProjectTowerType::FindAngleInfoByPartNo(const char* sPartNo)
 UINT CBomModel::m_uiCustomizeSerial = 0;
 CBomModel::CBomModel(void)
 {
-	
+	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
+	pProject->m_sProjName.Copy("新建工程");
 }
 CBomModel::~CBomModel(void)
 {

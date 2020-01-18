@@ -106,18 +106,7 @@ static BOOL RecogBaseInfoFromBlockRef(AcDbBlockReference *pBlockRef,BASIC_INFO &
 void UpdatePartList()
 {
 #ifndef __UBOM_ONLY_
-	if(g_pncSysPara.m_bAutoLayout==CPNCSysPara::LAYOUT_SEG)
-	{
-		if(!IsShowDisplayPartListDockBar())
-			DisplayPartListDockBar();
-	}
-	CPartListDlg *pPartListDlg = NULL;
-#ifdef __SUPPORT_DOCK_UI_
-	if(g_pPartListDockBar!=NULL)
-		pPartListDlg=(CPartListDlg*)g_pPartListDockBar->GetDlgPtr();
-#else
-	pPartListDlg = g_pPartListDlg;
-#endif
+	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 	if (pPartListDlg != NULL)
 		pPartListDlg->UpdatePartList();
 #endif
@@ -131,7 +120,7 @@ void SmartExtractPlate()
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	CDwgFileInfo *pDwgFile = NULL;
 	AcApDocument* pDoc = acDocManager->curDocument();
-	if (pDoc != NULL && g_pRevisionDlg != NULL)
+	if (pDoc != NULL)
 	{
 		CString file_path = pDoc->fileName();
 		pDwgFile = g_xUbomModel.FindDwgFile(file_path);
@@ -966,7 +955,12 @@ void RevisionPartProcess()
 		return;
 	}
 	g_xUbomModel.InitBomTblCfg();
-	g_pRevisionDlg->DisplayProcess = DisplayProcess;
-	g_pRevisionDlg->InitRevisionDlg();
+	//
+	CRevisionDlg* pRevisionDlg = g_xDockBarManager.GetRevisionDlgPtr();
+	if (pRevisionDlg)
+	{
+		pRevisionDlg->DisplayProcess = DisplayProcess;
+		pRevisionDlg->InitRevisionDlg();
+	}	
 }
 #endif

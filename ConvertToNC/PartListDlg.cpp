@@ -16,8 +16,6 @@
 
 #ifndef __UBOM_ONLY_
 // CPartListDlg ¶Ô»°¿ò
-CPartListDlg *g_pPartListDlg=NULL;
-CPartListDlg g_xPartListDlg;
 #ifdef __SUPPORT_DOCK_UI_
 IMPLEMENT_DYNCREATE(CPartListDlg, CAcUiDialog)
 CPartListDlg::CPartListDlg(CWnd* pParent /*=NULL*/)
@@ -83,8 +81,7 @@ void CPartListDlg::OnSize(UINT nType, int cx, int cy)
 	{
 		m_partList.GetWindowRect(&rectList);
 		ScreenToClient(&rectList);
-		if(m_partList.GetSafeHwnd())
-			m_partList.MoveWindow(0,rectList.top,cx,cy-rectList.top);
+		m_partList.MoveWindow(0,rectList.top,cx,cy-rectList.top);
 	}
 }
 

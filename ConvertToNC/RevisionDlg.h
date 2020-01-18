@@ -21,12 +21,13 @@ struct TREEITEM_INFO{
 	long itemType;
 	DWORD dwRefData;
 };
+#ifdef __SUPPORT_DOCK_UI_
+class CRevisionDlg : public CAcUiDialog
+#else
 class CRevisionDlg : public CDialog
+#endif
 {
-	DECLARE_DYNAMIC(CRevisionDlg)
-	bool m_bEnableWindowMoveListen;
-	int m_nScrLocationX;
-	int m_nScrLocationY;
+	DECLARE_DYNCREATE(CRevisionDlg)
 	int m_nRightMargin;
 	int m_nBtmMargin;
 	int m_iCompareMode;
@@ -48,6 +49,7 @@ protected:
 	virtual BOOL OnInitDialog();
 	virtual void OnOK();
 	virtual void OnCancel();
+	virtual void PreSubclassWindow();
 	//
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnClose();
@@ -55,10 +57,12 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMRClickTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnTvnSelchangedTreeContrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnTvnBeginlabeleditTreeContrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnTvnEndlabeleditTreeContrl(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMClickTreeContrl(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNewItem();
 	afx_msg void OnLoadProjFile();
 	afx_msg void OnExportProjFile();
-	afx_msg void OnProjectProperty();
 	afx_msg void OnImportBomFile();
 	afx_msg void OnImportAngleDwg();
 	afx_msg void OnImportPlateDwg();
@@ -79,10 +83,9 @@ public:
 	CProjectTowerType* GetProject(HTREEITEM hItem);
 	HTREEITEM FindTreeItem(HTREEITEM hItem,CXhChar100 sName);
 	//
-	BOOL Create();
+	BOOL CreateDlg();
 	void InitRevisionDlg();
 	//
 	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
 };
-extern CRevisionDlg *g_pRevisionDlg;
 #endif
