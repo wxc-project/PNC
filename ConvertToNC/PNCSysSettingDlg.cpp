@@ -95,6 +95,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_iPPiMode=valueStr[0]-'0';
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("AxisXCalType"))
 		g_pncSysPara.m_iAxisXCalType=valueStr[0]-'0';
+#ifdef __LAYOUT_
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_bAutoLayout1"))
 	{
 		if (valueStr.Compare("ÊÇ") == 0)
@@ -124,10 +125,10 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 				oper.InsertCmbListPropItem(pOtherItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
 				oper.InsertEditPropItem(pOtherItem, "m_nMkRectLen", "", "", -1, TRUE);
 				oper.InsertEditPropItem(pOtherItem, "m_nMkRectWidth", "", "", -1, TRUE);
-				DisplayPartListDockBar();
+				g_xDockBarManager.DisplayPartListDockBar();
 			}
 			else
-				HidePartListDockBar();
+				g_xDockBarManager.HidePartListDockBar();
 		}
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bAutoLayout2"))
@@ -143,10 +144,10 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			oper.InsertCmbListPropItem(pItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
 			oper.InsertEditPropItem(pItem, "m_nMkRectLen", "", "", -1, TRUE);
 			oper.InsertEditPropItem(pItem, "m_nMkRectWidth", "", "", -1, TRUE);
-			DisplayPartListDockBar();
+			g_xDockBarManager.DisplayPartListDockBar();
 		}
 		else
-			HidePartListDockBar();
+			g_xDockBarManager.HidePartListDockBar();
 		CXhChar200 sText;
 		long idProp = CPNCSysPara::GetPropID("m_bAutoLayout1");
 		if (g_pncSysPara.GetPropValueStr(idProp, sText) > 0)
@@ -163,6 +164,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			}
 		}
 	}
+#endif
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapWidth"))
 		g_pncSysPara.m_nMapWidth=atoi(valueStr);
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapLength"))
@@ -173,7 +175,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("CDrawDamBoard::BOARD_HEIGHT"))
 	{
 		CDrawDamBoard::BOARD_HEIGHT = atoi(valueStr);
-		CPartListDlg *pPartListDlg = GetPartListDlgPtr();
+		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg&&g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
@@ -181,7 +183,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	{
 		CDrawDamBoard::m_bDrawAllBamBoard = valueStr[0] - '0';
 		CLockDocumentLife lockDocument;
-		CPartListDlg *pPartListDlg = GetPartListDlgPtr();
+		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg&&g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
@@ -748,8 +750,6 @@ void CPNCSysSettingDlg::OnOK()
 	{
 		g_pncSysPara.ActiveRecogSchema(pSchema);
 		CPNCSysSettingDlg::OnClose();
-		if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-			DisplayPartListDockBar();
 		CDialog::OnOK();
 	}
 	else

@@ -17,11 +17,12 @@
 #define IDC_LIST_BOX                    100
 #define IDD_SYSTEM_SETTING_DLG          101
 #define IDC_E_PROP_HELP_STR             101
+#define IDS_REVISION                    101
+#define IDS_PART_LIST                   102
 #define IDD_FILTER_LAYER_DLG            104
 #define IDD_INPUT_MK_RECT_DLG           105
 #define IDB_IL_PROJECT                  105
 #define IDD_PART_LIST_DLG               107
-#define IDD_INPUT_AN_STRING_VAL_DLG     109
 #define IDI_LEFT_ROTATE                 111
 #define IDI_RIGHT_ROTATE                113
 #define IDC_TAB_GROUP                   114
@@ -32,7 +33,6 @@
 #define IDB_LEFT_ROTATE                 117
 #define IDC_E_RECT_W                    118
 #define IDB_MIRROR                      118
-#define IDC_E_VAL                       118
 #define IDC_E_TEXT_H                    119
 #define IDB_RIGHT_ROTATE                119
 #define IDB_BITMAP1                     120

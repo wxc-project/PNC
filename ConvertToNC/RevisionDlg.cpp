@@ -8,7 +8,6 @@
 #include "SortFunc.h"
 #include "image.h"
 #include "folder_dialog.h"
-#include "InputAnValDlg.h"
 #include "MsgBox.h"
 #include "ComparePartNoString.h"
 
@@ -20,7 +19,12 @@ static char THIS_FILE[] = __FILE__;
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 CRevisionDlg *g_pRevisionDlg;
+//
+#ifdef __SUPPORT_DOCK_UI_
+IMPLEMENT_DYNCREATE(CRevisionDlg, CAcUiDialog)
+#else
 IMPLEMENT_DYNAMIC(CRevisionDlg, CDialog)
+#endif
 //
 static BOOL FireItemChanged(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem* pItem,NM_LISTVIEW* pNMListView)
 {	//选中项发生变化后更新属性栏
@@ -127,14 +131,16 @@ static BOOL FireContextMenu(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem*
 	return TRUE;
 }
 // CRevisionDlg 对话框
+#ifdef __SUPPORT_DOCK_UI_
 CRevisionDlg::CRevisionDlg(CWnd* pParent /*=NULL*/)
-		: CDialog(CRevisionDlg::IDD, pParent)
-		, m_sCurFile(_T(""))
-		, m_sRecordNum(_T(""))
+	: CAcUiDialog(CRevisionDlg::IDD, pParent)
+#else
+CRevisionDlg::CRevisionDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CRevisionDlg::IDD, pParent)
+#endif
 {
-	m_bEnableWindowMoveListen=false;
-	m_nScrLocationX=0;
-	m_nScrLocationY=0;
+	m_sCurFile = _T("");
+	m_sRecordNum= _T("");
 	m_nRightMargin=0;
 	m_nBtmMargin=0;
 	m_iCompareMode=0;
@@ -161,10 +167,12 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_CONTRL, &OnNMRClickTreeCtrl)
 	ON_NOTIFY(TVN_SELCHANGED, IDC_TREE_CONTRL, &OnTvnSelchangedTreeContrl)
+	ON_NOTIFY(TVN_BEGINLABELEDIT, IDC_TREE_CONTRL, &OnTvnBeginlabeleditTreeContrl)
+	ON_NOTIFY(TVN_ENDLABELEDIT, IDC_TREE_CONTRL, &OnTvnEndlabeleditTreeContrl)
+	ON_NOTIFY(NM_CLICK, IDC_TREE_CONTRL, &OnNMClickTreeContrl)
 	ON_COMMAND(ID_NEW_ITEM,OnNewItem)
 	ON_COMMAND(ID_LOAD_PROJECT,OnLoadProjFile)
 	ON_COMMAND(ID_EXPORT_PROJECT,OnExportProjFile)
-	ON_COMMAND(ID_PROJECT_PROPERTY,OnProjectProperty)
 	ON_COMMAND(ID_IMPORT_BOM_FILE,OnImportBomFile)
 	ON_COMMAND(ID_IMPORT_ANGLE_DWG,OnImportAngleDwg)
 	ON_COMMAND(ID_IMPORT_PLATE_DWG,OnImportPlateDwg)
@@ -176,12 +184,17 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_RETRIEVED_ANGLES, OnRetrievedAngles)
 	ON_COMMAND(ID_RETRIEVED_PLATES, OnRetrievedPlates)
 	ON_COMMAND(ID_DELETE_ITEM,OnDeleteItem)
+	
 END_MESSAGE_MAP()
 
 // CRevisionDlg 消息处理程序
 BOOL CRevisionDlg::OnInitDialog()
 {
+#ifdef __SUPPORT_DOCK_UI_
+	CAcUiDialog::OnInitDialog();
+#else
 	CDialog::OnInitDialog();
+#endif
 	//初始化列表框
 	m_xListReport.EmptyColumnHeader();
 	m_xListReport.AddColumnHeader("件号", 75);
@@ -221,17 +234,17 @@ BOOL CRevisionDlg::OnInitDialog()
 	//m_xListReport.SetContextMenuFunc(FireContextMenu);
 	RefreshListCtrl(NULL);
 	//初始化树列表
-	m_imageList.Create(IDB_IL_PROJECT, 16, 1, RGB(0,255,0));
-	m_treeCtrl.SetImageList(&m_imageList,TVSIL_NORMAL);
-	m_treeCtrl.ModifyStyle(0,TVS_HASLINES|TVS_HASBUTTONS|TVS_LINESATROOT|TVS_SHOWSELALWAYS|TVS_FULLROWSELECT);
+	//m_imageList.Create(IDB_IL_PROJECT, 16, 1, RGB(0,255,0));
+	//m_treeCtrl.SetImageList(&m_imageList,TVSIL_NORMAL);
+	m_treeCtrl.ModifyStyle(0, TVS_HASLINES|TVS_HASBUTTONS|TVS_LINESATROOT|TVS_SHOWSELALWAYS|TVS_EDITLABELS);
 	RefreshTreeCtrl();
 	//移动窗口到合适位置
 	CRect xRect;
 	CWnd::GetWindowRect(xRect);
 	int width = xRect.Width();
 	int height=xRect.Height();
-	xRect.left=m_nScrLocationX;
-	xRect.top=m_nScrLocationY;
+	xRect.left=0;
+	xRect.top=0;
 	xRect.right = xRect.left+width;
 	xRect.bottom = xRect.top+height;
 	MoveWindow(xRect,TRUE);
@@ -242,7 +255,6 @@ BOOL CRevisionDlg::OnInitDialog()
 	ScreenToClient(&rect);
 	m_nRightMargin=clientRect.right-rect.right;
 	m_nBtmMargin=clientRect.bottom-rect.bottom;
-	m_bEnableWindowMoveListen=true;
 	UpdateData(FALSE);
 	return TRUE;
 }
@@ -256,15 +268,14 @@ void CRevisionDlg::OnClose()
 {
 	DestroyWindow();
 }
-BOOL CRevisionDlg::Create()
+BOOL CRevisionDlg::CreateDlg()
 {
 	return CDialog::Create(CRevisionDlg::IDD);
 }
 void CRevisionDlg::InitRevisionDlg()
 {
-	m_bEnableWindowMoveListen=false;
 	if(GetSafeHwnd()==0)
-		Create();
+		CreateDlg();
 	else
 		OnInitDialog();
 	UpdateData(FALSE);
@@ -622,7 +633,7 @@ void CRevisionDlg::RefreshTreeCtrl()
 	itemInfoList.Empty();
 	m_treeCtrl.DeleteAllItems();
 	HTREEITEM hItem=NULL;
-	HTREEITEM hRootItem=m_treeCtrl.InsertItem("工程塔型",PRJ_IMG_CALMODULE,PRJ_IMG_CALMODULE,TVI_ROOT);
+	HTREEITEM hRootItem=m_treeCtrl.InsertItem("工程塔型", PRJ_IMG_ROOT, PRJ_IMG_ROOT,TVI_ROOT);
 	TREEITEM_INFO *pItemInfo=itemInfoList.append(TREEITEM_INFO(PROJECT_GROUP,0));
 	m_treeCtrl.SetItemData(hRootItem,(DWORD)pItemInfo);
 	for(CProjectTowerType *pPrjTowerType=g_xUbomModel.m_xPrjTowerTypeList.GetFirst();pPrjTowerType;pPrjTowerType=g_xUbomModel.m_xPrjTowerTypeList.GetNext())
@@ -638,7 +649,7 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 	TREEITEM_INFO* pItemInfo=itemInfoList.append(TREEITEM_INFO(PROJECT_ITEM,(DWORD)pProject));
 	pTreeCtrl->SetItemData(hProjItem,(DWORD)pItemInfo);
 	//料单节点
-	hBomGroup=pTreeCtrl->InsertItem("料单文件组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
+	hBomGroup=pTreeCtrl->InsertItem("料单xls组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
 	pItemInfo=itemInfoList.append(TREEITEM_INFO(BOM_GROUP,NULL));
 	pTreeCtrl->SetItemData(hBomGroup,(DWORD)pItemInfo);
 	if(pProject->m_xLoftBom.GetPartNum()>0)
@@ -654,10 +665,10 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 		pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
 	}
 	//dwg文件节点
-	hJgGroup=pTreeCtrl->InsertItem("角钢dwg文件组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
+	hJgGroup=pTreeCtrl->InsertItem("角钢dwg组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
 	pItemInfo=itemInfoList.append(TREEITEM_INFO(ANGLE_GROUP,NULL));
 	pTreeCtrl->SetItemData(hJgGroup,(DWORD)pItemInfo);
-	hPlateGroup=pTreeCtrl->InsertItem("钢板dwg文件组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
+	hPlateGroup=pTreeCtrl->InsertItem("钢板dwg组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
 	pItemInfo=itemInfoList.append(TREEITEM_INFO(PLATE_GROUP,NULL));
 	pTreeCtrl->SetItemData(hPlateGroup,(DWORD)pItemInfo);
 	for(CDwgFileInfo* pDwgInfo=pProject->dwgFileList.GetFirst();pDwgInfo;pDwgInfo=pProject->dwgFileList.GetNext())
@@ -709,7 +720,6 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 	}
 	else if(pItemInfo->itemType==PROJECT_ITEM)
 	{
-		pMenu->AppendMenu(MF_STRING,ID_PROJECT_PROPERTY,"修改工程名称");
 		pMenu->AppendMenu(MF_STRING,ID_EXPORT_PROJECT,"生成工程文件");
 	}
 	else if(pItemInfo->itemType==BOM_GROUP)
@@ -810,6 +820,54 @@ void CRevisionDlg::OnTvnSelchangedTreeContrl(NMHDR *pNMHDR, LRESULT *pResult)
 	RefreshListCtrl(hItem);
 	*pResult = 0;
 }
+void CRevisionDlg::OnTvnBeginlabeleditTreeContrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMTVDISPINFO pTVDispInfo = reinterpret_cast<LPNMTVDISPINFO>(pNMHDR);
+	TV_ITEM item= pTVDispInfo->item;
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(item.hItem);
+	if (pItemInfo == NULL || pItemInfo->itemType != PROJECT_ITEM)
+		*pResult = 1;
+	else
+		*pResult = 0;
+}
+void CRevisionDlg::OnTvnEndlabeleditTreeContrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMTVDISPINFO pTVDispInfo = reinterpret_cast<LPNMTVDISPINFO>(pNMHDR);
+	// TODO: 在此添加控件通知处理程序代码
+
+	*pResult = 0;
+
+	TV_ITEM item;
+	item = pTVDispInfo->item;
+	CString strName = item.pszText;
+	if (strName == _T(""))
+		return;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo && pItemInfo->itemType == PROJECT_ITEM)
+	{
+		CProjectTowerType* pProject = (CProjectTowerType*)pItemInfo->dwRefData;
+		pProject->m_sProjName.Copy(strName);
+		m_treeCtrl.SetItemText(hSelItem, strName);
+	}
+}
+void CRevisionDlg::OnNMClickTreeContrl(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	if (hSelItem == NULL)
+		return;
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo && pItemInfo->itemType == PROJECT_ITEM)
+	{	//修改工程名称
+		m_treeCtrl.SelectItem(hSelItem);
+		m_treeCtrl.EditLabel(hSelItem);
+		return;
+	}
+	CEdit* pEdit = m_treeCtrl.GetEditControl();
+	if (::IsWindow(pEdit->GetSafeHwnd()))
+		pEdit->SendMessage(WM_CLOSE);
+	*pResult = 0;
+}
 //新建项目
 void CRevisionDlg::OnNewItem()
 {
@@ -859,24 +917,6 @@ void CRevisionDlg::OnExportProjFile()
 	CFileDialog dlg(FALSE,"ubm",pProject->m_sProjName,OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT,"料单工程文件(*.ubm)|*.ubm||");
 	if(dlg.DoModal()==IDOK)
 		pProject->WriteProjectFile(dlg.GetPathName());	
-}
-//设定工程属性
-void CRevisionDlg::OnProjectProperty()
-{
-	CXhTreeCtrl *pTreeCtrl=GetTreeCtrl();
-	HTREEITEM hSelectedItem=pTreeCtrl->GetSelectedItem();
-	TREEITEM_INFO *pItemInfo=(TREEITEM_INFO*)pTreeCtrl->GetItemData(hSelectedItem);
-	if(pItemInfo==NULL || pItemInfo->itemType!=PROJECT_ITEM)
-		return;
-	CProjectTowerType* pProject=(CProjectTowerType*)pItemInfo->dwRefData;
-	CInputAnStringValDlg dlg;
-	if(dlg.DoModal()!=IDOK)
-		return;
-	if(strlen(dlg.m_sItemValue)>0)
-	{
-		pProject->m_sProjName.Copy(dlg.m_sItemValue);
-		pTreeCtrl->SetItemText(hSelectedItem,dlg.m_sItemValue);
-	}
 }
 //导入料单文件(放样料单和生计料单)
 void CRevisionDlg::OnImportBomFile()
@@ -1040,32 +1080,36 @@ void CRevisionDlg::OnImportPlateDwg()
 void CRevisionDlg::OnMove(int x, int y)
 {
 	CDialog::OnMove(x, y);
-
-	if(m_bEnableWindowMoveListen)
-	{
-		m_nScrLocationX=x;
-		m_nScrLocationY=y;
-	}
 }
 void CRevisionDlg::OnSize(UINT nType, int cx, int cy)
 {
 	RECT rect;
 	CWnd* pWnd=CWnd::GetDlgItem(IDC_TREE_CONTRL);
-	if(pWnd->GetSafeHwnd()!=NULL)
-	{
-		/*pWnd->GetWindowRect(&rect);
-		ScreenToClient(&rect);
-		rect.right=cx-m_nRightMargin;
-		rect.bottom=cy-m_nBtmMargin;
-		pWnd->MoveWindow(&rect);*/
-	}
+	//
 	pWnd=CWnd::GetDlgItem(IDC_LIST_REPORT);
 	if(pWnd->GetSafeHwnd()!=NULL)
 	{
 		pWnd->GetWindowRect(&rect);
 		ScreenToClient(&rect);
-		rect.bottom=cy-m_nBtmMargin;
+#ifdef __SUPPORT_DOCK_UI_
+		rect.bottom = cy;
+		rect.right = cx;
+#else
+		rect.bottom = cy - m_nBtmMargin;
 		rect.right = cx - m_nRightMargin;
+#endif
+		pWnd->MoveWindow(&rect);
+	}
+	pWnd = CWnd::GetDlgItem(IDC_TREE_CONTRL);
+	if (pWnd->GetSafeHwnd() != NULL)
+	{
+		pWnd->GetWindowRect(&rect);
+		ScreenToClient(&rect);
+#ifdef __SUPPORT_DOCK_UI_
+		rect.bottom = cy;
+#else
+		rect.bottom = cy - m_nBtmMargin;
+#endif
 		pWnd->MoveWindow(&rect);
 	}
 	CDialog::OnSize(nType, cx, cy);
@@ -1306,5 +1350,15 @@ void CRevisionDlg::OnDeleteItem()
 			}
 		}
 	}
+}
+void CRevisionDlg::PreSubclassWindow()
+{
+#ifdef __SUPPORT_DOCK_UI_
+	ModifyStyle(DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION, DS_SETFONT | WS_CHILD);
+	CAcUiDialog::PreSubclassWindow();
+#else
+	//ModifyStyle(WS_CHILD, DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU);
+	CDialog::PreSubclassWindow();
+#endif
 }
 #endif

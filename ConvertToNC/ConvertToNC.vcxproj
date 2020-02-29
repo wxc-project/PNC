@@ -913,7 +913,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <TreatWChar_tAsBuiltInType>false</TreatWChar_tAsBuiltInType>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
       <MinimalRebuild>true</MinimalRebuild>
       <StringPooling>false</StringPooling>
@@ -921,7 +921,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__TMA_FILE_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__TMA_FILE_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ObjectARX 2005\inc</AdditionalIncludeDirectories>
@@ -939,7 +939,7 @@
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\ObjectARX 2005\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>acdb16.lib;acge16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_alg_fun.lib;f_ent.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_alg_fun.lib;f_ent.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\UBOM.def</ModuleDefinitionFile>
     </Link>
     <ResourceCompile>
@@ -2200,12 +2200,10 @@
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
     <ClCompile Include="ConvertToNC.cpp" />
-    <ClCompile Include="DockBarManager.cpp" />
     <ClCompile Include="DrawDamBoard.cpp" />
     <ClCompile Include="DrawUnit.cpp" />
     <ClCompile Include="DwgFile.cpp" />
     <ClCompile Include="FilterLayerDlg.cpp" />
-    <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="InputMKRectDlg.cpp" />
     <ClCompile Include="MonoImage.cpp" />
     <ClCompile Include="PartListDlg.cpp" />
@@ -2256,6 +2254,7 @@
     <ClCompile Include="XeroExtractor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
     <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -2397,7 +2396,6 @@
     <ClInclude Include="DrawUnit.h" />
     <ClInclude Include="FilterLayerDlg.h" />
     <ClInclude Include="IExtractor.h" />
-    <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="InputMKRectDlg.h" />
     <ClInclude Include="MonoImage.h" />
     <ClInclude Include="PartListDlg.h" />

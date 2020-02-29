@@ -234,9 +234,6 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\DimStyle.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
-    <ClCompile Include="InputAnValDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\BomTblTitleCfg.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
@@ -299,9 +296,6 @@
     </ClCompile>
     <ClCompile Include="InputMKRectDlg.cpp">
       <Filter>PNC</Filter>
-    </ClCompile>
-    <ClCompile Include="DockBarManager.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="DrawUnit.cpp">
       <Filter>PNC</Filter>
@@ -536,9 +530,6 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\PropertyList.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
-    <ClInclude Include="InputAnValDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="PartListDlg.h">
       <Filter>PNC</Filter>
     </ClInclude>
@@ -571,6 +562,9 @@
     </ClInclude>
     <ClInclude Include="BOM.h">
       <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h">
+      <Filter>ToolCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

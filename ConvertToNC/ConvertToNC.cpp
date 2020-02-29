@@ -33,10 +33,8 @@
 #include "LicFuncDef.h"
 #include "PNCSysPara.h"
 #include "MsgBox.h"
-#include "AcUiDialogPanel.h"
-#include "PartListDlg.h"
 #include "SteelSealReactor.h"
-#include "RevisionDlg.h"
+#include "DockBarManager.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -45,6 +43,7 @@ static char THIS_FILE[]=__FILE__;
 #endif
 /////////////////////////////////////////////////////////////////////////////
 // ObjectARX EntryPoint
+CDockBarManager g_xDockBarManager;
 
 char* SearchChar(char* srcStr, char ch, bool reverseOrder/*=false*/)
 {
@@ -332,12 +331,16 @@ void InitApplication()
 	::SetWindowText(hWnd,"PNC");
 #endif
 	RegisterServerComponents();
-	//
-	//创建对话框
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	g_pRevisionDlg = new CRevisionDlg();
-#endif
+	//读取配置文件
 	PNCSysSetImportDefault();
+	//显示对话框
+#ifndef __UBOM_ONLY_
+	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+		g_xDockBarManager.DisplayPartListDockBar();
+#endif
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	g_xDockBarManager.DisplayRevisionDockBar();
+#endif
 }
 void UnloadApplication()
 {
@@ -357,13 +360,6 @@ void UnloadApplication()
 		strcpy(separator,".rx");
 		::DeleteFile(cad_path);
 	}
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	if (g_pRevisionDlg)
-	{
-		delete g_pRevisionDlg;
-		g_pRevisionDlg = NULL;
-	}
-#endif
 }
 
 //-----------------------------------------------------------------------------
@@ -413,7 +409,6 @@ acrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
 		acrxDynamicLinker->unlockApplication(pkt);
 		acrxDynamicLinker->registerAppMDIAware(pkt);
 		InitApplication();
-		DisplayPartListDockBar();
 		g_pSteelSealReactor = new CSteelSealReactor();
 		break;
 	case AcRx::kUnloadAppMsg:
@@ -422,7 +417,6 @@ acrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
 			delete g_pSteelSealReactor;
 			g_pSteelSealReactor = NULL;
 		}
-		DestoryPartListDockBar();
 		UnloadApplication();
 		break;
 	case AcRx::kLoadDwgMsg:
