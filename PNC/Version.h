@@ -12,7 +12,7 @@
 #define PRODUCT_VER_MAIN  1 // version number (binary)
 #define PRODUCT_VER_MAIN2 0
 #define PRODUCT_VER_SUB   0
-#define PRODUCT_VER_SUB2 30 
+#define PRODUCT_VER_SUB2 32 
 #else
 #define FILE_VER_MAIN  1 // version number (binary)
 #define FILE_VER_MAIN2 0
@@ -22,7 +22,7 @@
 #define PRODUCT_VER_MAIN  1 // version number (binary)
 #define PRODUCT_VER_MAIN2 2
 #define PRODUCT_VER_SUB   0
-#define PRODUCT_VER_SUB2 68 
+#define PRODUCT_VER_SUB2 70 
 #endif
 
 // version number (string)

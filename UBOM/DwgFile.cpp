@@ -758,8 +758,11 @@ AcDbObjectId CDwgFileInfo::GetEntLineTypeId(AcDbEntity *pEnt)
 	{	//线型随层
 		AcDbLayerTableRecord *pLayerTableRecord;
 		acdbOpenObject(pLayerTableRecord, pEnt->layerId(), AcDb::kForRead);
-		pLayerTableRecord->close();
-		linetypeId = pLayerTableRecord->linetypeObjectId();
+		if (pLayerTableRecord)
+		{
+			pLayerTableRecord->close();
+			linetypeId = pLayerTableRecord->linetypeObjectId();
+		}
 	}
 	else if (stricmp(sLineTypeName, "ByBlock") == 0)
 		linetypeId = m_idSolidLine;		//如果图元的线型类型为ByBlock,则线型就是实线

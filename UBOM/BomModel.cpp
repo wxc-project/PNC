@@ -138,7 +138,7 @@ BOOL CBomFile::ParseTmaSheetContent(CVariant2dArray &sheetContentMap)
 				CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_METERIAL, str))
 				hashColIndexByColTitle.SetValue(T_TMA_METERIAL, i);
 			else if ((str.CompareNoCase(T_TMA_SINGLEBASE_NUM) == 0) ||
-				CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_NUM, str))
+				CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_SING_NUM, str))
 				hashColIndexByColTitle.SetValue(T_TMA_SINGLEBASE_NUM, i);
 			else if ((str.CompareNoCase(T_TMA_PROCESS_NUM) == 0) ||
 				CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_MANU_NUM, str))

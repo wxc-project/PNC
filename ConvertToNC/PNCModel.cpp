@@ -805,9 +805,9 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			{
 				CXhChar50 sCmd("-boundary %.2f,%.2f\n ", cur_dim_pos.x, cur_dim_pos.y);
 #ifdef _ARX_2007
-				SendCommandToCad(CStringW(sCmd));
+				SendCommandToCad(_bstr_t(sCmd));
 #else
-				SendCommandToCad(CString(sCmd));
+				SendCommandToCad(sCmd);
 #endif
 			}
 			else
@@ -844,9 +844,9 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	{	//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
 		if (bSendCommand)
 #ifdef _ARX_2007
-			SendCommandToCad(CStringW(" \n "));
+			SendCommandToCad(L" \n ");
 #else
-			SendCommandToCad(CString(" \n "));
+			SendCommandToCad(" \n ");
 #endif
 		else
 			acedCommand(RTSTR, "");
@@ -861,9 +861,9 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
 		if (bSendCommand)
 #ifdef _ARX_2007
-			SendCommandToCad(CStringW(" \n "));
+			SendCommandToCad(L" \n ");
 #else
-			SendCommandToCad(CString(" \n "));
+			SendCommandToCad(" \n ");
 #endif
 		else
 			acedCommand(RTSTR, "");
@@ -2408,8 +2408,13 @@ AcDbObjectId CPNCModel::GetEntLineTypeId(AcDbEntity *pEnt,char* sLayer/*=NULL*/)
 	{	//线型随层
 		AcDbLayerTableRecord *pLayerTableRecord;
 		acdbOpenObject(pLayerTableRecord,pEnt->layerId(),AcDb::kForRead);
-		pLayerTableRecord->close();
-		linetypeId=pLayerTableRecord->linetypeObjectId();
+		if (pLayerTableRecord)
+		{
+			pLayerTableRecord->close();
+			linetypeId = pLayerTableRecord->linetypeObjectId();
+		}
+		//else
+		//	int a = 10;
 	}
 	else if(stricmp(sLineTypeName,"ByBlock")==0)
 		linetypeId=m_idSolidLine;		//如果图元的线型类型为ByBlock,则线型就是实线
