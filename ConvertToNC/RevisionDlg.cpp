@@ -209,9 +209,9 @@ BOOL CRevisionDlg::OnInitDialog()
 		m_xListReport.AddColumnHeader("加工重量", 65);
 		m_xListReport.AddColumnHeader("备注", 150);
 	}
-	if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+	else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 		m_xListReport.AddColumnHeader("单基数", 52);
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{
 		m_xListReport.AddColumnHeader("加工数", 52);
 		m_xListReport.AddColumnHeader("焊接", 44);
@@ -223,6 +223,12 @@ BOOL CRevisionDlg::OnInitDialog()
 		m_xListReport.AddColumnHeader("开角", 44);
 		m_xListReport.AddColumnHeader("合角", 44);
 		m_xListReport.AddColumnHeader("带脚钉", 50);
+		m_xListReport.AddColumnHeader("备注", 150);
+	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_ChengDu_DongFang)
+	{
+		m_xListReport.AddColumnHeader("宽度", 52);
+		m_xListReport.AddColumnHeader("单基数", 52);
 		m_xListReport.AddColumnHeader("备注", 150);
 	}
 	m_xListReport.EnableSortItems(true,true);
@@ -366,13 +372,13 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("fSumWeight"))
 			lpInfo->SetSubItemColor(7, clr);
 	}
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 	{
 		lpInfo->SetSubItemText(4, CXhChar50("%d", pPart->GetPartNum()), TRUE);
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("nSingNum"))
 			lpInfo->SetSubItemColor(4, clr);
 	}
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{	//成都铁塔BOM显示信息
 		//加工数
 		lpInfo->SetSubItemText(4, CXhChar50("%d", pPart->GetPartNum()), TRUE);
@@ -439,6 +445,21 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		lpInfo->SetSubItemText(14, pPart->sNotes, TRUE);
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("sNotes"))
 			lpInfo->SetSubItemColor(14, clr);
+	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_ChengDu_DongFang)
+	{	//成都东方BOM信息
+		//宽度
+		lpInfo->SetSubItemText(4, CXhChar50("%.0f",pPart->wide), TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("fWidth"))
+			lpInfo->SetSubItemColor(4, clr);
+		//单基数
+		lpInfo->SetSubItemText(5, CXhChar50("%d", pPart->GetPartNum()), TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("nSingNum"))
+			lpInfo->SetSubItemColor(5, clr);
+		//备注
+		lpInfo->SetSubItemText(6, pPart->sNotes, TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("sNotes"))
+			lpInfo->SetSubItemColor(6, clr);
 	}
 	if(pParentItem)
 		return list.InsertItem(pParentItem,lpInfo,-1,true);
@@ -1199,9 +1220,9 @@ void CRevisionDlg::OnRefreshPartNum()
 	else
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
-	SendCommandToCad(CStringW(L"RE "));
+	SendCommandToCad(L"RE ");
 #else
-	SendCommandToCad(CString("RE "));
+	SendCommandToCad("RE ");
 #endif
 	RefreshListCtrl(hSelItem);
 }

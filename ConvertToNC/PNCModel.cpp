@@ -805,9 +805,9 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			{
 				CXhChar50 sCmd("-boundary %.2f,%.2f\n ", cur_dim_pos.x, cur_dim_pos.y);
 #ifdef _ARX_2007
-				SendCommandToCad(CStringW(sCmd));
+				SendCommandToCad(sCmd);
 #else
-				SendCommandToCad(CString(sCmd));
+				SendCommandToCad(sCmd);
 #endif
 			}
 			else
@@ -844,9 +844,9 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	{	//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
 		if (bSendCommand)
 #ifdef _ARX_2007
-			SendCommandToCad(CStringW(" \n "));
+			SendCommandToCad(" \n ");
 #else
-			SendCommandToCad(CString(" \n "));
+			SendCommandToCad(" \n ");
 #endif
 		else
 			acedCommand(RTSTR, "");
@@ -861,9 +861,9 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
 		if (bSendCommand)
 #ifdef _ARX_2007
-			SendCommandToCad(CStringW(" \n "));
+			SendCommandToCad(" \n ");
 #else
-			SendCommandToCad(CString(" \n "));
+			SendCommandToCad(" \n ");
 #endif
 		else
 			acedCommand(RTSTR, "");

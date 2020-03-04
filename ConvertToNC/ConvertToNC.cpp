@@ -339,7 +339,7 @@ void InitApplication()
 		g_xDockBarManager.DisplayPartListDockBar();
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	g_xDockBarManager.DisplayRevisionDockBar();
+	RevisionPartProcess();
 #endif
 }
 void UnloadApplication()

@@ -89,6 +89,9 @@ artifacts/
 # Chutzpah Test files
 _Chutzpah*
 
+#acad files
+*.fas
+
 # Visual C++ cache files
 ipch/
 *.aps
@@ -283,3 +286,7 @@ __pycache__/
 /ConvertToNC/RCa02940
 /ConvertToNC/RCa02092
 *.rej
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
