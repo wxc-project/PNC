@@ -119,7 +119,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			sheetContentMap.GetValueAt(iRow, iCol, value);
 			if (value.vt == VT_EMPTY)
 				continue;
-			CString str(value.bstrVal);
+			CString str(VariantToString(value));
 			str.Remove('\n');
 			if (CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_PART_NO, str))
 			{
@@ -379,7 +379,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			pBomPart->sSpec.Copy(sSpec);
 			pBomPart->sMaterial = sMaterial;
 			pBomPart->cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
-			if(g_xUbomModel.m_uiCustomizeSerial!=CBomModel::ID_JiangSu_HuaDian)
+			if (g_xUbomModel.m_uiCustomizeSerial != CBomModel::ID_JiangSu_HuaDian &&
+				g_xUbomModel.m_uiCustomizeSerial != CBomModel::ID_ChengDu_DongFang)
 				pBomPart->cQualityLevel = CProcessPart::QueryBriefQuality(sMaterial);
 			pBomPart->length = fLength;
 			pBomPart->fPieceWeight = fWeight;
@@ -820,7 +821,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 			pSrcPart->siZhiWan != pDesPart->siZhiWan)
 			hashBoolByPropName.SetValue("ZhiWan", TRUE);
 	}
-	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::ANGLE)
+	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::PLATE)
 	{	//钢板信息对比
 		if (hashColIndex.GetValue(CBomTblTitleCfg::T_WELD) &&
 			pSrcPart->bWeldPart != pDesPart->bWeldPart)

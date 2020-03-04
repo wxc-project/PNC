@@ -185,6 +185,7 @@ public:
 	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳
 	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电
+	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方
 	static UINT m_uiCustomizeSerial;
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
