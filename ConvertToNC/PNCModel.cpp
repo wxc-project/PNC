@@ -298,6 +298,12 @@ void CPlateProcessInfo::InternalExtractPlateRelaEnts()
 				if(!IsInPlate(startPt,endPt))
 					continue;
 			}
+			else if (pEnt->isKindOf(AcDbText::desc()))
+			{	//过滤不在区域内的文本
+				GEPOINT dimPt = GetCadTextDimPos(pEnt);
+				if (!IsInPlate(dimPt))
+					continue;
+			}
 			AppendRelaEntity(pEnt);
 		}
 	}
@@ -2390,63 +2396,7 @@ void CPNCModel::Empty()
 	m_hashPlateInfo.Empty();
 	m_xAllEntIdSet.Empty();
 }
-//获取实体的线性ID
-AcDbObjectId CPNCModel::GetEntLineTypeId(AcDbEntity *pEnt,char* sLayer/*=NULL*/)
-{
-	if(pEnt==NULL)
-		return NULL;
-	CXhChar50 sLineTypeName,sLayerName;
-#ifdef _ARX_2007
-	sLineTypeName.Copy((char*)_bstr_t(pEnt->linetype()));
-	sLayerName.Copy((char*)_bstr_t(pEnt->layer()));
-#else
-	sLineTypeName.Copy(pEnt->linetype());
-	sLayerName.Copy(pEnt->layer());
-#endif
-	AcDbObjectId linetypeId;
-	if(stricmp(sLineTypeName,"ByLayer")==0)
-	{	//线型随层
-		AcDbLayerTableRecord *pLayerTableRecord;
-		acdbOpenObject(pLayerTableRecord,pEnt->layerId(),AcDb::kForRead);
-		if (pLayerTableRecord)
-		{
-			pLayerTableRecord->close();
-			linetypeId = pLayerTableRecord->linetypeObjectId();
-		}
-		//else
-		//	int a = 10;
-	}
-	else if(stricmp(sLineTypeName,"ByBlock")==0)
-		linetypeId=m_idSolidLine;		//如果图元的线型类型为ByBlock,则线型就是实线
-	else
-		linetypeId=pEnt->linetypeId();
-	if(sLayer)
-		strcpy(sLayer,sLayerName);
-	return linetypeId;
-}
 //根据bpoly命令初始化钢板的轮廓边
-bool GetLineTypeIdByLineType(const char* line_type,AcDbObjectId &lineTypeId)
-{
-	lineTypeId=0;
-	//获取图层对应的线型Id
-	AcDbLinetypeTable *pLinetypeTbl;
-	GetCurDwg()->getLinetypeTable(pLinetypeTbl,AcDb::kForRead);
-	if(pLinetypeTbl)
-	{
-#ifdef _ARX_2007
-		pLinetypeTbl->getAt((ACHAR*)_bstr_t(line_type), lineTypeId);
-#else
-		pLinetypeTbl->getAt(line_type, lineTypeId);
-#endif
-		pLinetypeTbl->close();
-		if (lineTypeId.isNull())
-			return false;
-		else
-			return true;
-	}
-	else
-		return false;
-}
 void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 {
 	//添加一个特定图层
@@ -2454,8 +2404,8 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	CXhChar16 sNewLayer("pnc_layer"),sLineType=g_pncSysPara.m_sProfileLineType;
 	CreateNewLayer(sNewLayer, sLineType,AcDb::kLnWt013,1,m_idNewLayer,m_idSolidLine);
 	m_hashSolidLineTypeId.SetValue(m_idSolidLine.asOldId(),m_idSolidLine);
-	AcDbObjectId lineTypeId=0;
-	if(GetLineTypeIdByLineType("人民币",lineTypeId))
+	AcDbObjectId lineTypeId=GetLineTypeId("人民币");
+	if(lineTypeId.isValid())
 		m_hashSolidLineTypeId.SetValue(lineTypeId.asOldId(),lineTypeId);
 	//根据Spline提取火曲线特征信息(分段线段集合)
 	CSymbolRecoginzer symbols;
@@ -2494,6 +2444,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			Cpy_Pnt(start_point,acad_start_pt);
 			pLine->getEndPoint(acad_end_pt);
 			Cpy_Pnt(end_point,acad_end_pt);
+			start_point.z = end_point.z = 0;
 			double len=DISTANCE(start_point,end_point);
 			CXhChar50 startKeyStr(start_point);
 			ATOM_LIST<ACAD_LINEID> *pStartLineList=hashLineArrByPosKeyStr.GetValue(startKeyStr);
@@ -2517,6 +2468,11 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			Cpy_Pnt(start_point,acad_start_pt);
 			pArc->getEndPoint(acad_end_pt);
 			Cpy_Pnt(end_point,acad_end_pt);
+			/*将点坐标Z值统一手动初始化为0   wxc-2020.03.04
+			 *防止点坐标的Z值无限小时，CXhChar50构造函数有的处理为0.0，有的处理为-0.0
+			 *导致同一坐标处的连线只有一条的情况
+			*/
+			start_point.z = end_point.z = 0;
 			double len=DISTANCE(start_point,end_point);
 			CXhChar50 startKeyStr(start_point);
 			ATOM_LIST<ACAD_LINEID> *pStartLineList=hashLineArrByPosKeyStr.GetValue(startKeyStr);
@@ -2583,6 +2539,8 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		pEnt->close();
 		CXhChar50 sLayerName;
 		AcDbObjectId lineId=GetEntLineTypeId(pEnt,sLayerName);
+		if (lineId.isNull())
+			lineId = m_idSolidLine;
 		if(g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 		{	//按线型过滤
 			if (m_hashSolidLineTypeId.GetValue(lineId.asOldId()) == NULL)
@@ -2665,6 +2623,8 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			continue;
 		CXhChar50 sLayerName;
 		AcDbObjectId curLineId=GetEntLineTypeId(pEnt,sLayerName);
+		if (curLineId.isNull())
+			curLineId = m_idSolidLine;
 		hashLayerList.SetValue(objId.asOldId(),sLayerName);
 		//处理非选中实体：统一移到特定图层
 		if(selectedEntIdSet.GetValue(pEnt->id().asOldId()).isNull())

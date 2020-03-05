@@ -365,6 +365,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 				bHeJiao = TRUE;
 		}
 		//填充哈希表
+		if(sMaterial.GetLength()<=0 && sSpec.GetLength()<=0)
+			continue;	//异常数据
 		BOMPART* pBomPart = NULL;
 		if (pBomPart =m_hashPartByPartNo.GetValue(sPartNo))
 			logerr.Log("存在重复件号：%s", (char*)sPartNo);

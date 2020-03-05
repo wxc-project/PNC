@@ -58,7 +58,7 @@ struct ACAD_CIRCLE{
 		radius=r;
 		center=center_pt;
 	}
-	bool IsInCircle(f3dPoint &pos){
+	bool IsInCircle(GEPOINT &pos){
 		double dist=DISTANCE(pos,center);
 		if(dist<radius)
 			return true;
@@ -103,9 +103,9 @@ public:
 	AcDbObjectId partNumId;
 	AcDbObjectId plateInfoBlockRefId;
 	BOOL m_bIslandDetection;	//是否开启孤岛检测 wht 19-01-03
-	f3dPoint dim_pos,dim_vec;
+	GEPOINT dim_pos,dim_vec;
 	BOOL m_bHasInnerDimPos;
-	f3dPoint inner_dim_pos;		//根据件号位置找到的最近的螺栓孔位置，用于螺栓垫板提取 wht 19-02-01
+	GEPOINT inner_dim_pos;		//根据件号位置找到的最近的螺栓孔位置，用于螺栓垫板提取 wht 19-02-01
 	CXhChar100 m_sRelatePartNo;
 	BASIC_INFO m_xBaseInfo;
 	CHashSet<AcDbObjectId> pnTxtIdList;
@@ -191,7 +191,6 @@ public:
 	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
 	void LayoutPlates(BOOL bRelayout);
-	AcDbObjectId GetEntLineTypeId(AcDbEntity *pEnt,char* sLayer=NULL);
 	//
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }

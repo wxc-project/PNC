@@ -153,57 +153,17 @@ void SmartExtractPlate(CPNCModel *pModel)
 	pModel->DisplayProcess = DisplayProcess;
 	CLogErrorLife logErrLife;
 	AcDbObjectId entId;
-	AcDbEntity *pEnt=NULL;
 	CHashSet<AcDbObjectId> selectedEntList;
 	//默认选择所有的图形，方便后期的过滤使用
-	ads_name ent_sel_set,entname;
-#ifdef _ARX_2007
-	acedSSGet(L"ALL",NULL,NULL,NULL,ent_sel_set);
-#else
-	acedSSGet("ALL",NULL,NULL,NULL,ent_sel_set);
-#endif
-	long ll=0;
-	acedSSLength(ent_sel_set,&ll);
-	for(long i=0;i<ll;i++)
-	{	//初始化实体集合
-		acedSSName(ent_sel_set,i,entname);
-		acdbGetObjectId(entId,entname);
-		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
-		if(pEnt==NULL)
-			continue;
-		CAcDbObjLife objLife(pEnt);
-		pModel->m_xAllEntIdSet.SetValue(entId.asOldId(),entId);
-		selectedEntList.SetValue(entId.asOldId(), entId);
-	}
+	SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
 #ifndef __UBOM_ONLY_
-	//进行手动框选
-	int retCode=0;
-#ifdef _ARX_2007
-	retCode=acedSSGet(L"",NULL,NULL,NULL,ent_sel_set);
+	//PNC支持进行手动框选
+	if (!SelCadEntSet(selectedEntList))
+		return;	
 #else
-	retCode=acedSSGet("",NULL,NULL,NULL,ent_sel_set);
-#endif
-	if(retCode==RTCAN)
-	{	//用户按ESC取消
-		acedSSFree(ent_sel_set);
-		return;
-	}
-	else
-	{	
-		selectedEntList.Empty();
-		acedSSLength(ent_sel_set,&ll);
-		for(long i=0;i<ll;i++)
-		{	//根据文字说明初始化点集合
-			acedSSName(ent_sel_set,i,entname);
-			acdbGetObjectId(entId,entname);
-			acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
-			if(pEnt==NULL)
-				continue;
-			CAcDbObjLife objLife(pEnt);
-			selectedEntList.SetValue(entId.asOldId(),entId);
-		}
-	}
-	acedSSFree(ent_sel_set);
+	//UBOM默认处理所有图元
+	for (entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
+		selectedEntList.SetValue(entId.asOldId(), entId);
 #endif
 	//从框选信息中提取中钢板的标识，统计钢板集合
 	CHashSet<AcDbObjectId> textIdHash;
@@ -211,6 +171,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	BOLT_HOLE hole;
 	for (entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext())
 	{
+		AcDbEntity *pEnt = NULL;
 		acdbOpenAcDbEntity(pEnt, entId, AcDb::kForRead);
 		if(pEnt==NULL)
 			continue;
@@ -220,7 +181,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 		textIdHash.SetValue(entId.asOldId(), entId);
 		bool bValidAttrBlock = false;
 		BASIC_INFO baseInfo;
-		f3dPoint dim_pos, dim_vec;
+		GEPOINT dim_pos, dim_vec;
 		CXhChar500 sText;
 		if (pEnt->isKindOf(AcDbText::desc()))
 		{
@@ -230,48 +191,9 @@ void SmartExtractPlate(CPNCModel *pModel)
 #else
 			sText.Copy(pText->textString());
 #endif
-			//TMA生成钢板大样图之后，框选从一个文件复制到另外一个文件时，会导致position与alignmentPoint不一致
-			//位置不一致，修改属性后会触发adjustAlignment,导致所有文字位置偏移，此处调用adjustAlignment调整pos位置，
-			//再根据原始的position位置重设alignmentPoint wht 19-01-12
-			//AcGePoint3d org_txt_pos = pText->position();//alignmentPoint();
-			//AcGePoint3d org_align_pos = pText->alignmentPoint();
-			//pText->adjustAlignment();	//调用adjustAlignment调整pos与alignmentPoint一致
-			AcGePoint3d txt_pos = pText->position();//alignmentPoint();
-			AcGePoint3d align_pos = pText->alignmentPoint();
-			//AcGePoint3d offset_pos;
-			//Sub_Pnt(offset_pos, align_pos, txt_pos);
-			//pText->setPosition(org_txt_pos);
-			//Add_Pnt(align_pos, org_txt_pos, offset_pos);
-			//pText->setAlignmentPoint(align_pos);
-			//
 			if (!g_pncSysPara.IsMatchPNRule(sText))
 				continue;
-			//
-			double fTestH = pText->height();
-			double fWidth = TestDrawTextLength(sText, fTestH, pText->textStyle());
-			AcDb::TextHorzMode  horzMode = pText->horizontalMode();
-			AcDb::TextVertMode  vertMode = pText->verticalMode();
-			//获取AcDbText插入点 wht 18-12-20
-			//If vertical mode is AcDb::kTextBase and horizontal mode is either AcDb::kTextLeft, AcDb::kTextAlign, or AcDb::kTextFit,
-			//then the position point is the insertion point for the text object and, for AcDb::kTextLeft, 
-			//the alignment point (DXF group code 11) is automatically calculated based on the other parameters in the text object.
-			if (vertMode == AcDb::kTextBase)
-			{
-				if (horzMode == AcDb::kTextLeft || horzMode == AcDb::kTextAlign || horzMode == AcDb::kTextFit)
-					txt_pos = pText->position();
-				else
-					txt_pos = pText->alignmentPoint();
-			}
-			else
-				txt_pos = pText->alignmentPoint();
-
-			dim_vec.Set(cos(pText->rotation()), sin(pText->rotation()));
-			dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
-			//
-			if (horzMode == AcDb::kTextLeft)
-				dim_pos += dim_vec * (fWidth*0.5);
-			else if (horzMode == AcDb::kTextRight)
-				dim_pos -= dim_vec * (fWidth*0.5);
+			dim_pos = GetCadTextDimPos(pText, &dim_vec);
 		}
 		else if (pEnt->isKindOf(AcDbMText::desc()))
 		{
@@ -325,17 +247,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 				if (!g_pncSysPara.IsMatchPNRule(sText))
 					continue;
 			}
-			AcGePoint3d txt_pos = pMText->location();
-			double fTestH = pMText->actualHeight();
-			double fWidth = pMText->actualWidth();
-			dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
-			dim_vec.Set(cos(pMText->rotation()), sin(pMText->rotation()));
-
-			AcDbMText::AttachmentPoint align_type = pMText->attachment();
-			if (align_type == AcDbMText::kTopLeft || align_type == AcDbMText::kMiddleLeft || align_type == AcDbMText::kBottomLeft)
-				dim_pos += dim_vec * (fWidth*0.5);
-			else if (align_type == AcDbMText::kTopRight || align_type == AcDbMText::kMiddleRight || align_type == AcDbMText::kBottomRight)
-				dim_pos -= dim_vec * (fWidth*0.5);
+			dim_pos = GetCadTextDimPos(pMText, &dim_vec);
 		}
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
 		{	//从块中解析钢板信息
@@ -464,61 +376,12 @@ void SmartExtractPlate(CPNCModel *pModel)
 	//UBOM只需要更新钢板的基本信息
 	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
 	{
+		AcDbEntity *pEnt = NULL;
 		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
 		CAcDbObjLife objLife(pEnt);
-		if (pEnt == NULL)
-			continue;
 		if (!pEnt->isKindOf(AcDbText::desc()))
 			continue;
-		GEPOINT dim_pos;
-		CXhChar500 sText;
-		if (pEnt->isKindOf(AcDbText::desc()))
-		{
-			AcDbText* pText = (AcDbText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pText->textString()));
-#else
-			sText.Copy(pText->textString());
-#endif
-			double fTestH = pText->height();
-			double fWidth = TestDrawTextLength(sText, fTestH, pText->textStyle());
-			AcDb::TextHorzMode  horzMode = pText->horizontalMode();
-			AcDb::TextVertMode  vertMode = pText->verticalMode();
-			AcGePoint3d txt_pos;
-			if (vertMode == AcDb::kTextBase)
-			{
-				if (horzMode == AcDb::kTextLeft || horzMode == AcDb::kTextAlign || horzMode == AcDb::kTextFit)
-					txt_pos = pText->position();
-				else
-					txt_pos = pText->alignmentPoint();
-			}
-			else
-				txt_pos = pText->alignmentPoint();
-			GEPOINT vec(cos(pText->rotation()), sin(pText->rotation()));
-			dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
-			if (horzMode == AcDb::kTextLeft)
-				dim_pos += vec * (fWidth*0.5);
-			else if (horzMode == AcDb::kTextRight)
-				dim_pos -= vec * (fWidth*0.5);
-		}
-		else if (pEnt->isKindOf(AcDbMText::desc()))
-		{
-			AcDbMText* pMText = (AcDbMText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pMText->contents()));
-#else
-			sText.Copy(pMText->contents());
-#endif
-			double fTestH = pMText->actualHeight();
-			double fWidth = pMText->actualWidth();
-			GEPOINT vec(cos(pMText->rotation()), sin(pMText->rotation()));
-			AcDbMText::AttachmentPoint align_type = pMText->attachment();
-			dim_pos.Set(pMText->location().x, pMText->location().y, 0);
-			if (align_type == AcDbMText::kTopLeft || align_type == AcDbMText::kMiddleLeft || align_type == AcDbMText::kBottomLeft)
-				dim_pos += vec * (fWidth*0.5);
-			else if (align_type == AcDbMText::kTopRight || align_type == AcDbMText::kMiddleRight || align_type == AcDbMText::kBottomRight)
-				dim_pos -= vec * (fWidth*0.5);
-		}
+		GEPOINT dim_pos=GetCadTextDimPos(pEnt);
 		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos),*pTemPlate=NULL;
 		if (pPlateInfo)
 		{
@@ -544,6 +407,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 			}
 			else
 			{
+				CXhChar100 sText = GetCadTextContent(pEnt);
 				if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))
 					pPlateInfo->xBomPlate.siZhiWan = 1;
 				if (strstr(sText,"焊接"))
