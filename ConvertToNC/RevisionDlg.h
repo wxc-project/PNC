@@ -85,6 +85,7 @@ public:
 	//
 	BOOL CreateDlg();
 	void InitRevisionDlg();
+	static int GetDialogInitWidthByCustomizeSerial(int idCustomizeSerial);
 	//
 	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
 };

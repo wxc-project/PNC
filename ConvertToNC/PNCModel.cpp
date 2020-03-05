@@ -2413,6 +2413,8 @@ AcDbObjectId CPNCModel::GetEntLineTypeId(AcDbEntity *pEnt,char* sLayer/*=NULL*/)
 			pLayerTableRecord->close();
 			linetypeId = pLayerTableRecord->linetypeObjectId();
 		}
+		//else
+		//	int a = 10;
 	}
 	else if(stricmp(sLineTypeName,"ByBlock")==0)
 		linetypeId=m_idSolidLine;		//如果图元的线型类型为ByBlock,则线型就是实线

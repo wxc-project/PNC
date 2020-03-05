@@ -187,6 +187,7 @@ public:
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电
 	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方
 	static UINT m_uiCustomizeSerial;
+	static CXhChar100 GetClientName();
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };

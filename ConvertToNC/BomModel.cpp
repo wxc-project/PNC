@@ -1749,6 +1749,23 @@ CDwgFileInfo *CBomModel::FindDwgFile(const char* file_path)
 	}
 	return pDwgFile;
 }
+
+CXhChar100 CBomModel::GetClientName()
+{
+	CXhChar100 sClientName;
+	if (ID_AnHui_HongYuan == m_uiCustomizeSerial)	//安徽宏源
+		sClientName.Copy("安徽宏源");
+	else if(ID_AnHui_TingYang == m_uiCustomizeSerial)	//安徽汀阳
+		sClientName.Copy("安徽汀阳");
+	else if(ID_SiChuan_ChengDu == m_uiCustomizeSerial)	//中电建成都铁塔
+		sClientName.Copy("中电建成都铁塔");
+	else if(ID_JiangSu_HuaDian == m_uiCustomizeSerial)	//江苏华电
+		sClientName.Copy("江苏华电");
+	else if (ID_ChengDu_DongFang == m_uiCustomizeSerial)//成都东方
+		sClientName.Copy("成都东方");
+	return sClientName;
+}
+
 CXhChar16 CBomModel::QueryMatMarkIncQuality(BOMPART *pPart)
 {
 	CXhChar16 sMatMark;
