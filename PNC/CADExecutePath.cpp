@@ -197,7 +197,7 @@ CString GetProductVersion(const char* exe_path)
 }
 
 BOOL StartCadAndLoadArx(const char* productName, const char* APP_PATH, 
-						char* cad_path, CString &rxFilePath, HWND hWnd)
+						char* cad_path, CString &rxFilePath, HWND hWnd, BOOL bEnableDockWnd /*= FALSE*/)
 {
 	//启动CAD，并自动加载PNC.arx
 	char cadPath[MAX_PATH] = "", cadName[MAX_PATH] = "";
@@ -234,11 +234,26 @@ BOOL StartCadAndLoadArx(const char* productName, const char* APP_PATH,
 	{
 		CString sProductVersion = GetProductVersion(cadName);
 		if (sProductVersion.Find("16.") == 0)
-			fprintf(fp, "%s%s05.arx\n", APP_PATH, productName);
+		{
+			if(bEnableDockWnd)
+				fprintf(fp, "%s%s05-Dock.arx\n", APP_PATH, productName);
+			else
+				fprintf(fp, "%s%s05.arx\n", APP_PATH, productName);
+		}
 		else if (sProductVersion.Find("17.") == 0)
-			fprintf(fp, "%s%s07.arx\n", APP_PATH, productName);
+		{
+			if (bEnableDockWnd)
+				fprintf(fp, "%s%s07-Dock.arx\n", APP_PATH, productName);
+			else
+				fprintf(fp, "%s%s07.arx\n", APP_PATH, productName);
+		}
 		else if (sProductVersion.Find("18.") == 0)
-			fprintf(fp, "%s%s10.arx\n", APP_PATH, productName);
+		{
+			if (bEnableDockWnd)
+				fprintf(fp, "%s%s10-Dock.arx\n", APP_PATH, productName);
+			else
+				fprintf(fp, "%s%s10.arx\n", APP_PATH, productName);
+		}
 		else if(bZWCad)
 			fprintf(fp, "%s%s19.zrx\n", APP_PATH, productName);
 		fclose(fp);
