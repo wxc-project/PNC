@@ -17,21 +17,32 @@ static char THIS_FILE[]=__FILE__;
 #define  MIN_DISTANCE	25
 //////////////////////////////////////////////////////////////////////////
 //
-CStraightLine::CStraightLine(const double* _start,const double* _end)
+void CSymbolRecoginzer::AppendSymbolEnt(AcDbSpline* pSpline)
 {
-	ciCurveType=STRAIGHT;
-	start=_start;
-	end=_end;
+	if (pSpline == NULL)
+		return;
+	SYMBOL_ENTITY* pSymbolEnt = listSymbols.AttachObject();
+	pSymbolEnt->ciSymbolType = 1;	//火曲线S型符号
+	for (int i = 0; i < pSpline->numFitPoints() - 1; i++)
+	{
+		AcGePoint3d ptS, ptE;
+		pSpline->getFitPointAt(i, ptS);
+		pSpline->getFitPointAt(i + 1, ptE);
+		//添加线段
+		GELINE* pLine = pSymbolEnt->listSonlines.AttachObject();
+		Cpy_Pnt(pLine->start, ptS);
+		Cpy_Pnt(pLine->end, ptE);
+	}
 }
-bool CSymbolRecoginzer::IsIntersWith(ICurveLine* pCurveLine,DWORD cbFilterFlag/*=0*/)
+bool CSymbolRecoginzer::IsHuoquLine(GELINE* pCurveLine,DWORD cbFilterFlag/*=0*/)
 {	//通过标记符号识别火曲线
 	f3dPoint inters;
-	for(CSymbolEntity* pSymbol=listSymbols.EnumObjectFirst();pSymbol;pSymbol=listSymbols.EnumObjectNext())
+	for(SYMBOL_ENTITY* pSymbol=listSymbols.EnumObjectFirst();pSymbol;pSymbol=listSymbols.EnumObjectNext())
 	{
 		if(pSymbol->ciSymbolType!=cbFilterFlag)
 			continue;
 		int nInters=0;
-		for(CSymbolEntity::LINE* pSonLine=pSymbol->listSonlines.EnumObjectFirst();pSonLine;pSonLine=pSymbol->listSonlines.EnumObjectNext())
+		for(GELINE* pSonLine=pSymbol->listSonlines.EnumObjectFirst();pSonLine;pSonLine=pSymbol->listSonlines.EnumObjectNext())
 		{
 			if(Int3dll(f3dLine(pCurveLine->start,pCurveLine->end),f3dLine(pSonLine->start,pSonLine->end),inters)==1)
 				nInters++;
@@ -39,10 +50,6 @@ bool CSymbolRecoginzer::IsIntersWith(ICurveLine* pCurveLine,DWORD cbFilterFlag/*
 		if(nInters>=3)
 			return true;
 	}
-	return false;
-}
-bool CSymbolRecoginzer::IsWeldingAlongSide(ICurveLine* pCurveLine)
-{	//焊缝线识别
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -535,8 +542,10 @@ BOOL CPlateExtractor::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogni
 		AcGePoint3d startPt,endPt;
 		pAcDbLine->getStartPoint(startPt);
 		pAcDbLine->getEndPoint(endPt);
-		CStraightLine line(&startPt.x,&endPt.x);
-		bRet=pRecognizer->IsIntersWith(&line,0x01);
+		GELINE line;
+		Cpy_Pnt(line.start, startPt);
+		Cpy_Pnt(line.end, endPt);
+		bRet=pRecognizer->IsHuoquLine(&line,0x01);
 	}
 	if(!bRet)
 	{	//TODO:将来应允许通过图层或线型来识别火曲线 wjh-2017.6.3
@@ -592,6 +601,17 @@ double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord,double s
 			pEnt->close();
 		}
 		fHoleD = fabs(max(scope.wide(), scope.high())*scale);
+		//对计算得到的孔径进行圆整，精确到小数点一位
+		int nValue=(int)floor(fHoleD);		//整数部分
+		double fValue = fHoleD - nValue;	//小数部分
+		if (fValue < EPS2)	//孔径为整数
+			fHoleD = nValue;
+		else if (fValue > EPS_COS2)
+			fHoleD = nValue + 1;
+		else if (fabs(fValue - 0.5) < EPS2)
+			fHoleD = nValue + 0.5;
+		else
+			fHoleD = ftoi(fHoleD);
 	}
 	return fHoleD;
 }
@@ -636,18 +656,6 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		{	
 			hole.d = pBoltD->hole_d;
 			hole.increment = 0;
-			/*int nHoleD=(int)floor(pBoltD->hole_d);
-			double fHoleFloat=pBoltD->hole_d-nHoleD;
-			if(fabs(fHoleFloat)<EPS)
-			{	//孔径为整数
-				hole.d=(BYTE)pBoltD->hole_d;
-				hole.increment=0;
-			}
-			else 
-			{	//孔径为浮点数
-				hole.d=(BYTE)(nHoleD-1);
-				hole.increment=(float)(1+fHoleFloat);
-			}*/
 		}
 		else
 		{	//根据块内图元识别孔径 wht 19-10-16
@@ -707,8 +715,65 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 {
 	if(pEnt==NULL)
 		return FALSE;
-	if(!pEnt->isKindOf(AcDbText::desc())&&!pEnt->isKindOf(AcDbMText::desc()))
-		return FALSE;
+	//从块中解析钢板信息
+	if (pEnt->isKindOf(AcDbBlockReference::desc()))
+	{
+		AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
+		BOOL bRetCode = false;
+		AcDbEntity *pSubEnt = NULL;
+		AcDbObjectIterator *pIter = pBlockRef->attributeIterator();
+		for (pIter->start(); !pIter->done(); pIter->step())
+		{
+			CAcDbObjLife objLife(pIter->objectId());
+			if((pSubEnt=objLife.GetEnt())==NULL)
+				continue;
+			if (!pEnt->isKindOf(AcDbAttribute::desc()))
+				continue;
+			AcDbAttribute *pAttr = (AcDbAttribute*)pEnt;
+			CXhChar100 sTag, sText;
+#ifdef _ARX_2007
+			sTag.Copy(_bstr_t(pAttr->tag()));
+			sText.Copy(_bstr_t(pAttr->textString()));
+#else
+			sTag.Copy(pAttr->tag());
+			sText.Copy(pAttr->textString());
+#endif
+			if (sTag.GetLength() == 0 || sText.GetLength() == 0)
+				continue;
+			if (sTag.EqualNoCase("件号&规格&材质"))
+				bRetCode = RecogBasicInfo(pAttr, basicInfo);
+			else if (sTag.EqualNoCase("数量"))
+			{
+				CXhChar50 sTemp(sText);
+				for (char* token = strtok(sTemp, "X="); token; token = strtok(NULL, "X="))
+				{
+					CXhChar16 sToken(token);
+					if (sToken.Replace("块", "") > 0)
+						basicInfo.m_nNum = atoi(sToken);
+				}
+			}
+			else if (sTag.EqualNoCase("塔型"))
+				basicInfo.m_sTaType.Copy(sText);
+			else if (sTag.EqualNoCase("钢印"))
+			{
+				sText.Replace("钢印", "");
+				sText.Replace(":", "");
+				sText.Replace("：", "");
+				basicInfo.m_sTaStampNo.Copy(sText);
+			}
+			else if (sTag.EqualNoCase("孔径"))
+				basicInfo.m_sBoltStr.Copy(sText);
+			else if (sTag.EqualNoCase("工程代码"))
+			{
+				sText.Replace("工程代码", "");
+				sText.Replace(":", "");
+				sText.Replace("：", "");
+				basicInfo.m_sPrjCode.Copy(sText);
+			}
+		}
+		return bRetCode;
+	}
+	//从字符串中解析钢板信息
 	CXhChar500 sText;
 	ATOM_LIST<CXhChar200> lineList;
 	if(pEnt->isKindOf(AcDbText::desc()))

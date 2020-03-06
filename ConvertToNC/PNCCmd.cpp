@@ -44,64 +44,6 @@ void DisplayProcess(int percent, char *sTitle)
 		pProcDlg->SetTitle("进度");
 	pProcDlg->Refresh(percent);
 }
-static BOOL RecogBaseInfoFromBlockRef(AcDbBlockReference *pBlockRef,BASIC_INFO &baseInfo)
-{
-	if(pBlockRef==NULL)
-		return false;
-	BOOL bRetCode=false;
-	AcDbEntity *pEnt=NULL;
-	AcDbObjectIterator *pIter=pBlockRef->attributeIterator();
-	for(pIter->start();!pIter->done();pIter->step())
-	{
-		acdbOpenAcDbEntity(pEnt,pIter->objectId(),AcDb::kForRead);
-		CAcDbObjLife objLife(pEnt);
-		if(pEnt==NULL||!pEnt->isKindOf(AcDbAttribute::desc()))
-			continue;
-		AcDbAttribute *pAttr=(AcDbAttribute*)pEnt;
-		CXhChar100 sTag,sText;
-#ifdef _ARX_2007
-		sTag.Copy(_bstr_t(pAttr->tag()));
-		sText.Copy(_bstr_t(pAttr->textString()));
-#else
-		sTag.Copy(pAttr->tag());
-		sText.Copy(pAttr->textString());
-#endif
-		if(sTag.GetLength()==0||sText.GetLength()==0)
-			continue;
-		if(sTag.EqualNoCase("件号&规格&材质"))
-			bRetCode=g_pncSysPara.RecogBasicInfo(pAttr,baseInfo);
-		else if(sTag.EqualNoCase("数量"))
-		{
-			CXhChar50 sTemp(sText);
-			for(char* token=strtok(sTemp,"X=");token;token=strtok(NULL,"X="))
-			{
-				CXhChar16 sToken(token);
-				if(sToken.Replace("块","")>0)
-					baseInfo.m_nNum=atoi(sToken);
-			}
-		}
-		else if(sTag.EqualNoCase("塔型"))
-			baseInfo.m_sTaType.Copy(sText);
-		else if(sTag.EqualNoCase("钢印"))
-		{
-			sText.Replace("钢印","");
-			sText.Replace(":","");
-			sText.Replace("：","");
-			baseInfo.m_sTaStampNo.Copy(sText);
-		}
-		else if(sTag.EqualNoCase("孔径"))
-			baseInfo.m_sBoltStr.Copy(sText);
-		else if(sTag.EqualNoCase("工程代码"))
-		{
-			sText.Replace("工程代码","");
-			sText.Replace(":","");
-			sText.Replace("：","");
-			baseInfo.m_sPrjCode.Copy(sText);
-		}
-	}
-	return bRetCode;
-}
-
 
 void UpdatePartList()
 {
@@ -152,7 +94,6 @@ void SmartExtractPlate(CPNCModel *pModel)
 		return;
 	pModel->DisplayProcess = DisplayProcess;
 	CLogErrorLife logErrLife;
-	AcDbObjectId entId;
 	CHashSet<AcDbObjectId> selectedEntList;
 	//默认选择所有的图形，方便后期的过滤使用
 	SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
@@ -162,24 +103,22 @@ void SmartExtractPlate(CPNCModel *pModel)
 		return;	
 #else
 	//UBOM默认处理所有图元
-	for (entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
+	for (AcDbObjectId entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
 		selectedEntList.SetValue(entId.asOldId(), entId);
 #endif
 	//从框选信息中提取中钢板的标识，统计钢板集合
 	CHashSet<AcDbObjectId> textIdHash;
 	ATOM_LIST<GEPOINT> holePosList;
-	BOLT_HOLE hole;
-	for (entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext())
+	AcDbEntity *pEnt = NULL;
+	for (AcDbObjectId entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext())
 	{
-		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, entId, AcDb::kForRead);
-		if(pEnt==NULL)
+		CAcDbObjLife objLife(entId);
+		if((pEnt = objLife.GetEnt())==NULL)
 			continue;
-		CAcDbObjLife objLife(pEnt);
 		if (!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()) && !pEnt->isKindOf(AcDbBlockReference::desc()))
 			continue;
 		textIdHash.SetValue(entId.asOldId(), entId);
-		bool bValidAttrBlock = false;
+		//
 		BASIC_INFO baseInfo;
 		GEPOINT dim_pos, dim_vec;
 		CXhChar500 sText;
@@ -252,22 +191,22 @@ void SmartExtractPlate(CPNCModel *pModel)
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
 		{	//从块中解析钢板信息
 			AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
-			if (RecogBaseInfoFromBlockRef(pBlockRef, baseInfo))
+			if(g_pncSysPara.RecogBasicInfo(pBlockRef,baseInfo))
 			{
 				AcGePoint3d txt_pos = pBlockRef->position();
 				dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
 				dim_vec.Set(cos(pBlockRef->rotation()), sin(pBlockRef->rotation()));
-				bValidAttrBlock = true;
 			}
 			else
 			{
+				BOLT_HOLE hole;
 				if (g_pncSysPara.RecogBoltHole(pEnt, hole))
 					holePosList.append(GEPOINT(hole.posX, hole.posY));
 				continue;
 			}
 		}
 		CXhChar16 sPartNo;
-		if (bValidAttrBlock)
+		if (baseInfo.m_sPartNo.GetLength() > 0)
 			sPartNo.Copy(baseInfo.m_sPartNo);
 		else
 		{
@@ -289,7 +228,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 		pPlateProcess->m_bNeedExtract = TRUE;	//选择CAD实体包括当前件号时设置位需要提取
 		pPlateProcess->dim_pos = dim_pos;
 		pPlateProcess->dim_vec = dim_vec;
-		if (bValidAttrBlock)
+		if (baseInfo.m_sPartNo.GetLength() > 0)
 		{
 			pPlateProcess->plateInfoBlockRefId = entId;
 			pPlateProcess->xPlate.SetPartNo(sPartNo);
@@ -376,10 +315,9 @@ void SmartExtractPlate(CPNCModel *pModel)
 	//UBOM只需要更新钢板的基本信息
 	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
 	{
-		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
-		CAcDbObjLife objLife(pEnt);
-		if (!pEnt->isKindOf(AcDbText::desc()))
+		CAcDbObjLife objLife(objId);
+		AcDbEntity *pEnt = objLife.GetEnt();
+		if (pEnt==NULL || !pEnt->isKindOf(AcDbText::desc()))
 			continue;
 		GEPOINT dim_pos=GetCadTextDimPos(pEnt);
 		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos),*pTemPlate=NULL;
@@ -432,39 +370,10 @@ void SmartExtractPlate(CPNCModel *pModel)
 void ManualExtractPlate()
 {
 	CLogErrorLife logErrLife;
-	CHashSet<AcDbObjectId> selectedEntList;
 	//框选待修正钢板的轮廓边
-	ads_name ent_sel_set;
-	int retCode=0;
-#ifdef _ARX_2007
-	retCode=acedSSGet(L"",NULL,NULL,NULL,ent_sel_set);
-#else
-	retCode=acedSSGet("",NULL,NULL,NULL,ent_sel_set);
-#endif
-	if(retCode==RTCAN)
-	{	//用户按ESC取消
-		acedSSFree(ent_sel_set);
+	CHashSet<AcDbObjectId> selectedEntList;
+	if (!SelCadEntSet(selectedEntList))
 		return;
-	}
-	else
-	{	
-		long ll;
-		acedSSLength(ent_sel_set,&ll);
-		for(long i=0;i<ll;i++)
-		{	//根据文字说明初始化点集合
-			ads_name entname;
-			acedSSName(ent_sel_set,i,entname);
-			AcDbObjectId entId;
-			acdbGetObjectId(entId,entname);
-			AcDbEntity* pEnt;
-			acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
-			if(pEnt==NULL)
-				continue;
-			selectedEntList.SetValue(entId.asOldId(),entId);
-			pEnt->close();
-		}
-	}
-	acedSSFree(ent_sel_set);
 	//根据选择集合提取钢板的轮廓边，初始化顶点和螺栓信息
 	CPlateProcessInfo plate;
 	if(!plate.InitProfileBySelEnts(selectedEntList))

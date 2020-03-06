@@ -2,9 +2,6 @@
 #include "f_ent.h"
 #include "XhCharString.h"
 
-class AcDbLine;
-class AcDbEntity;
-
 struct BASIC_INFO{
 	char m_cMat;
 	char m_cQuality;			//质量等级
@@ -30,16 +27,7 @@ struct BOLT_HOLE{
 		posX = posY = increment = ciSymbolType = 0; d = 0;
 	}
 };
-struct ICurveLine{
-	static const BYTE STRAIGHT		=1;
-	static const BYTE ARCLINE		=2;
-	static const BYTE ELLIPSE		=3;
-	BYTE ciCurveType;	//1.直线;2.圆弧;3.椭圆弧
-	GEPOINT start,end;//const double* start,const double* end
-	ICurveLine(){ciCurveType=1;}
-};
-struct ISymbolRecognizer{
-	virtual bool IsIntersWith(ICurveLine* pCurveLine,DWORD cbFilterFlag=0)=0;
-	virtual bool IsWeldingAlongSide(ICurveLine* pCurveLine)=0;
-};
 
+struct ISymbolRecognizer {
+	virtual bool IsHuoquLine(GELINE* pLine, DWORD cbFilterFlag = 0) = 0;
+};

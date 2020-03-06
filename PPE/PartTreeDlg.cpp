@@ -119,30 +119,37 @@ void CPartTreeDlg::OnTvnKeydownTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 //删除中性文件
 void CPartTreeDlg::OnDeleteItem()
 {
-	HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
-	if(hItem==NULL)
+	int nSelectCount = m_treeCtrl.GetSelectedCount();
+	if (nSelectCount <= 0)
+		return; 
+	if (AfxMessageBox("确定要删除选中项吗？", MB_YESNO) == IDNO)
 		return;
-	TREEITEM_INFO *pInfo=(TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
-	if(pInfo==NULL||(pInfo->itemType!=TREEITEM_INFO::INFO_ANGLE&&pInfo->itemType!=TREEITEM_INFO::INFO_PLATE))
-		return;
-	CProcessPart *pPart=(CProcessPart*)pInfo->dwRefData;
-	if(pPart==NULL)
-		return;
-	if(AfxMessageBox("确定要删除选中项吗？",MB_YESNO)==IDNO)
-		return;
-	model.DeletePart(pPart->GetPartNo());
-	m_treeCtrl.DeleteItem(hItem);
-	//删除选中构件后获取当前选中项
-	hItem=m_treeCtrl.GetSelectedItem();
-	pPart=NULL;
-	if(hItem)
+	HTREEITEM hSelItem = NULL;
+	for (int i = 0; i < nSelectCount; i++)
 	{
-		pInfo=(TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
-		if(pInfo&&(pInfo->itemType==TREEITEM_INFO::INFO_ANGLE||pInfo->itemType==TREEITEM_INFO::INFO_PLATE))
-			pPart=(CProcessPart*)pInfo->dwRefData;
+		HTREEITEM hSelItem = m_treeCtrl.GetFirstSelectedItem();
+		if (hSelItem == NULL)
+			return;
+		TREEITEM_INFO *pInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+		if (pInfo == NULL || (pInfo->itemType != TREEITEM_INFO::INFO_ANGLE&&pInfo->itemType != TREEITEM_INFO::INFO_PLATE))
+			return;
+		CProcessPart *pPart = (CProcessPart*)pInfo->dwRefData;
+		if (pPart == NULL)
+			return;
+		model.DeletePart(pPart->GetPartNo());
+		m_treeCtrl.DeleteItem(hSelItem);
 	}
-	CPPEView* pView=(CPPEView*)theApp.GetView();
-	if(pPart)
+	//更新界面
+	HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
+	CProcessPart *pPart = NULL;
+	if (hItem)
+	{
+		TREEITEM_INFO *pInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
+		if (pInfo && (pInfo->itemType == TREEITEM_INFO::INFO_ANGLE || pInfo->itemType == TREEITEM_INFO::INFO_PLATE))
+			pPart = (CProcessPart*)pInfo->dwRefData;
+	}
+	CPPEView* pView = (CPPEView*)theApp.GetView();
+	if (pPart)
 		pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());
 	else
 		pView->UpdateCurWorkPartByPartNo(NULL);

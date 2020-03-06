@@ -8,22 +8,18 @@
 #include "ArrayList.h"
 
 //////////////////////////////////////////////////////////////////////////
-class CStraightLine : public ICurveLine
-{
-public:
-	CStraightLine(const double* _start,const double* _end);
-};
-class CSymbolEntity{
-public:
-	struct LINE{GEPOINT start,end;};
+//特殊符号识别器
+struct SYMBOL_ENTITY{
 	BYTE ciSymbolType;	//0x01.火曲线S型符号
-	CXhSimpleList<LINE> listSonlines;
+	CXhSimpleList<GELINE> listSonlines;
 };
-class CSymbolRecoginzer : public ISymbolRecognizer{
+class CSymbolRecoginzer : public ISymbolRecognizer {
+	CXhSimpleList<SYMBOL_ENTITY> listSymbols;
 public:
-	CXhSimpleList<CSymbolEntity> listSymbols;
-	bool IsIntersWith(ICurveLine* pCurveLine,DWORD cbFilterFlag=0);		//通过标记符号识别火曲线
-	bool IsWeldingAlongSide(ICurveLine* pCurveLine);	//焊缝线识别
+	//
+	void AppendSymbolEnt(AcDbSpline* pSpline);
+	//通过标记符号识别火曲线
+	virtual bool IsHuoquLine(GELINE* pLine,DWORD cbFilterFlag=0);
 };
 
 //////////////////////////////////////////////////////////////////////////
@@ -156,8 +152,8 @@ public:
 	void ParseBendText(const char* sText,double &degree,BOOL &bFrontBend);
 	virtual void Init();
 	//
-	virtual BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
-	virtual BOOL IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
+	virtual BOOL IsBendLine(AcDbLine* pAcDbLine, ISymbolRecognizer* pRecognizer = NULL);
+	virtual BOOL IsSlopeLine(AcDbLine* pAcDbLine, ISymbolRecognizer* pRecognizer = NULL);
 	static const int MAX_BOLT_HOLE = 100;	//最大的螺栓孔径 wht 19-12-21
 	virtual BOOL RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole);
 	virtual BOOL RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo);

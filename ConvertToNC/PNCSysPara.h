@@ -80,6 +80,7 @@ public:
 	BOOL RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum);
 	BOOL IsNeedFilterLayer(const char* sLayer);
 	BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
+	BOOL IsProfileEnt(AcDbEntity* pEnt);
 	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
 	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100,CPropTreeItem *pItem=NULL);//通过属性Id获取属性值

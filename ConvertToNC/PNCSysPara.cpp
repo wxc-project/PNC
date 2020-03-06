@@ -295,6 +295,23 @@ BOOL CPNCSysPara::IsNeedFilterLayer(const char* sLayer)
 	return FALSE;
 }
 
+BOOL CPNCSysPara::IsProfileEnt(AcDbEntity* pEnt)
+{
+	if (pEnt == NULL)
+		return FALSE;
+	if (pEnt->isKindOf(AcDbLine::desc()))
+		return TRUE;	//直线
+	if (pEnt->isKindOf(AcDbArc::desc()))
+		return TRUE;	//圆弧
+	//if (pEnt->isKindOf(AcDbEllipse::desc()))
+		//return TRUE;	//椭圆弧简化为直线处理了
+	if (pEnt->isKindOf(AcDbPolyline::desc()))
+		return TRUE;	//面域中包括轮廓边
+	if (pEnt->isKindOf(AcDbRegion::desc()))
+		return TRUE;	//多线段
+	return FALSE;
+}
+
 BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
 	BOOL bRet=CPlateExtractor::IsBendLine(pAcDbLine,pRecognizer);
