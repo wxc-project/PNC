@@ -283,3 +283,5 @@ __pycache__/
 /ConvertToNC/RCa02940
 /ConvertToNC/RCa02092
 *.rej
+*.manifest
+/ConvertToNC/UBOMDebugObj7/PNC07_manifest.rc

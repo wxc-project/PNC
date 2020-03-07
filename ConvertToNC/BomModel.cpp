@@ -119,7 +119,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			sheetContentMap.GetValueAt(iRow, iCol, value);
 			if (value.vt == VT_EMPTY)
 				continue;
-			CString str(value.bstrVal);
+			CString str(VariantToString(value));
 			str.Remove('\n');
 			if (CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_PART_NO, str))
 			{
@@ -171,12 +171,14 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	//2.获取Excel所有单元格的值
 	if (iStartRow <= 0)
 		iStartRow = iContentRow;
+	CStringArray repeatPartLabelArr;
 	for(int i=iStartRow;i<= sheetContentMap.RowsCount();i++)
 	{
 		VARIANT value;
 		int nSingleNum = 0, nProcessNum = 0;
 		double fLength = 0, fWeight = 0, fSumWeight = 0;
 		CXhChar100 sPartNo, sMaterial, sSpec, sNote, sReplaceSpec, sValue;
+		CXhChar100 sSingleNum, sProcessNum;
 		BOOL bCutAngle = FALSE, bCutRoot = FALSE, bCutBer = FALSE, bPushFlat = FALSE;
 		BOOL bKaiJiao = FALSE, bHeJiao = FALSE, bWeld = FALSE, bZhiWan = FALSE;
 		//件号
@@ -262,14 +264,18 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		if (pColIndex)
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
-			nSingleNum = atoi(VariantToString(value));
+			sSingleNum = VariantToString(value);
+			if(sSingleNum.GetLength()>0)
+				nSingleNum = atoi(sSingleNum);
 		}
 		//加工数
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::T_MANU_NUM);
 		if (pColIndex)
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
-			nProcessNum = atoi(VariantToString(value));
+			sProcessNum = VariantToString(value);
+			if(sProcessNum.GetLength()>0)
+				nProcessNum = atoi(sProcessNum);
 		}
 		//单基重量
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::T_SING_WEIGHT);
@@ -364,10 +370,15 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			if (sValue.Equal("*"))
 				bHeJiao = TRUE;
 		}
+		//材质、规格、单基数、加工数同时为空时，此行为无效行
+		if (sMaterial.GetLength() <= 0 && sSpec.GetLength() <= 0 &&
+			sSingleNum.GetLength() <= 0 && sProcessNum.GetLength() <= 0)
+			continue;	//当前行为无效行，跳过此行 wht 20-03-05
 		//填充哈希表
 		BOMPART* pBomPart = NULL;
-		if (pBomPart =m_hashPartByPartNo.GetValue(sPartNo))
-			logerr.Log("存在重复件号：%s", (char*)sPartNo);
+		if (pBomPart = m_hashPartByPartNo.GetValue(sPartNo))
+			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d",(char*)sPartNo,sProcessNum));
+			//logerr.Log("存在重复件号：%s", (char*)sPartNo);
 		int nWidth = 0, nThick = 0;
 		CProcessPart::RestoreSpec(sSpec, &nWidth, &nThick);
 		if (pBomPart == NULL)
@@ -379,7 +390,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			pBomPart->sSpec.Copy(sSpec);
 			pBomPart->sMaterial = sMaterial;
 			pBomPart->cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
-			if(g_xUbomModel.m_uiCustomizeSerial!=CBomModel::ID_JiangSu_HuaDian)
+			if (g_xUbomModel.m_uiCustomizeSerial != CBomModel::ID_JiangSu_HuaDian &&
+				g_xUbomModel.m_uiCustomizeSerial != CBomModel::ID_ChengDu_DongFang)
 				pBomPart->cQualityLevel = CProcessPart::QueryBriefQuality(sMaterial);
 			pBomPart->length = fLength;
 			pBomPart->fPieceWeight = fWeight;
@@ -417,6 +429,14 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{	//件号重复，加工数按累加计算 wht 19-09-15
 			pBomPart->feature1 += nProcessNum;
 		}
+	}
+	if (repeatPartLabelArr.GetSize() > 0)
+	{	//提示用户存在重复件号，件数按累加统计 wht 20-03-05
+		logerr.Log("文件名：%s\n", (char*)m_sFileName);
+		logerr.Log("存在重复件号（加工件数按累加计算）：\n");
+		logerr.Log("件号\t\t\t加工数\n");
+		for (int i = 0; i < repeatPartLabelArr.GetSize(); i++)
+			logerr.Log(repeatPartLabelArr[i]);
 	}
 	return TRUE;
 }
@@ -562,7 +582,7 @@ void CProjectTowerType::WriteProjectFile(CString sFilePath)
 		file.Write(&ibValue,sizeof(int));
 	}
 }
-BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath)
+BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
 	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
 	{	//安徽宏源料单文件中含有关键字
@@ -579,7 +599,10 @@ BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath)
 			return FALSE;	//放样数据已读取
 		if (g_xUbomModel.m_xTmaTblCfg.m_sColIndexArr.GetLength() <= 0)
 		{
-			logerr.Log("没有定制BOM数据列,读取失败!");
+			if (bDisplayMsgBox)
+				AfxMessageBox("没有定制BOM数据列,读取失败!");
+			else
+				logerr.Log("没有定制BOM数据列,读取失败!");
 			return FALSE;
 		}
 		CHashStrList<DWORD> hashColIndex;
@@ -616,7 +639,7 @@ BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath)
 	}
 	return TRUE;
 }
-BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath)
+BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
 	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
 	{
@@ -633,7 +656,10 @@ BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath)
 			return FALSE;	//放样数据已读取
 		if (g_xUbomModel.m_xErpTblCfg.m_sColIndexArr.GetLength() <= 0)
 		{
-			logerr.Log("没有定制BOM数据列,读取失败!");
+			if(bDisplayMsgBox)
+				AfxMessageBox("没有定制BOM数据列,读取失败!");
+			else
+				logerr.Log("没有定制BOM数据列,读取失败!");
 			return FALSE;
 		}
 		CHashStrList<DWORD> hashColIndex;
@@ -820,7 +846,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 			pSrcPart->siZhiWan != pDesPart->siZhiWan)
 			hashBoolByPropName.SetValue("ZhiWan", TRUE);
 	}
-	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::ANGLE)
+	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::PLATE)
 	{	//钢板信息对比
 		if (hashColIndex.GetValue(CBomTblTitleCfg::T_WELD) &&
 			pSrcPart->bWeldPart != pDesPart->bWeldPart)
@@ -837,12 +863,12 @@ int CProjectTowerType::CompareOrgAndLoftParts()
 	m_hashCompareResultByPartNo.Empty();
 	if(m_xLoftBom.GetPartNum()<=0)
 	{
-		logerr.Log("缺少放样BOM信息!");
+		AfxMessageBox("缺少放样BOM信息!");
 		return 2;
 	}
 	if(m_xOrigBom.GetPartNum()<=0)
 	{
-		logerr.Log("缺少工艺科BOM信息");
+		AfxMessageBox("缺少工艺科BOM信息");
 		return 2;
 	}
 	CHashStrList<BOOL> hashBoolByPropName;
@@ -952,13 +978,13 @@ int CProjectTowerType::CompareLoftAndAngleDwg(const char* sFileName)
 	const double COMPARE_EPS = 0.5;
 	if (m_xLoftBom.GetPartNum() <= 0)
 	{
-		logerr.Log("缺少放样BOM信息!");
+		AfxMessageBox("缺少放样BOM信息!");
 		return 2;
 	}
 	CDwgFileInfo* pDwgFile = FindDwgBomInfo(sFileName);
 	if (pDwgFile == NULL)
 	{
-		logerr.Log("未找到指定的角钢DWG文件!");
+		AfxMessageBox("未找到指定的角钢DWG文件!");
 		return 2;
 	}
 	//进行比对
@@ -1013,13 +1039,13 @@ int CProjectTowerType::CompareLoftAndPlateDwg(const char* sFileName)
 	const double COMPARE_EPS=0.5;
 	if(m_xLoftBom.GetPartNum()<=0)
 	{
-		logerr.Log("缺少放样BOM信息!");
+		AfxMessageBox("缺少放样BOM信息!");
 		return 2;
 	}
 	CDwgFileInfo* pDwgFile=FindDwgBomInfo(sFileName);
 	if(pDwgFile==NULL)
 	{
-		logerr.Log("未找到指定的钢板DWG文件!");
+		AfxMessageBox("未找到指定的钢板DWG文件!");
 		return 2;
 	}
 	//进行数据比对
@@ -1526,7 +1552,7 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 	LPDISPATCH pWorksheets = excelobj.GetWorksheets();
 	if(pWorksheets==NULL)
 	{
-		logerr.Log("ERP料单文件打开失败!");
+		AfxMessageBox("ERP料单文件打开失败!");
 		return FALSE;
 	}
 	//获取Excel指定Sheet内容存储至sheetContentMap中
@@ -1748,6 +1774,23 @@ CDwgFileInfo *CBomModel::FindDwgFile(const char* file_path)
 	}
 	return pDwgFile;
 }
+
+CXhChar100 CBomModel::GetClientName()
+{
+	CXhChar100 sClientName;
+	if (ID_AnHui_HongYuan == m_uiCustomizeSerial)	//安徽宏源
+		sClientName.Copy("安徽宏源");
+	else if(ID_AnHui_TingYang == m_uiCustomizeSerial)	//安徽汀阳
+		sClientName.Copy("安徽汀阳");
+	else if(ID_SiChuan_ChengDu == m_uiCustomizeSerial)	//中电建成都铁塔
+		sClientName.Copy("中电建成都铁塔");
+	else if(ID_JiangSu_HuaDian == m_uiCustomizeSerial)	//江苏华电
+		sClientName.Copy("江苏华电");
+	else if (ID_ChengDu_DongFang == m_uiCustomizeSerial)//成都东方
+		sClientName.Copy("成都东方");
+	return sClientName;
+}
+
 CXhChar16 CBomModel::QueryMatMarkIncQuality(BOMPART *pPart)
 {
 	CXhChar16 sMatMark;

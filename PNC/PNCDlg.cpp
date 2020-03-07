@@ -28,6 +28,7 @@ CPNCDlg::CPNCDlg(CWnd* pParent /*=NULL*/)
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 #endif
 	m_nRightMargin=0;
+	m_bChkEnableDocWnd = FALSE;
 }
 
 void CPNCDlg::DoDataExchange(CDataExchange* pDX)
@@ -35,6 +36,7 @@ void CPNCDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_COMBO1, m_xPathCmbBox);
 	DDX_CBString(pDX, IDC_COMBO1, m_sPath);
+	DDX_Check(pDX, IDC_CHK_ENABLE_DOCK_WND, m_bChkEnableDocWnd);
 }
 
 BEGIN_MESSAGE_MAP(CPNCDlg, CDialogEx)
@@ -107,8 +109,29 @@ BOOL CPNCDlg::OnInitDialog()
 	GetDlgItem(IDOK)->MoveWindow(&pncRc);
 	//
 	SetWindowText("UBOM");
+	RefreshCheckShowState();
 #endif
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
+}
+
+void CPNCDlg::RefreshCheckShowState()
+{
+#ifdef __UBOM_ONLY_
+	int iCurSel = m_xPathCmbBox.GetCurSel();
+	CString sCadPath,sCadName;
+	if (iCurSel > 0)
+	{
+		m_xPathCmbBox.GetLBText(iCurSel, sCadPath);
+		sCadName.Format("%sacad.exe", sCadPath);
+	}
+	CString sProductVersion = GetProductVersion(sCadName);
+	if (sProductVersion.Find("16.") == 0)
+		GetDlgItem(IDC_CHK_ENABLE_DOCK_WND)->ShowWindow(SW_SHOW);
+	else
+		GetDlgItem(IDC_CHK_ENABLE_DOCK_WND)->ShowWindow(SW_HIDE);
+#else
+	GetDlgItem(IDC_CHK_ENABLE_DOCK_WND)->ShowWindow(SW_HIDE);
+#endif
 }
 
 // 如果向对话框添加最小化按钮，则需要下面的代码
@@ -196,6 +219,7 @@ void CPNCDlg::OnCbnSelchangeCombo1()
 #endif
 		SetRegKey(HKEY_CURRENT_USER,sSubKey,"CAD_PATH",cadPath);
 	}
+	RefreshCheckShowState();
 }
 void CPNCDlg::OnSize(UINT nType, int cx, int cy)
 {
@@ -228,7 +252,7 @@ void CPNCDlg::OnOK()
 	char cadPath[MAX_PATH]="",cadName[MAX_PATH]="";
 	GetCadPath(cadPath);
 #ifdef __UBOM_ONLY_
-	if (StartCadAndLoadArx("UBOM", APP_PATH, cadPath, m_sRxFile, m_hWnd))
+	if (StartCadAndLoadArx("UBOM", APP_PATH, cadPath, m_sRxFile, m_hWnd, m_bChkEnableDocWnd))
 #else
 	if (StartCadAndLoadArx("PNC", APP_PATH, cadPath, m_sRxFile, m_hWnd))
 #endif

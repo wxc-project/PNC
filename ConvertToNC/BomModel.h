@@ -149,8 +149,8 @@ public:
 	CPlateProcessInfo *FindPlateInfoByPartNo(const char* sPartNo);
 	CAngleProcessInfo *FindAngleInfoByPartNo(const char* sPartNo);
 	//初始化操作
-	BOOL IsTmaBomFile(const char* sFileName);
-	BOOL IsErpBomFile(const char* sFileName);
+	BOOL IsTmaBomFile(const char* sFileName,BOOL bDisplayMsgBox = FALSE);
+	BOOL IsErpBomFile(const char* sFileName, BOOL bDisplayMsgBox = FALSE);
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
 	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName,BOOL bJgDxf);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
@@ -185,7 +185,9 @@ public:
 	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳
 	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电
+	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方
 	static UINT m_uiCustomizeSerial;
+	static CXhChar100 GetClientName();
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };

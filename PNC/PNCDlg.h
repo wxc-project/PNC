@@ -12,7 +12,7 @@ class CPNCDlg : public CDialogEx
 // 构造
 public:
 	CPNCDlg(CWnd* pParent = NULL);	// 标准构造函数	
-
+	void RefreshCheckShowState();
 // 对话框数据
 	enum { IDD = IDD_PNC_DIALOG };
 	int m_nRightMargin;
@@ -37,4 +37,5 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnBtnRunPPE();
 	afx_msg void OnBnClickedBtnAbout();
+	BOOL m_bChkEnableDocWnd;
 };

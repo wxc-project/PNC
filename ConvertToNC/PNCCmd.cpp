@@ -956,6 +956,7 @@ void RevisionPartProcess()
 	}
 	g_xUbomModel.InitBomTblCfg();
 	//
+	g_xDockBarManager.DisplayRevisionDockBar();
 	CRevisionDlg* pRevisionDlg = g_xDockBarManager.GetRevisionDlgPtr();
 	if (pRevisionDlg)
 	{

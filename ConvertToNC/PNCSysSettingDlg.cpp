@@ -125,10 +125,13 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 				oper.InsertCmbListPropItem(pOtherItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
 				oper.InsertEditPropItem(pOtherItem, "m_nMkRectLen", "", "", -1, TRUE);
 				oper.InsertEditPropItem(pOtherItem, "m_nMkRectWidth", "", "", -1, TRUE);
-				g_xDockBarManager.DisplayPartListDockBar();
 			}
+			#ifndef __UBOM_ONLY_
+			if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+				g_xDockBarManager.DisplayPartListDockBar();
 			else
 				g_xDockBarManager.HidePartListDockBar();
+			#endif
 		}
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bAutoLayout2"))
@@ -144,10 +147,13 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			oper.InsertCmbListPropItem(pItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
 			oper.InsertEditPropItem(pItem, "m_nMkRectLen", "", "", -1, TRUE);
 			oper.InsertEditPropItem(pItem, "m_nMkRectWidth", "", "", -1, TRUE);
-			g_xDockBarManager.DisplayPartListDockBar();
 		}
+#ifndef __UBOM_ONLY_
+		if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+			g_xDockBarManager.DisplayPartListDockBar();
 		else
 			g_xDockBarManager.HidePartListDockBar();
+#endif
 		CXhChar200 sText;
 		long idProp = CPNCSysPara::GetPropID("m_bAutoLayout1");
 		if (g_pncSysPara.GetPropValueStr(idProp, sText) > 0)

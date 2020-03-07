@@ -326,7 +326,12 @@ void InitApplication()
 #endif
 	HWND hWnd = adsw_acadMainWnd();
 #ifdef __UBOM_ONLY_
-	::SetWindowText(hWnd, "UBOM");
+	g_xUbomModel.InitBomTblCfg();
+	CXhChar100 sClientName = CBomModel::GetClientName();
+	if(sClientName.GetLength()>0)
+		::SetWindowText(hWnd, CXhChar100("UBOM-%s",(char*)sClientName));
+	else 
+		::SetWindowText(hWnd, "UBOM");
 #else
 	::SetWindowText(hWnd,"PNC");
 #endif
@@ -339,7 +344,8 @@ void InitApplication()
 		g_xDockBarManager.DisplayPartListDockBar();
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	g_xDockBarManager.DisplayRevisionDockBar();
+	int nWidth = CRevisionDlg::GetDialogInitWidthByCustomizeSerial(g_xUbomModel.m_uiCustomizeSerial);
+	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
 #endif
 }
 void UnloadApplication()

@@ -31,4 +31,4 @@ BOOL ReadCadPath(CAD_PATH &cad_path, bool bAutoFindPath);
 void InitCadPathList(ARRAY_LIST<CAD_PATH> &cadPathArr);
 CString GetProductVersion(const char* exe_path);
 BOOL StartCadAndLoadArx(const char* productName, const char* APP_PATH, 
-						char* cad_path, CString &rxFilePath, HWND hWnd);
+						char* cad_path, CString &rxFilePath, HWND hWnd,BOOL bEnableDockWnd=FALSE);

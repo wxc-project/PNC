@@ -188,6 +188,26 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 END_MESSAGE_MAP()
 
 // CRevisionDlg 消息处理程序
+int CRevisionDlg::GetDialogInitWidthByCustomizeSerial(int idCustomizeSerial)
+{
+	int nInitWidth = 510;
+	if (idCustomizeSerial == CBomModel::ID_AnHui_HongYuan ||
+		idCustomizeSerial == CBomModel::ID_AnHui_TingYang)
+	{
+		nInitWidth = 730;
+	}
+	else if (idCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+		nInitWidth = 565;
+	else if (idCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+	{
+		nInitWidth = 720;
+	}
+	else if (idCustomizeSerial == CBomModel::ID_ChengDu_DongFang)
+	{
+		nInitWidth = 760;
+	}
+	return nInitWidth;
+}
 BOOL CRevisionDlg::OnInitDialog()
 {
 #ifdef __SUPPORT_DOCK_UI_
@@ -199,7 +219,7 @@ BOOL CRevisionDlg::OnInitDialog()
 	m_xListReport.EmptyColumnHeader();
 	m_xListReport.AddColumnHeader("件号", 75);
 	m_xListReport.AddColumnHeader("规格", 70);
-	m_xListReport.AddColumnHeader("材质", 50);
+	m_xListReport.AddColumnHeader("材质", 53);
 	m_xListReport.AddColumnHeader("长度", 50);
 	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan||
 		g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang)
@@ -209,9 +229,9 @@ BOOL CRevisionDlg::OnInitDialog()
 		m_xListReport.AddColumnHeader("加工重量", 65);
 		m_xListReport.AddColumnHeader("备注", 150);
 	}
-	if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+	else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 		m_xListReport.AddColumnHeader("单基数", 52);
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{
 		m_xListReport.AddColumnHeader("加工数", 52);
 		m_xListReport.AddColumnHeader("焊接", 44);
@@ -223,6 +243,12 @@ BOOL CRevisionDlg::OnInitDialog()
 		m_xListReport.AddColumnHeader("开角", 44);
 		m_xListReport.AddColumnHeader("合角", 44);
 		m_xListReport.AddColumnHeader("带脚钉", 50);
+		m_xListReport.AddColumnHeader("备注", 150);
+	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_ChengDu_DongFang)
+	{
+		m_xListReport.AddColumnHeader("宽度", 52);
+		m_xListReport.AddColumnHeader("单基数", 52);
 		m_xListReport.AddColumnHeader("备注", 150);
 	}
 	m_xListReport.EnableSortItems(true,true);
@@ -326,7 +352,7 @@ CProjectTowerType* CRevisionDlg::GetProject(HTREEITEM hItem)
 	return pProject;
 }
 static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGridCtrl::CTreeItem *pParentItem,
-	BOMPART *pPart,CHashStrList<BOOL> *pHashBoolByPropName=NULL)
+	BOMPART *pPart,CHashStrList<BOOL> *pHashBoolByPropName=NULL,BOOL bUpdate=TRUE)
 {
 	COLORREF clr=RGB(230,100,230);
 	CListCtrlItemInfo *lpInfo=new CListCtrlItemInfo();
@@ -366,13 +392,13 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("fSumWeight"))
 			lpInfo->SetSubItemColor(7, clr);
 	}
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 	{
 		lpInfo->SetSubItemText(4, CXhChar50("%d", pPart->GetPartNum()), TRUE);
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("nSingNum"))
 			lpInfo->SetSubItemColor(4, clr);
 	}
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{	//成都铁塔BOM显示信息
 		//加工数
 		lpInfo->SetSubItemText(4, CXhChar50("%d", pPart->GetPartNum()), TRUE);
@@ -440,10 +466,25 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("sNotes"))
 			lpInfo->SetSubItemColor(14, clr);
 	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_ChengDu_DongFang)
+	{	//成都东方BOM信息
+		//宽度
+		lpInfo->SetSubItemText(4, CXhChar50("%.0f",pPart->wide), TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("fWidth"))
+			lpInfo->SetSubItemColor(4, clr);
+		//单基数
+		lpInfo->SetSubItemText(5, CXhChar50("%d", pPart->GetPartNum()), TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("nSingNum"))
+			lpInfo->SetSubItemColor(5, clr);
+		//备注
+		lpInfo->SetSubItemText(6, pPart->sNotes, TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("sNotes"))
+			lpInfo->SetSubItemColor(6, clr);
+	}
 	if(pParentItem)
-		return list.InsertItem(pParentItem,lpInfo,-1,true);
+		return list.InsertItem(pParentItem,lpInfo,-1,bUpdate==TRUE);
 	else
-		return list.InsertRootItem(lpInfo);
+		return list.InsertRootItem(lpInfo,bUpdate);
 }
 void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 {
@@ -469,7 +510,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			{
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
-				pItem=InsertPartToList(m_xListReport,NULL,pPart,NULL);
+				pItem=InsertPartToList(m_xListReport,NULL,pPart,NULL,FALSE);
 				pItem->m_idProp=(long)pPart;
 			}
 			m_sCurFile.Format("%s",(char*)pBom->m_sBomName);
@@ -484,7 +525,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			{
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
-				pItem=InsertPartToList(m_xListReport,NULL,&pAngleInfo->m_xAngle,NULL);
+				pItem=InsertPartToList(m_xListReport,NULL,&pAngleInfo->m_xAngle,NULL,FALSE);
 				pItem->m_idProp=(long)pAngleInfo;
 			}
 			m_sCurFile.Format("%s",(char*)pDwg->m_sDwgName);
@@ -499,12 +540,13 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			{
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
-				pItem=InsertPartToList(m_xListReport,NULL,&pPlateInfo->xBomPlate,NULL);
+				pItem=InsertPartToList(m_xListReport,NULL,&pPlateInfo->xBomPlate,NULL,FALSE);
 				pItem->m_idProp=(long)pPlateInfo;
 			}
 			m_sCurFile.Format("%s",(char*)pDwg->m_sDwgName);
 			m_sRecordNum.Format("%d", pDwg->GetPlateNum());
 		}
+		m_xListReport.Redraw();
 		if (DisplayProcess)
 			DisplayProcess(100, "显示读取结果......");
 	}
@@ -526,18 +568,18 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				//添加新行并设置背景色
 				if (pResult->pOrgPart)
 				{
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart);	
+					pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL, FALSE);	
 					if (pResult->pLoftPart == NULL)
 					{	//生技有，放样没有
 						pItem->m_bStrikeout = TRUE;
 						pItem->SetBkColor(RGB(140, 140, 255));
 					}
 					else //数据不一致
-						InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
+						InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName, FALSE);
 				}
 				else
 				{
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart);
+					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL, FALSE);
 					pItem->SetBkColor(RGB(128, 128, 255));
 				}
 			}
@@ -563,11 +605,11 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 						pItem->SetBkColor(RGB(140, 140, 255));
 					}
 					else
-						InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
+						InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName, FALSE);
 				}
 				else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType == BOMPART::ANGLE)
 				{
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
+					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL, FALSE);
 					pItem->SetBkColor(RGB(128, 128, 255));
 				}
 			}
@@ -593,12 +635,12 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 						pItem->SetBkColor(RGB(140, 140, 255));
 					}
 					else
-						InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
+						InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName, FALSE);
 
 				}
 				else if (pResult->pOrgPart==NULL && pResult->pLoftPart &&pResult->pLoftPart->cPartType == BOMPART::PLATE)
 				{
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
+					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL, FALSE);
 					pItem->SetBkColor(RGB(128, 128, 255));
 				}
 			}
@@ -618,10 +660,11 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
 				if(pResult->pOrgPart)
 					continue;
-				CSuperGridCtrl::CTreeItem *pItem=InsertPartToList(m_xListReport,NULL,pResult->pLoftPart);
+				CSuperGridCtrl::CTreeItem* pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL, FALSE);
 				pItem->SetBkColor(RGB(150,220,150));
 			}
 		}
+		m_xListReport.Redraw();
 		if (DisplayProcess)
 			DisplayProcess(100, "显示校审结果......");
 	}
@@ -1099,6 +1142,16 @@ void CRevisionDlg::OnSize(UINT nType, int cx, int cy)
 		rect.right = cx - m_nRightMargin;
 #endif
 		pWnd->MoveWindow(&rect);
+		//
+		CWnd* pNumWnd = CWnd::GetDlgItem(IDC_E_NUM);
+		if (pNumWnd)
+		{
+			int nListCtrlRight = rect.right;
+			pNumWnd->GetWindowRect(&rect);
+			ScreenToClient(&rect);
+			rect.right = nListCtrlRight;
+			pNumWnd->MoveWindow(&rect);
+		}
 	}
 	pWnd = CWnd::GetDlgItem(IDC_TREE_CONTRL);
 	if (pWnd->GetSafeHwnd() != NULL)
@@ -1126,7 +1179,7 @@ void CRevisionDlg::OnCompareData()
 	CProjectTowerType* pProject=GetProject(hSelItem);
 	if(pProject==NULL)
 	{
-		logerr.Log("没有找到工程塔形");
+		AfxMessageBox("没有找到工程塔形,无法执行数据比对！");
 		return;
 	}
 	if(pItemInfo->itemType==ANGLE_DWG_ITEM)
@@ -1199,9 +1252,9 @@ void CRevisionDlg::OnRefreshPartNum()
 	else
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
-	SendCommandToCad(CStringW(L"RE "));
+	SendCommandToCad(L"RE ");
 #else
-	SendCommandToCad(CString("RE "));
+	SendCommandToCad("RE ");
 #endif
 	RefreshListCtrl(hSelItem);
 }

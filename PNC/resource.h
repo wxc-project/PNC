@@ -34,6 +34,8 @@
 #define IDC_BN_RETURN_TO_SERVER_LICENSE 1007
 #define IDC_BTN_AUTH                    1007
 #define IDC_LIST_MODULE                 1008
+#define IDC_CHECK1                      1009
+#define IDC_CHK_ENABLE_DOCK_WND         1009
 #define IDC_S_VERSION                   1012
 #define IDC_S_DOG                       1013
 #define IDC_BN_CREATE_IDENTITY_FILE     1056
@@ -56,7 +58,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        137
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1009
+#define _APS_NEXT_CONTROL_VALUE         1010
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
