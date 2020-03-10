@@ -212,6 +212,22 @@ bool DetectSpecifiedHaspKeyFile(const char* default_file)
 		SetHaspLoginScope(scope_xmlstr);
 	return detected;
 }
+BOOL IsValidAuthorization()
+{
+#ifdef __UBOM_ONLY_
+	#ifdef __PNC_
+	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_UBOM))
+		return FALSE;
+	#else
+	if (!VerifyValidFunction(TMA_LICFUNC::FUNC_IDENTITY_UBOM))
+		return FALSE;
+	#endif
+#else
+	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_BASIC))
+		return FALSE;
+#endif
+	return TRUE;
+}
 void InitApplication()
 {
 	//进行加密处理
@@ -317,35 +333,27 @@ void InitApplication()
 			return;
 		}
 	}
-#ifdef __PNC_
-	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_BASIC))
+	if (!IsValidAuthorization())
 	{
-		AfxMessageBox("软件缺少合法使用授权!");
+		AfxMessageBox("软件缺少合法使用授权，请联系供应商！");
 		exit(0);
 	}
-#endif
-	HWND hWnd = adsw_acadMainWnd();
-#ifdef __UBOM_ONLY_
-	g_xUbomModel.InitBomTblCfg();
-	CXhChar100 sClientName = CBomModel::GetClientName();
-	if(sClientName.GetLength()>0)
-		::SetWindowText(hWnd, CXhChar100("UBOM-%s",(char*)sClientName));
-	else 
-		::SetWindowText(hWnd, "UBOM");
-#else
-	::SetWindowText(hWnd,"PNC");
-#endif
+	//加载菜单项
 	RegisterServerComponents();
 	//读取配置文件
 	PNCSysSetImportDefault();
 	//显示对话框
 #ifndef __UBOM_ONLY_
+	::SetWindowText(adsw_acadMainWnd(), "PNC");
 	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
 		g_xDockBarManager.DisplayPartListDockBar();
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	int nWidth = CRevisionDlg::GetDialogInitWidthByCustomizeSerial(g_xUbomModel.m_uiCustomizeSerial);
-	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
+	g_xUbomModel.InitBomTblCfg();
+	CXhChar100 sWndText("UBOM");
+	sWndText.Append(CBomModel::GetClientName(), '-');
+	::SetWindowText(adsw_acadMainWnd(), sWndText);
+	RevisionPartProcess();
 #endif
 }
 void UnloadApplication()

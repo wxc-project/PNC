@@ -907,11 +907,10 @@ BOOL CPlateProcessInfo::InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEnt
 	objectLineArr.SetSize(0, selectedEntSet.GetNodeNum());
 	for (AcDbObjectId objId = selectedEntSet.GetFirst(); objId; objId = selectedEntSet.GetNext())
 	{
-		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, objId, AcDb::kForRead);
+		CAcDbObjLife objLife(objId);
+		AcDbEntity *pEnt = objLife.GetEnt();
 		if (pEnt == NULL)
 			continue;
-		pEnt->close();
 		if (!pEnt->isKindOf(AcDbLine::desc()) &&
 			!pEnt->isKindOf(AcDbArc::desc()) &&
 			!pEnt->isKindOf(AcDbEllipse::desc()) &&
@@ -2212,8 +2211,7 @@ void CPlateProcessInfo::RefreshPlateNum()
 {
 	if (partNumId == NULL)
 		return;
-	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
-	acDocManager->lockDocument(curDoc(), AcAp::kWrite, NULL, NULL, true);
+	CLockDocumentLife lockCurDocLife;
 	AcDbEntity *pEnt = NULL;
 	acdbOpenAcDbEntity(pEnt, partNumId, AcDb::kForWrite);
 	CAcDbObjLife entLife(pEnt);
@@ -2230,7 +2228,7 @@ void CPlateProcessInfo::RefreshPlateNum()
 			((strstr(sValueG, "数量:") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量:") != NULL) ||
 			(strstr(sValueG, "数量：") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量：") != NULL)))
 		{	//修改钢板加工数 wht 19-08-05
-			sValueS.Printf("%s%d", (char*)g_pncSysPara.m_sPnNumKey, xPlate.feature);
+			sValueS.Printf("%s%d", (char*)g_pncSysPara.m_sPnNumKey, xBomPlate.feature1);
 		}
 		else
 		{
@@ -2242,7 +2240,7 @@ void CPlateProcessInfo::RefreshPlateNum()
 					break;
 				}
 			}
-			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)sValueM, xPlate.feature);
+			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)sValueM, xBomPlate.feature1);
 		}
 #ifdef _ARX_2007
 		pText->setTextString(_bstr_t(sValueS));
@@ -2268,7 +2266,7 @@ void CPlateProcessInfo::RefreshPlateNum()
 				(strstr(sTemp, "数量：") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量：") != NULL)))
 			{
 				sTemp.Replace("\\P", "");
-				sValueS.Printf("%s%d", (char*)g_pncSysPara.m_sPnNumKey, xPlate.feature);
+				sValueS.Printf("%s%d", (char*)g_pncSysPara.m_sPnNumKey, xBomPlate.feature1);
 				sText.Replace(sTemp, sValueS);	//更新数量行 wht 19-08-13
 #ifdef _ARX_2007
 				pMText->setContents(_bstr_t(sText));
@@ -2280,7 +2278,6 @@ void CPlateProcessInfo::RefreshPlateNum()
 			
 		}
 	}
-	acDocManager->unlockDocument(curDoc());
 }
 SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 {

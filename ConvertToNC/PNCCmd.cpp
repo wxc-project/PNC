@@ -214,14 +214,15 @@ void SmartExtractPlate(CPNCModel *pModel)
 			if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)
 				continue;	//当前件号为焊接子件件号 wht 19-07-22
 		}
+		if(strlen(sPartNo) <= 0)
+		{
+			logerr.Log("钢板信息%s,识别机制不能识别!", (char*)sText);
+			continue;
+		}
 		CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(sPartNo);
-		if (strlen(sPartNo) <= 0 ||
-			(pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId)))
+		if (pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId))
 		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
-			if (strlen(sPartNo) <= 0)
-				logerr.Log("钢板信息%s,识别机制不能识别!", (char*)sText);
-			else //件号相同但是钢板对应的entId不同，需要提醒用户 wht 19-04-24
-				logerr.Log("钢板%s,件号重复请确认!", (char*)sText);
+			logerr.Log("钢板%s,件号重复请确认!", (char*)sText);
 			continue;
 		}
 		CPlateProcessInfo* pPlateProcess = pModel->AppendPlate(sPartNo);
@@ -313,6 +314,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 	AfxMessageBox(CXhChar100("共提取钢板%d个，成功%d个，失败%d!",nSum,nValid,nSum-nValid));
 #else
 	//UBOM只需要更新钢板的基本信息
+	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))
+		pPlateInfo->xBomPlate.sPartNo = pPlateInfo->GetPartNo();
 	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
 	{
 		CAcDbObjLife objLife(objId);
@@ -339,7 +342,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 				if (baseInfo.m_nThick > 0)
 					pPlateInfo->xBomPlate.thick = (float)baseInfo.m_nThick;
 				if (baseInfo.m_nNum > 0)
-					pPlateInfo->xBomPlate.SetPartNum(baseInfo.m_nNum);
+					pPlateInfo->xBomPlate.feature1 = baseInfo.m_nNum;	//加工数
 				if (baseInfo.m_idCadEntNum != 0)
 					pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 			}
@@ -369,6 +372,26 @@ void SmartExtractPlate(CPNCModel *pModel)
 //////////////////////////////////////////////////////////////////////////
 void ManualExtractPlate()
 {
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	CDwgFileInfo *pDwgFile = NULL;
+	AcApDocument* pDoc = acDocManager->curDocument();
+	if (pDoc != NULL)
+	{
+		CString file_path = pDoc->fileName();
+		pDwgFile = g_xUbomModel.FindDwgFile(file_path);
+	}
+	if (pDwgFile)
+		ManualExtractPlate(pDwgFile->GetPncModel());
+	else
+		ManualExtractPlate(&model);
+#else
+	ManualExtractPlate(&model);
+#endif
+}
+void ManualExtractPlate(CPNCModel *pModel)
+{
+	if (pModel == NULL)
+		return;
 	CLogErrorLife logErrLife;
 	//框选待修正钢板的轮廓边
 	CHashSet<AcDbObjectId> selectedEntList;
@@ -389,34 +412,29 @@ void ManualExtractPlate()
 		return;
 	}
 	//在模型列表中添加钢板信息 wht 19-12-21
-	CPlateProcessInfo *pExistPlate = model.GetPlateInfo(plate.GetPartNo());
+	CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(plate.GetPartNo());
 	if (pExistPlate == NULL)
-		pExistPlate = model.AppendPlate(plate.GetPartNo());
+		pExistPlate = pModel->AppendPlate(plate.GetPartNo());
 	pExistPlate->InitProfileBySelEnts(selectedEntList);
 	pExistPlate->ExtractPlateRelaEnts();
 	pExistPlate->UpdatePlateInfo(TRUE);
-
+#ifndef __UBOM_ONLY_
 	//生成PPI文件,保存到到当前工作路径下
 	CString file_path;
 	GetCurWorkPath(file_path);
 	if(pExistPlate->vertexList.GetNodeNum()>3)
 		pExistPlate->CreatePPiFile(file_path);
 	//绘制提取的钢板外形--支持排版
-	model.LayoutPlates(g_pncSysPara.m_bAutoLayout);
+	pModel->LayoutPlates(g_pncSysPara.m_bAutoLayout);
 	//
 	UpdatePartList();
-	/*
-	//绘制钢板外形及螺栓，便于查看提取是否正确
-	DRAGSET.ClearEntSet();
-	plate.DrawPlate(NULL);
-	SCOPE_STRU scope;
-	DRAGSET.GetDragScope(scope);
-	ads_point base;
-	base[X] = scope.fMinX;
-	base[Y] = scope.fMaxY;
-	base[Z] = 0;
-	DragEntSet(base,"请点取构件图的插入点");
-	*/
+#else
+	pExistPlate->xBomPlate.cMaterial = pExistPlate->xPlate.cMaterial;
+	pExistPlate->xBomPlate.cQualityLevel = pExistPlate->xPlate.cQuality;
+	pExistPlate->xBomPlate.thick = pExistPlate->xPlate.m_fThick;
+	pExistPlate->xBomPlate.sSpec.Printf("-%.f", pExistPlate->xBomPlate.thick);
+	pExistPlate->xBomPlate.feature1 = pExistPlate->xPlate.feature;	//加工数
+#endif
 }
 
 #ifndef __UBOM_ONLY_
@@ -705,19 +723,7 @@ void EnvGeneralSet()
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 void RevisionPartProcess()
 {
-#ifdef __PNC_
-	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_UBOM))
-	{
-		AfxMessageBox("无UBOM对料授权，请联系供应商！");
-		return;
-	}
-#else
-	if (!VerifyValidFunction(TMA_LICFUNC::FUNC_IDENTITY_UBOM))
-	{
-		AfxMessageBox("无UBOM对料授权，请联系供应商！");
-		return;
-	}
-#endif
+	//加载角钢工艺卡
 	CLogErrorLife logErrLife;
 	char APP_PATH[MAX_PATH]="", sJgCardPath[MAX_PATH]="";
 	GetAppPath(APP_PATH);
@@ -727,14 +733,11 @@ void RevisionPartProcess()
 		logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!",sJgCardPath));
 		return;
 	}
-	g_xUbomModel.InitBomTblCfg();
-	//
-	g_xDockBarManager.DisplayRevisionDockBar();
+	//显示对话框
+	int nWidth = CRevisionDlg::GetDialogInitWidthByCustomizeSerial(g_xUbomModel.m_uiCustomizeSerial);
+	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
 	CRevisionDlg* pRevisionDlg = g_xDockBarManager.GetRevisionDlgPtr();
 	if (pRevisionDlg)
-	{
 		pRevisionDlg->DisplayProcess = DisplayProcess;
-		pRevisionDlg->InitRevisionDlg();
-	}	
 }
 #endif

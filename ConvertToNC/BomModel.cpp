@@ -7,6 +7,7 @@
 #include "SortFunc.h"
 #include "CadToolFunc.h"
 #include "ComparePartNoString.h"
+#include "PNCSysPara.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 CBomModel g_xUbomModel;
@@ -431,20 +432,21 @@ BOOL CBomFile::ImportTmaExcelFile()
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
 		return FALSE;
-	int nSheetNum = excelobj.GetWorkSheetCount();
 	//获取定制列信息
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	g_xUbomModel.m_xTmaTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = g_xUbomModel.m_xTmaTblCfg.m_nStartRow-1;
 	//解析数据
-	int nValidSheetCount = 0;
-	m_hashPartByPartNo.Empty();
-	int iAngleSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, "角钢下料");
+	int nSheetNum = excelobj.GetWorkSheetCount();
+	int nValidSheetCount = 0, iValidSheet = (nSheetNum == 1) ? 1 : 0;
 	BOOL bRetCode = FALSE;
-	if (iAngleSheet > 0)
-	{	//优先读取【角钢下料】表单（江苏电装格式）wht 19-09-15
+	m_hashPartByPartNo.Empty();
+	if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)	//青岛豪迈读取放样原始材料表
+		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, "放样原始材料表");
+	if (iValidSheet > 0)
+	{	//优先读取指定sheet
 		CVariant2dArray sheetContentMap(1, 1);
-		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iAngleSheet);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet);
 		if (ParseSheetContent(sheetContentMap,hashColIndexByColTitle,iStartRow))
 		{
 			nValidSheetCount++;
@@ -791,7 +793,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 			}
 			else
 			{	//判断数值是否相等
-				if (fabsl(pSrcPart->length - pDesPart->length) > 0)
+				if (fabsl(pSrcPart->length - pDesPart->length) > g_pncSysPara.m_fMaxLenErr)
 					hashBoolByPropName.SetValue("fLength", TRUE);
 			}
 		}
@@ -1757,14 +1759,16 @@ CXhChar100 CBomModel::GetClientName()
 	CXhChar100 sClientName;
 	if (ID_AnHui_HongYuan == m_uiCustomizeSerial)	//安徽宏源
 		sClientName.Copy("安徽宏源");
-	else if(ID_AnHui_TingYang == m_uiCustomizeSerial)	//安徽汀阳
+	else if (ID_AnHui_TingYang == m_uiCustomizeSerial)	//安徽汀阳
 		sClientName.Copy("安徽汀阳");
-	else if(ID_SiChuan_ChengDu == m_uiCustomizeSerial)	//中电建成都铁塔
+	else if (ID_SiChuan_ChengDu == m_uiCustomizeSerial)	//中电建成都铁塔
 		sClientName.Copy("中电建成都铁塔");
-	else if(ID_JiangSu_HuaDian == m_uiCustomizeSerial)	//江苏华电
+	else if (ID_JiangSu_HuaDian == m_uiCustomizeSerial)	//江苏华电
 		sClientName.Copy("江苏华电");
 	else if (ID_ChengDu_DongFang == m_uiCustomizeSerial)//成都东方
 		sClientName.Copy("成都东方");
+	else if (ID_QingDao_HaoMai == m_uiCustomizeSerial)	//青岛豪迈
+		sClientName.Copy("青岛豪迈");
 	return sClientName;
 }
 
@@ -1773,7 +1777,7 @@ CXhChar16 CBomModel::QueryMatMarkIncQuality(BOMPART *pPart)
 	CXhChar16 sMatMark;
 	if (pPart)
 	{
-		sMatMark = CProcessPart::QuerySteelMatMark(pPart->cMaterial, pPart->sMaterial);
+		sMatMark = CProcessPart::QuerySteelMatMark(pPart->cMaterial);
 		if (pPart->cQualityLevel != 0 && !sMatMark.EqualNoCase(pPart->sMaterial))
 			sMatMark.Append(pPart->cQualityLevel);
 	}

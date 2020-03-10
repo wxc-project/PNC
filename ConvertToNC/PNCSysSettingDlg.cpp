@@ -71,6 +71,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_sJgCadName.Copy(valueStr);
 		g_pncSysPara.InitJgCardInfo(valueStr);
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fMaxLenErr"))
+		g_pncSysPara.m_fMaxLenErr = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bMKPos"))
 	{
 		if (valueStr.Compare("ÊÇ") == 0)
@@ -851,6 +853,7 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	oper.InsertEditPropItem(pGroupItem, "m_sJgCadName");
+	oper.InsertEditPropItem(pGroupItem, "m_fMaxLenErr");
 #endif
 	oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");

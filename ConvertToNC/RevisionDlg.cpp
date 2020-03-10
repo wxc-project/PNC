@@ -183,6 +183,7 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_MODIFY_TMA_FILE, OnModifyTmaFile)
 	ON_COMMAND(ID_RETRIEVED_ANGLES, OnRetrievedAngles)
 	ON_COMMAND(ID_RETRIEVED_PLATES, OnRetrievedPlates)
+	ON_COMMAND(ID_REVISE_TEH_PLATE, OnRetrievedPlate)
 	ON_COMMAND(ID_DELETE_ITEM,OnDeleteItem)
 	
 END_MESSAGE_MAP()
@@ -196,7 +197,8 @@ int CRevisionDlg::GetDialogInitWidthByCustomizeSerial(int idCustomizeSerial)
 	{
 		nInitWidth = 730;
 	}
-	else if (idCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+	else if (idCustomizeSerial == CBomModel::ID_JiangSu_HuaDian ||
+			 idCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
 		nInitWidth = 565;
 	else if (idCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 	{
@@ -229,6 +231,8 @@ BOOL CRevisionDlg::OnInitDialog()
 		m_xListReport.AddColumnHeader("加工重量", 65);
 		m_xListReport.AddColumnHeader("备注", 150);
 	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+		m_xListReport.AddColumnHeader("加工数", 52);
 	else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 		m_xListReport.AddColumnHeader("单基数", 52);
 	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
@@ -391,6 +395,12 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		lpInfo->SetSubItemText(7, sValue, TRUE);
 		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("fSumWeight"))
 			lpInfo->SetSubItemColor(7, clr);
+	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+	{
+		lpInfo->SetSubItemText(4, CXhChar50("%d", pPart->feature1), TRUE);
+		if (pHashBoolByPropName&&pHashBoolByPropName->GetValue("nManuNum"))
+			lpInfo->SetSubItemColor(4, clr);
 	}
 	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
 	{
@@ -800,8 +810,11 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		pMenu->AppendMenu(MF_STRING,ID_COMPARE_DATA,"角钢数据校核");
 		pMenu->AppendMenu(MF_STRING,ID_EXPORT_COMPARE_RESULT,"导出校审结果");
 		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan||
-			g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang)
+			g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang||
+			g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
 			pMenu->AppendMenu(MF_STRING,ID_REFRESH_PART_NUM,"更新加工数");
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang)
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
 		pMenu->AppendMenu(MF_SEPARATOR);
 		pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_ANGLES, "重新提取角钢");
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除角钢图纸");
@@ -811,10 +824,14 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		pMenu->AppendMenu(MF_STRING,ID_COMPARE_DATA,"钢板数据校核");
 		pMenu->AppendMenu(MF_STRING,ID_EXPORT_COMPARE_RESULT,"导出校审结果");
 		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan||
-			g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang)
+			g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang||
+			g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_PART_NUM, "更新加工数");
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_TingYang)
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
 		pMenu->AppendMenu(MF_SEPARATOR);
 		pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_PLATES,"重新提取钢板");
+		pMenu->AppendMenu(MF_STRING, ID_REVISE_TEH_PLATE, "修正特定钢板");
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除钢板图纸");
 	}
 	pMenu->TrackPopupMenu(TPM_LEFTALIGN|TPM_RIGHTBUTTON,scr_point.x,scr_point.y,this);
@@ -1349,7 +1366,20 @@ void CRevisionDlg::OnRetrievedPlates()
 		return;
 	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE);
 }
-
+void CRevisionDlg::OnRetrievedPlate()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo;
+	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL || pItemInfo->itemType != PLATE_DWG_ITEM)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo == NULL || pDwgInfo->IsJgDwgInfo())
+		return;
+	pDwgInfo->ExtractThePlate();
+	RefreshListCtrl(hSelItem);
+}
 void CRevisionDlg::OnDeleteItem()
 {
 	CLogErrorLife logErrLife;
