@@ -73,6 +73,7 @@ protected:
 	afx_msg void OnModifyTmaFile();
 	afx_msg void OnRetrievedAngles();
 	afx_msg void OnRetrievedPlates();
+	afx_msg void OnRetrievedPlate();
 	afx_msg void OnDeleteItem();
 public:
 	CXhTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}

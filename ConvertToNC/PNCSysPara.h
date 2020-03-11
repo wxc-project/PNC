@@ -62,6 +62,7 @@ public:
 	double m_fPixelScale;
 	//
 	CXhChar100 m_sJgCadName;	//角钢工艺卡
+	double m_fMaxLenErr;		//长度最大误差值
 public:
 	CPNCSysPara();
 	~CPNCSysPara();

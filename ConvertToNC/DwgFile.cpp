@@ -244,12 +244,11 @@ f3dPoint CAngleProcessInfo::GetAngleDataPos(BYTE data_type)
 //更新角钢的加工数据
 void CAngleProcessInfo::RefreshAngleNum()
 {
-	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
+	CLockDocumentLife lockCurDocLife;
 	f3dPoint data_pt=GetAngleDataPos(ITEM_TYPE_SUM_PART_NUM);
 	CXhChar16 sPartNum("%d",m_xAngle.feature1);
 	if(partNumId==NULL)
 	{	//添加角钢加工数
-		acDocManager->lockDocument(curDoc(),AcAp::kWrite,NULL,NULL,true);
 		AcDbBlockTableRecord *pBlockTableRecord=GetBlockTableRecord();
 		if(pBlockTableRecord==NULL)
 		{
@@ -259,11 +258,9 @@ void CAngleProcessInfo::RefreshAngleNum()
 		DimText(pBlockTableRecord,data_pt,sPartNum,TextStyleTable::hzfs.textStyleId,
 			g_pncSysPara.fTextHigh,0,AcDb::kTextCenter,AcDb::kTextVertMid);
 		pBlockTableRecord->close();//关闭块表
-		acDocManager->unlockDocument(curDoc());
 	}
 	else
 	{	//改写角钢加工数
-		acDocManager->lockDocument(curDoc(),AcAp::kWrite,NULL,NULL,true);
 		AcDbEntity *pEnt=NULL;
 		acdbOpenAcDbEntity(pEnt,partNumId,AcDb::kForWrite);
 		if(pEnt->isKindOf(AcDbText::desc()))
@@ -285,15 +282,13 @@ void CAngleProcessInfo::RefreshAngleNum()
 #endif
 		}
 		pEnt->close();
-		acDocManager->unlockDocument(curDoc());
 	}
 }
 void CAngleProcessInfo::RefreshAngleSumWeight()
 {
-	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
+	CLockDocumentLife lockCurDocLife;
 	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_SUM_WEIGHT);
 	CXhChar16 sSumWeight("%.f", m_xAngle.fSumWeight);
-	CLockDocumentLife lockDoc;
 	if (sumWeightId == NULL)
 	{	//添加角钢总重
 		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
@@ -356,6 +351,11 @@ BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf)
 	else
 		return RetrievePlates();
 }
+BOOL CDwgFileInfo::ExtractThePlate()
+{
+	ManualExtractPlate(&m_xPncMode);
+	return TRUE;
+}
 //////////////////////////////////////////////////////////////////////////
 //钢板DWG操作
 //////////////////////////////////////////////////////////////////////////
@@ -380,14 +380,12 @@ void CDwgFileInfo::ModifyPlateDwgPartNum()
 {
 	if(m_xPncMode.GetPlateNum()<=0)
 		return;
-	CPlateProcessInfo* pInfo=NULL;
-	CProcessPlate* pProcessPlate=NULL;
 	BOOL bFinish=TRUE;
-	for(pInfo=EnumFirstPlate();pInfo;pInfo=EnumNextPlate())
+	for(CPlateProcessInfo* pInfo=EnumFirstPlate();pInfo;pInfo=EnumNextPlate())
 	{
 		CXhChar16 sPartNo=pInfo->xPlate.GetPartNo();
-		pProcessPlate=(CProcessPlate*)m_pProject->m_xLoftBom.FindPart(sPartNo);
-		if(pProcessPlate==NULL)
+		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if(pLoftBom ==NULL)
 		{
 			bFinish=FALSE;
 			logerr.Log("TMA放样材料表中没有%s钢板",(char*)sPartNo);
@@ -399,9 +397,9 @@ void CDwgFileInfo::ModifyPlateDwgPartNum()
 			logerr.Log("%s钢板件数修改失败!",(char*)sPartNo);
 			continue;
 		}
-		if(pInfo->xPlate.feature!=pProcessPlate->feature)
+		if(pInfo->xBomPlate.feature1!= pLoftBom->feature1)
 		{	//加工数不同进行修改
-			pInfo->xPlate.feature=pProcessPlate->feature;	//加工数
+			pInfo->xBomPlate.feature1 = pLoftBom->feature1;	//加工数
 			pInfo->RefreshPlateNum();
 		}
 	}
@@ -492,6 +490,29 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 	}
 	if(bFinish)
 		AfxMessageBox("角钢加工数修改完毕!");
+}
+//更新角钢总重
+void CDwgFileInfo::ModifyAngleDwgSumWeight()
+{
+	if (m_hashJgInfo.GetNodeNum() <= 0)
+		return;
+	CAngleProcessInfo* pJgInfo = NULL;
+	BOOL bFinish = TRUE;
+	for (pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg())
+	{
+		CXhChar16 sPartNo = pJgInfo->m_xAngle.sPartNo;
+		BOMPART* pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if (pBomJg == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("TMA材料表中没有%s角钢", (char*)sPartNo);
+			continue;
+		}
+		pJgInfo->m_xAngle.fSumWeight = pBomJg->fSumWeight;
+		pJgInfo->RefreshAngleSumWeight();
+	}
+	if (bFinish)
+		AfxMessageBox("角钢总重修改完毕!");
 }
 //提取角钢操作
 BOOL CDwgFileInfo::RetrieveAngles()

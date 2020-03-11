@@ -79,6 +79,7 @@
 #define ID_MENU_BOLT_DEL                32778
 #define ID_REFRESH_PART_NUM             32779
 #define ID_EXPORT_PROJECT               32780
+#define ID_REFRESH_WEIGHT               32781
 #define ID_REVISE_TEH_PLATE             32782
 #define ID_RETRIEVED_ANGLES             32783
 #define ID_RETRIEVED_PLATES             32784

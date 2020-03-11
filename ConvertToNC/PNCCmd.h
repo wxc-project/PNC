@@ -6,6 +6,7 @@
 void SmartExtractPlate();	//智能提取板的信息
 void SmartExtractPlate(CPNCModel *pModel);
 void ManualExtractPlate();	//手动提取钢板信息
+void ManualExtractPlate(CPNCModel *pModel);
 void EnvGeneralSet();		//系统设置
 #ifndef __UBOM_ONLY_
 void SendPartEditor();		//编辑钢板信息

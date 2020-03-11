@@ -68,6 +68,7 @@ void CPNCSysPara::Init()
 	m_ciBendLineColorIndex = 190;	//紫色
 	m_sProfileLineType.Copy("CONTINUOUS");
 	m_fPixelScale = 0.8;
+	m_fMaxLenErr = 0.5;
 	//默认过滤图层名
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
@@ -127,6 +128,7 @@ void CPNCSysPara::InitPropHashtable()
 	//基本设置
 	AddPropItem("general_set",PROPLIST_ITEM(id++,"常规设置","常规设置"));
 	AddPropItem("m_sJgCadName", PROPLIST_ITEM(id++,"角钢工艺卡","当前使用的角钢工艺卡"));
+	AddPropItem("m_fMaxLenErr", PROPLIST_ITEM(id++, "长度最大误差值", "数据校审时，长度比较的最大误差值"));
 	AddPropItem("m_bIncDeformed",PROPLIST_ITEM(id++,"已考虑火曲变形","待提取的钢板图形已考虑火曲变形量","是|否"));
 	AddPropItem("m_bReplaceSH", PROPLIST_ITEM(id++, "启用特殊孔代孔", "将特殊功用类型的孔进行代孔处理", "是|否"));
 	AddPropItem("m_nReplaceHD", PROPLIST_ITEM(id++, "代孔直径", "进行代孔的螺栓直径", "12|16|20|24"));
@@ -167,6 +169,8 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if (GetPropID("m_sJgCadName") == id)
 		sText = m_sJgCadName;
+	else if(GetPropID("m_fMaxLenErr")==id)
+		sText.Printf("%.f", g_pncSysPara.m_fMapScale);
 	else if (GetPropID("m_bReplaceSH") == id)
 	{
 		if (g_pncSysPara.m_bReplaceSH)

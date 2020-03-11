@@ -91,6 +91,7 @@ public:
 	CAngleProcessInfo* FindAngleByPt(f3dPoint data_pos);
 	CAngleProcessInfo* FindAngleByPartNo(const char* sPartNo);
 	void ModifyAngleDwgPartNum();
+	void ModifyAngleDwgSumWeight();
 	//钢板DWG操作
 	int GetPlateNum(){return m_xPncMode.GetPlateNum();}
 	CPlateProcessInfo* EnumFirstPlate(){return m_xPncMode.EnumFirstPlate(FALSE);}
@@ -104,6 +105,7 @@ public:
 	CProjectTowerType* BelongModel() const{return m_pProject;}
 	BOOL IsJgDwgInfo(){return m_bJgDwgFile;}
 	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf);
+	BOOL ExtractThePlate();
 };
 //////////////////////////////////////////////////////////////////////////
 //CProjectTowerType
@@ -186,6 +188,7 @@ public:
 	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电
 	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方
+	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈
 	static UINT m_uiCustomizeSerial;
 	static CXhChar100 GetClientName();
 	//
