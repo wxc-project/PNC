@@ -90,7 +90,7 @@ BOOL ACAD_LINEID::UpdatePos()
 }
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
-AcDbObjectId MkCadObjId(unsigned long idOld){ return AcDbObjectId((AcDbStub*)idOld); }
+//AcDbObjectId MkCadObjId(unsigned long idOld){ return AcDbObjectId((AcDbStub*)idOld); }
 CPlateProcessInfo::CPlateProcessInfo()
 {
 	m_fZoomScale=100;

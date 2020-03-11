@@ -291,3 +291,5 @@ __pycache__/
 *.vcxproj.user
 *.vcxproj.filters
 /PNC/UBOMDebug
+*.manifest
+*.rc

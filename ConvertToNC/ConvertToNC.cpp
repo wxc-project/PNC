@@ -45,7 +45,7 @@ static char THIS_FILE[]=__FILE__;
 // ObjectARX EntryPoint
 CDockBarManager g_xDockBarManager;
 
-char* SearchChar(char* srcStr, char ch, bool reverseOrder/*=false*/)
+static char* SearchChar(char* srcStr, char ch, bool reverseOrder/*=false*/)
 {
 	if (!reverseOrder)
 		return strchr(srcStr, ch);
