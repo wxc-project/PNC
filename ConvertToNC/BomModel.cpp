@@ -770,7 +770,10 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 		hashBoolByPropName.SetValue("cMaterial", TRUE);
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_SING_NUM) &&
 		pSrcPart->GetPartNum() != pDesPart->GetPartNum())
-		hashBoolByPropName.SetValue("nSingNum", TRUE);
+	{	//青岛豪迈不比较单基数
+		if (g_xUbomModel.m_uiCustomizeSerial != CBomModel::ID_QingDao_HaoMai)
+			hashBoolByPropName.SetValue("nSingNum", TRUE);
+	}
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_MANU_NUM) &&
 		pSrcPart->feature1 != pDesPart->feature1)
 	{	//安徽宏源不比较加工数，但需要修正加工数
@@ -1162,6 +1165,16 @@ void CProjectTowerType::AddAngleResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhCha
 		for (int i = 0; i < 15; i++)
 			col_arr[i] = 10;
 	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+	{
+		nCol = 6;
+		str_arr.SetSize(6);
+		str_arr[0] = "构件编号"; str_arr[1] = "设计规格"; str_arr[2] = "材质";
+		str_arr[3] = "长度"; str_arr[4] = "加工数"; str_arr[5] = "数据来源";
+		col_arr.SetSize(6);
+		for (int i = 0; i < 6; i++)
+			col_arr[i] = 10;
+	}
 	else
 	{
 		nCol = 6;
@@ -1186,6 +1199,8 @@ void CProjectTowerType::AddAngleResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhCha
 		map.SetValueAt(index, 3, COleVariant(CXhChar50("%.0f", pResult->pOrgPart->length)));
 		map.SetValueAt(index, 4, COleVariant((long)pResult->pOrgPart->GetPartNum()));
 		map.SetValueAt(index, 5, COleVariant(CXhChar16("DWG")));
+		if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+			map.SetValueAt(index, 4, COleVariant((long)pResult->pOrgPart->feature1));
 		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 		{
 			PART_ANGLE* pOrgJg = (PART_ANGLE*)pResult->pOrgPart;
@@ -1225,6 +1240,15 @@ void CProjectTowerType::AddAngleResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhCha
 			map.SetValueAt(index + 1, 4, COleVariant((long)pResult->pLoftPart->GetPartNum()));
 			CExcelOper::SetRangeBackColor(excel_sheet, 42, CXhChar16("E%d", index + 2));
 			CExcelOper::SetRangeBackColor(excel_sheet, 44, CXhChar16("E%d", index + 3));
+		}
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+		{
+			if (pResult->hashBoolByPropName.GetValue("nManuNum"))
+			{
+				map.SetValueAt(index + 1, 4, COleVariant((long)pResult->pLoftPart->feature1));
+				CExcelOper::SetRangeBackColor(excel_sheet, 42, CXhChar16("E%d", index + 2));
+				CExcelOper::SetRangeBackColor(excel_sheet, 44, CXhChar16("E%d", index + 3));
+			}
 		}
 		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 		{
@@ -1324,6 +1348,8 @@ void CProjectTowerType::AddPlateResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhCha
 		map.SetValueAt(index, 4, pResult->pOrgPart->bWeldPart ? COleVariant("*") : COleVariant(""));
 		map.SetValueAt(index, 5, pResult->pOrgPart->siZhiWan > 0 ? COleVariant("*") : COleVariant(""));
 		map.SetValueAt(index, 6, COleVariant(CXhChar16("DWG")));
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+			map.SetValueAt(index, 3, COleVariant((long)pResult->pOrgPart->feature1));
 		//
 		CExcelOper::MergeRowRange(excel_sheet, CXhChar16("A%d", index + 2), CXhChar16("A%d", index + 3));
 		if (pResult->hashBoolByPropName.GetValue("spec"))
@@ -1346,15 +1372,24 @@ void CProjectTowerType::AddPlateResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhCha
 		}
 		if (pResult->hashBoolByPropName.GetValue("Weld"))
 		{
-			map.SetValueAt(index + 1, 4, COleVariant((long)pResult->pLoftPart->GetPartNum()));
+			map.SetValueAt(index + 1, 4, pResult->pLoftPart->bWeldPart ? COleVariant("*") : COleVariant(""));
 			CExcelOper::SetRangeBackColor(excel_sheet, 42, CXhChar16("E%d", index + 2));
 			CExcelOper::SetRangeBackColor(excel_sheet, 44, CXhChar16("E%d", index + 3));
 		}
 		if (pResult->hashBoolByPropName.GetValue("ZhiWan"))
 		{
-			map.SetValueAt(index + 1, 5, COleVariant((long)pResult->pLoftPart->GetPartNum()));
+			map.SetValueAt(index + 1, 5, pResult->pLoftPart->siZhiWan > 0 ? COleVariant("*") : COleVariant(""));
 			CExcelOper::SetRangeBackColor(excel_sheet, 42, CXhChar16("F%d", index + 2));
 			CExcelOper::SetRangeBackColor(excel_sheet, 44, CXhChar16("F%d", index + 3));
+		}
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)
+		{
+			if (pResult->hashBoolByPropName.GetValue("nManuNum"))
+			{
+				map.SetValueAt(index + 1, 3, COleVariant((long)pResult->pLoftPart->feature1));
+				CExcelOper::SetRangeBackColor(excel_sheet, 42, CXhChar16("D%d", index + 2));
+				CExcelOper::SetRangeBackColor(excel_sheet, 44, CXhChar16("D%d", index + 3));
+			}
 		}
 		map.SetValueAt(index + 1, 6, COleVariant(CXhChar16("Excle")));
 		index += 2;
@@ -1379,11 +1414,6 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 	}
 	CQuickSort<CXhChar16>::QuickSort(keyStrArr.m_pData, keyStrArr.GetSize(), compare_func);
 	//生成Excel
-	int index = 0, nCol = 4, nResult = GetResultCount();
-	double col_arr[4] = { 15,15,15,15 };
-	CStringArray str_arr;
-	str_arr.SetSize(4);
-	str_arr[0] = "件号"; str_arr[1] = "规格"; str_arr[2] = "材质"; str_arr[3] = "长度";
 	if (iSheet == 1)
 	{	//第一种结果：ERP和TMA表中的数据信息不同
 		if (iCompareType == COMPARE_BOM_FILE)
@@ -1398,6 +1428,10 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 		_Worksheet excel_sheet;
 		excel_sheet.AttachDispatch(pSheet, FALSE);
 		excel_sheet.Select();
+		CStringArray str_arr;
+		str_arr.SetSize(4);
+		str_arr[0] = "件号"; str_arr[1] = "规格"; str_arr[2] = "材质"; str_arr[3] = "长度";
+		double col_arr[4] = { 15,15,15,15 };
 		CExcelOper::AddRowToExcelSheet(excel_sheet, 1, str_arr, col_arr, TRUE);
 		if (iCompareType == COMPARE_BOM_FILE)
 		{
@@ -1409,6 +1443,7 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 		else
 			excel_sheet.SetName("DWG多号");
 		//填充内容
+		int index = 0, nCol = 4, nResult = GetResultCount();
 		CVariant2dArray map(nResult * 2, nCol);
 		for (int i = 0; i < keyStrArr.GetSize(); i++)
 		{
@@ -1431,6 +1466,10 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 		_Worksheet excel_sheet;
 		excel_sheet.AttachDispatch(pSheet, FALSE);
 		excel_sheet.Select();
+		CStringArray str_arr;
+		str_arr.SetSize(4);
+		str_arr[0] = "件号"; str_arr[1] = "规格"; str_arr[2] = "材质"; str_arr[3] = "长度";
+		double col_arr[4] = { 15,15,15,15 };
 		CExcelOper::AddRowToExcelSheet(excel_sheet, 1, str_arr, col_arr, TRUE);
 		if (iCompareType == COMPARE_BOM_FILE)
 		{
@@ -1442,6 +1481,7 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 		else
 			excel_sheet.SetName("DWG缺号");
 		//填充内容
+		int index = 0, nCol = 4, nResult = GetResultCount();
 		CVariant2dArray map(nResult * 2, nCol);
 		for (int i = 0; i < keyStrArr.GetSize(); i++)
 		{
