@@ -151,8 +151,8 @@ public:
 	CPlateProcessInfo *FindPlateInfoByPartNo(const char* sPartNo);
 	CAngleProcessInfo *FindAngleInfoByPartNo(const char* sPartNo);
 	//³õÊ¼»¯²Ù×÷
-	BOOL IsTmaBomFile(const char* sFileName);
-	BOOL IsErpBomFile(const char* sFileName);
+	BOOL IsTmaBomFile(const char* sFileName,BOOL bDisplayMsgBox = FALSE);
+	BOOL IsErpBomFile(const char* sFileName, BOOL bDisplayMsgBox = FALSE);
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
 	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName,BOOL bJgDxf);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
