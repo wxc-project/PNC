@@ -292,4 +292,4 @@ __pycache__/
 *.vcxproj.filters
 /PNC/UBOMDebug
 *.manifest
-*.rc
+/ConvertToNC/UBOMDebugObj7/PNC07_manifest.rc

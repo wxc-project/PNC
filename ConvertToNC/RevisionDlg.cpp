@@ -1196,7 +1196,7 @@ void CRevisionDlg::OnCompareData()
 	CProjectTowerType* pProject=GetProject(hSelItem);
 	if(pProject==NULL)
 	{
-		logerr.Log("没有找到工程塔形");
+		AfxMessageBox("没有找到工程塔形,无法执行数据比对！");
 		return;
 	}
 	if(pItemInfo->itemType==ANGLE_DWG_ITEM)
