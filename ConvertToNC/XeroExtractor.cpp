@@ -727,9 +727,9 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 			CAcDbObjLife objLife(pIter->objectId());
 			if((pSubEnt=objLife.GetEnt())==NULL)
 				continue;
-			if (!pEnt->isKindOf(AcDbAttribute::desc()))
+			if (!pSubEnt->isKindOf(AcDbAttribute::desc()))
 				continue;
-			AcDbAttribute *pAttr = (AcDbAttribute*)pEnt;
+			AcDbAttribute *pAttr = (AcDbAttribute*)pSubEnt;
 			CXhChar100 sTag, sText;
 #ifdef _ARX_2007
 			sTag.Copy(_bstr_t(pAttr->tag()));
