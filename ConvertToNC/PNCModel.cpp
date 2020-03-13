@@ -651,29 +651,10 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 }
 f2dRect CPlateProcessInfo::GetPnDimRect()
 {
+	//文本坐标 this->dim_pos 已做居中处理
 	f2dRect rect;
-	AcDbEntity* pEnt=NULL;
-	acdbOpenAcDbEntity(pEnt,partNoId,AcDb::kForRead);
-	CAcDbObjLife objLife(pEnt);
-	f3dPoint origin=dim_pos;
-	if(pEnt&&pEnt->isKindOf(AcDbText::desc()))
-	{
-		AcDbText* pText=(AcDbText*)pEnt;
-		CXhChar100 sText;
-#ifdef _ARX_2007
-		sText.Copy(_bstr_t(pText->textString()));
-#else
-		sText.Copy(pText->textString());
-#endif
-		double heigh=pText->height();
-		double angle=pText->rotation();
-		double len=DrawTextLength(sText,heigh,pText->textStyle());
-		f3dPoint dim_norm(-sin(angle),cos(angle));
-		origin+=dim_vec*len*0.5;
-		origin+=dim_norm*heigh*0.5;
-	}
-	rect.topLeft.Set(origin.x-10,origin.y+10);
-	rect.bottomRight.Set(origin.x+10,origin.y-10);
+	rect.topLeft.Set(dim_pos.x-10, dim_pos.y+10);
+	rect.bottomRight.Set(dim_pos.x+10, dim_pos.y-10);
 	return rect;
 }
 //过滤重复点
@@ -703,6 +684,16 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 {
 	if (!m_bNeedExtract)
 		return;
+#ifdef __ALFA_TEST_
+	//用于测试查看文本的坐标位置
+	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y + 10));
+	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y - 10));
+	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y - 10));
+	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y + 10));
+	pBlockTableRecord->close();
+#endif
+	//
 	ads_name seqent;
 	AcDbObjectId initLastObjId,plineId;
 	acdbEntLast(seqent);
