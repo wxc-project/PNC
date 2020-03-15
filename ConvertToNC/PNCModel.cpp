@@ -2416,7 +2416,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		else if(g_pncSysPara.m_ciRecogMode==CPNCSysPara::FILTER_BY_COLOR)
 		{	//°´ÑÕÉ«¹ýÂË
 			int ciColorIndex = GetEntColorIndex(pEnt);
-			if (ciColorIndex == g_pncSysPara.m_ciProfileColorIndex)
+			if (ciColorIndex != g_pncSysPara.m_ciProfileColorIndex)
 				continue;
 		} 
 		GEPOINT ptS, ptE;

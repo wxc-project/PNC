@@ -293,3 +293,4 @@ __pycache__/
 /PNC/UBOMDebug
 *.manifest
 /ConvertToNC/UBOMDebugObj7/PNC07_manifest.rc
+*.txt
