@@ -123,9 +123,21 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		{
 			AcDbCircle *pCir = (AcDbCircle*)pEnt;
 			AcGePoint3d center = pCir->center();
+			//对孔径进行圆整，精确到小数点一位
+			double fHoleD= pCir->radius() * 2;
+			int nValue = (int)floor(fHoleD);	//整数部分
+			double fValue = fHoleD - nValue;	//小数部分
+			if (fValue < EPS2)	//孔径为整数
+				fHoleD = nValue;
+			else if (fValue > EPS_COS2)
+				fHoleD = nValue + 1;
+			else if (fabs(fValue - 0.5) < EPS2)
+				fHoleD = nValue + 0.5;
+			else
+				fHoleD = ftoi(fHoleD);
 			//记录圆半径及位置 wht 19-07-20
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_CIRCLE;
-			pRelaEnt->m_fSize = pCir->radius() * 2;
+			pRelaEnt->m_fSize = fHoleD;
 			pRelaEnt->pos.Set(center.x, center.y, center.z);
 		}
 		else if (pEnt->isKindOf(AcDbSpline::desc()))

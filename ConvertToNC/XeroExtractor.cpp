@@ -676,20 +676,26 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		AcDbCircle* pCircle=(AcDbCircle*)pEnt;
 		if(int(pCircle->radius())<=0)	//去除点
 			return FALSE;
+		/* 特殊孔直径直接设置直径，不设孔径增大值，
+		/*否则在PPE中统一处理孔径增大值时会丢失此处提取的孔径增大值 wht 19-09-12
+		/*对孔径进行圆整，精确到小数点一位
+		*/
 		double fDiameter=pCircle->radius()*2;
-		hole.posX=(float)pCircle->center().x;
-		hole.posY=(float)pCircle->center().y;
-		//特殊孔直径直接设置直径，不设孔径增大值，否则在PPE中统一处理孔径增大值时会丢失此处提取的孔径增大值 wht 19-09-12
+		int nValue = (int)floor(fDiameter);	//整数部分
+		double fValue = fDiameter - nValue;	//小数部分
+		if (fValue < EPS2)	//孔径为整数
+			fDiameter = nValue;
+		else if (fValue > EPS_COS2)
+			fDiameter = nValue + 1;
+		else if (fabs(fValue - 0.5) < EPS2)
+			fDiameter = nValue + 0.5;
+		else
+			fDiameter = ftoi(fDiameter);
 		hole.d = fDiameter;
 		hole.increment = 0;
-		/*
-		int bolt_d=(int)pCircle->radius()*2;
-		hole.d=bolt_d;
-		if(fabs(fDiameter-bolt_d)>EPS2)
-			hole.increment=(float)fDiameter-bolt_d;
-		else
-			hole.increment=0;*/
-		hole.ciSymbolType=1;	//默认挂线孔
+		hole.ciSymbolType = 1;	//默认挂线孔
+		hole.posX=(float)pCircle->center().x;
+		hole.posY=(float)pCircle->center().y;
 		return TRUE;
 	}
 	else if (pEnt->isKindOf(AcDbEllipse::desc()))
