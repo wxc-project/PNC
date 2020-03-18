@@ -906,7 +906,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropItem=oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_dwFileFlag");
 	pPropItem->SetReadOnly(TRUE);
 	oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendLine");
-	//oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendType");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendType");
 	pGroupItem->m_bHideChildren = (!g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE));
 	//ÎÄ¼şÉèÖÃ
 	pParentItem = oper.InsertPropItem(pRootItem, "FileSet");

@@ -229,9 +229,9 @@ void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine,int type)
 		vertexList.DeleteAt(i);
 	vertexList.Clean();
 }
-BOOL CPlateObject::RecogWeldLine()
+BOOL CPlateObject::RecogWeldLine(const double* ptS, const double* ptE)
 {
-	return FALSE;
+	return RecogWeldLine(f3dLine(ptS, ptE));
 }
 BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
 {

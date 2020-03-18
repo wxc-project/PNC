@@ -943,11 +943,10 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 	{
 		m_propList.SetFocus();
 		m_propList.SetCurSel(pItem->m_iIndex);	//选中指定属性
-		AcDbEntity *pEnt = NULL;
-		acdbOpenObject(pEnt, pCADEnt->m_idEnt, AcDb::kForRead);
+		CAcDbObjLife acdbObjLife(pCADEnt->m_idEnt);
+		AcDbEntity *pEnt = acdbObjLife.GetEnt();
 		if (pEnt == NULL)
 			return;
-		CAcDbObjLife life(pEnt);
 		int iColorIndex = GetEntColorIndex(pEnt);
 		COLORREF clr = GetColorFromIndex(iColorIndex);
 		char tem_str[100] = "";

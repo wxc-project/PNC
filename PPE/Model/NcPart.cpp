@@ -393,7 +393,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 	SCOPE_STRU scope;
 	GetPlateScope(tempPlate,scope);
 	//
-	double fSpecialD=0,fShapeAddDist=0;
+	double fSpecialD = 0, fShapeAddDist = 0, fFontH = 10;
 	int bNeedSH,iNcMode=0;
 	CXhChar100 sValue;
 	if(GetSysParaFromReg("LimitSH",sValue))
@@ -402,9 +402,10 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		bNeedSH=atoi(sValue);
 	if (dxf_mode == CNCPart::CUT_MODE && GetSysParaFromReg("ShapeAddDist", sValue))
 		fShapeAddDist=atof(sValue);
+	if (GetSysParaFromReg("TextHeight", sValue))
+		fFontH = atof(sValue);
 	//移除共线点之前获取火曲线位置 wht 19-09-26
 	f3dLine huoquLine[2] = {};
-	BYTE bendTypeArr[2] = {0, 0};
 	if (dxf_mode == CNCPart::LASER_MODE)
 	{
 		for (int i = 2; i <= tempPlate.m_cFaceN; i++)
@@ -415,8 +416,6 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				huoquLine[i - 2].endPt.Set();
 				logerr.Log("第%d火曲线始末段绘制顶点查找失败", i - 1);
 			}
-			else
-				bendTypeArr[i-2] = tempPlate.GetHuoQuFaceBendType(i);
 		}
 	}
 	ATOM_LIST<PROFILE_VER> xDestList;
@@ -565,17 +564,24 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			{
 				if(huoquLine[i].startPt!=huoquLine[i].endPt)
 				{
-					if(bOutputBendLine)
-						file.NewLine(huoquLine[i].startPt, huoquLine[i].endPt, 1);	//设置火曲线为红色
+					GEPOINT ptS = huoquLine[i].startPt, ptE = huoquLine[i].endPt;
+					if (bOutputBendLine)
+						file.NewLine(ptS, ptE, 1);	//设置火曲线为红色
 					if (bOutputBendType)
 					{
-						//判断正反曲，并在火曲线附近标注 + -号
-						BYTE cBendType = bendTypeArr[i];
-						//暂未提取火曲角度，无法识别火曲类型 wht 19-10-04
-						/*if (cBendType == CProcessPlate::BEND_IN)
-							file.NewText("-",);
-						else if (cBendType == CProcessPlate::BEND_OUT)
-							file.NewText("+");*/
+						double fHuoquAngle = (i == 0) ? tempPlate.m_fHuoQuAngle1 : tempPlate.m_fHuoQuAngle2;
+						CXhChar16 sText("%.1f", fHuoquAngle* DEGTORAD_COEF);
+						sText.Append("%%d");	//DXF文件中角度的书写
+						double fTextW = strlen(sText)*fFontH*0.7;
+						GEPOINT vec = (ptE - ptS).normalized();
+						double fRotAngle = Cal2dLineAng(0, 0, vec.x, vec.y);
+						if (fRotAngle > Pi / 2 && fRotAngle < 3 * Pi / 2)
+							fRotAngle -= Pi;
+						GEPOINT dimVec(cos(fRotAngle), sin(fRotAngle));
+						GEPOINT offVec(-sin(fRotAngle), cos(fRotAngle));
+						GEPOINT dimPos = 0.5*(ptS + ptE);
+						dimPos = dimPos - dimVec * fTextW*0.5 + offVec * 2;
+						file.NewText(sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, 7);
 					}
 				}
 			}
@@ -684,9 +690,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 			if (sNoteArr.GetSize() > 0)
 			{
-				double fTextW = 0, fTextH = 0, fFontH = 10;
-				if (GetSysParaFromReg("TextHeight", sValue))
-					fFontH = atof(sValue);
+				double fTextW = 0, fTextH = 0;
 				for (int i = 0; i < sNoteArr.GetSize(); i++)
 				{
 					double len = strlen(sNoteArr[i])*fFontH*0.7;

@@ -34,6 +34,8 @@ void UpdateHuoquFaceItems(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 	{
 		pFaceItem=oper.InsertEditPropItem(pParentItem,"HuoquFace[0]");
 		pFaceItem->SetReadOnly();
+		pPropItem = oper.InsertEditPropItem(pFaceItem, "HuoquFace[0].angle");
+		pPropItem->m_bHideChildren = TRUE;
 		pPropItem=oper.InsertButtonPropItem(pFaceItem,"HuoQuFaceNorm[0]");
 		pPropItem->m_bHideChildren=TRUE;
 		oper.InsertEditPropItem(pPropItem,"HuoQuFaceNorm[0].x");
@@ -54,6 +56,8 @@ void UpdateHuoquFaceItems(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 	{
 		pFaceItem=oper.InsertEditPropItem(pParentItem,"HuoquFace[1]");
 		pFaceItem->SetReadOnly();
+		pPropItem = oper.InsertEditPropItem(pFaceItem, "HuoquFace[1].angle");
+		pPropItem->m_bHideChildren = TRUE;
 		pPropItem=oper.InsertButtonPropItem(pFaceItem,"HuoQuFaceNorm[1]");
 		pPropItem->m_bHideChildren=TRUE;
 		oper.InsertEditPropItem(pPropItem,"HuoQuFaceNorm[1].x");

@@ -72,7 +72,7 @@ public:
 	CAD_ENTITY *EnumNextEnt(){return m_xHashRelaEntIdList.GetNext();}
 	virtual bool IsInPlate(const double* poscoord);
 	virtual bool IsInPlate(const double* start,const double* end);
-	virtual BOOL RecogWeldLine();
+	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
 	virtual BOOL RecogWeldLine(f3dLine slop_line);
 };
 //////////////////////////////////////////////////////////////////////////

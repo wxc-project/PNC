@@ -461,7 +461,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	//根据Spline提取火曲线标记信息(分段线段集合)
 	AcDbEntity *pEnt = NULL;
 	CSymbolRecoginzer symbols;
-	PRESET_ARRAY8<CAD_ENTITY*> bendDimTextArr;
+	CHashSet<CAD_ENTITY*> bendDimTextSet;
 	for(CAD_ENTITY *pRelaObj=m_xHashRelaEntIdList.GetFirst();pRelaObj;pRelaObj=m_xHashRelaEntIdList.GetNext())
 	{
 		if( pRelaObj->ciEntType!=RELA_ACADENTITY::TYPE_SPLINE&&
@@ -474,8 +474,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			symbols.AppendSymbolEnt((AcDbSpline*)pEnt);
 		else if(pRelaObj->ciEntType==RELA_ACADENTITY::TYPE_TEXT)
 		{
-			if(g_pncSysPara.IsMatchBendRule(pRelaObj->sText))
-				bendDimTextArr.Append(pRelaObj);
+			if (g_pncSysPara.IsMatchBendRule(pRelaObj->sText))
+				bendDimTextSet.SetValue(pRelaObj->idCadEnt,pRelaObj);
 		}
 	}
 	//
@@ -600,61 +600,52 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				xPlate.mkVec=ptArr[1]-ptArr[2];
 			normalize(xPlate.mkVec);
 		}
-		//
+		//提取火曲线信息
 		if(pEnt->isKindOf(AcDbLine::desc()))
-		{	//初始化钢板的火曲线信息
-			if(xPlate.m_cFaceN>=3)
-				continue;
+		{	
+			f3dLine line;
 			AcDbLine* pAcDbLine=(AcDbLine*)pEnt;
-			double dist=0,min_dist=100000;
-			f3dPoint startPt,endPt,perp;
-			Cpy_Pnt(startPt,pAcDbLine->startPoint());
-			Cpy_Pnt(endPt,pAcDbLine->endPoint());
+			Cpy_Pnt(line.startPt, pAcDbLine->startPoint());
+			Cpy_Pnt(line.endPt, pAcDbLine->endPoint());
 			if(g_pncSysPara.IsBendLine((AcDbLine*)pEnt,&symbols))
 			{
-				int iFace=0;
-				xPlate.m_cFaceN+=1;
-				if(xPlate.m_cFaceN==2)
+				if (xPlate.m_cFaceN >= 3)
+					continue;	//最多支持两条火曲线
+				//记录火曲线
+				xPlate.m_cFaceN += 1;
+				xPlate.HuoQuLine[xPlate.m_cFaceN - 2] = line;
+				//提取火曲角度，初始化火曲面法向
+				CMinDouble minDisBendDim;
+				double dist = 0, fDegree = 0;
+				GEPOINT line_vec = (line.endPt - line.startPt).normalized();
+				for (CAD_ENTITY *pBendDim = bendDimTextSet.GetFirst(); pBendDim; pBendDim = bendDimTextSet.GetNext())
 				{
-					xPlate.HuoQuLine[0].startPt=startPt;
-					xPlate.HuoQuLine[0].endPt=endPt;
-				}
-				else
-				{
-					xPlate.HuoQuLine[1].startPt=startPt;
-					xPlate.HuoQuLine[1].endPt=endPt;
-					iFace=1;
-				}
-				int iMatch=-1;
-				CAD_ENTITY *pMatchEnt=NULL;
-				for(DWORD i=0;i<bendDimTextArr.Size();i++)
-				{
-					CAD_ENTITY *pEnt=bendDimTextArr.At(i);
-					if(pEnt==NULL)
+					CAcDbObjLife objLife(MkCadObjId(pBendDim->idCadEnt));
+					AcDbEntity* pHuoquText = objLife.GetEnt();
+					if (pHuoquText == NULL || !pHuoquText->isKindOf(AcDbText::desc()))
 						continue;
-					if(SnapPerp(&perp,startPt,endPt,f3dPoint(pEnt->pos),&dist)&&dist<min_dist)
-					{
-						pMatchEnt=pEnt;
-						iMatch=i;
-					}
+					GEPOINT perp, text_pt, text_vec;
+					text_pt = GetCadTextDimPos(pHuoquText, &text_vec);
+					if(fabs(text_vec*line_vec)< EPS_COS2)
+						continue;	//火曲文字标注方向与火曲线方向不平行
+					SnapPerp(&perp, line, text_pt, &dist);
+					minDisBendDim.Update(dist, pBendDim);
 				}
-				//TODO：在制弯线附近查找文字标注，根据文字标注识别制弯度数，并初始化火曲面法线方向 wht 19-02-13
-				/*if(iMatch>=0&&pMatchEnt!=NULL)
+				if(minDisBendDim.m_pRelaObj)
 				{
-					double fDegree=0;
-					BOOL bFrontBend=FALSE;
-					g_pncSysPara.ParseBendText(pMatchEnt->sText,fDegree,bFrontBend);
-					fDegree*=RADTODEG_COEF;
-					f3dPoint axis=endPt-startPt;
-					normalize(axis);
-					RotateVectorAroundVector(xPlate.HuoQuFaceNorm[iFace],sin(fDegree),cos(fDegree),axis);
-					//f3dPoint extend_vec=xPlate.HuoQuFaceNorm[iFace];
-					//RotateVectorAroundVector(xPlate.HuoQuFaceNorm[iFace],1,0,axis);
-				}*/
+					CAD_ENTITY *pBendDim = (CAD_ENTITY *)minDisBendDim.m_pRelaObj;
+					BOOL bFrontBend = FALSE;
+					g_pncSysPara.ParseBendText(pBendDim->sText,fDegree,bFrontBend);
+					fDegree *= bFrontBend ? 1 : -1;
+					GEPOINT bend_face_norm(0, 0, 1);
+					RotateVectorAroundVector(bend_face_norm, fDegree*RADTODEG_COEF, line_vec);
+					normalize(bend_face_norm);
+					xPlate.HuoQuFaceNorm[xPlate.m_cFaceN - 2] = bend_face_norm;
+				}
 			}
 			else if(g_pncSysPara.IsSlopeLine((AcDbLine*)pEnt))
 			{
-				RecogWeldLine(f3dLine(startPt,endPt));
+				RecogWeldLine(line);
 				continue;
 			}
 		}
