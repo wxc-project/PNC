@@ -190,6 +190,7 @@ public:
 	void ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
+	void SplitManyPartNo();
 	void LayoutPlates(BOOL bRelayout);
 	//
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}

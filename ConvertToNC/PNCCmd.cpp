@@ -122,71 +122,13 @@ void SmartExtractPlate(CPNCModel *pModel)
 		BASIC_INFO baseInfo;
 		GEPOINT dim_pos, dim_vec;
 		CXhChar500 sText;
-		if (pEnt->isKindOf(AcDbText::desc()))
+		CXhChar16 sPartNo;
+		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
 		{
-			AcDbText* pText = (AcDbText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pText->textString()));
-#else
-			sText.Copy(pText->textString());
-#endif
-			if (!g_pncSysPara.IsMatchPNRule(sText))
+			sText = GetCadTextContent(pEnt);
+			if(!g_pncSysPara.ParsePartNoText(pEnt,sPartNo))
 				continue;
-			dim_pos = GetCadTextDimPos(pText, &dim_vec);
-		}
-		else if (pEnt->isKindOf(AcDbMText::desc()))
-		{
-			AcDbMText* pMText = (AcDbMText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pMText->contents()));
-#else
-			sText.Copy(pMText->contents());
-#endif			
-			//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
-			if (sText.GetLength() > 0)
-			{
-				CXhChar500 sNewText;
-				char cPreChar = sText.At(0);
-				sNewText.Append(cPreChar);
-				for (int i = 1; i < sText.GetLength(); i++)
-				{
-					char cCurChar = sText.At(i);
-					if (cPreChar == '\\'&&cCurChar == 'P')
-						sNewText.Append('W');
-					else
-						sNewText.Append(cCurChar);
-					cPreChar = cCurChar;
-				}
-				sText.Copy(sNewText);
-			}
-			ATOM_LIST<CXhChar200> lineTextList;
-			for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
-			{
-				CXhChar200 sTemp(sKey);
-				sTemp.Replace("\\W", "");
-				lineTextList.append(sTemp);
-			}
-			if (lineTextList.GetNodeNum() > 0)
-			{
-				BOOL bFindPartNo = FALSE;
-				for (CXhChar200 *pLineText = lineTextList.GetFirst(); pLineText; pLineText = lineTextList.GetNext())
-				{
-					if (g_pncSysPara.IsMatchPNRule(*pLineText))
-					{
-						sText.Copy(*pLineText);
-						bFindPartNo = TRUE;
-						break;
-					}
-				}
-				if (!bFindPartNo)
-					continue;
-			}
-			else
-			{
-				if (!g_pncSysPara.IsMatchPNRule(sText))
-					continue;
-			}
-			dim_pos = GetCadTextDimPos(pMText, &dim_vec);
+			dim_pos = GetCadTextDimPos(pEnt, &dim_vec);
 		}
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
 		{	//从块中解析钢板信息
@@ -204,15 +146,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 					holePosList.append(GEPOINT(hole.posX, hole.posY));
 				continue;
 			}
-		}
-		CXhChar16 sPartNo;
-		if (baseInfo.m_sPartNo.GetLength() > 0)
-			sPartNo.Copy(baseInfo.m_sPartNo);
-		else
-		{
-			BYTE ciRetCode = g_pncSysPara.ParsePartNoText(sText, sPartNo);
-			if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)
-				continue;	//当前件号为焊接子件件号 wht 19-07-22
+			if (baseInfo.m_sPartNo.GetLength() > 0)
+				sPartNo.Copy(baseInfo.m_sPartNo);
 		}
 		if(strlen(sPartNo) <= 0)
 		{
@@ -314,8 +249,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	AfxMessageBox(CXhChar100("共提取钢板%d个，成功%d个，失败%d!",nSum,nValid,nSum-nValid));
 #else
 	//UBOM只需要更新钢板的基本信息
-	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))
-		pPlateInfo->xBomPlate.sPartNo = pPlateInfo->GetPartNo();
+	pModel->MergeManyPartNo();
 	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
 	{
 		CAcDbObjLife objLife(objId);
@@ -323,43 +257,42 @@ void SmartExtractPlate(CPNCModel *pModel)
 		if (pEnt==NULL || !pEnt->isKindOf(AcDbText::desc()))
 			continue;
 		GEPOINT dim_pos=GetCadTextDimPos(pEnt);
-		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos),*pTemPlate=NULL;
-		if (pPlateInfo)
+		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos);
+		if(pPlateInfo==NULL)
+			continue;	//
+		BASIC_INFO baseInfo;
+		if (g_pncSysPara.RecogBasicInfo(pEnt, baseInfo))
 		{
-			BASIC_INFO baseInfo;
-			if (g_pncSysPara.RecogBasicInfo(pEnt, baseInfo))
-			{
-				if (baseInfo.m_sPartNo.GetLength() > 0&&
-					(pTemPlate = pModel->GetPlateInfo(baseInfo.m_sPartNo)))
-				{
-					pPlateInfo = pTemPlate;
-					pPlateInfo->xBomPlate.sPartNo = baseInfo.m_sPartNo;
-				}
-				if (baseInfo.m_cMat > 0)
-					pPlateInfo->xBomPlate.cMaterial = baseInfo.m_cMat;
-				if (baseInfo.m_cQuality > 0)
-					pPlateInfo->xBomPlate.cQualityLevel = baseInfo.m_cQuality;
-				if (baseInfo.m_nThick > 0)
-					pPlateInfo->xBomPlate.thick = (float)baseInfo.m_nThick;
-				if (baseInfo.m_nNum > 0)
-					pPlateInfo->xBomPlate.feature1 = baseInfo.m_nNum;	//加工数
-				if (baseInfo.m_idCadEntNum != 0)
-					pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
-			}
-			else
-			{
-				CXhChar100 sText = GetCadTextContent(pEnt);
-				if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))
-					pPlateInfo->xBomPlate.siZhiWan = 1;
-				if (strstr(sText,"焊接"))
-					pPlateInfo->xBomPlate.bWeldPart = TRUE;
-			}
+			if (baseInfo.m_cMat > 0)
+				pPlateInfo->xPlate.cMaterial = baseInfo.m_cMat;
+			if (baseInfo.m_cQuality > 0)
+				pPlateInfo->xPlate.cQuality = baseInfo.m_cQuality;
+			if (baseInfo.m_nThick > 0)
+				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
+			if (baseInfo.m_nNum > 0)
+				pPlateInfo->xPlate.feature = baseInfo.m_nNum;
+			if (baseInfo.m_idCadEntNum != 0)
+				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
+		}
+		else
+		{
+			CXhChar100 sText = GetCadTextContent(pEnt);
+			if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))
+				pPlateInfo->xBomPlate.siZhiWan = 1;
+			if (strstr(sText,"焊接"))
+				pPlateInfo->xBomPlate.bWeldPart = TRUE;
 		}
 	}
+	pModel->SplitManyPartNo();
 	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))
 	{
+		pPlateInfo->xBomPlate.sPartNo = pPlateInfo->GetPartNo();
+		pPlateInfo->xBomPlate.cMaterial = pPlateInfo->xPlate.cMaterial;
+		pPlateInfo->xBomPlate.cQualityLevel = pPlateInfo->xPlate.cQuality;
+		pPlateInfo->xBomPlate.thick = pPlateInfo->xPlate.m_fThick;
+		pPlateInfo->xBomPlate.feature1 = pPlateInfo->xPlate.feature;	//加工数
 		if (pPlateInfo->xBomPlate.thick <= 0)
-			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xPlate.GetPartNo());
+			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xBomPlate.sPartNo);
 		else
 			pPlateInfo->xBomPlate.sSpec.Printf("-%.f", pPlateInfo->xBomPlate.thick);
 	}

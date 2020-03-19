@@ -2843,7 +2843,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 //处理钢板一板多号的情况
 void CPNCModel::MergeManyPartNo()
 {
-	for(CPlateProcessInfo* pPlateProcess=model.EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=model.EnumNextPlate(TRUE))
+	for(CPlateProcessInfo* pPlateProcess=EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=EnumNextPlate(TRUE))
 	{
 		if(pPlateProcess->vertexList.GetNodeNum()<=3)
 			continue;
@@ -2863,6 +2863,40 @@ void CPNCModel::MergeManyPartNo()
 		m_hashPlateInfo.pop_stack();
 	}
 	m_hashPlateInfo.Clean();
+}
+//拆分一板多号的情况
+void CPNCModel::SplitManyPartNo()
+{
+	for (CPlateProcessInfo* pPlateInfo =m_hashPlateInfo.GetFirst(); pPlateInfo; pPlateInfo = m_hashPlateInfo.GetNext())
+	{
+		if(pPlateInfo->pnTxtIdList.GetNodeNum() <= 1)
+			continue;
+		m_hashPlateInfo.push_stack();
+		for (AcDbObjectId objId = pPlateInfo->pnTxtIdList.GetFirst(); objId; objId = pPlateInfo->pnTxtIdList.GetNext())
+		{
+			if (pPlateInfo->partNoId == objId)
+				continue;
+			CAcDbObjLife objLife(objId);
+			AcDbEntity *pEnt = objLife.GetEnt();
+			if (pEnt == NULL)
+				continue;
+			CXhChar16 sPartNo;
+			if (g_pncSysPara.ParsePartNoText(pEnt, sPartNo))
+			{
+				CPlateProcessInfo* pNewPlateInfo = m_hashPlateInfo.Add(sPartNo);
+				pNewPlateInfo->xPlate.SetPartNo(sPartNo);
+				pNewPlateInfo->partNoId = objId;
+				pNewPlateInfo->partNumId = (g_pncSysPara.m_iDimStyle == 0) ? objId : pPlateInfo->partNumId;
+				pNewPlateInfo->xPlate.cMaterial = pPlateInfo->xPlate.cMaterial;
+				pNewPlateInfo->xPlate.m_fThick = pPlateInfo->xPlate.m_fThick;
+				pNewPlateInfo->xPlate.feature = pPlateInfo->xPlate.feature;
+				//特殊工艺信息
+				pNewPlateInfo->xBomPlate.siZhiWan = pPlateInfo->xBomPlate.siZhiWan;
+				pNewPlateInfo->xBomPlate.bWeldPart = pPlateInfo->xBomPlate.bWeldPart;
+			}
+		}
+		m_hashPlateInfo.pop_stack();
+	}
 }
 
 void CPNCModel::LayoutPlates(BOOL bRelayout)

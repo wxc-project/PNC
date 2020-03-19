@@ -923,6 +923,59 @@ BOOL CPlateExtractor::RecogArcEdge(AcDbEntity* pEnt,f3dArcLine& arcLine,BYTE& ci
 	}
 	return FALSE;
 }
+BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
+{
+	if (pAcadText == NULL)
+		return FALSE;
+	CXhChar100 sText;
+	if (pAcadText->isKindOf(AcDbText::desc()))
+		sText = GetCadTextContent(pAcadText);
+	else if (pAcadText->isKindOf(AcDbMText::desc()))
+	{
+		sText = GetCadTextContent(pAcadText);
+		if (sText.GetLength() <= 0)
+			return FALSE;
+		//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
+		CXhChar100 sNewText;
+		char cPreChar = sText.At(0);
+		sNewText.Append(cPreChar);
+		for (int i = 1; i < sText.GetLength(); i++)
+		{
+			char cCurChar = sText.At(i);
+			if (cPreChar == '\\'&&cCurChar == 'P')
+				sNewText.Append('W');
+			else
+				sNewText.Append(cCurChar);
+			cPreChar = cCurChar;
+		}
+		sText.Copy(sNewText);
+		//
+		ATOM_LIST<CXhChar50> lineTextList;
+		for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
+		{
+			CXhChar50 sTemp(sKey);
+			sTemp.Replace("\\W", "");
+			lineTextList.append(sTemp);
+		}
+		if (lineTextList.GetNodeNum() > 0)
+		{
+			for (CXhChar50 *pLineText = lineTextList.GetFirst(); pLineText; pLineText = lineTextList.GetNext())
+			{
+				if (IsMatchPNRule(*pLineText))
+				{
+					sText.Copy(*pLineText);
+					break;
+				}
+			}
+		}
+	}
+	if (!IsMatchPNRule(sText))
+		return FALSE;
+	BYTE ciRetCode = ParsePartNoText(sText, sPartNo);
+	if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)
+		return FALSE;	//当前件号为焊接子件件号 wht 19-07-22
+	return TRUE;
+}
 //////////////////////////////////////////////////////////////////////////
 //CJgCardExtractor
 CJgCardExtractor::CJgCardExtractor()
