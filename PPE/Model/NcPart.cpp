@@ -570,7 +570,11 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 					if (bOutputBendType)
 					{
 						double fHuoquAngle = (i == 0) ? tempPlate.m_fHuoQuAngle1 : tempPlate.m_fHuoQuAngle2;
-						CXhChar16 sText("%.1f", fHuoquAngle* DEGTORAD_COEF);
+						CXhChar16 sText;
+						if (fHuoquAngle > 0)
+							sText.Printf("+%.1f", fabs(fHuoquAngle)* DEGTORAD_COEF);
+						else
+							sText.Printf("-%.1f", fabs(fHuoquAngle)* DEGTORAD_COEF);
 						sText.Append("%%d");	//DXF文件中角度的书写
 						double fTextW = strlen(sText)*fFontH*0.7;
 						GEPOINT vec = (ptE - ptS).normalized();
