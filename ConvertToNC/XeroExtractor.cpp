@@ -518,19 +518,20 @@ void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
 }
 void CPlateExtractor::ParseBendText(const char* sText,double &degree,BOOL &bFrontBend)
 {
+	if (strstr(sText, m_sFrontBendKey))
+		bFrontBend = TRUE;
+	else
+		bFrontBend = FALSE;
 	CXhChar100 sValue(sText);
 	sValue.Replace("¡¡"," ");
-	if(strstr(sText,m_sFrontBendKey))
-		bFrontBend=TRUE;
-	else 
-		bFrontBend=FALSE;
-	CString str(sValue);
-	str.Replace(m_sFrontBendKey,"");
-	str.Replace(m_sReverseBendKey,"");
-	str.Replace("¡ã","");
-	str.Replace("¶È","");
-	if(str.GetLength()>0)
-		degree=atof(str);
+	sValue.Replace(m_sFrontBendKey,"");
+	sValue.Replace(m_sReverseBendKey,"");
+	sValue.Replace("¾í±ß", "");
+	sValue.Replace("¡ã"," ");
+	sValue.Replace("¶È"," ");
+	char* sKey = strtok(sValue, " ");
+	if(strlen(sKey)>0)
+		degree=atof(sKey);
 	else
 		degree=0;
 }

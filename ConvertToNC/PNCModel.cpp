@@ -627,8 +627,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 					GEPOINT text_vec;
 					f3dPoint perp, text_pt;
 					text_pt = GetCadTextDimPos(pHuoquText, &text_vec);
-					if(fabs(text_vec*line_vec)< EPS_COS2)
-						continue;	//火曲文字标注方向与火曲线方向不平行
+					//if(fabs(text_vec*line_vec)< EPS_COS2)
+						//continue;	//火曲文字标注方向与火曲线方向不平行
 					SnapPerp(&perp, line, text_pt, &dist);
 					minDisBendDim.Update(dist, pBendDim);
 				}
@@ -637,11 +637,14 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 					CAD_ENTITY *pBendDim = (CAD_ENTITY *)minDisBendDim.m_pRelaObj;
 					BOOL bFrontBend = FALSE;
 					g_pncSysPara.ParseBendText(pBendDim->sText,fDegree,bFrontBend);
-					fDegree *= bFrontBend ? 1 : -1;
-					GEPOINT bend_face_norm(0, 0, 1);
-					RotateVectorAroundVector(bend_face_norm, fDegree*RADTODEG_COEF, line_vec);
-					normalize(bend_face_norm);
-					xPlate.HuoQuFaceNorm[xPlate.m_cFaceN - 2] = bend_face_norm;
+					if (fDegree > 0)
+					{
+						fDegree *= bFrontBend ? 1 : -1;
+						GEPOINT bend_face_norm(0, 0, 1);
+						RotateVectorAroundVector(bend_face_norm, fDegree*RADTODEG_COEF, line_vec);
+						normalize(bend_face_norm);
+						xPlate.HuoQuFaceNorm[xPlate.m_cFaceN - 2] = bend_face_norm;
+					}
 				}
 			}
 			else if(g_pncSysPara.IsSlopeLine((AcDbLine*)pEnt))
