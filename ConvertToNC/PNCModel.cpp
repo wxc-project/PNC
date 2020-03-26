@@ -624,7 +624,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 					AcDbEntity* pHuoquText = objLife.GetEnt();
 					if (pHuoquText == NULL || !pHuoquText->isKindOf(AcDbText::desc()))
 						continue;
-					GEPOINT perp, text_pt, text_vec;
+					GEPOINT text_vec;
+					f3dPoint perp, text_pt;
 					text_pt = GetCadTextDimPos(pHuoquText, &text_vec);
 					//if(fabs(text_vec*line_vec)< EPS_COS2)
 						//continue;	//火曲文字标注方向与火曲线方向不平行
