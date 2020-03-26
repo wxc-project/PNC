@@ -570,6 +570,11 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 					if (bOutputBendType)
 					{
 						double fHuoquAngle = (i == 0) ? tempPlate.m_fHuoQuAngle1 : tempPlate.m_fHuoQuAngle2;
+						if (fHuoquAngle == 0)
+						{
+							logerr.Log("钢板%s的第%d火曲面法线不正确，火曲角度计算有误!", (char*)tempPlate.GetPartNo(), i + 1);
+							continue;
+						}
 						CXhChar16 sText;
 						if (fHuoquAngle > 0)
 							sText.Printf("+%.1f", fabs(fHuoquAngle)* DEGTORAD_COEF);

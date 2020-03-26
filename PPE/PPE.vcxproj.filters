@@ -240,9 +240,6 @@
     <ClInclude Include="PPEView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\PropertyList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -373,6 +370,9 @@
       <Filter>ToolCode</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h">
+      <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h">
       <Filter>TowerCad</Filter>
     </ClInclude>
   </ItemGroup>
