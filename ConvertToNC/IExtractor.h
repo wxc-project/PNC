@@ -20,7 +20,7 @@ struct BASIC_INFO{
 };
 struct BOLT_HOLE{
 	double d;			//螺栓名称直径如M20螺栓时d=20
-	BYTE ciSymbolType;	//0.图块;1.圆孔
+	BYTE ciSymbolType;	//0.标准图块|1.特殊图块|2.圆孔
 	float increment;	//螺栓孔比螺栓名义直径的增大间隙值
 	float posX,posY;	//
 	BOLT_HOLE() {

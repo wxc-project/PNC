@@ -648,28 +648,45 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 			return FALSE;
 		hole.posX=(float)pReference->position().x;
 		hole.posY=(float)pReference->position().y;
-		if(pBoltD->diameter>0)
-		{
-			hole.d=(BYTE)pBoltD->diameter;
-			hole.increment=1.5;
-		}
-		else if(pBoltD->hole_d>0)
-		{	
-			hole.d = pBoltD->hole_d;
-			hole.increment = 0;
+		if(pBoltD->diameter > 0 || pBoltD->hole_d > 0)
+		{	//指定螺栓块的直径或孔径，按照标准螺栓处理
+			hole.ciSymbolType = 0;
+			if (pBoltD->diameter > 0 && pBoltD->hole_d > pBoltD->diameter)
+			{	//同时指定螺栓块的直径和孔径
+				hole.d = pBoltD->diameter;
+				hole.increment = (float)(pBoltD->hole_d - pBoltD->diameter);
+			}
+			else if (pBoltD->diameter > 0)
+			{	//指定螺栓块的直径
+				hole.d = pBoltD->diameter;
+				hole.increment = 1.5;
+			}
+			else if(pBoltD->hole_d > 0)
+			{	//指定螺栓块的孔径
+				hole.d = pBoltD->hole_d;
+				hole.increment = 0;
+			}
+			else
+			{
+				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
+				return FALSE;
+			}
 		}
 		else
-		{	//根据块内图元识别孔径 wht 19-10-16
+		{	//未指定螺栓块的直径和孔径,按特殊孔处理，孔径根据块内图元自动计算
 			double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
 			if (fHoleD > 0)
 			{
 				hole.d = fHoleD;
 				hole.increment = 0;
+				hole.ciSymbolType = 1;	//特殊图块
 			}
 			else
+			{
 				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
+				return FALSE;
+			}
 		}
-		hole.ciSymbolType=0;
 		return TRUE;
 	}
 	else if(pEnt->isKindOf(AcDbCircle::desc()))
@@ -694,7 +711,7 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 			fDiameter = ftoi(fDiameter);
 		hole.d = fDiameter;
 		hole.increment = 0;
-		hole.ciSymbolType = 1;	//默认挂线孔
+		hole.ciSymbolType = 2;	//默认挂线孔
 		hole.posX=(float)pCircle->center().x;
 		hole.posY=(float)pCircle->center().y;
 		return TRUE;
@@ -710,7 +727,7 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		hole.d = axis.mod() * 2;
 		//if (fabs(radiusRatio - 1) > EPS2)
 		//	return FALSE;
-		hole.ciSymbolType = 1;	//默认挂线孔
+		hole.ciSymbolType = 2;	//默认挂线孔
 		if (hole.d > MAX_BOLT_HOLE)
 			return FALSE;
 		else

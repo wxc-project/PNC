@@ -120,26 +120,7 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbArc::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_ARC;
 		else if (pEnt->isKindOf(AcDbCircle::desc()))
-		{
-			AcDbCircle *pCir = (AcDbCircle*)pEnt;
-			AcGePoint3d center = pCir->center();
-			//对孔径进行圆整，精确到小数点一位
-			double fHoleD= pCir->radius() * 2;
-			int nValue = (int)floor(fHoleD);	//整数部分
-			double fValue = fHoleD - nValue;	//小数部分
-			if (fValue < EPS2)	//孔径为整数
-				fHoleD = nValue;
-			else if (fValue > EPS_COS2)
-				fHoleD = nValue + 1;
-			else if (fabs(fValue - 0.5) < EPS2)
-				fHoleD = nValue + 0.5;
-			else
-				fHoleD = ftoi(fHoleD);
-			//记录圆半径及位置 wht 19-07-20
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_CIRCLE;
-			pRelaEnt->m_fSize = fHoleD;
-			pRelaEnt->pos.Set(center.x, center.y, center.z);
-		}
 		else if (pEnt->isKindOf(AcDbSpline::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_SPLINE;
 		else if (pEnt->isKindOf(AcDbEllipse::desc()))
@@ -171,48 +152,7 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbMText::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_MTEXT;
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
-		{
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_BLOCKREF;
-			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
-			AcDbObjectId blockId = pReference->blockTableRecord();
-			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
-			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
-			if (pTempBlockTableRecord)
-			{
-				pTempBlockTableRecord->close();
-				CXhChar50 sName;
-#ifdef _ARX_2007
-				ACHAR* sValue = new ACHAR[50];
-				pTempBlockTableRecord->getName(sValue);
-				sName.Copy((char*)_bstr_t(sValue));
-				delete[] sValue;
-#else
-				char *sValue = new char[50];
-				pTempBlockTableRecord->getName(sValue);
-				sName.Copy(sValue);
-				delete[] sValue;
-#endif
-				BOLT_BLOCK* pBoltD = g_pncSysPara.hashBoltDList.GetValue(sName);
-				if (pBoltD)
-				{
-					strcpy(pRelaEnt->sText, sName);
-					pRelaEnt->pos.x = (float)pReference->position().x;
-					pRelaEnt->pos.y = (float)pReference->position().y;
-					//根据块内图元识别孔径 wht 19-10-16
-					//优化根据螺栓图块识别孔径尺寸，方便后续对比提取尺寸与设置尺寸是否一致 wht 19-11-28
-					double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-					if (fHoleD > 0)
-						pRelaEnt->m_fSize = fHoleD;
-					else if (pBoltD->diameter > 0)
-						pRelaEnt->m_fSize = (BYTE)pBoltD->diameter + 1.5;
-					else if (pBoltD->hole_d > 0)
-						pRelaEnt->m_fSize = pBoltD->hole_d;
-					else
-						pBoltD->hole_d = pBoltD->diameter = 0;
-					
-				}
-			}
-		}
 		else if (pEnt->isKindOf(AcDbDiametricDimension::desc()))
 		{
 			AcDbDiametricDimension *pDimD = (AcDbDiametricDimension*)pEnt;
@@ -528,51 +468,36 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			pBoltInfo->posY=boltInfo.posY;
 			pBoltInfo->bolt_d=boltInfo.d;
 			pBoltInfo->hole_d_increment=boltInfo.increment;
-			pBoltInfo->cFuncType=(boltInfo.ciSymbolType==1)?2:0;
-			//在螺栓空周围搜索孔径标注，识别孔径 wht 18-12-30
+			pBoltInfo->cFuncType=(boltInfo.ciSymbolType == 0) ? 0 : 2;
 			//有文字孔径标注的螺栓图形为螺栓图符时也需要根据文字标注更新孔径 wht 19-11-28
-			double cur_hole_d = boltInfo.d + boltInfo.increment;
-			if( pBoltInfo->bolt_d==0||
-				(pRelaObj->m_fSize>0&&fabs(cur_hole_d -pRelaObj->m_fSize)>EPS2))
-			{	
-				BOOL bFind = FALSE;
-				int nPush=m_xHashRelaEntIdList.push_stack();
-				for(CAD_ENTITY *pOtherRelaObj=m_xHashRelaEntIdList.GetFirst(); pOtherRelaObj; pOtherRelaObj =m_xHashRelaEntIdList.GetNext())
+			int nPush = m_xHashRelaEntIdList.push_stack();
+			for (CAD_ENTITY *pOtherRelaObj = m_xHashRelaEntIdList.GetFirst(); pOtherRelaObj; pOtherRelaObj = m_xHashRelaEntIdList.GetNext())
+			{
+				if (pOtherRelaObj->ciEntType != RELA_ACADENTITY::TYPE_TEXT &&
+					pOtherRelaObj->ciEntType != RELA_ACADENTITY::TYPE_DIM_D)
+					continue;
+				if (strlen(pOtherRelaObj->sText) <= 0 ||
+					(strstr(pOtherRelaObj->sText, "%%C") == NULL && strstr(pOtherRelaObj->sText, "%%c") == NULL &&
+						strstr(pOtherRelaObj->sText, "Φ") == NULL))
+					continue;
+				if (DISTANCE(pOtherRelaObj->pos, GEPOINT(boltInfo.posX, boltInfo.posY)) < 50)
 				{
-					if( pOtherRelaObj->ciEntType!=RELA_ACADENTITY::TYPE_TEXT &&
-						pOtherRelaObj->ciEntType!= RELA_ACADENTITY::TYPE_DIM_D)
-						continue;
-					if( strlen(pOtherRelaObj->sText)<=0||
-						(strstr(pOtherRelaObj->sText,"%%C")==NULL&&strstr(pOtherRelaObj->sText,"%%c")==NULL&&
-						 strstr(pOtherRelaObj->sText,"Φ") == NULL))
-						continue;
-					if(DISTANCE(pOtherRelaObj->pos,GEPOINT(boltInfo.posX,boltInfo.posY))<50)
-					{
-						CString ss(pOtherRelaObj->sText);
-						if(ss.Find("钻")>=0)
-							pBoltInfo->cFlag=1;
-						ss.Replace("%%C","");
-						ss.Replace("%%c","");
-						ss.Replace("Φ", "");
-						ss.Replace("钻","");
-						ss.Replace("孔","");
-						ss.Replace("冲","");
-						double hole_d=atof(ss);
-						pBoltInfo->bolt_d=hole_d;
-						pBoltInfo->hole_d_increment=0;
-						pBoltInfo->cFuncType=2;
-						bFind = FALSE;
-						break;
-					}
-				}
-				m_xHashRelaEntIdList.pop_stack(nPush);
-				if (!bFind && (pRelaObj->m_fSize > 0 && fabs(cur_hole_d - pRelaObj->m_fSize) > EPS2))
-				{	//未找到合适文字标注时根据块实际尺寸修订螺栓孔径 wht 19-11-28
-					pBoltInfo->bolt_d = pRelaObj->m_fSize;
+					CString ss(pOtherRelaObj->sText);
+					if (ss.Find("钻") >= 0)
+						pBoltInfo->cFlag = 1;
+					ss.Replace("%%C", "");
+					ss.Replace("%%c", "");
+					ss.Replace("Φ", "");
+					ss.Replace("钻", "");
+					ss.Replace("孔", "");
+					ss.Replace("冲", "");
+					double hole_d = atof(ss);
+					pBoltInfo->bolt_d = hole_d;
 					pBoltInfo->hole_d_increment = 0;
 					pBoltInfo->cFuncType = 2;
 				}
 			}
+			m_xHashRelaEntIdList.pop_stack(nPush);
 			//对于特殊孔进行代孔处理
 			if (g_pncSysPara.m_bReplaceSH && pBoltInfo->cFuncType == 2)
 			{
