@@ -6,6 +6,7 @@
 #include "LogFile.h"
 #include "DefCard.h"
 #include "ProcessPart.h"
+#include <vector>
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -343,8 +344,23 @@ BOOL CPlateExtractor::IsMatchPNRule(const char* sText)
 			return FALSE;
 		if(strlen(m_sMatKey)>0 && strstr(sText,m_sMatKey)==NULL)
 			return FALSE;
-		if(strlen(m_sPnNumKey)>0 && strstr(sText,m_sPnNumKey)==NULL)
-			return FALSE;
+		if (strlen(m_sPnNumKey) > 0)
+		{
+			if (strstr(m_sPnNumKey, "|"))
+			{	//件数关键字支持多个，如"件|块"
+				CXhChar50 sNumKey = m_sPnNumKey;
+				char* sKey = NULL;
+				for (sKey = strtok(sNumKey, "|"); sKey; sKey = strtok(NULL, "|"))
+				{
+					if(strstr(sText, sKey))
+						break;
+				}
+				if (sKey == NULL)
+					return FALSE;
+			}
+			else if(strstr(sText, m_sPnNumKey) == NULL)
+				return FALSE;
+		}
 	}
 	else	//多行标注设置条件
 	{	//多行标注中根据特定文字进行排除(特例化在此不合适)
@@ -381,10 +397,13 @@ BOOL CPlateExtractor::IsMatchNumRule(const char* sText)
 		return FALSE;
 	if(m_iDimStyle==0)
 		return IsMatchPNRule(sText);
-	else if(strstr(sText,m_sPnNumKey))
-		return TRUE;
-	else
-		return FALSE;
+	CXhChar50 sNumKey = m_sPnNumKey;
+	for (char* sKey = strtok(sNumKey, "|"); sKey; sKey = strtok(NULL, "|"))
+	{
+		if (strstr(sText, sKey))
+			return TRUE;
+	}
+	return FALSE;
 }
 BOOL CPlateExtractor::IsMatchBendRule(const char* sText)
 {
@@ -493,26 +512,36 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat,char& cQuality)
 	{
 		if(strstr(sKey,"Q")&&strstr(sKey,"|")==NULL)
 		{
-			cMat = CProcessPart::QueryBriefMatMark(sKey);
+			char cMark = CProcessPart::QueryBriefMatMark(sKey);
 			cQuality = CProcessPart::QueryBriefQuality(sKey);
+			cMat = (cMark == 'A') ? 0 : cMark;
 			return;
 		}
 	}
 }
 void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
 {
+	//获取件数的若干个关键码
+	CXhChar50 sNumKey = m_sPnNumKey;
+	std::vector<CXhChar16> numKeyArr;
+	for (char* sKey = strtok(sNumKey, "|"); sKey; sKey = strtok(NULL, "|"))
+		numKeyArr.push_back(CXhChar16(sKey));
+	//解析字符串，获取件数值
 	CXhChar100 str,sValue(sText);
 	sValue.Replace("　"," ");
 	if(m_iDimStyle==0)
 		sValue.Replace(m_sPnKey,"| ");
-	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
+	for(char* sSubStr=strtok(sValue," \t"); sSubStr; sSubStr =strtok(NULL," \t"))
 	{
-		if(strstr(sKey,m_sPnNumKey))
+		for (size_t i = 0; i < numKeyArr.size(); i++)
 		{
-			str.Copy(sKey);
-			str.Replace(m_sPnNumKey,"");
-			nNum=atoi(str);
-			return;
+			if (strstr(sSubStr, numKeyArr[i]))
+			{
+				str.Copy(sSubStr);
+				str.Replace(numKeyArr[i], "");
+				nNum = atoi(str);
+				return;
+			}
 		}
 	}
 }

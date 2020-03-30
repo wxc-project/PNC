@@ -7,7 +7,9 @@
 #include "FileIO.h"
 #include "BomTblTitleCfg.h"
 #include "..\ConvertToNC\PNCModel.h"
+#include <vector>
 
+using std::vector;
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 class CProjectTowerType;
 class CBomFile
@@ -128,10 +130,7 @@ public:
 	};
 private:
 	void CompareData(BOMPART* pLoftPart, BOMPART* pDesPart, CHashStrList<BOOL> &hashBoolByPropName);
-	void AddBomResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhChar16>& keyStrArr);
-	void AddAngleResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhChar16>& keyStrArr);
-	void AddPlateResultSheet(LPDISPATCH pSheet, ARRAY_LIST<CXhChar16>& keyStrArr);
-	void AddDwgLackPartSheet(LPDISPATCH pSheet);
+	void AddDwgLackPartSheet(LPDISPATCH pSheet, int iCompareType);
 	void AddCompareResultSheet(LPDISPATCH pSheet, int index, int iCompareType);
 public:
 	DWORD key;
@@ -174,6 +173,46 @@ public:
 class CBomModel
 {
 public:
+	const static char* KEY_PN;			//= "PartNo";
+	const static char* KEY_MAT;			//= "Material";
+	const static char* KEY_SPEC;		//= "Spec";
+	const static char* KEY_LEN;			//= "Length";
+	const static char* KEY_WIDE;		//= "Width";
+	const static char* KEY_SING_N;		//= "SingNum";
+	const static char* KEY_MANU_N;		//= "ManuNum"
+	const static char* KEY_MANU_W;		//= "SumWeight"
+	const static char* KEY_WELD;		//= "Weld"
+	const static char* KEY_ZHI_WAN;		//= "ZhiWan"
+	const static char* KEY_CUT_ANGLE;	//= "CutAngle"
+	const static char* KEY_CUT_ROOT;	//= "CutRoot"
+	const static char* KEY_CUT_BER;		//= "CutBer"
+	const static char* KEY_PUSH_FLAT;	//= "PushFlat"
+	const static char* KEY_KAI_JIAO;	//= "KaiJiao"
+	const static char* KEY_HE_JIAO;		//= "HeJiao"
+	const static char* KEY_FOO_NAIL;	//= "FootNail"
+	const static char* KEY_NOTES;		//= "NOTE"
+	//功能模块
+	static const BYTE FUNC_BOM_COMPARE		 = 1;	//0X01料单校审
+	static const BYTE FUNC_BOM_AMEND		 = 2;	//0X02修正料单
+	static const BYTE FUNC_DWG_COMPARE		 = 3;	//0X04DWG数据校审
+	static const BYTE FUNC_DWG_AMEND_NUM	 = 4;	//0X08修正加工数
+	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X10修正重量
+	DWORD m_dwFunctionFlag;
+	//
+	struct BOM_TITLE
+	{
+		CXhChar16 m_sKey;
+		CXhChar16 m_sTitle;
+		int m_nWidth;	//标题宽度
+		//
+		BOM_TITLE(const char* sKey, const char* sTile, int nWidth)
+		{
+			m_sKey.Copy(sKey);
+			m_sTitle.Copy(sTile);
+			m_nWidth = nWidth;
+		}
+	};
+	vector<BOM_TITLE> m_xBomTitleArr;
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg;
 public:
@@ -181,16 +220,21 @@ public:
 	~CBomModel(void);
 	//
 	void InitBomTblCfg();
+	int InitBomTitle();
 	CDwgFileInfo *FindDwgFile(const char* file_path);
+	bool IsValidFunc(int iFuncType);
+	DWORD AddFuncType(int iFuncType);
+	//
 public:
-	static const BYTE ID_AnHui_HongYuan		= 1;	//安徽宏源
-	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳
-	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔
-	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电
-	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方
-	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈
+	//客户ID
+	static const BYTE ID_AnHui_HongYuan		= 1;	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
+	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
+	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔(DWG校审|更新加工数)
+	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电(料单校审)
+	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新加工数)
+	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈(DWG校审|更新加工数)
 	static UINT m_uiCustomizeSerial;
-	static CXhChar100 GetClientName();
+	static CXhChar50 m_sCustomizeName;
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };

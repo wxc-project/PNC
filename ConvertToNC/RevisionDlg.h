@@ -3,6 +3,7 @@
 #include "supergridctrl.h"
 #include "XhTreeCtrl.h"
 #include "BomModel.h"
+
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 // CRevisionDlg 对话框
 enum TREEITEM_TYPE{
@@ -28,14 +29,12 @@ class CRevisionDlg : public CDialog
 #endif
 {
 	DECLARE_DYNCREATE(CRevisionDlg)
+	static int m_nWidth;
 	int m_nRightMargin;
 	int m_nBtmMargin;
 	int m_iCompareMode;
 public:
-	CImageList m_imageList;
 	ATOM_LIST<TREEITEM_INFO>itemInfoList;
-	CString m_sCurFile;		// 当前显示文件
-	CString m_sRecordNum;	// 显示记录数
 public:
 	CRevisionDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CRevisionDlg();
@@ -44,6 +43,9 @@ public:
 	//控件变量
 	CSuperGridCtrl m_xListReport;
 	CXhTreeCtrl m_treeCtrl;
+	CString m_sCurFile;		// 当前显示文件
+	CString m_sRecordNum;	// 显示记录数
+	CString m_sSearchText;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -70,11 +72,12 @@ protected:
 	afx_msg void OnExportCompResult();
 	afx_msg void OnRefreshPartNum();
 	afx_msg void OnModifyErpFile();
-	afx_msg void OnModifyTmaFile();
 	afx_msg void OnRetrievedAngles();
 	afx_msg void OnRetrievedPlates();
 	afx_msg void OnRetrievedPlate();
 	afx_msg void OnDeleteItem();
+	afx_msg void OnSearchPart();
+	afx_msg LRESULT OnAcadKeepFocus(WPARAM, LPARAM);
 public:
 	CXhTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}
 	void ContextMenu(CWnd *pWnd, CPoint point);
@@ -86,7 +89,6 @@ public:
 	//
 	BOOL CreateDlg();
 	void InitRevisionDlg();
-	static int GetDialogInitWidthByCustomizeSerial(int idCustomizeSerial);
 	//
 	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
 };

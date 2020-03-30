@@ -49,6 +49,8 @@
 #define IDC_CHK_EDIT_MK                 129
 #define IDC_LIST_                       132
 #define IDC_LIST_SYSTEM_SETTING_DLG     132
+#define IDC_E_SEARCH_TEXT               133
+#define IDC_BTN_SEARCH                  134
 #define IDD_REVISION_DLG                136
 #define IDR_ITEM_CMD_POPUP              140
 #define IDC_TREE_CONTRL                 141
@@ -92,7 +94,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        125
 #define _APS_NEXT_COMMAND_VALUE         32779
-#define _APS_NEXT_CONTROL_VALUE         133
+#define _APS_NEXT_CONTROL_VALUE         135
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

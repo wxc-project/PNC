@@ -656,18 +656,20 @@ void EnvGeneralSet()
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 void RevisionPartProcess()
 {
-	//加载角钢工艺卡
 	CLogErrorLife logErrLife;
-	char APP_PATH[MAX_PATH]="", sJgCardPath[MAX_PATH]="";
-	GetAppPath(APP_PATH);
-	sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
-	if(!g_pncSysPara.InitJgCardInfo(sJgCardPath))
-	{
-		logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!",sJgCardPath));
-		return;
+	if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE))
+	{	//加载角钢工艺卡
+		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "";
+		GetAppPath(APP_PATH);
+		sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
+		if (!g_pncSysPara.InitJgCardInfo(sJgCardPath))
+		{
+			logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!", sJgCardPath));
+			return;
+		}
 	}
 	//显示对话框
-	int nWidth = CRevisionDlg::GetDialogInitWidthByCustomizeSerial(g_xUbomModel.m_uiCustomizeSerial);
+	int nWidth = g_xUbomModel.InitBomTitle();
 	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
 	CRevisionDlg* pRevisionDlg = g_xDockBarManager.GetRevisionDlgPtr();
 	if (pRevisionDlg)
