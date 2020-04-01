@@ -120,7 +120,25 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbArc::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_ARC;
 		else if (pEnt->isKindOf(AcDbCircle::desc()))
+		{
+			AcDbCircle* pCircle = (AcDbCircle*)pEnt;
+			AcGePoint3d center = pCircle->center();
+			double fHoldD = pCircle->radius() * 2;
+			int nValue = (int)floor(fHoldD);	//整数部分
+			double fValue = fHoldD - nValue;	//小数部分
+			if (fValue < EPS2)	//孔径为整数
+				fHoldD = nValue;
+			else if (fValue > EPS_COS2)
+				fHoldD = nValue + 1;
+			else if (fabs(fValue - 0.5) < EPS2)
+				fHoldD = nValue + 0.5;
+			else
+				fHoldD = ftoi(fHoldD);
+			//记录圆圈的大小，方便后期处理圆心圆的情况(同一个位置处有多个圆圈)
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_CIRCLE;
+			pRelaEnt->m_fSize = fHoldD;
+			pRelaEnt->pos.Set(center.x, center.y, center.z);
+		}
 		else if (pEnt->isKindOf(AcDbSpline::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_SPLINE;
 		else if (pEnt->isKindOf(AcDbEllipse::desc()))
@@ -152,7 +170,40 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbMText::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_MTEXT;
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
+		{
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_BLOCKREF;
+			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+			AcDbObjectId blockId = pReference->blockTableRecord();
+			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+			if (pTempBlockTableRecord == NULL)
+			{
+				pTempBlockTableRecord->close();
+				CXhChar50 sName;
+#ifdef _ARX_2007
+				ACHAR* sValue = new ACHAR[50];
+				pTempBlockTableRecord->getName(sValue);
+				sName.Copy((char*)_bstr_t(sValue));
+				delete[] sValue;
+#else
+				char *sValue = new char[50];
+				pTempBlockTableRecord->getName(sValue);
+				sName.Copy(sValue);
+				delete[] sValue;
+#endif
+				//记录图块的位置和大小，方便后期处理同一位置有多个图块的情况
+				BOLT_BLOCK* pBoltD = g_pncSysPara.hashBoltDList.GetValue(sName);
+				if (pBoltD)
+				{
+					strcpy(pRelaEnt->sText, sName);
+					pRelaEnt->pos.x = (float)pReference->position().x;
+					pRelaEnt->pos.y = (float)pReference->position().y;
+					double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+					if (fHoleD > 0)
+						pRelaEnt->m_fSize = fHoleD;
+				}
+			}
+		}
 		else if (pEnt->isKindOf(AcDbDiametricDimension::desc()))
 		{
 			AcDbDiametricDimension *pDimD = (AcDbDiametricDimension*)pEnt;
@@ -469,6 +520,10 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			pBoltInfo->bolt_d=boltInfo.d;
 			pBoltInfo->hole_d_increment=boltInfo.increment;
 			pBoltInfo->cFuncType=(boltInfo.ciSymbolType == 0) ? 0 : 2;
+			//对于圆圈表示的螺栓，先根据圆圈直径和标准螺栓直径粗判是否归属于标准螺栓,然后再根据文字标注进行精判 wxc-2020-04-01
+			if (pEnt->isKindOf(AcDbCircle::desc()))
+			{
+			}
 			//有文字孔径标注的螺栓图形为螺栓图符时也需要根据文字标注更新孔径 wht 19-11-28
 			int nPush = m_xHashRelaEntIdList.push_stack();
 			for (CAD_ENTITY *pOtherRelaObj = m_xHashRelaEntIdList.GetFirst(); pOtherRelaObj; pOtherRelaObj = m_xHashRelaEntIdList.GetNext())
