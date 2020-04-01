@@ -129,7 +129,7 @@ BOOL CPartListDlg::UpdatePartList()
 		str_arr[0]=pPlate->xPlate.GetPartNo();
 		str_arr[1].Format("-%.f",pPlate->xPlate.m_fThick);
 		str_arr[2]=CProcessPart::QuerySteelMatMark(pPlate->xPlate.cMaterial);
-		str_arr[3].Format("%d",pPlate->xPlate.feature);
+		str_arr[3].Format("%d", pPlate->xPlate.m_nProcessNum);
 		int iItem=m_partList.InsertItemRecord(-1,str_arr);
 		m_partList.SetItemData(iItem,(DWORD)pPlate);
 		if (pPlate->xPlate.m_fThick <= 0)

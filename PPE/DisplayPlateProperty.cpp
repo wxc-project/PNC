@@ -82,32 +82,36 @@ BOOL ModifyPlateProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CString 
 	if(pPlate==NULL)
 		return FALSE;
 	BOOL bUpdatePartItemText=FALSE;
-	if(CProcessPlate::GetPropID("m_Seg")==pItem->m_idProp)
+	if (CProcessPlate::GetPropID("m_Seg") == pItem->m_idProp)
 		pPlate->SetSegI(SEGI(valueStr.GetBuffer()));
-	else if(CProcessPlate::GetPropID("m_sPartNo")==pItem->m_idProp)
+	else if (CProcessPlate::GetPropID("m_sPartNo") == pItem->m_idProp)
 	{
-		CProcessPart *pPart=model.FromPartNo(valueStr);
-		if(pPart==NULL)
+		CProcessPart *pPart = model.FromPartNo(valueStr);
+		if (pPart == NULL)
 		{
-			model.ModifyPartNo(pPlate->GetPartNo(),valueStr);
-			bUpdatePartItemText=TRUE;
+			model.ModifyPartNo(pPlate->GetPartNo(), valueStr);
+			bUpdatePartItemText = TRUE;
 		}
-		else if(pPart!=pPlate)
+		else if (pPart != pPlate)
 		{
-			AfxMessageBox(CXhChar50("已存在件号为%s的构件,请重新设置件号!",valueStr));
+			AfxMessageBox(CXhChar50("已存在件号为%s的构件,请重新设置件号!", valueStr));
 			return FALSE;
 		}
 	}
-	else if(CProcessPlate::GetPropID("m_cMaterial")==pItem->m_idProp)
+	else if (CProcessPlate::GetPropID("m_cMaterial") == pItem->m_idProp)
 	{
 		pPlate->cMaterial = QuerySteelBriefMatMark(valueStr.GetBuffer());
-		bUpdatePartItemText=TRUE;
+		bUpdatePartItemText = TRUE;
 	}
-	else if(CProcessPlate::GetPropID("m_fThick")==pItem->m_idProp)
+	else if (CProcessPlate::GetPropID("m_fThick") == pItem->m_idProp)
 	{
-		pPlate->m_fThick=(float)atof(valueStr);
-		bUpdatePartItemText=TRUE;
+		pPlate->m_fThick = (float)atof(valueStr);
+		bUpdatePartItemText = TRUE;
 	}
+	else if (CProcessPlate::GetPropID("m_nSingleNum") == pItem->m_idProp)
+		pPlate->m_nSingleNum = atoi(valueStr);
+	else if (CProcessPlate::GetPropID("m_nProcessNum") == pItem->m_idProp)
+		pPlate->m_nProcessNum = atoi(valueStr);
 	else if(CProcessPlate::GetPropID("m_fWeight")==pItem->m_idProp)
 		pPlate->m_fWeight=(float)atof(valueStr);
 	else if(CProcessPlate::GetPropID("m_sNote")==pItem->m_idProp)
@@ -311,6 +315,8 @@ BOOL CPPEView::DisplayPlateProperty()
 	oper.InsertEditPropItem(pParentItem,"m_Seg");
 	oper.InsertCmbListPropItem(pParentItem,"m_cMaterial",MakeMaterialMarkSetString());
 	oper.InsertEditPropItem(pParentItem,"m_fThick");
+	oper.InsertEditPropItem(pParentItem, "m_nSingleNum");
+	oper.InsertEditPropItem(pParentItem, "m_nProcessNum");
 	oper.InsertEditPropItem(pParentItem,"m_sNote");
 	pPropItem=oper.InsertEditPropItem(pParentItem,"m_sRelPartNo");
 	pPropItem->SetReadOnly(TRUE);
