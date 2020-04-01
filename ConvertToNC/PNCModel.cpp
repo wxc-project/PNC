@@ -523,6 +523,25 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			//对于圆圈表示的螺栓，先根据圆圈直径和标准螺栓直径粗判是否归属于标准螺栓,然后再根据文字标注进行精判 wxc-2020-04-01
 			if (pEnt->isKindOf(AcDbCircle::desc()))
 			{
+				bool bStardBolt = true;
+				double fHoleD = boltInfo.d;
+				short wBoltD = ftoi(fHoleD - 2.1);
+				if (wBoltD <= 12)
+					wBoltD = 12;
+				else if (wBoltD <= 16)
+					wBoltD = 16;
+				else if (wBoltD <= 20)
+					wBoltD = 20;
+				else if (wBoltD <= 24)
+					wBoltD = 24;
+				else
+					bStardBolt = false;
+				if (bStardBolt)
+				{
+					pBoltInfo->bolt_d = wBoltD;
+					pBoltInfo->hole_d_increment = fHoleD - wBoltD;
+					pBoltInfo->cFuncType = 0;
+				}
 			}
 			//有文字孔径标注的螺栓图形为螺栓图符时也需要根据文字标注更新孔径 wht 19-11-28
 			int nPush = m_xHashRelaEntIdList.push_stack();
