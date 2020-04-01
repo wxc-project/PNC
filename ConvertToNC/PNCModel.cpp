@@ -176,7 +176,7 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 			AcDbObjectId blockId = pReference->blockTableRecord();
 			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
 			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
-			if (pTempBlockTableRecord == NULL)
+			if (pTempBlockTableRecord)
 			{
 				pTempBlockTableRecord->close();
 				CXhChar50 sName;
@@ -523,7 +523,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			//对于圆圈表示的螺栓，先根据圆圈直径和标准螺栓直径粗判是否归属于标准螺栓,然后再根据文字标注进行精判 wxc-2020-04-01
 			if (pEnt->isKindOf(AcDbCircle::desc()))
 			{
-				bool bStardBolt = true;
+				bool bStandardBolt = true;
 				double fHoleD = boltInfo.d;
 				short wBoltD = ftoi(fHoleD - 2.1);
 				if (wBoltD <= 12)
@@ -535,8 +535,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				else if (wBoltD <= 24)
 					wBoltD = 24;
 				else
-					bStardBolt = false;
-				if (bStardBolt)
+					bStandardBolt = false;
+				if (bStandardBolt)
 				{
 					pBoltInfo->bolt_d = wBoltD;
 					pBoltInfo->hole_d_increment = fHoleD - wBoltD;
