@@ -179,7 +179,7 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE c
 			f3dPoint cir_center(pBoltInfo->posX, pBoltInfo->posY);
 			curPt.Set(cir_center.x + pCutPt->radius, cir_center.y);
 			pCutPt->vertex = ProcessPoint(curPt - prevPt, cCSMode);
-			pCutPt->centerPt = ProcessPoint(cir_center - GEPOINT(prevPt), cCSMode);
+			pCutPt->centerPt = ProcessPoint(cir_center - f3dPoint(prevPt), cCSMode);
 			prevPt = curPt;
 		}
 	}

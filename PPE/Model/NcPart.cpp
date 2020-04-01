@@ -582,7 +582,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 							sText.Printf("-%.1f", fabs(fHuoquAngle)* DEGTORAD_COEF);
 						sText.Append("%%d");	//DXF文件中角度的书写
 						double fTextW = strlen(sText)*fFontH*0.7;
-						GEPOINT vec = (ptE - ptS).normalized();
+						GEPOINT vec = f3dPoint(ptE - ptS).normalized();
 						double fRotAngle = Cal2dLineAng(0, 0, vec.x, vec.y);
 						if (fRotAngle > Pi / 2 && fRotAngle < 3 * Pi / 2)
 							fRotAngle -= Pi;

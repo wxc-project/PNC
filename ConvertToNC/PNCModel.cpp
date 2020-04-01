@@ -120,7 +120,10 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbArc::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_ARC;
 		else if (pEnt->isKindOf(AcDbCircle::desc()))
+		{
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_CIRCLE;
+
+		}
 		else if (pEnt->isKindOf(AcDbSpline::desc()))
 			pRelaEnt->ciEntType = RELA_ACADENTITY::TYPE_SPLINE;
 		else if (pEnt->isKindOf(AcDbEllipse::desc()))
