@@ -539,7 +539,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				if (bStardBolt)
 				{
 					pBoltInfo->bolt_d = wBoltD;
-					pBoltInfo->hole_d_increment = fHoleD - wBoltD;
+					pBoltInfo->hole_d_increment = (float)(fHoleD - wBoltD);
 					pBoltInfo->cFuncType = 0;
 				}
 			}
