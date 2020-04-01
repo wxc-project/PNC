@@ -444,7 +444,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			if(baseInfo.m_nThick>0)
 				xPlate.m_fThick=(float)baseInfo.m_nThick;
 			if (baseInfo.m_nNum > 0)
-				xPlate.feature = baseInfo.m_nNum;
+				xPlate.m_nSingleNum = xPlate.m_nProcessNum = baseInfo.m_nNum;
 			if (baseInfo.m_idCadEntNum != 0)
 				partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 			if(baseInfo.m_sPartNo.GetLength()>0&&bRelatePN)
@@ -2818,7 +2818,8 @@ void CPNCModel::SplitManyPartNo()
 				pNewPlateInfo->partNumId = (g_pncSysPara.m_iDimStyle == 0) ? objId : pPlateInfo->partNumId;
 				pNewPlateInfo->xPlate.cMaterial = pPlateInfo->xPlate.cMaterial;
 				pNewPlateInfo->xPlate.m_fThick = pPlateInfo->xPlate.m_fThick;
-				pNewPlateInfo->xPlate.feature = pPlateInfo->xPlate.feature;
+				pNewPlateInfo->xPlate.m_nProcessNum = pPlateInfo->xPlate.m_nProcessNum;
+				pNewPlateInfo->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nSingleNum;
 				//特殊工艺信息
 				pNewPlateInfo->xBomPlate.siZhiWan = pPlateInfo->xBomPlate.siZhiWan;
 				pNewPlateInfo->xBomPlate.bWeldPart = pPlateInfo->xBomPlate.bWeldPart;

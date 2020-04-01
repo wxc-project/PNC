@@ -170,7 +170,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 			pPlateProcess->xPlate.SetPartNo(sPartNo);
 			pPlateProcess->xPlate.cMaterial = baseInfo.m_cMat;
 			pPlateProcess->xPlate.m_fThick = (float)baseInfo.m_nThick;
-			pPlateProcess->xPlate.feature = baseInfo.m_nNum;
+			pPlateProcess->xPlate.m_nProcessNum = baseInfo.m_nNum;
+			pPlateProcess->xPlate.m_nSingleNum = baseInfo.m_nNum;
 			pPlateProcess->xPlate.mkpos = dim_pos;
 			pPlateProcess->xPlate.mkVec = dim_vec;
 			if (pModel->m_sTaStampNo.GetLength() <= 0 && baseInfo.m_sTaStampNo.GetLength() > 0)
@@ -270,7 +271,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 			if (baseInfo.m_nThick > 0)
 				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
 			if (baseInfo.m_nNum > 0)
-				pPlateInfo->xPlate.feature = baseInfo.m_nNum;
+				pPlateProcess->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nProcessNum = baseInfo.m_nNum;
 			if (baseInfo.m_idCadEntNum != 0)
 				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 		}
@@ -290,7 +291,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 		pPlateInfo->xBomPlate.cMaterial = pPlateInfo->xPlate.cMaterial;
 		pPlateInfo->xBomPlate.cQualityLevel = pPlateInfo->xPlate.cQuality;
 		pPlateInfo->xBomPlate.thick = pPlateInfo->xPlate.m_fThick;
-		pPlateInfo->xBomPlate.feature1 = pPlateInfo->xPlate.feature;	//加工数
+		pPlateInfo->xBomPlate.feature1 = pPlateInfo->xPlate.m_nProcessNum;	//加工数
+		pPlateInfo->xBomPlate.SetPartNum(pPlateInfo->xPlate.m_nSingleNum);	//单基数
 		if (pPlateInfo->xBomPlate.thick <= 0)
 			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xBomPlate.sPartNo);
 		else
@@ -366,7 +368,8 @@ void ManualExtractPlate(CPNCModel *pModel)
 	pExistPlate->xBomPlate.cQualityLevel = pExistPlate->xPlate.cQuality;
 	pExistPlate->xBomPlate.thick = pExistPlate->xPlate.m_fThick;
 	pExistPlate->xBomPlate.sSpec.Printf("-%.f", pExistPlate->xBomPlate.thick);
-	pExistPlate->xBomPlate.feature1 = pExistPlate->xPlate.feature;	//加工数
+	pExistPlate->xBomPlate.feature1 = pExistPlate->xPlate.m_nProcessNum;	//加工数
+	pExistPlate->xBomPlate.SetPartNum(pExistPlate->xPlate.m_nSingleNum);	//单基数
 #endif
 }
 

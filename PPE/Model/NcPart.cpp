@@ -274,7 +274,7 @@ bool CNCPart::CreatePlateWkfFile(CProcessPlate *pPlate, const char* file_path)
 	double fPosY = centre.y;
 	fprintf(fp, "T %.2f %.2f 件号:%s\n", centre.x, fPosY, (char*)tempPlate.GetPartNo());
 	fPosY -= fTextHeight;
-	fprintf(fp, "T %.2f %.2f 数量:%d\n", centre.x, fPosY, tempPlate.m_nDanJiNum);
+	fprintf(fp, "T %.2f %.2f 数量:%d\n", centre.x, fPosY, tempPlate.m_nSingleNum);
 	fPosY -= fTextHeight;
 	fprintf(fp, "T %.2f %.2f 板厚:%d\n", centre.x, fPosY, (int)tempPlate.m_fThick);
 	fPosY -= fTextHeight;
