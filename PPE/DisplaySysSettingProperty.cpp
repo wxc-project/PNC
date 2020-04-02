@@ -10,6 +10,7 @@
 #include "LicFuncDef.h"
 #include "NcPart.h"
 #include "PlankConfigDlg.h"
+#include "FileFormatSetDlg.h"
 
 void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 {
@@ -755,6 +756,12 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 		CPlankConfigDlg dlg;
 		dlg.DoModal();
 	}
+	else if (CSysPara::GetPropID("FileFormat") == pItem->m_idProp)
+	{
+		CFileFormatSetDlg dlg;
+		if(dlg.DoModal()==IDOK)
+			pPropList->SetItemPropValue(pItem->m_idProp, model.file_format.GetFileFormatStr());
+	}
 	else 
 		return FALSE;
 	return TRUE;
@@ -852,6 +859,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//¸Ö°åÊä³öÉèÖÃ
 	pParentItem = oper.InsertPropItem(pRootItem, "OutPutSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_PROCESSCARD_INFO);
+	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
 #ifdef __PROCESS_PLATE_
 	pPropItem = oper.InsertCmbListPropItem(pParentItem, "nc.m_iNcMode");

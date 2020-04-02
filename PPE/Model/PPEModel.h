@@ -2,7 +2,9 @@
 #include "HashTable.h"
 #include "XhCharString.h"
 #include "ProcessPart.h"
+#include <vector>
 
+using std::vector;
 struct ISysPara
 {
 	const static BYTE TYPE_FLAME_CUT	= 0;	//火焰切割
@@ -32,6 +34,36 @@ public:
 	CXhChar16 m_sOperator;		//操作员（制表人）
 	CXhChar16 m_sAuditor;		//审核人
 	CXhChar16 m_sCritic;		//评审人
+	//文件输出格式定制
+	static const CXhChar16 KEY_TA_TYPE;
+	static const CXhChar16 KEY_PART_NO;
+	static const CXhChar16 KEY_PART_MAT;
+	static const CXhChar16 KEY_PART_THICK;
+	static const CXhChar16 KEY_SINGLE_NUM;
+	static const CXhChar16 KEY_PROCESS_NUM;
+	struct FILE_FORMAT 
+	{
+		vector<CXhChar16> m_sSplitters;
+		vector<CXhChar16> m_sKeyMarkArr;
+		//
+		FILE_FORMAT() { ; }
+		CXhChar100 GetFileFormatStr(){
+			CXhChar100 sText;
+			size_t nSplit = m_sSplitters.size();
+			size_t nKeySize = m_sKeyMarkArr.size();
+			for (size_t i = 0; i < nKeySize; i++)
+			{
+				if (sText.GetLength()>0 && nSplit >= i&& m_sSplitters[i - 1].GetLength() > 0)
+					sText.Append(m_sSplitters[i - 1]);
+				sText.Append(m_sKeyMarkArr[i]);
+			}
+			//文件格式末尾带特殊分隔符
+			if(nKeySize >0 && nSplit == nKeySize && m_sSplitters[nSplit - 1].GetLength() > 0)
+				sText.Append(m_sSplitters[nSplit - 1]);
+			return sText;
+		}
+		bool IsValidFormat() { return m_sKeyMarkArr.size() > 0; }
+	}file_format;
 public:
 	static ILog2File* log2file;
 	static ILog2File* Log2File();//永远会返回一个有效指针,但只有log2file!=NULL时,才会真正记录错误日志

@@ -1196,51 +1196,21 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 }
 void CPlateProcessInfo::InitMkPos(GEPOINT &mk_pos,GEPOINT &mk_vec)
 {
-	int i=0;
-	AcDbEntity *pEnt=NULL;
+	GEPOINT dim_pos, dim_vec;
 	for(AcDbObjectId objId=pnTxtIdList.GetFirst();objId;objId=pnTxtIdList.GetNext())
 	{
-		acdbOpenAcDbEntity(pEnt,objId,AcDb::kForRead);
+		CAcDbObjLife objLife(objId);
+		AcDbEntity *pEnt = objLife.GetEnt();
 		if(pEnt==NULL)
 			continue;
-		pEnt->close();
-		if(!pEnt->isKindOf(AcDbText::desc())&&!pEnt->isKindOf(AcDbMText::desc()))
-			continue;
-		CXhChar100 sText;
-		double heigh=0;
-		AcDbObjectId styleId;
-		if(pEnt->isKindOf(AcDbText::desc()))
-		{
-			AcDbText* pText=(AcDbText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pText->textString()));
-#else
-			sText.Copy(pText->textString());
-#endif
-			heigh=pText->height();
-			styleId=pText->textStyle();
-		}
-		else if(pEnt->isKindOf(AcDbMText::desc()))
-		{
-			AcDbMText* pMText=(AcDbMText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pMText->contents()));
-#else
-			sText.Copy(pMText->contents());
-#endif
-			heigh=pMText->textHeight();
-			styleId=pMText->textStyle();
-		}
-		double len=DrawTextLength(sText,heigh,styleId);
-		f3dPoint origin=dim_pos+dim_vec*len*0.5;
-		if(mk_vec.IsZero())
-			mk_vec=dim_vec;
-		if(i==0)
-			mk_pos=origin;
+		GEPOINT pt = GetCadTextDimPos(pEnt, &dim_vec);
+		if (dim_pos.IsZero())
+			dim_pos = pt;
 		else
-			mk_pos=(mk_pos+origin)*0.5;
-		i++;
+			dim_pos = (dim_pos + pt)*0.5;
 	}
+	mk_pos = dim_pos;
+	mk_vec = dim_vec;
 }
 //生成ppi中性文件
 void CPlateProcessInfo::CreatePPiFile(const char* file_path)

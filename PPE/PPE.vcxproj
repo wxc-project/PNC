@@ -310,6 +310,7 @@
     <ClCompile Include="DisplayLineAngleProperty.cpp" />
     <ClCompile Include="DisplayPlateProperty.cpp" />
     <ClCompile Include="DisplaySysSettingProperty.cpp" />
+    <ClCompile Include="FileFormatSetDlg.cpp" />
     <ClCompile Include="HoleIncrementSetDlg.cpp" />
     <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="KaiHeLineAngleDlg.cpp" />
@@ -501,6 +502,7 @@
     <ClInclude Include="AdjustOrderDlg.h" />
     <ClInclude Include="BendPlankStyleDlg.h" />
     <ClInclude Include="CutWingAngleDlg.h" />
+    <ClInclude Include="FileFormatSetDlg.h" />
     <ClInclude Include="HoleIncrementSetDlg.h" />
     <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="KaiHeLineAngleDlg.h" />

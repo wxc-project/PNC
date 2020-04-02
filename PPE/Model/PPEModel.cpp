@@ -32,7 +32,14 @@ static BOOL DestroyPart(CProcessPart* pPart)
 		delete (CProcessPart*)pPart;
 	return TRUE;
 }
+//////////////////////////////////////////////////////////////////////////
 //
+const CXhChar16 CPPEModel::KEY_TA_TYPE		= "塔型";
+const CXhChar16 CPPEModel::KEY_PART_NO		= "件号";
+const CXhChar16 CPPEModel::KEY_PART_MAT		= "材质";
+const CXhChar16 CPPEModel::KEY_PART_THICK	= "厚度";
+const CXhChar16 CPPEModel::KEY_SINGLE_NUM	= "单基数";
+const CXhChar16 CPPEModel::KEY_PROCESS_NUM	= "加工数";
 static CLogFile emptylogfile;
 ILog2File* CPPEModel::log2file=NULL;	//错误日志文件
 ISysPara* CPPEModel::sysPara=NULL;
