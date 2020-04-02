@@ -414,10 +414,7 @@ static bool CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, c
 			CXhChar100  sFileName = GetValidFileName(&model, pPlate);
 			if (sFileName.Length() <= 0)
 				continue;
-			if(model.m_sTaType.GetLength()>0)
-				sFilePath.Printf("%s\\%s-%s.%s", (char*)sNcFileDir,(char*)model.m_sTaType, (char*)sFileName, (char*)sNcExt);
-			else
-				sFilePath.Printf("%s\\%s.%s", (char*)sNcFileDir, (char*)sFileName,(char*)sNcExt);
+			sFilePath.Printf("%s\\%s.%s", (char*)sNcFileDir, (char*)sFileName,(char*)sNcExt);
 			if (CNCPart::PLATE_DXF_FILE == iNcFileType)			//钢板DXF类型文件
 				CNCPart::CreatePlateDxfFile(pPlate, sFilePath, iNcMode);
 #ifdef __PNC_

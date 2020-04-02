@@ -71,7 +71,44 @@ CXhChar200 GetValidFileName(CPPEModel *pModel,CProcessPart *pPart,const char* sP
 {
 	CXhChar200 sFileName;
 	CXhChar500 sFilePath=pModel->GetPartFilePath(pPart->GetPartNo());
-	if(sFilePath.Length()>0)
+	if (pModel->file_format.IsValidFormat() && pPart->IsPlate())
+	{	//根据用户定制，提取文件名
+		CProcessPlate* pPlate = (CProcessPlate*)pPart;
+		size_t nSplit = pModel->file_format.m_sSplitters.size();
+		size_t nKeySize = pModel->file_format.m_sKeyMarkArr.size();
+		for (size_t i = 0; i < nKeySize; i++)
+		{
+			CXhChar50 sValue;
+			if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PART_NO))
+				sValue.Copy(pPart->GetPartNo());
+			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PART_MAT))
+				CProcessPart::QuerySteelMatMark(pPart->cMaterial, sValue);
+			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PART_THICK) &&
+				pPlate->GetThick() > 0)
+				sValue.Printf("%.0f", pPlate->GetThick());
+			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_SINGLE_NUM) &&
+				pPlate->m_nSingleNum > 0)
+				sValue.Printf("%d", pPlate->m_nSingleNum);
+			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PROCESS_NUM) &&
+				pPlate->m_nProcessNum > 0)
+				sValue.Printf("%d", pPlate->m_nProcessNum);
+			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_TA_TYPE) &&
+				pModel->m_sTaType.GetLength() > 0)
+				sValue.Copy(pModel->m_sTaType);
+			//
+			if (sValue.GetLength() > 0)
+			{
+				if (sFileName.GetLength() > 0 && nSplit >= i && 
+					pModel->file_format.m_sSplitters[i - 1].GetLength() > 0)
+					sFileName.Append(pModel->file_format.m_sSplitters[i - 1]);
+				sFileName.Append(sValue);
+			}
+		}
+		//文件格式末尾带特殊分隔符
+		if (nKeySize > 0 && nSplit == nKeySize && pModel->file_format.m_sSplitters[nSplit - 1].GetLength() > 0)
+			sFileName.Append(pModel->file_format.m_sSplitters[nSplit - 1]);
+	}
+	else if(sFilePath.Length()>0)
 	{	//根据ppi文件提取路径，提取文件名
 		char drive[8],dir[MAX_PATH],fname[MAX_PATH],ext[10];
 		_splitpath(sFilePath,drive,dir,fname,ext);

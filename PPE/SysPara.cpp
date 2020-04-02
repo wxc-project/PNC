@@ -66,6 +66,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.m_sNcDriverPath",PROPLIST_ITEM(id++,"角钢NC驱动"));
 	//文件设置
 	AddPropItem("FileSet", PROPLIST_ITEM(id++, "文件设置"));
+	AddPropItem("FileFormat", PROPLIST_ITEM(id++, "输出文件格式"));
 	AddPropItem("PbjPara",PROPLIST_ITEM(id++,"PBJ设置"));
 	AddPropItem("pbj.m_iPbjMode",PROPLIST_ITEM(id++,"分类输出","生成PBJ文件时是否分类输出","0.无|1.按厚度"));
 	AddPropItem("pbj.m_bIncVertex",PROPLIST_ITEM(id++,"输出顶点","导出PBJ时，是否包括顶点","是|否"));
@@ -312,7 +313,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.4");
+	CString version("2.5");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -432,6 +433,12 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar << CString(model.m_sOperator);
 	ar << CString(model.m_sAuditor);
 	ar << CString(model.m_sCritic);
+	ar << model.file_format.m_sSplitters.size();
+	for (size_t i = 0; i < model.file_format.m_sSplitters.size(); i++)
+		ar << CString(model.file_format.m_sSplitters[i]);
+	ar << model.file_format.m_sKeyMarkArr.size();
+	for (size_t i = 0; i < model.file_format.m_sKeyMarkArr.size(); i++)
+		ar << CString(model.file_format.m_sKeyMarkArr[i]);
 	//更新注册表内容 wxc 16-11-21
 	WriteSysParaToReg("NCMode");
 	WriteSysParaToReg("MKRectL");
@@ -652,6 +659,23 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar >> sValue; model.m_sOperator.Copy(sValue);
 		ar >> sValue; model.m_sAuditor.Copy(sValue);
 		ar >> sValue; model.m_sCritic.Copy(sValue);
+	}
+	if (compareVersion(version, "2.5") >= 0)
+	{
+		int nSize = 0;
+		ar >> nSize;
+		CString sValue;
+		for (int i = 0; i < nSize; i++)
+		{
+			ar >> sValue;
+			model.file_format.m_sSplitters.push_back(CXhChar16(sValue));
+		}
+		ar >> nSize;
+		for (int i = 0; i < nSize; i++)
+		{
+			ar >> sValue;
+			model.file_format.m_sKeyMarkArr.push_back(CXhChar16(sValue));
+		}
 	}
 	//获取注册表内容
 	ReadSysParaFromReg("NCMode");
@@ -1152,6 +1176,8 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		else //if (nc.m_xLaserPara.m_bOutputBendType)
 			sText.Copy("否");
 	}
+	else if (GetPropID("FileFormat") == id)
+		sText.Copy(model.file_format.GetFileFormatStr());
 	else if(GetPropID("pbj.m_iPbjMode")==id)
 	{
 		if(pbj.m_iPbjMode==0)

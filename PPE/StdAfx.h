@@ -32,6 +32,7 @@
 #include "f_ent.h"
 #include "f_alg_fun.h"
 #include "f_ent_list.h"
+#include <afxcontrolbars.h>
 
 //{{AFX_INSERT_LOCATION}}
 // Microsoft Visual C++ will insert additional declarations immediately before the previous line.

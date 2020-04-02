@@ -190,6 +190,9 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\NcJg.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
+    <ClCompile Include="FileFormatSetDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
@@ -374,6 +377,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h">
       <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="FileFormatSetDlg.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
