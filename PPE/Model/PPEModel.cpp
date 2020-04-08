@@ -331,7 +331,7 @@ void CPPEModel::ReadPrjTowerInfoFromCfgFile(const char* cfg_file_path)
 	if(fp==NULL)
 		return;
 	CXhChar500 sLine;
-	char line_txt[MAX_PATH],key_word[100];
+	char line_txt[MAX_PATH] = "", key_word[100] = "";
 	while(!feof(fp))
 	{
 		if(fgets(line_txt,MAX_PATH,fp)==NULL)
@@ -340,7 +340,7 @@ void CPPEModel::ReadPrjTowerInfoFromCfgFile(const char* cfg_file_path)
 		strcpy(sText,line_txt);
 		sLine=sText;
 		sLine.Replace('=',' ');
-		sprintf(line_txt,"%s",sLine);
+		sprintf(line_txt,"%s",(char*)sLine);
 		char *skey=strtok((char*)sText,"=,;");
 		strncpy(key_word,skey,100);
 		//≥£πÊ…Ë÷√

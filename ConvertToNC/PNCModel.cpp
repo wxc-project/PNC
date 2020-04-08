@@ -498,6 +498,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				xPlate.m_nSingleNum = xPlate.m_nProcessNum = baseInfo.m_nNum;
 			if (baseInfo.m_idCadEntNum != 0)
 				partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
+			if (baseInfo.m_sTaType.GetLength() > 0 && model.m_sTaType.GetLength() <= 0)
+				model.m_sTaType.Copy(baseInfo.m_sTaType);
 			if(baseInfo.m_sPartNo.GetLength()>0&&bRelatePN)
 			{
 				if(xPlate.GetPartNo().GetLength()<=0)
