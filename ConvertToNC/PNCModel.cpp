@@ -3115,3 +3115,32 @@ CPlateProcessInfo *CSortedModel::EnumNextPlate()
 	else
 		return NULL;
 }
+//////////////////////////////////////////////////////////////////////////
+//CDxfFolder
+CExpoldeModel g_explodeModel;
+AcApDocument* CDxfFileItem::SearchTargetDoc()
+{
+	CXhChar500 file_path;
+	AcApDocument *pTargetDoc = NULL;
+	AcApDocumentIterator *pIter = acDocManager->newAcApDocumentIterator();
+	for (; !pIter->done(); pIter->step())
+	{
+		pTargetDoc = pIter->document();
+#ifdef _ARX_2007
+		file_path.Copy(_bstr_t(pTargetDoc->fileName()));
+#else
+		file_path.Copy(pTargetDoc->fileName());
+#endif
+		if (strstr(file_path, m_sFilePath))
+			break;
+	}
+	if (pIter)
+	{
+		delete pIter;
+		pIter = NULL;
+	}
+	if (strstr(file_path, m_sFilePath))
+		return pTargetDoc;
+	else
+		return NULL;
+}

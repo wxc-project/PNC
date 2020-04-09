@@ -13,6 +13,7 @@ void SendPartEditor();		//编辑钢板信息
 void LayoutPlates();		//自动排版
 void InsertMKRect();		//插入钢印区
 void DrawProfileByTxtFile();//通过读取Txt文件绘制外形
+void ExplodeText();			//打碎文本(文本类型转换为多段线)
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 void RevisionPartProcess();	//校审构件工艺信息

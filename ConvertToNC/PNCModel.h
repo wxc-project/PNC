@@ -8,7 +8,9 @@
 #include "CadToolFunc.h"
 #include "XhMath.h"
 #include "BOM.h"
+#include <vector>
 
+using std::vector;
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
 struct VERTEX_TAG{
@@ -228,7 +230,8 @@ public:
 	void WritePrjTowerInfoToCfgFile(const char* cfg_file_path);
 };
 extern CPNCModel model;
-
+//////////////////////////////////////////////////////////////////////////
+//
 class CSortedModel
 {
 	ARRAY_LIST<CPlateProcessInfo*> platePtrList;
@@ -238,3 +241,46 @@ public:
 	CPlateProcessInfo *EnumFirstPlate();
 	CPlateProcessInfo *EnumNextPlate();
 };
+//////////////////////////////////////////////////////////////////////////
+//
+class CDxfFileItem 
+{
+	AcApDocument* SearchTargetDoc();
+public:
+	CXhChar50 m_sFileName;
+	CString m_sFilePath;
+public:
+	CDxfFileItem() { ; }
+	~CDxfFileItem() { ; }
+	//
+	void Activate() {
+		AcApDocument* pDoc = SearchTargetDoc();
+		if(pDoc)
+			acDocManager->activateDocument(pDoc);
+	}
+	void Save() {
+		AcApDocument* pDoc = SearchTargetDoc();
+		if (pDoc)
+			pDoc->database()->save();
+	}
+};
+class CDxfFolder
+{
+public:
+	CXhChar50 m_sFolderName;
+	vector<CDxfFileItem> m_xDxfFileSet;
+public:
+	CDxfFolder() {}
+	~CDxfFolder() { m_xDxfFileSet.clear(); }
+};
+class CExpoldeModel {
+	ATOM_LIST<CDxfFolder> dxfFolderList;
+public:
+	CExpoldeModel() { ; }
+	//
+	int GetNum() { return dxfFolderList.GetNodeNum(); }
+	CDxfFolder* AppendFolder() { return dxfFolderList.append(); }
+	CDxfFolder* EnumFirst() { return dxfFolderList.GetFirst(); }
+	CDxfFolder* EnumNext() { return dxfFolderList.GetNext(); }
+};
+extern CExpoldeModel g_explodeModel;
