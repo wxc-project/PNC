@@ -2840,6 +2840,7 @@
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
     <ClCompile Include="ConvertToNC.cpp" />
+    <ClCompile Include="DocManagerReactor.cpp" />
     <ClCompile Include="DrawDamBoard.cpp" />
     <ClCompile Include="DrawUnit.cpp" />
     <ClCompile Include="DwgFile.cpp" />
@@ -3072,6 +3073,7 @@
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
     <ClInclude Include="DockBarManager.h" />
+    <ClInclude Include="DocManagerReactor.h" />
     <ClInclude Include="DrawDamBoard.h" />
     <ClInclude Include="DrawUnit.h" />
     <ClInclude Include="ExplodeTxtDlg.h" />

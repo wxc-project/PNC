@@ -437,12 +437,19 @@ acrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
 		acrxDynamicLinker->registerAppMDIAware(pkt);
 		InitApplication();
 		g_pSteelSealReactor = new CSteelSealReactor();
+		g_pDocManagerReactor = new CDocManagerReactor();
+		acDocManager->addReactor(g_pDocManagerReactor);
 		break;
 	case AcRx::kUnloadAppMsg:
 		if (g_pSteelSealReactor != NULL)
 		{
 			delete g_pSteelSealReactor;
 			g_pSteelSealReactor = NULL;
+		}
+		if (g_pDocManagerReactor != NULL)
+		{
+			delete g_pDocManagerReactor;
+			g_pDocManagerReactor = NULL;
 		}
 		UnloadApplication();
 		break;

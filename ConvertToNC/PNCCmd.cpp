@@ -647,49 +647,8 @@ void DrawProfileByTxtFile()
 void ExplodeText()
 {
 	CLogErrorLife logErrLife;
-	//g_xDockBarManager.DisplayExplodeTxtDockBar();
-	//
-	CString sDxfFolder;
-	if (!InvokeFolderPickerDlg(sDxfFolder))
-		return;
-	//在指定路径下查找DXF文件
-	CDxfFolder* pFolder = g_explodeModel.AppendFolder();
-	CFileFind file_find;
-	BOOL bFind = file_find.FindFile(CXhChar200("%s\\*.dxf", sDxfFolder));
-	while (bFind)
-	{
-		bFind = file_find.FindNextFile();
-		if (file_find.IsDots() || file_find.IsHidden() || file_find.IsReadOnly() ||
-			file_find.IsSystem() || file_find.IsTemporary() || file_find.IsDirectory())
-			continue;
-		CString file_path = file_find.GetFilePath();
-		CString str_ext = file_path.Right(4);	//取后缀名
-		str_ext.MakeLower();
-		if (str_ext.CompareNoCase(".dxf") != 0)
-			continue;
-		CDxfFileItem dxf_file;
-		dxf_file.m_sFilePath = file_path;
-		pFolder->m_xDxfFileSet.push_back(dxf_file);
-	}
-	file_find.Close();
-	//进行文本炸开
-	for (size_t i = 0; i < pFolder->m_xDxfFileSet.size(); i++)
-	{
-		AcApDocument *pTargetDoc = OpenDwgFile(pFolder->m_xDxfFileSet[i].m_sFilePath);
-		if (pTargetDoc == NULL)
-			continue;
-		acDocManager->lockDocument(pTargetDoc, AcAp::kWrite);
-#ifdef _ARX_2007
-		acDocManager->sendStringToExecute(pTargetDoc, _bstr_t("txtexp\n"), false);
-		acDocManager->sendStringToExecute(pTargetDoc, _bstr_t("all\n"), false);
-		acDocManager->sendStringToExecute(pTargetDoc, _bstr_t("\n"), false);
-#else
-		acDocManager->sendStringToExecute(pTargetDoc, CXhChar200("txtexp\n"), false);
-		acDocManager->sendStringToExecute(pTargetDoc, CXhChar200("all\n"), false);
-		acDocManager->sendStringToExecute(pTargetDoc, CXhChar200("\n"), false);
-#endif
-		acDocManager->unlockDocument(pTargetDoc);
-	}
+	CAcModuleResourceOverride useThisRes;
+	g_xDockBarManager.DisplayExplodeTxtDockBar();
 }
 #endif
 //////////////////////////////////////////////////////////////////////////

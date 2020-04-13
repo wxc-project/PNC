@@ -53,6 +53,8 @@ BEGIN_MESSAGE_MAP(CExplodeTxtDlg, CDialog)
 	ON_NOTIFY(NM_RCLICK, IDC_TREE_CTRL, OnRclickTreeCtrl)
 	ON_COMMAND(ID_IMPORT_ITEM, OnImportItem)
 	ON_COMMAND(ID_EXPLODE_ITEM, OnExplodeItem)
+	ON_COMMAND(ID_SAVE_ITEM, OnSaveItem)
+	ON_COMMAND(ID_CLOSE_ITEM, OnCloseItem)
 	ON_MESSAGE(WM_ACAD_KEEPFOCUS, OnAcadKeepFocus)
 END_MESSAGE_MAP()
 
@@ -148,6 +150,7 @@ void CExplodeTxtDlg::OnImportItem()
 		if (!InvokeFolderPickerDlg(sDxfFolder))
 			return;
 		CDxfFolder* pFolder = g_explodeModel.AppendFolder();
+		pFolder->m_sFolderPath = sDxfFolder;
 		pFolder->m_sFolderName.Printf("文件组%d", g_explodeModel.GetNum());
 		//在指定路径下查找DXF文件
 		CFileFind file_find;
@@ -182,7 +185,7 @@ void CExplodeTxtDlg::OnImportItem()
 #endif
 			if (eStatue == Acad::eOk)
 			{
-				eStatue = acDocManager->lockDocument(curDoc(), AcAp::kWrite);
+				acDocManager->lockDocument(curDoc(), AcAp::kWrite);
 #ifdef _ARX_2007
 				acDocManager->sendStringToExecute(curDoc(), _bstr_t("txtexp\n"), false);
 				acDocManager->sendStringToExecute(curDoc(), _bstr_t("all\n"), false);
@@ -192,7 +195,7 @@ void CExplodeTxtDlg::OnImportItem()
 				acDocManager->sendStringToExecute(curDoc(), CXhChar200("all\n"), false);
 				acDocManager->sendStringToExecute(curDoc(), CXhChar200("\n"), false);
 #endif
-				eStatue = acDocManager->unlockDocument(curDoc());
+				acDocManager->unlockDocument(curDoc());
 			}
 			else
 				logerr.Log("%s打开失败!", sFileName.GetBuffer());
@@ -226,10 +229,29 @@ void CExplodeTxtDlg::OnSaveItem()
 	if (pItemInfo->itemType == TREEITEM_INFO::DXF_FOLDER)
 	{
 		CDxfFolder* pFolder = (CDxfFolder*)pItemInfo->dwRefData;
+		CXhChar500 sWorkDir("%s分解", pFolder->m_sFolderPath);
+		MakeDirectory(sWorkDir);
 		for (size_t i = 0; i < pFolder->m_xDxfFileSet.size(); i++)
-			pFolder->m_xDxfFileSet[i].Save();
+			pFolder->m_xDxfFileSet[i].Save(sWorkDir);
+		ShellExecute(NULL, "open", NULL, NULL, sWorkDir, SW_SHOW);
 	}
 }
+
+void CExplodeTxtDlg::OnCloseItem()
+{
+	HTREEITEM hSelectedItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelectedItem);
+	if (hSelectedItem == NULL || pItemInfo == NULL)
+		return;
+	if (pItemInfo->itemType == TREEITEM_INFO::DXF_FOLDER)
+	{
+		CDxfFolder* pFolder = (CDxfFolder*)pItemInfo->dwRefData;
+		for (size_t i = 0; i < pFolder->m_xDxfFileSet.size(); i++)
+			pFolder->m_xDxfFileSet[i].Close();
+	}
+	OnClose();
+}
+
 void CExplodeTxtDlg::ContextMenu(CWnd *pWnd, CPoint point)
 {
 	CPoint scr_point = point;
@@ -248,6 +270,7 @@ void CExplodeTxtDlg::ContextMenu(CWnd *pWnd, CPoint point)
 	{
 		pMenu->AppendMenu(MF_STRING, ID_EXPLODE_ITEM, "拆分");
 		pMenu->AppendMenu(MF_STRING, ID_SAVE_ITEM, "保存");
+		pMenu->AppendMenu(MF_STRING, ID_CLOSE_ITEM, "关闭");
 	}
 	popMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, scr_point.x, scr_point.y, this);
 }
@@ -270,6 +293,6 @@ void CExplodeTxtDlg::RefreshFolderItem(CDxfFolder* pDxfFolder)
 }
 LRESULT CExplodeTxtDlg::OnAcadKeepFocus(WPARAM, LPARAM)
 {
-	return TRUE;
+	return(TRUE);
 }
 #endif

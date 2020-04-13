@@ -55,5 +55,6 @@ protected:
 	afx_msg void OnImportItem();
 	afx_msg void OnExplodeItem();
 	afx_msg void OnSaveItem();
+	afx_msg void OnCloseItem();
 };
 #endif

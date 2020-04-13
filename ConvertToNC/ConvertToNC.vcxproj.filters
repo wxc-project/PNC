@@ -324,6 +324,9 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
+    <ClCompile Include="DocManagerReactor.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -577,6 +580,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h">
       <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="DocManagerReactor.h">
+      <Filter>PNC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

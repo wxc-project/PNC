@@ -8,6 +8,7 @@
 #include "CadToolFunc.h"
 #include "XhMath.h"
 #include "BOM.h"
+#include "DocManagerReactor.h"
 #include <vector>
 
 using std::vector;
@@ -255,18 +256,18 @@ public:
 	//
 	void Activate() {
 		AcApDocument* pDoc = SearchTargetDoc();
-		if(pDoc)
-			acDocManager->activateDocument(pDoc);
-	}
-	void Save() {
-		AcApDocument* pDoc = SearchTargetDoc();
 		if (pDoc)
-			pDoc->database()->save();
+		{
+			acDocManager->activateDocument(pDoc);
+		}
 	}
+	BOOL Save(const char* sWordDir);
+	BOOL Close();
 };
 class CDxfFolder
 {
 public:
+	CString m_sFolderPath;
 	CXhChar50 m_sFolderName;
 	vector<CDxfFileItem> m_xDxfFileSet;
 public:
@@ -284,3 +285,4 @@ public:
 	CDxfFolder* EnumNext() { return dxfFolderList.GetNext(); }
 };
 extern CExpoldeModel g_explodeModel;
+extern CDocManagerReactor *g_pDocManagerReactor;
