@@ -2,6 +2,7 @@
 #include "BomModel.h"
 #include "DefCard.h"
 #include "CadToolFunc.h"
+#include "DimStyle.h"
 #include "ArrayList.h"
 #include "PNCCmd.h"
 #include "PNCSysPara.h"

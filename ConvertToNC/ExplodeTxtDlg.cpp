@@ -122,8 +122,10 @@ void CExplodeTxtDlg::OnTvnSelchangedTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
 	if (pItemInfo->itemType == TREEITEM_INFO::DXF_FILE_ITEM)
 	{
-		CDxfFileItem* pDxfFile = (CDxfFileItem*)pItemInfo->dwRefData;
-		pDxfFile->Activate();
+		CDxfFolder::DXF_ITEM* pDxfItem = (CDxfFolder::DXF_ITEM*)pItemInfo->dwRefData;
+		AcApDocument* pDoc = SearchDoc(pDxfItem->m_sFilePath);
+		if (pDoc)
+			acDocManager->activateDocument(pDoc);
 	}
 	*pResult = 0;
 }
@@ -166,10 +168,10 @@ void CExplodeTxtDlg::OnImportItem()
 			str_ext.MakeLower();
 			if (str_ext.CompareNoCase(".dxf") != 0)
 				continue;
-			CDxfFileItem dxf_file;
-			dxf_file.m_sFilePath = file_path;
-			dxf_file.m_sFileName.Copy(file_find.GetFileName());
-			pFolder->m_xDxfFileSet.push_back(dxf_file);
+			CDxfFolder::DXF_ITEM dxf_item;
+			dxf_item.m_sFilePath = file_path;
+			dxf_item.m_sFileName.Copy(file_find.GetFileName());
+			pFolder->m_xDxfFileSet.push_back(dxf_item);
 		}
 		file_find.Close();
 		//在CAD中打开这些文件
@@ -232,7 +234,30 @@ void CExplodeTxtDlg::OnSaveItem()
 		CXhChar500 sWorkDir("%s分解", pFolder->m_sFolderPath);
 		MakeDirectory(sWorkDir);
 		for (size_t i = 0; i < pFolder->m_xDxfFileSet.size(); i++)
-			pFolder->m_xDxfFileSet[i].Save(sWorkDir);
+		{
+			AcApDocument* pDoc = SearchDoc(pFolder->m_xDxfFileSet[i].m_sFilePath);
+			if (pDoc == NULL)
+				continue;
+			//获取指定文档实体集合
+			AcDbObjectIdArray entObjIds;
+			GetAcadEntArr(pDoc, entObjIds);
+			//保存到DXF文件中
+			acDocManager->lockDocument(pDoc, AcAp::kWrite, NULL, NULL, true);
+			CXhChar200 file_path("%s\\%s", (char*)sWorkDir, (char*)pFolder->m_xDxfFileSet[i].m_sFileName);
+			AcDbDatabase* pOut = NULL;
+			Acad::ErrorStatus es = pDoc->database()->wblock(pOut, entObjIds, AcGePoint3d(0, 0, 0));
+			if (pOut)
+			{
+				pOut->setWorldview(true);
+#ifdef _ARX_2007
+				es = pOut->dxfOut(_bstr_t(file_path));
+#else
+				es = pOut->dxfOut(file_path);
+#endif
+				delete pOut;
+			}
+			acDocManager->unlockDocument(pDoc);
+		}
 		ShellExecute(NULL, "open", NULL, NULL, sWorkDir, SW_SHOW);
 	}
 }
@@ -247,7 +272,12 @@ void CExplodeTxtDlg::OnCloseItem()
 	{
 		CDxfFolder* pFolder = (CDxfFolder*)pItemInfo->dwRefData;
 		for (size_t i = 0; i < pFolder->m_xDxfFileSet.size(); i++)
-			pFolder->m_xDxfFileSet[i].Close();
+		{
+			AcApDocument* pDoc = SearchDoc(pFolder->m_xDxfFileSet[i].m_sFilePath);
+			if (pDoc == NULL)
+				continue;
+			CloseDoc(pDoc);
+		}
 	}
 	OnClose();
 }
@@ -283,9 +313,9 @@ void CExplodeTxtDlg::RefreshFolderItem(CDxfFolder* pDxfFolder)
 	m_treeCtrl.SetItemData(hFolderItem, (DWORD)pItemInfo);
 	for (size_t i = 0; i < pDxfFolder->m_xDxfFileSet.size(); i++)
 	{
-		CDxfFileItem* pDxfFile = &pDxfFolder->m_xDxfFileSet[i];
-		HTREEITEM hItem = m_treeCtrl.InsertItem(pDxfFile->m_sFileName, 0, 0, hFolderItem);
-		pItemInfo = itemInfoList.append(TREEITEM_INFO(TREEITEM_INFO::DXF_FILE_ITEM, (DWORD)pDxfFile));
+		CDxfFolder::DXF_ITEM* pDxfItem = &pDxfFolder->m_xDxfFileSet[i];
+		HTREEITEM hItem = m_treeCtrl.InsertItem(pDxfItem->m_sFileName, 0, 0, hFolderItem);
+		pItemInfo = itemInfoList.append(TREEITEM_INFO(TREEITEM_INFO::DXF_FILE_ITEM, (DWORD)pDxfItem));
 		m_treeCtrl.SetItemData(hItem, (DWORD)pItemInfo);
 	}
 	m_treeCtrl.Expand(hFolderItem, TVE_EXPAND);

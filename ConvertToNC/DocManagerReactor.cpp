@@ -19,7 +19,9 @@ void CDocManagerReactor::documentActivated(AcApDocument* pActivatedDoc)
 		return;
 	//
 	CAcModuleResourceOverride useThisRes;
+#ifndef __UBOM_ONLY_
 	CExplodeTxtDlg* pDlg=g_xDockBarManager.GetExplodeTxtDlgPtr();
 	if (pDlg)
 		pDlg->SetFocus();
+#endif
 }

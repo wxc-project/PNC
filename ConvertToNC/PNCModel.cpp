@@ -7,6 +7,7 @@
 #include "DragEntSet.h"
 #include "SortFunc.h"
 #include "CadToolFunc.h"
+#include "LayerTable.h"
 #include "PolygonObject.h"
 
 #ifdef _DEBUG
@@ -3115,92 +3116,4 @@ CPlateProcessInfo *CSortedModel::EnumNextPlate()
 		return *ppPlate;
 	else
 		return NULL;
-}
-//////////////////////////////////////////////////////////////////////////
-//CDxfFolder
-AcApDocument* CDxfFileItem::SearchTargetDoc()
-{
-	CXhChar500 file_path;
-	AcApDocument *pTargetDoc = NULL;
-	AcApDocumentIterator *pIter = acDocManager->newAcApDocumentIterator();
-	for (; !pIter->done(); pIter->step())
-	{
-		pTargetDoc = pIter->document();
-#ifdef _ARX_2007
-		file_path.Copy(_bstr_t(pTargetDoc->fileName()));
-#else
-		file_path.Copy(pTargetDoc->fileName());
-#endif
-		if (strstr(file_path, m_sFilePath))
-			break;
-	}
-	if (pIter)
-	{
-		delete pIter;
-		pIter = NULL;
-	}
-	if (strstr(file_path, m_sFilePath))
-		return pTargetDoc;
-	else
-		return NULL;
-}
-BOOL CDxfFileItem::Save(const char* sWordDir)
-{
-	AcApDocument* pDoc = SearchTargetDoc();
-	if(pDoc==NULL)
-		return FALSE;
-	acDocManager->lockDocument(pDoc, AcAp::kWrite, NULL, NULL, true);
-	AcDbObjectIdArray outObjIds;
-	AcDbBlockTable *pTempBlockTable = NULL;
-	pDoc->database()->getBlockTable(pTempBlockTable, AcDb::kForRead);
-	AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
-	pTempBlockTable->getAt(ACDB_MODEL_SPACE, pTempBlockTableRecord, AcDb::kForWrite);
-	pTempBlockTable->close();//关闭块表
-	AcDbBlockTableRecordIterator *pIterator = NULL;
-	pTempBlockTableRecord->newIterator(pIterator);
-	for (; !pIterator->done(); pIterator->step())
-	{
-		AcDbEntity *pEnt = NULL;
-		pIterator->getEntity(pEnt, AcDb::kForRead);
-		if (pEnt == NULL)
-			continue;
-		pEnt->close();
-		outObjIds.append(pEnt->id());
-	}
-	pTempBlockTableRecord->close();
-	if (pIterator)
-	{
-		delete pIterator;
-		pIterator = NULL;
-	}
-	//
-	CXhChar200 file_path("%s\\%s", sWordDir,(char*)m_sFileName);
-	AcDbDatabase* pOut = NULL;
-	Acad::ErrorStatus es = pDoc->database()->wblock(pOut, outObjIds, AcGePoint3d(0, 0, 0));
-	if (pOut)
-	{
-		pOut->setWorldview(true);
-#ifdef _ARX_2007
-		es = pOut->dxfOut(_bstr_t(file_path));
-#else
-		es = pOut->dxfOut(file_path);
-#endif
-		delete pOut;
-	}
-	acDocManager->unlockDocument(pDoc);
-	return (es == Acad::eOk);
-}
-//关闭文件
-extern long acdbSetDbmod(AcDbDatabase * pDb, long newVal);
-BOOL CDxfFileItem::Close()
-{
-	AcApDocument* pDoc = SearchTargetDoc();
-	if (pDoc == NULL)
-		return FALSE;
-	acDocManager->setCurDocument(pDoc);
-	acDocManager->lockDocument(pDoc);
-	acdbSetDbmod(pDoc->database(), 0); // clear changes flag
-	acDocManager->unlockDocument(pDoc);
-	Acad::ErrorStatus es = acDocManager->closeDocument(pDoc);
-	return (es == Acad::eOk);
 }

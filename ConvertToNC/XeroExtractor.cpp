@@ -1068,7 +1068,6 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 	if (strlen(sJgCardPath) <= 0)
 		return false;
 	f3dPoint startPt, endPt;
-	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;
 #ifdef _ARX_2007

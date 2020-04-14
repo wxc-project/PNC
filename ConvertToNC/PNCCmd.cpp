@@ -10,6 +10,7 @@
 #include "LicFuncDef.h"
 #include "ProcBarDlg.h"
 #include "folder_dialog.h"
+#include "DimStyle.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE

@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "PNCSysPara.h"
 #include "CadToolFunc.h"
+#include "LayerTable.h"
 #include "XeroExtractor.h"
 
 #ifdef _DEBUG

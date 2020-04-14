@@ -244,32 +244,17 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 //
-class CDxfFileItem 
-{
-	AcApDocument* SearchTargetDoc();
-public:
-	CXhChar50 m_sFileName;
-	CString m_sFilePath;
-public:
-	CDxfFileItem() { ; }
-	~CDxfFileItem() { ; }
-	//
-	void Activate() {
-		AcApDocument* pDoc = SearchTargetDoc();
-		if (pDoc)
-		{
-			acDocManager->activateDocument(pDoc);
-		}
-	}
-	BOOL Save(const char* sWordDir);
-	BOOL Close();
-};
 class CDxfFolder
 {
 public:
+	struct DXF_ITEM 
+	{
+		CXhChar50 m_sFileName;
+		CString m_sFilePath;
+	};
 	CString m_sFolderPath;
 	CXhChar50 m_sFolderName;
-	vector<CDxfFileItem> m_xDxfFileSet;
+	vector<DXF_ITEM> m_xDxfFileSet;
 public:
 	CDxfFolder() {}
 	~CDxfFolder() { m_xDxfFileSet.clear(); }
