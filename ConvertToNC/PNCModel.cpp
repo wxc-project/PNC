@@ -353,27 +353,26 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 {	//合并圆心相同的圆，同一圆心只保留直径最大的圆
 	CHashStrList<CAD_ENTITY*> hashEntPtrByCenterStr;	//记录圆心对应的直径最大的螺栓实体
 	hashInvalidBoltCirPtrSet.Empty();
-	BOOL bFilterHoleBlockRef=TRUE;
 	for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
 	{
+		if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_BLOCKREF &&
+			pEnt->ciEntType != RELA_ACADENTITY::TYPE_CIRCLE)
+			continue;	//仅处理螺栓图块和圆
 		if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_BLOCKREF)
+		{	
+			if (pEnt->m_fSize == 0 || strlen(pEnt->sText) <= 0)
+				continue;	//非螺栓图块
+		}
+		else if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_CIRCLE)
 		{
-			if (bFilterHoleBlockRef)
-			{	//同一个位置有多个螺栓图符时，取直径最大的螺栓图符，避免添加重叠螺栓 wht 19-11-25
-				if (pEnt->m_fSize == 0 || strlen(pEnt->sText) <= 0)
-					continue;
+			if ((m_bCirclePlate && cir_center.IsEqual(pEnt->pos)) ||
+				(pEnt->m_fSize<0 || pEnt->m_fSize>CPlateExtractor::MAX_BOLT_HOLE))
+			{	//环型板的同心圆和直径超过100的圆都不可能时螺栓孔 wxc 20-04-15
+				hashInvalidBoltCirPtrSet.SetValue((DWORD)pEnt, pEnt);
+				continue;
 			}
-			else
-				continue;
 		}
-		else if (pEnt->ciEntType != RELA_ACADENTITY::TYPE_CIRCLE && //&&pEnt->ciEntType != CAD_ENT::TYPE_POLYLINE_ARC)
-			pEnt->ciEntType != RELA_ACADENTITY::TYPE_ELLIPSE)
-			continue;
-		if (pEnt->ciEntType == RELA_ACADENTITY::TYPE_ELLIPSE)
-		{	//椭圆孔最大支持100，大于100的椭圆时不按螺栓孔处理 wht 19-12-01
-			if (pEnt->m_fSize<0 && pEnt->m_fSize>CPlateExtractor::MAX_BOLT_HOLE)
-				continue;
-		}
+		//同一个位置有多个螺栓图符或圆孔时，取直径最大的螺栓图符或圆孔，避免添加重叠螺栓 wht 19 - 11 - 25
 		CXhChar50 sKey("%.2f,%.2f,%.2f", pEnt->pos.x, pEnt->pos.y, pEnt->pos.z);
 		CAD_ENTITY **ppEntPtr = hashEntPtrByCenterStr.GetValue(sKey);
 		if (ppEntPtr)
@@ -419,7 +418,6 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 				if (bDigit)
 					continue;	//文字为小于100的数字，不可能为件号 wht 19-12-11
 			}
-
 			//排除件号标注圆圈
 			SCOPE_STRU scope;
 			for (CAD_ENTITY **ppCirEnt = hashEntPtrByCenterStr.GetFirst(); ppCirEnt; ppCirEnt = hashEntPtrByCenterStr.GetNext())
@@ -657,6 +655,24 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			}
 		}
 	}
+	if (m_bCirclePlate)
+	{	//圆形钢板时，查找是否有内轮廓
+		for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+		{
+			if(pRelaObj->ciEntType!= RELA_ACADENTITY::TYPE_CIRCLE)
+				continue;
+			CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
+			if ((pEnt = objLife.GetEnt()) == NULL || !pEnt->isKindOf(AcDbCircle::desc()))
+				continue;
+			if (pRelaObj->pos.IsEqual(cir_center))
+			{
+				AcDbCircle* pCir = (AcDbCircle*)pEnt;
+				xPlate.m_fInnerRadius = pCir->radius();
+				xPlate.m_tInnerOrigin = cir_center;
+				break;
+			}
+		}
+	}
 	return m_xHashRelaEntIdList.GetNodeNum()>1;
 }
 f2dRect CPlateProcessInfo::GetPnDimRect()
@@ -844,6 +860,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			pVer->arc.center=center;
 			pVer->arc.work_norm=norm;
 			pVer->arc.radius=acgeArc.radius();
+			pVer->arc.fSectAngle = fabs(acgeArc.endAng() - acgeArc.startAng());
 		}
 	}
 	pPline->erase(Adesk::kTrue);	//删除polyline对象
@@ -867,6 +884,31 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 			tem_vertes.DeleteCursor();
 	}
 	tem_vertes.Clean();
+	//判断钢板是否为圆型钢板
+	if (tem_vertes.GetNodeNum() == 4)
+	{
+		bool bValidCir = true;
+		GEPOINT pt;
+		for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
+		{
+			VERTEX* pCur = tem_vertes.GetByIndex(i);
+			if (pt.IsZero())
+				pt = pCur->arc.center;
+			double fAngle = RadToDegree(pCur->arc.fSectAngle);
+			if (pCur->ciEdgeType != 2 
+				|| fabs(90 - fAngle) > 2 
+				|| !pt.IsEqual(pCur->arc.center,EPS2))
+			{
+				bValidCir = false;
+				break;
+			}
+		}
+		if (bValidCir)
+		{
+			m_bCirclePlate = TRUE;
+			cir_center = pt;
+		}
+	}
 	//填充钢板的轮廓点
 	vertexList.Empty();
 	for(int i=0;i<tem_vertes.GetNodeNum();i++)

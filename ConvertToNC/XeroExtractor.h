@@ -44,7 +44,13 @@ public:
 			double fSectAngle;	//指定扇形角(圆弧需要)
 			GEPOINT center,work_norm,column_norm;
 		}arc;
-		VERTEX(){ciEdgeType=1;m_bWeldEdge=m_bRollEdge=false;manu_space=0;arc.radius=tag.dwParam=0;}
+		VERTEX(){
+			ciEdgeType=1;
+			m_bWeldEdge=m_bRollEdge=false;
+			manu_space=0;
+			arc.radius = arc.fSectAngle = 0;
+			tag.dwParam = 0;
+		}
 	};
 	struct CAD_ENTITY{
 		BYTE ciEntType;

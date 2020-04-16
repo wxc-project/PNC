@@ -526,6 +526,51 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 			pPrevVertex=pVertex;
 		}
+		//»æÖÆÄÚÔ²
+		if (tempPlate.m_fInnerRadius > 0)
+		{
+			if (!tempPlate.m_tInnerColumnNorm.IsZero() && fabs(tempPlate.m_tInnerColumnNorm*f3dPoint(0, 0, 1)) < EPS_COS)
+			{	//ÍÖÔ²
+				f3dPoint workNorm(0, 0, 1);
+				f3dPoint center = tempPlate.m_tInnerOrigin, columnNorm = tempPlate.m_tInnerColumnNorm;
+				f3dPoint minorAxis = columnNorm ^ workNorm;
+				normalize(minorAxis);	//ÍÖÔ²¶ÌÖá·½Ïò
+				f3dPoint majorAxis(-minorAxis.y, minorAxis.x, minorAxis.z);
+				normalize(majorAxis);	//ÍÖÔ²³¤Öá·½Ïò
+				double radiusRatio = columnNorm * workNorm;
+				workNorm *= (radiusRatio < EPS) ? -1 : 1;
+				double minorRadius = tempPlate.m_fInnerRadius;				//ÍÖÔ²¶Ì°ëÖá³¤¶È
+				double majorRadius = minorRadius / fabs(radiusRatio);		//ÍÖÔ²³¤°ëÖá³¤¶È
+				for (int i = 0; i < 4; i++)
+				{
+					f3dPoint ptS, ptE;
+					if (i == 0)
+					{
+						ptS = center + majorAxis * majorRadius;
+						ptE = center + minorAxis * minorRadius;
+					}
+					else if (i == 1)
+					{
+						ptS = center + minorAxis * minorRadius;
+						ptE = center - majorAxis * majorRadius;
+					}
+					else if (i == 2)
+					{
+						ptS = center - majorAxis * majorRadius;
+						ptE = center - minorAxis * minorRadius;
+					}
+					else
+					{
+						ptS = center - minorAxis * minorRadius;
+						ptE = center + majorAxis * majorRadius;
+					}
+					f3dArcLine arcLine;
+					arcLine.CreateEllipse(center, ptS, ptE, columnNorm, workNorm, minorRadius);
+				}
+			}
+			else
+				file.NewCircle(tempPlate.m_tInnerOrigin, tempPlate.m_fInnerRadius);
+		}
 		//»æÖÆÂÝË¨¿×
 		f3dPoint centre,startPt;
 		for(BOLT_INFO *pHole=tempPlate.m_xBoltInfoList.GetFirst();pHole;pHole=tempPlate.m_xBoltInfoList.GetNext())

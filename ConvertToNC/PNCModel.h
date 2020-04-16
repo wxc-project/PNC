@@ -99,6 +99,8 @@ private:
 	double m_fZoomScale;		//缩放比例
 	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
 public:
+	BOOL m_bCirclePlate;	//是否为圆型板
+	GEPOINT cir_center;
 	BOOL m_bEnableReactor;
 	CProcessPlate xPlate;
 	PART_PLATE xBomPlate;
