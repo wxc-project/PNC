@@ -44,7 +44,13 @@ public:
 			double fSectAngle;	//指定扇形角(圆弧需要)
 			GEPOINT center,work_norm,column_norm;
 		}arc;
-		VERTEX(){ciEdgeType=1;m_bWeldEdge=m_bRollEdge=false;manu_space=0;arc.radius=tag.dwParam=0;}
+		VERTEX(){
+			ciEdgeType=1;
+			m_bWeldEdge=m_bRollEdge=false;
+			manu_space=0;
+			arc.radius = arc.fSectAngle = 0;
+			tag.dwParam = 0;
+		}
 	};
 	struct CAD_ENTITY{
 		BYTE ciEntType;
@@ -141,6 +147,7 @@ public:
 	BOOL IsMatchMatRule(const char* sText);
 	BOOL IsMatchNumRule(const char* sText);
 	BOOL IsMatchBendRule(const char* sText);
+	BOOL IsBriefMatMark(char cMat);
 	//解析件号时返回解析结果类型，用于排除焊接子件件号 wht 19-07-22
 	static const int PART_LABEL_EMPTY = 0;	//空件号
 	static const int PART_LABEL_VALID = 1;	//可用件号

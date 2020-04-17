@@ -9,6 +9,8 @@
 #include "RevisionDlg.h"
 #include "LicFuncDef.h"
 #include "ProcBarDlg.h"
+#include "folder_dialog.h"
+#include "DimStyle.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -639,8 +641,17 @@ void DrawProfileByTxtFile()
 	int retCode = DragEntSet(insert_pos, "输入插入点\n");
 #endif
 }
+//////////////////////////////////////////////////////////////////////////
+//打碎文本,将文本类型转换为多段线
+//ExplodeText
+//////////////////////////////////////////////////////////////////////////
+void ExplodeText()
+{
+	CLogErrorLife logErrLife;
+	CAcModuleResourceOverride useThisRes;
+	g_xDockBarManager.DisplayExplodeTxtDockBar();
+}
 #endif
-
 //////////////////////////////////////////////////////////////////////////
 //系统设置
 //EnvGeneralSet

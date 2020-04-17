@@ -414,6 +414,14 @@ BOOL CPlateExtractor::IsMatchBendRule(const char* sText)
 	else
 		return FALSE;
 }
+BOOL CPlateExtractor::IsBriefMatMark(char cMat)
+{
+	if ('H' == cMat || 'h' == cMat || 'G' == cMat ||
+		'P' == cMat || 'T' == cMat || 'S' == cMat)
+		return TRUE;
+	else
+		return FALSE;
+}
 BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 {
 	CXhChar100 str,sValue(sText);
@@ -432,8 +440,10 @@ BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 			str.Copy(sKey);
 			str.Replace("|", "");
 			str.Remove(' ');
-			//兼容件号中带空格的情况（比如：101 H,提取为101H） wht 19-07-22
-			if (str.GetLength() == 1 && sPrevStr.GetLength() > 0)
+			//兼容件号中带空格的情况（比如：101 H,提取为101H 或 H 101,提取为H101） wht 19-07-22
+			if (str.GetLength() == 1 && IsBriefMatMark(str[0]) && sPrevStr.GetLength() > 0)
+				sPartNo.Printf("%s%s", (char*)sPrevStr, (char*)str);
+			else if (sPrevStr.GetLength() == 1 && IsBriefMatMark(str[0]) && str.GetLength() > 0)
 				sPartNo.Printf("%s%s", (char*)sPrevStr, (char*)str);
 			else
 				sPartNo.Copy(str);
@@ -510,12 +520,11 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat,char& cQuality)
 	//for(char* sKey=strtok(sValue," \t\\P");sKey;sKey=strtok(NULL," \t\\P"))
 	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
 	{
-		if(strstr(sKey,"Q")&&strstr(sKey,"|")==NULL)
+		if (cMat == 0 && strstr(sKey, "Q") && strstr(sKey, "|") == NULL)
 		{
 			char cMark = CProcessPart::QueryBriefMatMark(sKey);
 			cQuality = CProcessPart::QueryBriefQuality(sKey);
 			cMat = (cMark == 'A') ? 0 : cMark;
-			return;
 		}
 	}
 }
@@ -891,6 +900,13 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 				ParsePartNoText(sTemp, basicInfo.m_sPartNo);
 				bRet = TRUE;
 			}
+			if (strstr(sText, "塔型"))
+			{
+				sText.Replace("塔型", "");
+				sText.Replace(":", "");
+				sText.Replace("：", "");
+				basicInfo.m_sTaType.Copy(sText);
+			}
 		}
 	}
 	else
@@ -915,6 +931,14 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 		if (IsMatchPNRule(sText))
 		{
 			ParsePartNoText(sText, basicInfo.m_sPartNo);
+			bRet = TRUE;
+		}
+		if(strstr(sText,"塔型"))
+		{
+			sText.Replace("塔型", "");
+			sText.Replace(":", "");
+			sText.Replace("：", "");
+			basicInfo.m_sTaType.Copy(sText);
 			bRet = TRUE;
 		}
 	}
@@ -1044,7 +1068,6 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 	if (strlen(sJgCardPath) <= 0)
 		return false;
 	f3dPoint startPt, endPt;
-	GetCurDwg()->setClayer(LayerTable::VisibleProfileLayer.layerId);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;
 #ifdef _ARX_2007

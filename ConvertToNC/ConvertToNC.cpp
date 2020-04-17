@@ -107,6 +107,12 @@ void RegisterServerComponents ()
 		L"DrawByTxtFile",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&DrawProfileByTxtFile);				// Function pointer
+	//打碎文本
+	acedRegCmds->addCommand(L"PNC-MENU",   // Group name
+		L"ET",					// Global function name
+		L"ET",					// Local function name
+		ACRX_CMD_MODAL,							// Type
+		&ExplodeText);				// Function pointer	
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 //校审构件工艺信息
@@ -160,6 +166,12 @@ void RegisterServerComponents ()
 		"DrawByTxtFile",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&DrawProfileByTxtFile);				// Function pointer
+	//打碎文本
+	acedRegCmds->addCommand("PNC-MENU",   // Group name
+		"ET",					// Global function name
+		"ET",					// Local function name
+		ACRX_CMD_MODAL,							// Type
+		&ExplodeText);				// Function pointer
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	//校审构件工艺信息
@@ -425,12 +437,19 @@ acrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
 		acrxDynamicLinker->registerAppMDIAware(pkt);
 		InitApplication();
 		g_pSteelSealReactor = new CSteelSealReactor();
+		g_pDocManagerReactor = new CDocManagerReactor();
+		acDocManager->addReactor(g_pDocManagerReactor);
 		break;
 	case AcRx::kUnloadAppMsg:
 		if (g_pSteelSealReactor != NULL)
 		{
 			delete g_pSteelSealReactor;
 			g_pSteelSealReactor = NULL;
+		}
+		if (g_pDocManagerReactor != NULL)
+		{
+			delete g_pDocManagerReactor;
+			g_pDocManagerReactor = NULL;
 		}
 		UnloadApplication();
 		break;

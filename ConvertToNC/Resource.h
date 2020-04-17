@@ -42,6 +42,7 @@
 #define IDC_BTN_EXPORT_DXF              123
 #define IDC_BTN_CLOCKWISE_ROTATION      124
 #define IDC_BTN_MIRROR                  125
+#define IDD_EXPLODE_TXT_DLG             125
 #define IDC_BTN_ANTICLOCKWISE_ROTATION  126
 #define IDC_BTN_MOVE                    127
 #define IDC_BTN_MOVE_MK_RECT            128
@@ -51,6 +52,7 @@
 #define IDC_LIST_SYSTEM_SETTING_DLG     132
 #define IDC_E_SEARCH_TEXT               133
 #define IDC_BTN_SEARCH                  134
+#define IDC_TREE_CTRL                   135
 #define IDD_REVISION_DLG                136
 #define IDR_ITEM_CMD_POPUP              140
 #define IDC_TREE_CONTRL                 141
@@ -87,14 +89,17 @@
 #define ID_RETRIEVED_PLATES             32784
 #define ID_MODIFY_ERP_FILE              32785
 #define ID_DELETE_ITEM                  32786
-
+#define ID_SAVE_ITEM                    32787
+#define ID_IMPORT_ITEM                  32788
+#define ID_EXPLODE_ITEM                 32789
+#define ID_CLOSE_ITEM					32790
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        125
-#define _APS_NEXT_COMMAND_VALUE         32779
-#define _APS_NEXT_CONTROL_VALUE         135
+#define _APS_NEXT_RESOURCE_VALUE        127
+#define _APS_NEXT_COMMAND_VALUE         32791
+#define _APS_NEXT_CONTROL_VALUE         136
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

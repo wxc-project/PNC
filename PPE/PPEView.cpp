@@ -513,7 +513,7 @@ BOOL CPPEView::ReceiveFromParentProcess()
 		theApp.m_xPPEModelBuffer.ReadString(folder_path);
 		model.InitModelByFolderPath(folder_path);
 		CXhChar500 cfg_path(folder_path);
-		cfg_path.Append("config.ini");
+		cfg_path.Append("\\config.ini");
 		model.ReadPrjTowerInfoFromCfgFile(cfg_path);
 	}
 	else

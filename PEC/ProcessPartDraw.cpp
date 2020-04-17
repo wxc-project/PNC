@@ -1686,6 +1686,60 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		pPrevPrevPnt=pPrevPnt;
 		pPrevPnt = pVertex;
 	}
+	//绘制内圆
+	if (pPlate->m_fInnerRadius > 0)
+	{
+		if (!pPlate->m_tInnerColumnNorm.IsZero() && fabs(pPlate->m_tInnerColumnNorm*f3dPoint(0, 0, 1)) < EPS_COS)
+		{	//椭圆
+			f3dPoint center = pPlate->m_tInnerOrigin, workNorm(0, 0, 1), columnNorm = pPlate->m_tInnerColumnNorm;
+			f3dPoint minorAxis = columnNorm ^ workNorm;
+			normalize(minorAxis);	//椭圆短轴方向
+			f3dPoint majorAxis(-minorAxis.y, minorAxis.x, minorAxis.z);
+			normalize(majorAxis);	//椭圆长轴方向
+			double radiusRatio = fabs(columnNorm*workNorm);
+			double minorRadius = pPlate->m_fInnerRadius;				//椭圆短半轴长度
+			double majorRadius = pPlate->m_fInnerRadius / radiusRatio;	//椭圆长半轴长度
+			workNorm *= (columnNorm*workNorm < EPS) ? -1 : 1;
+			for (int i = 0; i < 4; i++)
+			{
+				f3dPoint ptS, ptE;
+				if (i == 0)
+				{
+					ptS = center + majorAxis * majorRadius;
+					ptE = center + minorAxis * minorRadius;
+				}
+				else if (i == 1)
+				{
+					ptS = center + minorAxis * minorRadius;
+					ptE = center - majorAxis * majorRadius;
+				}
+				else if (i == 2)
+				{
+					ptS = center - majorAxis * majorRadius;
+					ptE = center - minorAxis * minorRadius;
+				}
+				else
+				{
+					ptS = center - minorAxis * minorRadius;
+					ptE = center + majorAxis * majorRadius;
+				}
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing);
+				pArcLine->CreateEllipse(center, ptS, ptE, columnNorm, workNorm, minorRadius);
+			}
+		}
+		else
+		{
+			f3dCircle circle;
+			circle.norm.Set(0, 0, 1);
+			circle.centre = pPlate->m_tInnerOrigin;
+			circle.radius = pPlate->m_fInnerRadius;
+			circle.pen.width = 1;
+			circle.pen.crColor = PS_SOLID;
+			IDbCircle* pCir = AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius);
+			pCir->SetPen(circle.pen);
+		}
+	}
+	//绘制火曲线
 	line.pen.style=PS_DASHDOTDOT;
 	line.pen.crColor=RGB(255,0,0);
 	line.pen.width=1;
@@ -1709,41 +1763,41 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 	//螺栓孔
 	if(pPlate->m_xBoltInfoList.GetNodeNum()>0)
 	{
-	ATOM_LIST<f3dPoint> lsPtList;
-	for(BOLT_INFO *pBoltInfo=pPlate->m_xBoltInfoList.GetFirst();pBoltInfo;pBoltInfo=pPlate->m_xBoltInfoList.GetNext())
-		lsPtList.append(f3dPoint(pBoltInfo->posX,pBoltInfo->posY,0));
-	BOLT_INFO* pFirstBolt=pPlate->m_xBoltInfoList.GetFirst();
-	f3dPoint pre_ls_pt,cur_ls_pt;
-	pre_ls_pt.Set(pFirstBolt->posX,pFirstBolt->posY,0);
-	COLORREF ls_color=color;
-	for(BOLT_INFO *pBoltInfo=pPlate->m_xBoltInfoList.GetFirst();pBoltInfo;pBoltInfo=pPlate->m_xBoltInfoList.GetNext())
-	{
-		f3dCircle circle;
-		circle.norm.Set(0,0,1);
-		cur_ls_pt.Set(pBoltInfo->posX,pBoltInfo->posY,0);
-		circle.centre=cur_ls_pt;
-		circle.radius = (pBoltInfo->bolt_d+pBoltInfo->hole_d_increment)/2;
-		circle.ID	  = pBoltInfo->hiberId.HiberDownId(2);
-		pBoltInfo->hiberId.masterId=pPlate->GetKey();
-		//只有特殊孔才可能是小数，特殊孔也查不到合适的颜色，此处可强制转为整数 wht 19-09-12
-		ls_color=GetBoltColorRef((long)pBoltInfo->bolt_d);
-		if(IsPositionOverlap(cur_ls_pt,lsPtList))	//同一个位置出现多个螺栓孔，特殊标记RGB(123,104,238)
-			AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,RGB(127,255,0),3);
-		else
-			AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,ls_color,2);
-		if(CProcessPartDraw::m_bDispBoltOrder)
+		ATOM_LIST<f3dPoint> lsPtList;
+		for(BOLT_INFO *pBoltInfo=pPlate->m_xBoltInfoList.GetFirst();pBoltInfo;pBoltInfo=pPlate->m_xBoltInfoList.GetNext())
+			lsPtList.append(f3dPoint(pBoltInfo->posX,pBoltInfo->posY,0));
+		BOLT_INFO* pFirstBolt=pPlate->m_xBoltInfoList.GetFirst();
+		f3dPoint pre_ls_pt,cur_ls_pt;
+		pre_ls_pt.Set(pFirstBolt->posX,pFirstBolt->posY,0);
+		COLORREF ls_color=color;
+		for(BOLT_INFO *pBoltInfo=pPlate->m_xBoltInfoList.GetFirst();pBoltInfo;pBoltInfo=pPlate->m_xBoltInfoList.GetNext())
 		{
-			CXhChar100 sValue;
-			double fTextHeight=10;
-			if(CPEC::GetSysParaFromReg("TextHeight",sValue))
-				fTextHeight=atof(sValue);
-			CXhChar50 text("%d",pBoltInfo->keyId);
-			AppendDbText(pDrawing,cur_ls_pt,text,0,fTextHeight,IDbText::AlignMiddleCenter,plateId,0,RGB(61,145,64),2);
-			if(pBoltInfo!=pFirstBolt)
-				AppendDbLine(pDrawing,pre_ls_pt,cur_ls_pt,HIBERID(pPlate->GetKey()),PS_DASH,color);
+			f3dCircle circle;
+			circle.norm.Set(0,0,1);
+			cur_ls_pt.Set(pBoltInfo->posX,pBoltInfo->posY,0);
+			circle.centre=cur_ls_pt;
+			circle.radius = (pBoltInfo->bolt_d+pBoltInfo->hole_d_increment)/2;
+			circle.ID	  = pBoltInfo->hiberId.HiberDownId(2);
+			pBoltInfo->hiberId.masterId=pPlate->GetKey();
+			//只有特殊孔才可能是小数，特殊孔也查不到合适的颜色，此处可强制转为整数 wht 19-09-12
+			ls_color=GetBoltColorRef((long)pBoltInfo->bolt_d);
+			if(IsPositionOverlap(cur_ls_pt,lsPtList))	//同一个位置出现多个螺栓孔，特殊标记RGB(123,104,238)
+				AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,RGB(127,255,0),3);
+			else
+				AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,ls_color,2);
+			if(CProcessPartDraw::m_bDispBoltOrder)
+			{
+				CXhChar100 sValue;
+				double fTextHeight=10;
+				if(CPEC::GetSysParaFromReg("TextHeight",sValue))
+					fTextHeight=atof(sValue);
+				CXhChar50 text("%d",pBoltInfo->keyId);
+				AppendDbText(pDrawing,cur_ls_pt,text,0,fTextHeight,IDbText::AlignMiddleCenter,plateId,0,RGB(61,145,64),2);
+				if(pBoltInfo!=pFirstBolt)
+					AppendDbLine(pDrawing,pre_ls_pt,cur_ls_pt,HIBERID(pPlate->GetKey()),PS_DASH,color);
+			}
+			pre_ls_pt=cur_ls_pt;
 		}
-		pre_ls_pt=cur_ls_pt;
-	}
 	}
 	//处理卷边
 	pPrevPnt=pPlate->vertex_list.GetTail();

@@ -8,7 +8,10 @@
 #include "CadToolFunc.h"
 #include "XhMath.h"
 #include "BOM.h"
+#include "DocManagerReactor.h"
+#include <vector>
 
+using std::vector;
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
 struct VERTEX_TAG{
@@ -96,6 +99,8 @@ private:
 	double m_fZoomScale;		//缩放比例
 	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
 public:
+	BOOL m_bCirclePlate;	//是否为圆型板
+	GEPOINT cir_center;
 	BOOL m_bEnableReactor;
 	CProcessPlate xPlate;
 	PART_PLATE xBomPlate;
@@ -228,7 +233,8 @@ public:
 	void WritePrjTowerInfoToCfgFile(const char* cfg_file_path);
 };
 extern CPNCModel model;
-
+//////////////////////////////////////////////////////////////////////////
+//
 class CSortedModel
 {
 	ARRAY_LIST<CPlateProcessInfo*> platePtrList;
@@ -238,3 +244,32 @@ public:
 	CPlateProcessInfo *EnumFirstPlate();
 	CPlateProcessInfo *EnumNextPlate();
 };
+//////////////////////////////////////////////////////////////////////////
+//
+class CDxfFolder
+{
+public:
+	struct DXF_ITEM 
+	{
+		CXhChar50 m_sFileName;
+		CString m_sFilePath;
+	};
+	CString m_sFolderPath;
+	CXhChar50 m_sFolderName;
+	vector<DXF_ITEM> m_xDxfFileSet;
+public:
+	CDxfFolder() {}
+	~CDxfFolder() { m_xDxfFileSet.clear(); }
+};
+class CExpoldeModel {
+	ATOM_LIST<CDxfFolder> dxfFolderList;
+public:
+	CExpoldeModel() { ; }
+	//
+	int GetNum() { return dxfFolderList.GetNodeNum(); }
+	CDxfFolder* AppendFolder() { return dxfFolderList.append(); }
+	CDxfFolder* EnumFirst() { return dxfFolderList.GetFirst(); }
+	CDxfFolder* EnumNext() { return dxfFolderList.GetNext(); }
+};
+extern CExpoldeModel g_explodeModel;
+extern CDocManagerReactor *g_pDocManagerReactor;
