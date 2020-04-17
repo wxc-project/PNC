@@ -318,6 +318,9 @@
     <ClCompile Include="BOM.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\XhCore\PartLib\AngleLibrary.cpp">
+      <Filter>PartLib</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -565,6 +568,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h">
       <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
+      <Filter>PartLib</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
