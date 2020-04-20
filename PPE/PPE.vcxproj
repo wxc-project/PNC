@@ -65,7 +65,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\LDS\bin\TMARelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">..\UBOMRelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">..\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
@@ -114,9 +114,9 @@
     </ClCompile>
     <Link>
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>.\Release/PPE.exe</OutputFile>
+      <OutputFile>..\..\LDS\bin\TMARelease\PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Debug;..\..\XhCore-dll\AlgFun\Debug;..\..\XhCore-dll\EntList\Debug;..\..\XhCore-dll\LmaDlg\2010Release;..\PEC\Debug;..\..\XhCore-dll\DrawSolid\Debug;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\LmaDlg\Release;..\PEC\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\LDS\bin\TMARelease;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ProgramDatabaseFile>.\Release/PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>

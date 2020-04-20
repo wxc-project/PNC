@@ -302,7 +302,7 @@ bool CNCPart::CreatePlateWkfFile(CProcessPlate *pPlate, const char* file_path)
 	{
 		double x = fabs(pHole->posX) < EPS ? 0 : pHole->posX;
 		double y = fabs(pHole->posY) < EPS ? 0 : pHole->posY;
-		fprintf(fp, "C %.2f %.2f %.2f\n", x, y, (pHole->bolt_d*0.5));
+		fprintf(fp, "C %.2f %.2f %.2f\n", x, y, ((pHole->bolt_d + pHole->hole_d_increment)*0.5));
 	}
 	//数据文本信息
 	f3dPoint centre(tempPlate.mkpos.x, tempPlate.mkpos.y);

@@ -53,7 +53,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\LDS\bin\TMARelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">..\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">PncRelease\</IntDir>
@@ -112,7 +112,7 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\XhCore-dll\XeroCad;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad\Localize</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\PPE\Model;..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\XhCore-dll\XeroCad;..\..\ToolKits\TowerCad;..\..\XhCore-dll\XeroCad\Localize</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <OutputFile>$(OutDir)PEC.dll</OutputFile>
@@ -123,7 +123,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <ImportLibrary>$(OutDir)PEC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Debug;..\..\XhCore-dll\AlgFun\Debug;..\..\XhCore-dll\EntList\Debug;..\..\XhCore-dll\DrawSolid\Debug;..\..\XhCore-dll\LmaDlg\2010Release;..\..\XhCore-dll\PartLib\2010Release;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhCore-dll\XeroCad\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\LmaDlg\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhCore-dll\XeroCad\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLdsLm2.lib;XhLicAgent2.lib;DrawSolid.lib;PartLib.lib;LmaDlg10.lib;XeroCad.lib</AdditionalDependencies>
     </Link>
     <Midl>
