@@ -1,0 +1,312 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#ifndef APSTUDIO_INVOKED
+#include "targetver.h"
+#endif
+#include "afxres.h"
+#include "verrsrc.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(936)
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#ifndef APSTUDIO_INVOKED\r\n"
+    "#include ""targetver.h""\r\n"
+    "#endif\r\n"
+    "#include ""afxres.h""\r\n"
+    "#include ""verrsrc.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+    "#define _AFX_NO_OLE_RESOURCES\r\n"
+    "#define _AFX_NO_TRACKER_RESOURCES\r\n"
+    "#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+    "\r\n"
+    "#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+    "LANGUAGE 4, 2\r\n"
+    "#include ""res\\BPS.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+    "#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+    "#endif\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 1,0,0,1
+ PRODUCTVERSION 1,0,0,1
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404B0"
+        BEGIN
+            VALUE "CompanyName", "TODO: <公司名>"
+            VALUE "FileDescription", "TODO: <文件说明>"
+            VALUE "FileVersion", "1.0.0.1"
+            VALUE "InternalName", "BPS.dll"
+            VALUE "LegalCopyright", "TODO: (C) <公司名>。保留所有权利。"
+            VALUE "OriginalFilename", "BPS.dll"
+            VALUE "ProductName", "TODO: <产品名>"
+            VALUE "ProductVersion", "1.0.0.1"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OPTIMAL_SORT_DLG DIALOGEX 0, 0, 298, 277
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "优化排序"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "批量打印",IDOK,233,237,55,14
+    PUSHBUTTON      "取消",IDCANCEL,233,252,55,14
+    CONTROL         "",IDC_JG_LIST,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,7,221,244
+    LTEXT           "材料名称:",IDC_STATIC,230,8,35,8,SS_CENTERIMAGE
+    CONTROL         "角钢",IDC_CHE_JG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,19,26,10
+    CONTROL         "圆钢",IDC_CHE_YG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,31,25,10
+    CONTROL         "钢管",IDC_CHE_TUBE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,41,32,10
+    LTEXT           "材质类型:",IDC_STATIC,230,87,35,8
+    CONTROL         "Q345",IDC_CHE_Q345,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,108,32,10
+    CONTROL         "Q235",IDC_CHE_Q235,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,96,32,10
+    CONTROL         "Q390",IDC_CHE_Q390,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,120,32,10
+    CONTROL         "Q420",IDC_CHE_Q420,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,132,32,10
+    CONTROL         "Q460",IDC_CHE_Q460,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,144,32,10
+    LTEXT           "规格型号:",IDC_STATIC,230,157,35,8
+    LTEXT           "肢宽:",IDC_STATIC,232,170,20,8
+    LTEXT           "厚度:",IDC_STATIC,232,186,20,8
+    EDITTEXT        IDC_E_WIDTH,251,167,40,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_THICK,251,183,40,14,ES_AUTOHSCROLL
+    LTEXT           "数量:",IDC_STATIC,232,205,20,8
+    EDITTEXT        IDC_E_NUM,251,202,40,14,ES_AUTOHSCROLL | ES_READONLY
+    CONTROL         "扁铁",IDC_CHE_FLAT,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,52,32,10
+    CONTROL         "夹具",IDC_CHE_JIG,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,63,32,10
+    CONTROL         "钢格栅",IDC_CHE_GGS,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,246,74,32,10
+    LTEXT           "工艺卡路径:",IDC_STATIC,8,254,40,11,SS_CENTERIMAGE
+    EDITTEXT        IDC_E_CARD_PATH,49,252,167,14,ES_AUTOHSCROLL | ES_READONLY
+    PUSHBUTTON      "...",IDC_BTN_JG_CARD,216,252,14,14
+END
+
+IDD_SELECT_JG_CARD_DLG DIALOGEX 0, 0, 189, 59
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "选择角钢工艺卡"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,27,38,50,14
+    PUSHBUTTON      "取消",IDCANCEL,115,38,50,14
+    LTEXT           "请确定工艺卡路径:",IDC_STATIC,7,8,68,10
+    COMBOBOX        IDC_CMB_CARD_PATH,7,20,175,48,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_INPUT_DLG DIALOGEX 0, 0, 248, 54
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Dialog"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_E_INPUT,8,7,233,22,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDC_BTN_OK,182,29,59,17
+END
+
+IDD_SELECT_TOWER_TYPE DIALOGEX 0, 0, 191, 64
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "选择工程塔型"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,31,43,50,14
+    PUSHBUTTON      "取消",IDCANCEL,114,43,50,14
+    LTEXT           "工程名称:",IDC_STATIC,8,8,38,10
+    COMBOBOX        IDC_CMB_PROJECT_NAME,46,7,138,48,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "塔型名称:",IDC_STATIC,8,26,38,10
+    COMBOBOX        IDC_CMB_TOWERTYPE_NAME,46,24,138,48,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_RECONNECTION_SERVER_DLG DIALOGEX 0, 0, 150, 98
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "联机协作"
+FONT 10, "宋体", 0, 0, 0x0
+BEGIN
+    EDITTEXT        IDC_E_SERVER_NAME,71,9,70,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_USER_NAME,71,32,70,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_USER_PASSWORD,71,55,70,14,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "确定",IDOK,17,77,50,14
+    PUSHBUTTON      "取消",IDCANCEL,83,77,50,14
+    LTEXT           "服务器名:",IDC_STATIC,31,11,35,8
+    ICON            IDI_SERVER,IDC_STATIC,7,7,20,20
+    LTEXT           "用户名:",IDC_STATIC,39,35,27,8
+    ICON            IDI_USER,IDC_STATIC,7,29,20,20
+    LTEXT           "密  码:",IDC_S_PASSWORD,39,58,28,8
+    ICON            IDI_KEY,IDC_S_KEY,7,52,20,20
+END
+
+IDD_PROC_BAR_DLG DIALOG 0, 0, 224, 21
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "到位进度"
+FONT 10, "宋体"
+BEGIN
+    CONTROL         "Progress1",IDC_PROGRESS_BAR,"msctls_progress32",WS_BORDER,7,4,189,10
+    LTEXT           "100%",IDC_NUMERIC_PROC,197,6,18,8
+END
+
+IDD_UPLOAD_PROCESS_CARD_DLG DIALOGEX 0, 0, 530, 328
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "上传工艺卡"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "批量上传",IDOK,425,7,55,14
+    PUSHBUTTON      "关闭",IDCANCEL,482,7,42,14
+    CONTROL         "",1470,"SysListView32",LVS_REPORT | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,7,23,189,299
+    CONTROL         "",IDC_S_CARD,"Static",SS_BLACKFRAME,196,23,327,299
+    LTEXT           "",IDC_S_PROMPT_INFO,43,11,151,8
+    LTEXT           "构件列表",IDC_STATIC,8,8,30,11,SS_CENTERIMAGE
+    COMBOBOX        IDC_CMB_TASK,218,8,92,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "任务:",IDC_STATIC,196,10,20,8
+    COMBOBOX        IDC_CMB_TOWERTYPE,337,8,83,30,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "塔型:",IDC_S_TOWERTYPE,314,11,20,8
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_OPTIMAL_SORT_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 291
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 270
+    END
+
+    IDD_SELECT_JG_CARD_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 182
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 52
+    END
+
+    IDD_INPUT_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 241
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 47
+    END
+
+    IDD_SELECT_TOWER_TYPE, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 184
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 57
+    END
+
+    IDD_RECONNECTION_SERVER_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_PROC_BAR_DLG, DIALOG
+    BEGIN
+    END
+
+    IDD_UPLOAD_PROCESS_CARD_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 523
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 321
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Icon
+//
+
+// Icon with lowest ID value placed first to ensure application icon
+// remains consistent on all systems.
+IDI_KEY                 ICON                    "res\\KEY.ICO"
+IDI_SERVER              ICON                    "res\\icon1.ico"
+IDI_USER                ICON                    "res\\ico00001.ico"
+#endif    // 中文(简体，中国) resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+#define _AFX_NO_SPLITTER_RESOURCES
+#define _AFX_NO_OLE_RESOURCES
+#define _AFX_NO_TRACKER_RESOURCES
+#define _AFX_NO_PROPERTY_RESOURCES
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE 4, 2
+#include "res\BPS.rc2"  // 非 Microsoft Visual C++ 编辑的资源
+#include "l.CHS\afxres.rc"      // 标准组件
+#endif
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

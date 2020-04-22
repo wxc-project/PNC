@@ -1,0 +1,5 @@
+LIBRARY      "BPS"
+
+EXPORTS
+	acrxEntryPoint		PRIVATE
+	acrxGetApiVersion	PRIVATE
