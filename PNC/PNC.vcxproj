@@ -116,12 +116,12 @@
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;__PNC_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
-      <AdditionalIncludeDirectories>..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd;..\..\ToolKits\TowerCad;..\..\ToolKits\ToolCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd-dll\XhLmd;..\..\ToolKits\TowerCad;..\..\ToolKits\ToolCode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\XhLmd\XhLicAgent\Release2;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLmd\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhLmd-dll\XhLicAgent\Release2;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLmd\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>version.lib;XhLicAgent2.lib;XhLdsLm2.lib;XhLmd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Midl>

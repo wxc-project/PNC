@@ -1,5 +1,0 @@
-LIBRARY      "UBOM"
-
-EXPORTS
-	acrxEntryPoint		PRIVATE
-	acrxGetApiVersion	PRIVATE

@@ -1000,7 +1000,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ObjectARX 2005\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(OutDir)PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -1015,7 +1015,7 @@
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;D:\ObjectARX 2005\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\ObjectARX 2005\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\ARXSDK\ObjectARX 2005\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
     </Link>
@@ -1042,7 +1042,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(OutDir)PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -1057,7 +1057,7 @@
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;D:\ObjectARX 2005\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\..\ARXSDK\ObjectARX 2007\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\ARXSDK\ObjectARX 2007\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb17.lib;acge17.lib;acISMobj17.lib;adui17.lib;acui17.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
     </Link>
@@ -1167,7 +1167,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ObjectARX 2005\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(IntDir)UBOM.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -1181,7 +1181,7 @@
       <ProgramDatabaseFile>$(OutDir)UBOM.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)UBOM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\ObjectARX 2005\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\ARXSDK\ObjectARX 2005\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb16.lib;acge16.lib;achapi16.lib;acISMobj16.lib;adui16.lib;acui16.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_alg_fun.lib;f_ent.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\UBOM.def</ModuleDefinitionFile>
     </Link>
@@ -2610,7 +2610,10 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\XhCore\PartLib\AngleLibrary.cpp" />
+    <ClCompile Include="..\..\XhCore\PartLib\AngleLibrary.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
@@ -2910,7 +2913,10 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
-    <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h" />
+    <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
+    </ClInclude>
     <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
