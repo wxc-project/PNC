@@ -642,18 +642,6 @@
     <None Include="PNC-ZRX.def">
       <Filter>PNC</Filter>
     </None>
-    <None Include="ubom(安徽宏源).cfg">
-      <Filter>UBOM</Filter>
-    </None>
-    <None Include="ubom(常规).cfg">
-      <Filter>UBOM</Filter>
-    </None>
-    <None Include="ubom(成都铁塔).cfg">
-      <Filter>UBOM</Filter>
-    </None>
-    <None Include="ubom(江苏华电).cfg">
-      <Filter>UBOM</Filter>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Object Include="..\..\XhLmd\DogDrvs\MHWIN32C.OBJ">

@@ -173,7 +173,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	if (iStartRow <= 0)
 		iStartRow = iContentRow;
 	CStringArray repeatPartLabelArr;
-	for(int i=iStartRow;i<= sheetContentMap.RowsCount();i++)
+	int nRowCount = sheetContentMap.RowsCount();
+	for(int i=iStartRow;i<= nRowCount;i++)
 	{
 		VARIANT value;
 		int nSingleNum = 0, nProcessNum = 0;
@@ -1418,6 +1419,8 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 	excel_usedRange.AttachDispatch(excel_sheet.GetUsedRange());
 	excel_range.AttachDispatch(excel_usedRange.GetRows());
 	long nRowNum = excel_range.GetCount();
+	//excel_usedRange计算行数时会少一行，原因未知。暂时在此处增加行数 wht 20-04-24
+	nRowNum += 10;
 	excel_range.AttachDispatch(excel_usedRange.GetColumns());
 	long nColNum = excel_range.GetCount();
 	CVariant2dArray sheetContentMap(1,1);
@@ -1545,6 +1548,7 @@ CAngleProcessInfo *CProjectTowerType::FindAngleInfoByPartNo(const char* sPartNo)
 //CBomModel
 UINT CBomModel::m_uiCustomizeSerial = 0;
 CXhChar50 CBomModel::m_sCustomizeName;
+BOOL CBomModel::m_bExeRppWhenArxLoad = TRUE;
 const char* CBomModel::KEY_PN			= "PartNo";
 const char* CBomModel::KEY_MAT			= "Material";
 const char* CBomModel::KEY_SPEC			= "Spec";
@@ -1671,6 +1675,12 @@ void CBomModel::InitBomTblCfg()
 				if (skey != NULL)
 					m_xErpTblCfg.m_nStartRow = atoi(skey);
 			}
+		}
+		else if (_stricmp(key_word, "ExeRppWhenArxLoad") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if(skey!=NULL)
+				CBomModel::m_bExeRppWhenArxLoad = atoi(skey);
 		}
 	}
 	fclose(fp);

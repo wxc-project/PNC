@@ -366,7 +366,8 @@ void InitApplication()
 	if(CBomModel::m_sCustomizeName.GetLength()>0)
 		sWndText.Append(CBomModel::m_sCustomizeName, '-');
 	::SetWindowText(adsw_acadMainWnd(), sWndText);
-	RevisionPartProcess	();
+	if(CBomModel::m_bExeRppWhenArxLoad)
+		RevisionPartProcess	();
 #endif
 }
 void UnloadApplication()

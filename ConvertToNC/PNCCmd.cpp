@@ -94,6 +94,30 @@ void SmartExtractPlate(CPNCModel *pModel)
 {
 	if (pModel == NULL)
 		return;
+	BOOL bSendCommand = FALSE;
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	bSendCommand = TRUE;
+#endif
+	struct resbuf var;
+#ifdef _ARX_2007
+	acedGetVar(L("WORLDUCS"), &var);
+#else
+	acedGetVar("WORLDUCS", &var);
+#endif
+	int iRet = var.resval.rint;
+	if (iRet == 0)
+	{	//用户坐标系与世界坐标系不一致，执行ucs命令，修订坐标系 wht 20-04-24
+		if(bSendCommand)
+			SendCommandToCad("ucs w ");
+		else
+		{
+#ifdef _ARX_2007
+			acedCommand(RTSTR, L"ucs", RTSTR, L"w", RTNONE);
+#else
+			acedCommand(RTSTR, "ucs", RTSTR, "w", RTNONE);
+#endif
+		}
+	}
 	pModel->DisplayProcess = DisplayProcess;
 	CLogErrorLife logErrLife;
 	CHashSet<AcDbObjectId> selectedEntList;
@@ -273,7 +297,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 			if (baseInfo.m_nThick > 0)
 				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
 			if (baseInfo.m_nNum > 0)
-				pPlateProcess->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nProcessNum = baseInfo.m_nNum;
+				pPlateInfo->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nProcessNum = baseInfo.m_nNum;
 			if (baseInfo.m_idCadEntNum != 0)
 				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 		}

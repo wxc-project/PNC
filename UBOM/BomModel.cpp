@@ -287,6 +287,8 @@ BOOL CBomFile::ImportTmaExcelFile()
 		excel_usedRange.AttachDispatch(excel_sheet.GetUsedRange());
 		excel_range.AttachDispatch(excel_usedRange.GetRows());
 		long nRowNum = excel_range.GetCount();
+		//excel_usedRange计算行数时会少一行，原因未知。暂时在此处增加行数 wht 20-04-24
+		nRowNum += 10;
 		excel_range.AttachDispatch(excel_usedRange.GetColumns());
 		long nColNum = excel_range.GetCount();
 		if(nColNum<TMA_EXCEL_COL_COUNT || strstr(excel_sheet.GetName(),"表头"))
@@ -1165,6 +1167,8 @@ BOOL CProjectTowerType::ModifyErpBomPartNo(BYTE ciMatCharPosType)
 	excel_usedRange.AttachDispatch(excel_sheet.GetUsedRange());
 	excel_range.AttachDispatch(excel_usedRange.GetRows());
 	long nRowNum = excel_range.GetCount();
+	//excel_usedRange计算行数时会少一行，原因未知。暂时在此处增加行数 wht 20-04-24
+	nRowNum += 10;
 	excel_range.AttachDispatch(excel_usedRange.GetColumns());
 	long nColNum = excel_range.GetCount();
 	CVariant2dArray sheetContentMap(1,1);
