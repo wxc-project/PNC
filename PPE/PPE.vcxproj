@@ -292,7 +292,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\XhCore\Graphics;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\XhCore\DrawSolid;..\..\XhCore\XeroCad;..\..\XhCore\PartLib;..\..\XhCore\LmaDlg;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\PEC;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\XeroCad;..\..\XhCore-dll\PartLib;..\..\XhCore-dll\LmaDlg;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\PEC;.\Model;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;__PNC_;__ALL_LICFUNC_;__PROPERTYLIST_UI_;__VS2010_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -313,7 +313,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore\Ent\Release;..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\DrawSolid\Release;..\..\XhCore\XeroCad\Release;..\..\XhCore\LmaDlg\Release;..\..\XhCore\PartLib\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\PEC\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhCore-dll\LmaDlg\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\PEC\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
