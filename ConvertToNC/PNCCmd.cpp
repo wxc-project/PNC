@@ -100,7 +100,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 #endif
 	struct resbuf var;
 #ifdef _ARX_2007
-	acedGetVar(L("WORLDUCS"), &var);
+	acedGetVar(L"WORLDUCS", &var);
 #else
 	acedGetVar("WORLDUCS", &var);
 #endif
@@ -108,7 +108,11 @@ void SmartExtractPlate(CPNCModel *pModel)
 	if (iRet == 0)
 	{	//用户坐标系与世界坐标系不一致，执行ucs命令，修订坐标系 wht 20-04-24
 		if(bSendCommand)
+#ifdef _ARX_2007
+			SendCommandToCad(L"ucs w ");
+#else
 			SendCommandToCad("ucs w ");
+#endif
 		else
 		{
 #ifdef _ARX_2007
