@@ -682,11 +682,9 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		if(sName.GetLength()<=0)
 			return FALSE;
 		BOLT_BLOCK* pBoltD=hashBoltDList.GetValue(sName);
-		if(pBoltD==NULL)
-			return FALSE;
 		hole.posX=(float)pReference->position().x;
 		hole.posY=(float)pReference->position().y;
-		if(pBoltD->diameter > 0 || pBoltD->hole_d > 0)
+		if(pBoltD && (pBoltD->diameter > 0 || pBoltD->hole_d > 0))
 		{	//指定螺栓块的直径或孔径，按照标准螺栓处理
 			hole.ciSymbolType = 0;
 			if (pBoltD->diameter > 0 && pBoltD->hole_d > pBoltD->diameter)
@@ -718,10 +716,11 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 				hole.d = fHoleD;
 				hole.increment = 0;
 				hole.ciSymbolType = 1;	//特殊图块
+				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
 			}
 			else
 			{
-				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
+				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径，根据块识别尺寸失败！", (char*)sName);
 				return FALSE;
 			}
 		}

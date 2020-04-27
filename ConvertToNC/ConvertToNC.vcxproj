@@ -1009,7 +1009,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>Debug7/PNC.arx</OutputFile>
+      <OutputFile>$(OutDir)PNC.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>.\Debug7/PNC.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
