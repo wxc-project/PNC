@@ -555,22 +555,31 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				if (strlen(pOtherRelaObj->sText) <= 0 ||
 					(strstr(pOtherRelaObj->sText, "%%C") == NULL && strstr(pOtherRelaObj->sText, "%%c") == NULL &&
 						strstr(pOtherRelaObj->sText, "Φ") == NULL))
-					continue;
+					continue;	//没有螺栓直径信息
+				if(strstr(pOtherRelaObj->sText, "-"))
+					continue;	//正常的钢印信息标注，非特殊螺栓直径标注,例如：4-Φ18    
 				if (DISTANCE(pOtherRelaObj->pos, GEPOINT(boltInfo.posX, boltInfo.posY)) < 50)
 				{
 					CString ss(pOtherRelaObj->sText);
 					if (ss.Find("钻") >= 0)
 						pBoltInfo->cFlag = 1;
-					ss.Replace("%%C", "");
-					ss.Replace("%%c", "");
-					ss.Replace("Φ", "");
+					ss.Replace("%%C", "|");
+					ss.Replace("%%c", "|");
+					ss.Replace("Φ", "|");
 					ss.Replace("钻", "");
 					ss.Replace("孔", "");
 					ss.Replace("冲", "");
-					double hole_d = atof(ss);
-					pBoltInfo->bolt_d = hole_d;
-					pBoltInfo->hole_d_increment = 0;
-					pBoltInfo->cFuncType = 2;
+					CXhChar100 sText(ss);
+					std::vector<CXhChar16> numKeyArr;
+					for (char* sKey = strtok(sText, "|"); sKey; sKey = strtok(NULL, "|"))
+						numKeyArr.push_back(CXhChar16(sKey));
+					if (numKeyArr.size() == 1)
+					{
+						double hole_d = atof(numKeyArr[0]);
+						pBoltInfo->bolt_d = hole_d;
+						pBoltInfo->hole_d_increment = 0;
+						pBoltInfo->cFuncType = 2;
+					}
 				}
 			}
 			m_xHashRelaEntIdList.pop_stack(nPush);
