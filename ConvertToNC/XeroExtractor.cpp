@@ -281,6 +281,7 @@ void CPlateExtractor::Init()
 	hashBoltDList.SetValue("M12",BOLT_BLOCK("TMA", "M12",12));
 	hashBoltDList.SetValue("板孔25.5",BOLT_BLOCK("TW", "板孔25.5",24));
 	hashBoltDList.SetValue("板孔21.5",BOLT_BLOCK("TW", "板孔21.5",20));
+	hashBoltDList.SetValue("板孔19.5",BOLT_BLOCK("TW", "板孔19.5",18));
 	hashBoltDList.SetValue("板孔17.5",BOLT_BLOCK("TW", "板孔17.5",16));
 	hashBoltDList.SetValue("板孔13.5",BOLT_BLOCK("TW", "板孔13.5",12));
 	hashBoltDList.SetValue("板孔默认",BOLT_BLOCK("TW", "板孔默认",0));
@@ -682,9 +683,13 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		if(sName.GetLength()<=0)
 			return FALSE;
 		BOLT_BLOCK* pBoltD=hashBoltDList.GetValue(sName);
+		if (pBoltD == NULL)
+		{	//只对设置未螺栓图符的块进行处理，否则可能错误识别其它块为螺栓孔 wht 20-04-28
+			return FALSE;
+		}
 		hole.posX=(float)pReference->position().x;
 		hole.posY=(float)pReference->position().y;
-		if(pBoltD && (pBoltD->diameter > 0 || pBoltD->hole_d > 0))
+		if(pBoltD->diameter > 0 || pBoltD->hole_d > 0)
 		{	//指定螺栓块的直径或孔径，按照标准螺栓处理
 			hole.ciSymbolType = 0;
 			if (pBoltD->diameter > 0 && pBoltD->hole_d > pBoltD->diameter)
@@ -716,7 +721,6 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 				hole.d = fHoleD;
 				hole.increment = 0;
 				hole.ciSymbolType = 1;	//特殊图块
-				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
 			}
 			else
 			{
