@@ -16,8 +16,6 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define  ASSIST_RADIUS	2
-
 CPNCModel model;
 CExpoldeModel g_explodeModel;
 CDocManagerReactor *g_pDocManagerReactor;
@@ -945,18 +943,18 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	for(int i=0;i<tem_vertes.GetNodeNum();i++)
 	{
 		VERTEX* pCurVer=tem_vertes.GetByIndex(i);
-		if(pCurVer->ciEdgeType==2&&ftoi(pCurVer->arc.radius)==ASSIST_RADIUS)
+		if(pCurVer->ciEdgeType==2&&ftoi(pCurVer->arc.radius)==CPNCModel::ASSIST_RADIUS)
 		{
 			VERTEX* pNextVer=tem_vertes.GetByIndex((i+1)%nVertNum);
 			if(pNextVer->ciEdgeType==1)
 				pNextVer->pos=pCurVer->arc.center;
-			else if(pNextVer->ciEdgeType==2&&ftoi(pNextVer->arc.radius)!=ASSIST_RADIUS)
+			else if(pNextVer->ciEdgeType==2&&ftoi(pNextVer->arc.radius)!= CPNCModel::ASSIST_RADIUS)
 				pNextVer->pos=pCurVer->arc.center;
 		}
 	}
 	for(pVer=tem_vertes.GetFirst();pVer;pVer=tem_vertes.GetNext())
 	{
-		if(pVer->ciEdgeType==2&&ftoi(pVer->arc.radius)==ASSIST_RADIUS)
+		if(pVer->ciEdgeType==2&&ftoi(pVer->arc.radius)== CPNCModel::ASSIST_RADIUS)
 			tem_vertes.DeleteCursor();
 	}
 	tem_vertes.Clean();
@@ -2399,6 +2397,7 @@ bool CPlateProcessInfo::IsMarkPosCadEnt(int idCadEnt)
 //////////////////////////////////////////////////////////////////////////
 //ExtractPlateInfo
 //ExtractPlateProfile
+const float CPNCModel::ASSIST_RADIUS = 1;
 CPNCModel::CPNCModel()
 {
 	Empty();
@@ -2548,12 +2547,12 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			//在圆弧始点添加辅助小圆
 			AcDbObjectId circleId;
 			AcGeVector3d norm(0,0,1);
-			AcDbCircle *pCircle1=new AcDbCircle(startPt,norm,2);
+			AcDbCircle *pCircle1=new AcDbCircle(startPt,norm, ASSIST_RADIUS);
 			pBlockTableRecord->appendAcDbEntity(circleId,pCircle1);
 			xAssistCirSet.SetValue(circleId.asOldId(),circleId);
 			pCircle1->close();
 			//终点处添加辅助小圆
-			AcDbCircle *pCircle2=new AcDbCircle(endPt,norm,2);
+			AcDbCircle *pCircle2=new AcDbCircle(endPt,norm, ASSIST_RADIUS);
 			pBlockTableRecord->appendAcDbEntity(circleId,pCircle2);
 			xAssistCirSet.SetValue(circleId.asOldId(),circleId);
 			pCircle2->close();

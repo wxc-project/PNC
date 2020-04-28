@@ -185,6 +185,7 @@ public:
 	CXhChar50 m_sTaAlias;		//代号
 	CXhChar50 m_sTaStampNo;		//钢印号
 	CXhChar500 m_sWorkPath;		//当前模型对应的工作路径 wht 19-04-02
+	static const float ASSIST_RADIUS;
 public:
 	CPNCModel(void);
 	~CPNCModel(void);
