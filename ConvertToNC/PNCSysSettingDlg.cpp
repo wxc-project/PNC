@@ -71,6 +71,10 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_sJgCadName.Copy(valueStr);
 		g_pncSysPara.InitJgCardInfo(valueStr);
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_sPartLabelTitle"))
+		g_pncSysPara.m_sPartLabelTitle = valueStr;
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_sJgCardBlockName"))
+		g_pncSysPara.m_sJgCardBlockName = valueStr;
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fMaxLenErr"))
 		g_pncSysPara.m_fMaxLenErr = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bMKPos"))

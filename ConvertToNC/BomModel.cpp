@@ -75,7 +75,7 @@ static BOOL DeleteBomPart(BOMPART *pPart)
 int compare_func(const CXhChar16& str1,const CXhChar16& str2)
 {
 	CString keyStr1(str1),keyStr2(str2);
-	return ComparePartNoString(keyStr1,keyStr2);
+	return ComparePartNoString(keyStr1, keyStr2, "SHGPT");
 }
 //////////////////////////////////////////////////////////////////////////
 //CBomFile
@@ -461,7 +461,14 @@ BOOL CBomFile::ImportTmaExcelFile()
 	int nValidSheetCount = 0, iValidSheet = (nSheetNum == 1) ? 1 : 0;
 	BOOL bRetCode = FALSE;
 	m_hashPartByPartNo.Empty();
-	if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)	//青岛豪迈读取放样原始材料表
+	int iCfgSheetIndex = 0;
+	if (g_xUbomModel.m_sTMABomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
+	{
+		iCfgSheetIndex = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName);
+		if (iCfgSheetIndex > 0)
+			iValidSheet = iCfgSheetIndex;
+	}
+	if (iCfgSheetIndex==0 && g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)	//青岛豪迈读取放样原始材料表
 		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, "放样原始材料表");
 	if (iValidSheet > 0)
 	{	//优先读取指定sheet
@@ -494,11 +501,24 @@ BOOL CBomFile::ImportTmaExcelFile()
 //导入ERP料单EXCEL文件
 BOOL CBomFile::ImportErpExcelFile()
 {
+	if (m_sFileName.GetLength() <= 0)
+		return FALSE;
+	CExcelOperObject excelobj;
+	if (!excelobj.OpenExcelFile(m_sFileName))
+		return FALSE;
+	//读取sheet内容
+	int nSheetNum = excelobj.GetWorkSheetCount();
+	int iValidSheet = (nSheetNum >= 1) ? 1 : 0;
+	BOOL bRetCode = FALSE;
+	if (g_xUbomModel.m_sERPBomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
+		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sERPBomSheetName);
 	//获取Excel内容存储至sheetContentMap中,建立列标题与列索引映射表hashColIndexByColTitle
 	CVariant2dArray sheetContentMap(1,1);
+	if (g_xUbomModel.m_sTMABomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
+		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName);
 	//最大支持52行，不设置最大列数时如果整行设置背景色会导致自动获取到的列数过大，加载Excel速度慢 wht 19-12-30
-	if(!CExcelOper::GetExcelContentOfSpecifySheet(m_sFileName,sheetContentMap,1,52))
-	//if (!CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, 1,52))
+	//if(!CExcelOper::GetExcelContentOfSpecifySheet(m_sFileName,sheetContentMap,1,52))
+	if (!CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet,52))
 		return false;
 	//获取定制列信息
 	CHashStrList<DWORD> hashColIndexByColTitle;
@@ -589,10 +609,21 @@ void CProjectTowerType::WriteProjectFile(CString sFilePath)
 }
 BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+	char sFileName[MAX_PATH] = "";
+	_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
+	if (g_xUbomModel.m_sTMABomFileKeyStr.GetLength() > 0)
+	{	//根据设置的关键字，判断是否为TMA表单 wht 20-04-29
+		CXhChar200 sCurFileName(sFileName);
+		CXhChar200 sKeyStr(g_xUbomModel.m_sTMABomFileKeyStr);
+		sCurFileName.ToUpper();
+		sKeyStr.ToUpper();
+		if (strstr(sCurFileName, sKeyStr)!=NULL)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
 	{	//安徽宏源料单文件中含有关键字
-		char sFileName[MAX_PATH] = "";
-		_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
 		if (strstr(sFileName, "TMA") || strstr(sFileName, "tma"))
 			return TRUE;
 		else
@@ -646,10 +677,21 @@ BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox 
 }
 BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
-	if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+	char sFileName[MAX_PATH] = "";
+	_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
+	if (g_xUbomModel.m_sERPBomFileKeyStr.GetLength() > 0)
+	{	//根据设置的关键字，判断是否为TMA表单 wht 20-04-29
+		CXhChar200 sCurFileName(sFileName);
+		CXhChar200 sKeyStr(g_xUbomModel.m_sERPBomFileKeyStr);
+		sCurFileName.ToUpper();
+		sKeyStr.ToUpper();
+		if (strstr(sCurFileName, sKeyStr) != NULL)
+			return TRUE;
+		else
+			return FALSE;
+	}
+	else if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
 	{
-		char sFileName[MAX_PATH] = "";
-		_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
 		if (strstr(sFileName, "ERP") || strstr(sFileName, "erp"))
 			return TRUE;	//安徽宏源料单文件中含有关键字
 		else
@@ -751,6 +793,7 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJ
 #endif
 	}
 	//读取DWG文件信息
+	CWaitCursor wait;
 	CDwgFileInfo* pDwgFile = FindDwgBomInfo(sFileName);
 	if (pDwgFile)
 	{
@@ -1549,6 +1592,10 @@ CAngleProcessInfo *CProjectTowerType::FindAngleInfoByPartNo(const char* sPartNo)
 UINT CBomModel::m_uiCustomizeSerial = 0;
 CXhChar50 CBomModel::m_sCustomizeName;
 BOOL CBomModel::m_bExeRppWhenArxLoad = TRUE;
+CXhChar200 CBomModel::m_sTMABomFileKeyStr;
+CXhChar200 CBomModel::m_sERPBomFileKeyStr;
+CXhChar200 CBomModel::m_sTMABomSheetName;
+CXhChar200 CBomModel::m_sERPBomSheetName;
 const char* CBomModel::KEY_PN			= "PartNo";
 const char* CBomModel::KEY_MAT			= "Material";
 const char* CBomModel::KEY_SPEC			= "Spec";
@@ -1624,6 +1671,7 @@ void CBomModel::InitBomTblCfg()
 		strcpy(sText, line_txt);
 		CString sLine(line_txt);
 		sLine.Replace('=', ' ');
+		sLine.Replace('\n', ' ');
 		sprintf(line_txt, "%s", sLine);
 		char *skey = strtok((char*)sText, "=,;");
 		strncpy(key_word, skey, 100);
@@ -1681,6 +1729,42 @@ void CBomModel::InitBomTblCfg()
 			skey = strtok(NULL, "=,;");
 			if(skey!=NULL)
 				CBomModel::m_bExeRppWhenArxLoad = atoi(skey);
+		}
+		else if (_stricmp(key_word, "TMABomFileKeyStr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				CBomModel::m_sTMABomFileKeyStr.Copy(skey);
+				CBomModel::m_sTMABomFileKeyStr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ERPBomFileKeyStr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				CBomModel::m_sERPBomFileKeyStr.Copy(skey);
+				CBomModel::m_sERPBomFileKeyStr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "TMABomSheetName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				CBomModel::m_sTMABomSheetName.Copy(skey);
+				CBomModel::m_sTMABomSheetName.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ERPBomSheetName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				CBomModel::m_sERPBomSheetName.Copy(skey);
+				CBomModel::m_sERPBomSheetName.Remove(' ');
+			}
 		}
 	}
 	fclose(fp);

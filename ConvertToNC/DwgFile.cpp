@@ -550,9 +550,7 @@ BOOL CDwgFileInfo::RetrieveAngles()
 #else
 			sText.Copy(pText->textString());
 #endif
-			if((strstr(sText,"¼þ")==NULL&&strstr(sText,"±à")==NULL) || strstr(sText,"ºÅ")==NULL)
-				continue;
-			if (strstr(sText, "Í¼ºÅ") != NULL || strstr(sText, "ÎÄ¼þ±àºÅ") != NULL)
+			if (!g_pncSysPara.IsPartLabelTitle(sText))
 				continue;
 			orig_pt= g_pncSysPara.GetJgCardOrigin(f3dPoint(pText->position().x,pText->position().y,0));
 		}
@@ -565,9 +563,7 @@ BOOL CDwgFileInfo::RetrieveAngles()
 #else
 			sText.Copy(pMText->contents());
 #endif
-			if ((strstr(sText, "¼þ") == NULL && strstr(sText, "±à") == NULL) || strstr(sText, "ºÅ") == NULL)
-				continue;
-			if (strstr(sText, "Í¼ºÅ") != NULL || strstr(sText, "ÎÄ¼þ±àºÅ") != NULL)
+			if (!g_pncSysPara.IsPartLabelTitle(sText))
 				continue;
 			orig_pt= g_pncSysPara.GetJgCardOrigin(f3dPoint(pMText->location().x,pMText->location().y,0));
 		}
@@ -592,7 +588,7 @@ BOOL CDwgFileInfo::RetrieveAngles()
 			sName.Copy(sValue);
 			delete[] sValue;
 #endif
-			if(strcmp(sName,"JgCard")!=0)
+			if (!g_pncSysPara.IsJgCardBlockName(sName))
 				continue;
 			orig_pt.Set(pReference->position().x,pReference->position().y,0);
 		}

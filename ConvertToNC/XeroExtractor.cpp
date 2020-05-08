@@ -7,6 +7,7 @@
 #include "DefCard.h"
 #include "ProcessPart.h"
 #include <vector>
+#include "PNCSysPara.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -1066,13 +1067,14 @@ CJgCardExtractor::~CJgCardExtractor()
 {
 
 }
-bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
+BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 {
 	if (strlen(sJgCardPath) <= 0)
-		return false;
+		return CARD_READ_FAIL;
 	f3dPoint startPt, endPt;
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;
+	PRESET_ARRLIST(CXhChar100, partNoPosArr, 10);
 #ifdef _ARX_2007
 	if ((retCode=blkDb.readDwgFile((ACHAR*)_bstr_t(sJgCardPath), _SH_DENYRW, true)) == Acad::eOk)
 #else
@@ -1113,18 +1115,18 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 #else
 				sText.Copy(pMText->contents());
 #endif
-				if ((strstr(sText, "件") == NULL && strstr(sText, "编") == NULL) || strstr(sText, "号") == NULL)
-					continue;
-				if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
-					continue;
-				double fPosX = pMText->location().x;
-				double fPosY = pMText->location().y;
-				if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
+				if (g_pncSysPara.IsPartLabelTitle(sText))
 				{
-					fPnDistX = fPosX;
-					fPnDistY = fPosY;
+					double fPosX = pMText->location().x;
+					double fPosY = pMText->location().y;
+					if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
+					{
+						fPnDistX = fPosX;
+						fPnDistY = fPosY;
+						partNoPosArr.Append(CXhChar100("%s 位置(%.1f,%.1f)", (char*)sText, fPosX, fPosY));
+					}
+					nPartLabelCount++;
 				}
-				nPartLabelCount++;
 				continue;
 			}
 			if (pEnt->isKindOf(AcDbText::desc()))
@@ -1135,18 +1137,18 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 #else
 				sText.Copy(pText->textString());
 #endif
-				if ((strstr(sText, "件") == NULL && strstr(sText, "编") == NULL) || strstr(sText, "号") == NULL)
-					continue;
-				if (strstr(sText, "图号") != NULL || strstr(sText, "文件编号") != NULL)
-					continue;
-				double fPosX = pText->position().x;
-				double fPosY = pText->position().y;
-				if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
+				if (g_pncSysPara.IsPartLabelTitle(sText))
 				{
-					fPnDistX = fPosX;
-					fPnDistY = fPosY;
+					double fPosX = pText->position().x;
+					double fPosY = pText->position().y;
+					if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
+					{
+						fPnDistX = fPosX;
+						fPnDistY = fPosY;
+						partNoPosArr.Append(CXhChar100("%s 位置(%.1f,%.1f)",(char*)sText,fPosX,fPosY));
+					}
+					nPartLabelCount++;
 				}
-				nPartLabelCount++;
 				continue;
 			}
 			if (!pEnt->isKindOf(AcDbPoint::desc()))
@@ -1262,14 +1264,28 @@ bool CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 				he_jiao_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
 			}
 		}
+		pTempBlockTableRecord->close();
 		//工艺卡矩形区域
 		fMinX = scope.fMinX;
 		fMinY = scope.fMinY;
 		fMaxX = scope.fMaxX;
 		fMaxY = scope.fMaxY;
-		return true;
+
+		if (nPartLabelCount == 1)
+			return CARD_READ_SUCCEED;
+		else
+		{
+			if (partNoPosArr.GetSize() > 1)
+			{
+				logerr.LogString(CXhChar100("工艺卡图框{%s}中存在多个文件,请确认：", (char*)sJgCardPath));
+				for (CXhChar100 *pPartPos = partNoPosArr.GetFirst(); pPartPos; pPartPos = partNoPosArr.GetNext())
+					logerr.LogString(*pPartPos);
+				logerr.ShowToScreen();
+			}
+			return CARD_READ_ERROR_PARTNO;
+		}
 	}
-	return false;
+	return CARD_READ_FAIL;
 }
 f3dPoint CJgCardExtractor::GetJgCardOrigin(f3dPoint partNo_pt)
 {

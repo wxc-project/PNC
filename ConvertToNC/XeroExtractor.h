@@ -198,6 +198,9 @@ public:
 	CJgCardExtractor();
 	~CJgCardExtractor();
 	//
-	bool InitJgCardInfo(const char* sJgCardPath);
+	static const int CARD_READ_FAIL = 0;
+	static const int CARD_READ_SUCCEED = 1;
+	static const int CARD_READ_ERROR_PARTNO = 2;	//工艺卡中存在多个件号需要配置件号标题 wht 20-05-08
+	BYTE InitJgCardInfo(const char* sJgCardPath);
 	f3dPoint GetJgCardOrigin(f3dPoint partNo_pt);
 };

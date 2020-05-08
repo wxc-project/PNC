@@ -61,7 +61,9 @@ public:
 	CXhChar16 m_sProfileLineType;
 	double m_fPixelScale;
 	//
-	CXhChar100 m_sJgCadName;	//角钢工艺卡
+	CXhChar100 m_sJgCadName;		//角钢工艺卡
+	CXhChar16 m_sPartLabelTitle;	//件号标题
+	CXhChar50 m_sJgCardBlockName;	//角钢工艺卡块名称 wht 19-09-24
 	double m_fMaxLenErr;		//长度最大误差值
 public:
 	CPNCSysPara();
@@ -85,6 +87,8 @@ public:
 	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
 	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100,CPropTreeItem *pItem=NULL);//通过属性Id获取属性值
+	BOOL IsPartLabelTitle(const char* sText);
+	BOOL IsJgCardBlockName(const char* sBlockName);
 };
 extern CPNCSysPara g_pncSysPara;
 extern CSteelSealReactor *g_pSteelSealReactor;	

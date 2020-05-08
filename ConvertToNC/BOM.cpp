@@ -296,7 +296,7 @@ short BOMPART::GetHuoquLineCount(BOOL bIncRollEdge/*=TRUE*/)
 {
 	return siZhiWan;
 }
-char* BOMPART::GetPartNo(int nMatCharPosType/*=0*/,char cMatSeparator/*=0*/, bool bIncQualityLevel /*= false*/)
+CXhChar50 BOMPART::GetPartNo(int nMatCharPosType/*=0*/,char cMatSeparator/*=0*/, bool bIncQualityLevel /*= false*/)
 {
 	CXhChar16 szMaterial("%c", cMaterial);
 	if (cQualityLevel != 0 && bIncQualityLevel)

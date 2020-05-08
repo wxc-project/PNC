@@ -52,6 +52,9 @@ void CPNCSysPara::Init()
 	m_iAxisXCalType = 0;
 	m_bReplaceSH = FALSE;
 	m_nReplaceHD = 20;
+	m_sJgCadName.Empty();
+	m_sPartLabelTitle.Empty();
+	m_sJgCardBlockName.Empty();
 	//自动排版设置
 	m_bAutoLayout = FALSE;
 	m_nMapWidth = 1500;
@@ -170,6 +173,10 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if (GetPropID("m_sJgCadName") == id)
 		sText = m_sJgCadName;
+	else if (pItem->m_idProp == GetPropID("m_sPartLabelTitle"))
+		g_pncSysPara.m_sPartLabelTitle = valueStr;
+	else if (pItem->m_idProp == GetPropID("m_sJgCardBlockName"))
+		g_pncSysPara.m_sJgCardBlockName = valueStr;
 	else if(GetPropID("m_fMaxLenErr")==id)
 		sText.Printf("%.f", g_pncSysPara.m_fMapScale);
 	else if (GetPropID("m_bReplaceSH") == id)
@@ -446,6 +453,39 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 		return FALSE;
 	return TRUE;
 }
+BOOL CPNCSysPara::IsJgCardBlockName(const char* sBlockName)
+{
+	if (sBlockName != NULL && strcmp(sBlockName, "JgCard") == 0)
+		return TRUE;
+	else if (m_sJgCardBlockName.GetLength() > 0 && m_sJgCardBlockName.EqualNoCase(sBlockName))
+		return TRUE;
+	else
+		return false;
+}
+BOOL CPNCSysPara::IsPartLabelTitle(const char* sText)
+{
+	if (m_sPartLabelTitle.GetLength() > 0)
+	{
+		CString ss1(sText), ss2(m_sPartLabelTitle);
+		ss1 = ss1.Trim();
+		ss2 = ss2.Trim();
+		ss1.Remove(' ');
+		ss2.Remove(' ');
+		if (ss1.CompareNoCase(ss2) == 0)
+			return true;
+		else
+			return false;
+	}
+	else
+	{
+		if (!(strstr(sText, "件") && strstr(sText, "号")) &&	//件号、零件编号
+			!(strstr(sText, "编") && strstr(sText, "号")))		//编号、构件编号
+			return false;
+		if (strstr(sText, "文件") != NULL)
+			return false;	//排除"文件编号"导致的提取错误 wht 19-05-13
+		return true;
+	}
+}
 //////////////////////////////////////////////////////////////////////////
 //
 
@@ -623,6 +663,18 @@ void PNCSysSetImportDefault()
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectLen);
 		else if (_stricmp(key_word, "JG_CARD") == 0)
 			sscanf(line_txt, "%s%s", key_word, (char*)g_pncSysPara.m_sJgCadName);
+		else if (_stricmp(key_word, "PartLabelTitle") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sPartLabelTitle, "%s", skey);
+			g_pncSysPara.m_sPartLabelTitle.Replace(" ", "");
+		}
+		else if (_stricmp(key_word, "JgCardBlockName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sJgCardBlockName, "%s", skey);
+			g_pncSysPara.m_sJgCardBlockName.Replace(" ", "");
+		}
 #ifndef __UBOM_ONLY_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::BOARD_HEIGHT);
@@ -664,6 +716,8 @@ void PNCSysSetExportDefault()
 	}
 	fprintf(fp, "基本设置\n");
 	fprintf(fp, "JG_CARD=%s\n", (char*)g_pncSysPara.m_sJgCadName);
+	fprintf(fp, "PartLabelTitle=%s ;件号标题\n", (char*)g_pncSysPara.m_sPartLabelTitle);
+	fprintf(fp, "JgCardBlockName=%s ;角钢工艺卡块名称\n", (char*)g_pncSysPara.m_sJgCardBlockName);
 	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
 	fprintf(fp, "PPIMode=%d ;PPI文件模式\n", g_pncSysPara.m_iPPiMode);
 	fprintf(fp, "AutoLayout=%d ;自动排版\n", g_pncSysPara.m_bAutoLayout);

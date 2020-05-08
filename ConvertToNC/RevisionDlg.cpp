@@ -87,6 +87,22 @@ static BOOL FireItemChanged(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem*
 		ZoomAcadView(scope, 20);
 	return bRetCode;
 }
+static CXhChar16 RemovePartNoMatBriefMark(CXhChar16 sPartNo,char cMaterial)
+{
+	if( cMaterial!='S'&&
+		cMaterial!='H'&&
+		cMaterial!='G'&&
+		cMaterial!='P'&&
+		cMaterial!='T')
+		return sPartNo;
+	CXhChar16 sNewPartNo(sPartNo);
+	if(sPartNo.At(0)==cMaterial)
+		sNewPartNo.Copy((char*)sPartNo+1);
+	else if(sPartNo.At(sPartNo.GetLength()-1)==cMaterial)
+		sNewPartNo.NCopy(sPartNo,sPartNo.GetLength()-1);
+	sNewPartNo=sNewPartNo.Replace(' ',0);
+	return sNewPartNo;
+}
 static int FireCompareItem(const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem1,const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem2,DWORD lPara)
 {
 	COMPARE_FUNC_EXPARA* pExPara=(COMPARE_FUNC_EXPARA*)lPara;
@@ -100,8 +116,8 @@ static int FireCompareItem(const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem1,c
 	CString sText1=pItem1->m_lpNodeInfo->GetSubItemText(iSubItem);
 	CString sText2=pItem2->m_lpNodeInfo->GetSubItemText(iSubItem);
 	int result = 0;
-	if (iSubItem == 0)
-		result = ComparePartNoString(sText1, sText2);
+	if (iSubItem == 0)	//件号
+		result = ComparePartNoString(sText1, sText2, "SHGPT");
 	else if (iSubItem == 1)
 		result = CompareMultiSectionString(sText1, sText2);
 	else
@@ -385,6 +401,22 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 	else
 		return list.InsertRootItem(lpInfo,bUpdate);
 }
+typedef CPlateProcessInfo* CPlateInfoPtr;
+typedef CAngleProcessInfo* CAngleInfoPtr;
+typedef BOMPART* BomPartPtr;
+int ComparePlatePtrByPartNo(const CPlateInfoPtr &plate1, const CPlateInfoPtr &plate2);
+int CompareAnglePtrByPartNo(const CAngleInfoPtr &angle1, const CAngleInfoPtr &angle2)
+{
+	CXhChar50 sPartNo1 = angle1->m_xAngle.GetPartNo();
+	CXhChar50 sPartNo2 = angle2->m_xAngle.GetPartNo();
+	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
+}
+int CompareBomPartPtrByPartNo(const BomPartPtr &part1, const BomPartPtr &part2)
+{
+	CXhChar50 sPartNo1 = part1->GetPartNo();
+	CXhChar50 sPartNo2 = part2->GetPartNo();
+	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
+}
 void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 {
 	m_sRecordNum = "";
@@ -407,8 +439,16 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		{
 			CBomFile* pBom=(CBomFile*)pInfo->dwRefData;
 			nNum = pBom->GetPartNum();
-			for(BOMPART *pPart=pBom->EnumFirstPart();pPart;pPart=pBom->EnumNextPart(), index++)
+			BOMPART *pPart = NULL;
+			ARRAY_LIST<BOMPART*> partPtrArr;
+			for (pPart = pBom->EnumFirstPart(); pPart; pPart = pBom->EnumNextPart())
+				partPtrArr.Append(pPart);
+			CHeapSort<BOMPART*>::HeapSort(partPtrArr.m_pData, partPtrArr.GetSize(), CompareBomPartPtrByPartNo);
+			for(BOMPART **ppPart=partPtrArr.GetFirst();ppPart;ppPart=partPtrArr.GetNext(), index++)
 			{
+				pPart = *ppPart;
+				if(pPart==NULL)
+					continue;
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
 				pItem=InsertPartToList(m_xListReport,NULL,pPart,NULL);
@@ -421,8 +461,16 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		{
 			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pDwg->GetJgNum();
-			for(CAngleProcessInfo *pAngleInfo=pDwg->EnumFirstJg();pAngleInfo;pAngleInfo=pDwg->EnumNextJg(),index++)
+			CAngleProcessInfo *pAngleInfo = NULL;
+			ARRAY_LIST<CAngleProcessInfo*> anglePartPtrArr;
+			for (pAngleInfo = pDwg->EnumFirstJg(); pAngleInfo; pAngleInfo = pDwg->EnumNextJg())
+				anglePartPtrArr.append(pAngleInfo);
+			CHeapSort<CAngleProcessInfo*>::HeapSort(anglePartPtrArr.m_pData, anglePartPtrArr.GetSize(), CompareAnglePtrByPartNo);
+			for(CAngleProcessInfo **ppAngle=anglePartPtrArr.GetFirst();ppAngle;ppAngle=anglePartPtrArr.GetNext(), index++)
 			{
+				pAngleInfo = *ppAngle;
+				if (pAngleInfo == NULL)
+					continue;
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
 				pItem=InsertPartToList(m_xListReport,NULL,&pAngleInfo->m_xAngle,NULL);
@@ -435,8 +483,16 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		{
 			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pDwg->GetPlateNum();
-			for(CPlateProcessInfo *pPlateInfo=pDwg->EnumFirstPlate();pPlateInfo;pPlateInfo=pDwg->EnumNextPlate(),index++)
+			CPlateProcessInfo *pPlateInfo = NULL;
+			ARRAY_LIST<CPlateProcessInfo*> platePtrArr;
+			for (pPlateInfo = pDwg->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwg->EnumNextPlate(), index++)
+				platePtrArr.append(pPlateInfo);
+			CHeapSort<CPlateProcessInfo*>::HeapSort(platePtrArr.m_pData, platePtrArr.GetSize(), ComparePlatePtrByPartNo);
+			for(CPlateProcessInfo **ppPlateInfo=platePtrArr.GetFirst();ppPlateInfo;ppPlateInfo=platePtrArr.GetNext())
 			{
+				pPlateInfo = *ppPlateInfo;
+				if (pPlateInfo == NULL)
+					continue;
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
 				pItem=InsertPartToList(m_xListReport,NULL,&pPlateInfo->xBomPlate,NULL);
@@ -930,7 +986,8 @@ void CRevisionDlg::OnImportBomFile()
 	}
 	else
 	{	//只需导入一种料单
-		CString sFilePath = dlg.GetPathName();//获取文件名 
+		POSITION pos = dlg.GetStartPosition();
+		CString sFilePath = dlg.GetNextPathName(pos);
 		pProject->InitBomInfo(sFilePath, TRUE);
 		pTreeCtrl->Expand(hSelectedItem, TVE_EXPAND);
 		if (pProject->m_xLoftBom.GetPartNum() > 0)
@@ -1189,7 +1246,9 @@ void CRevisionDlg::OnRetrievedAngles()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo==NULL || !pDwgInfo->IsJgDwgInfo())
 		return;
+	CWaitCursor wait;
 	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, TRUE);
+	RefreshListCtrl(hSelItem);
 }
 void CRevisionDlg::OnRetrievedPlates()
 {
@@ -1202,7 +1261,9 @@ void CRevisionDlg::OnRetrievedPlates()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL || pDwgInfo->IsJgDwgInfo())
 		return;
+	CWaitCursor wait;
 	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE);
+	RefreshListCtrl(hSelItem);
 }
 void CRevisionDlg::OnRetrievedPlate()
 {

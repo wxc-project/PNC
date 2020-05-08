@@ -236,6 +236,11 @@ public:
 	static UINT m_uiCustomizeSerial;
 	static CXhChar50 m_sCustomizeName;
 	static BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
+	static CXhChar200 m_sTMABomFileKeyStr;	//支持指定TMA Bom文件名关键字，TMA与ERP Excel文件格式一样时可通过关键字进行区分 wht 20-04-29
+	static CXhChar200 m_sERPBomFileKeyStr;
+	static CXhChar200 m_sTMABomSheetName;	//支持指定导入的Excel文件中的Sheet名称 wht 20-04-29
+	static CXhChar200 m_sERPBomSheetName;
+
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };

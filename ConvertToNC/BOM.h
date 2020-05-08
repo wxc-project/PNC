@@ -175,7 +175,7 @@ public:
 	virtual int GetLsHoleStr(char *hole_str,BOOL bIncUnit=TRUE);	//ÂÝË¨¿××Ö·û´®
 	virtual CXhChar16 GetPartTypeName(BOOL bSymbol=FALSE);
 	virtual CXhChar16 GetPartSubTypeName();
-	virtual char* GetPartNo(int nMatCharPosType=0,char cMatSeparator=0,bool bIncQualityLevel=false);
+	virtual CXhChar50 GetPartNo(int nMatCharPosType=0,char cMatSeparator=0,bool bIncQualityLevel=false);
 	virtual void FromBuffer(CBuffer &buffer,long version=NULL);
 	virtual void ToBuffer(CBuffer &buffer,long version=NULL);
 	virtual double GetWeldLength(){return 0;}
