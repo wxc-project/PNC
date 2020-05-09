@@ -310,7 +310,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 			CXhChar100 sText = GetCadTextContent(pEnt);
 			if (strstr(sText, "¾í±ß") || strstr(sText, "»ðÇú") || strstr(sText, "ÍâÇú") || strstr(sText, "ÄÚÇú"))
 				pPlateInfo->xBomPlate.siZhiWan = 1;
-			if (strstr(sText,"º¸½Ó"))
+			if (strstr(sText,"º¸½Ó") || strstr(sText, "Õýº¸") || strstr(sText, "·´º¸"))
 				pPlateInfo->xBomPlate.bWeldPart = TRUE;
 		}
 	}

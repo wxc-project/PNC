@@ -226,11 +226,21 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	{
 		m_xAngle.bKaiJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_KAIJIAO;
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
+			if(m_xAngle.bKaiJiao)
+				m_xAngle.siZhiWan = 1;
+		}
 	}
 	else if (PtInDataRect(ITEM_TYPE_HEJIAO, data_pos))
 	{
 		m_xAngle.bHeJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_HEJIAO;
+		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
+			if (m_xAngle.bHeJiao)
+				m_xAngle.siZhiWan = 1;
+		}
 	}
 	return cType;
 }

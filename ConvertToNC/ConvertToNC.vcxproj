@@ -2734,6 +2734,7 @@
     <ClCompile Include="..\..\XhCore\PartLib\AngleLibrary.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -3039,6 +3040,7 @@
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
