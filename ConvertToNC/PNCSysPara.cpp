@@ -173,9 +173,9 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if (GetPropID("m_sJgCadName") == id)
 		sText = m_sJgCadName;
-	else if (pItem->m_idProp == GetPropID("m_sPartLabelTitle"))
+	else if (GetPropID("m_sPartLabelTitle") == id)
 		g_pncSysPara.m_sPartLabelTitle = valueStr;
-	else if (pItem->m_idProp == GetPropID("m_sJgCardBlockName"))
+	else if (GetPropID("m_sJgCardBlockName") == id)
 		g_pncSysPara.m_sJgCardBlockName = valueStr;
 	else if(GetPropID("m_fMaxLenErr")==id)
 		sText.Printf("%.f", g_pncSysPara.m_fMapScale);
