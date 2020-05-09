@@ -389,7 +389,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 		else
 			hashEntPtrByCenterStr.SetValue(sKey, pEnt);
 	}
-	if (g_pncSysPara.m_ciBoltRecogMode == CPNCSysPara::BOLT_RECOG_DEFAULT)
+	if (g_pncSysPara.IsFilterPartNoCir())
 	{
 		int nInvalidCount = 0;
 		for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
@@ -478,10 +478,6 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！",(char*)xPlate.GetPartNo(),nInvalidCirCountForText);
 	//baseInfo应定义在For循环外，否则多行多次提取会导致之前的提取到的结果被冲掉 wht 19-10-22
 	BASIC_INFO baseInfo;
-	ARRAY_LIST<CXhChar200> errorList;
-	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
-		pRelaObj->flag = 0;	//清空标志位
-	CHashList<CXhChar200> hashErrorStrByTextEntPtr;
 	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
 	{
 		if (hashInvalidBoltCirPtrSet.GetValue((DWORD)pRelaObj))
@@ -546,97 +542,6 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 					pBoltInfo->hole_d_increment = (float)(fHoleD - wBoltD);
 					pBoltInfo->cFuncType = 0;
 				}
-			}
-			//有文字孔径标注的螺栓图形为螺栓图符时也需要根据文字标注更新孔径 wht 19-11-28
-			int nPush = m_xHashRelaEntIdList.push_stack();
-			//TODO：特殊孔文字标注识别应在螺栓提取完成之后再统一处理 wht 20-04-28
-			//1、先按通用标准识别螺栓；
-			//2、从钢板文字标准中找到螺栓孔标注文字；
-			//3、根据文字与螺栓孔距离判断是否为螺栓孔标注，并修改螺栓孔属性。
-			for (CAD_ENTITY *pOtherRelaObj = m_xHashRelaEntIdList.GetFirst(); pOtherRelaObj; pOtherRelaObj = m_xHashRelaEntIdList.GetNext())
-			{
-				if (pOtherRelaObj->ciEntType != RELA_ACADENTITY::TYPE_TEXT &&
-					pOtherRelaObj->ciEntType != RELA_ACADENTITY::TYPE_DIM_D)
-					continue;
-				if (strlen(pOtherRelaObj->sText) <= 0 ||
-					(strstr(pOtherRelaObj->sText, "%%C") == NULL && strstr(pOtherRelaObj->sText, "%%c") == NULL &&
-						strstr(pOtherRelaObj->sText, "Φ") == NULL))
-					continue;	//没有螺栓直径信息
-				if (strstr(pOtherRelaObj->sText, "-"))
-				{	//重新提取原有文件，找出可能错误的钢板时使用以下代码 wht 20-04-27
-					/*if (DISTANCE(pOtherRelaObj->pos, GEPOINT(boltInfo.posX, boltInfo.posY)) < 50)
-					{
-						CXhChar200 errorStr("%s#钢板，%s文字(半径50)附近的螺栓孔经识别可能有误，请确认！", (char*)xPlate.GetPartNo(),(char*)pOtherRelaObj->sText);
-						errorList.Append(errorStr);
-					}*/
-					continue;	//正常的钢印信息标注，非特殊螺栓直径标注,例如：4-Φ18    
-				}
-				if(pOtherRelaObj->flag==1)
-					continue;	//当前文字已处理 wht 20-04-28
-				//搜索半径根据当前孔半径动态设置
-				//孔半径外扩10mm为搜索半径(M12螺栓单排为40，字体高度一般为3mm)，搜索范围太大会影响多个螺栓孔 wht 20-04-23
-				const double TEXT_SEARCH_R = (boltInfo.d + boltInfo.increment)*0.5 + 25;
-				double dist = DISTANCE(pOtherRelaObj->pos, GEPOINT(boltInfo.posX, boltInfo.posY));
-				CString sTemp(pOtherRelaObj->sText);
-				bool bNeedDrillHole = sTemp.Replace("钻", "") > 0;
-				bool bNeedPunchHole = sTemp.Replace("冲", "") > 0;
-				if (dist < TEXT_SEARCH_R)
-				{
-					CString ss(pOtherRelaObj->sText);
-					if (ss.Find("钻") >= 0)
-						pBoltInfo->cFlag = 1;
-					ss.Replace("%%C", "|");
-					ss.Replace("%%c", "|");
-					ss.Replace("Φ", "|");
-					bNeedDrillHole = ss.Replace("钻", "")>0;
-					ss.Replace("孔", "");
-					bNeedPunchHole = ss.Replace("冲", "")>0;
-					CXhChar100 sText(ss);
-					std::vector<CXhChar16> numKeyArr;
-					for (char* sKey = strtok(sText, "-|，,:：Xx*"); sKey; sKey = strtok(NULL, "-|，,:：Xx*"))
-						numKeyArr.push_back(CXhChar16(sKey));
-					if (numKeyArr.size() == 1)
-					{
-						double hole_d = atof(numKeyArr[0]);
-						double org_holt_d = boltInfo.d + boltInfo.increment;
-						double dd = fabs(hole_d - org_holt_d);
-						//钻孔或冲孔或非标准图块，识别为挂线孔 wht 20-04-27
-						if (dd<EPS2 && (bNeedPunchHole || bNeedDrillHole || boltInfo.ciSymbolType != 0))
-						{
-							pBoltInfo->bolt_d = hole_d;
-							pBoltInfo->hole_d_increment = 0;
-							pBoltInfo->cFuncType = 2;
-							pOtherRelaObj->flag = 1;	//设置当前文字为已处理状态，以后不用重复判断 wht 20-04-28
-							hashErrorStrByTextEntPtr.DeleteNode((DWORD)pOtherRelaObj);
-						}
-						if (dd > EPS2 && (bNeedPunchHole || bNeedDrillHole || boltInfo.ciSymbolType != 0))
-						{
-							CXhChar200 errorStr("%s#钢板，根据文字(%s)识别的直径与螺栓孔图面直径存在误差值(%.1f)，无法使用文字更新孔状态，请确认！", 
-												(char*)xPlate.GetPartNo(), (char*)pOtherRelaObj->sText, dd);
-							hashErrorStrByTextEntPtr.SetValue((DWORD)pOtherRelaObj,errorStr);
-						}
-					}
-				}
-				else if (bNeedPunchHole || bNeedDrillHole || boltInfo.ciSymbolType != 0)
-				{
-					CXhChar100 sText(pRelaObj->sText);
-					std::vector<CXhChar16> numKeyArr;
-					for (char* sKey = strtok(sText, "-|，,:：Xx*"); sKey; sKey = strtok(NULL, "-|，,:：Xx*"))
-						numKeyArr.push_back(CXhChar16(sKey));
-					if (numKeyArr.size() == 1)
-					{	//当前文字标注是有效的孔径标注是才需要提醒用户 wht 20-04-28
-						CXhChar200 errorStr("%s#钢板，文字(%s)与螺栓孔距离过远，无法使用文字更新孔状态，请调整后重试！",
-							(char*)xPlate.GetPartNo(), (char*)pOtherRelaObj->sText);
-						hashErrorStrByTextEntPtr.SetValue((DWORD)pOtherRelaObj, errorStr);
-					}
-				}
-			}
-			m_xHashRelaEntIdList.pop_stack(nPush);
-			//对于特殊孔进行代孔处理
-			if (g_pncSysPara.m_bReplaceSH && pBoltInfo->cFuncType == 2)
-			{
-				pBoltInfo->bolt_d = g_pncSysPara.m_nReplaceHD;
-				pBoltInfo->hole_d_increment = 1.5;
 			}
 			continue;
 		}
@@ -713,24 +618,97 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			}
 		}
 	}
-	//提示螺栓螺栓孔文字标注
-	if (hashErrorStrByTextEntPtr.GetNodeNum() > 0)
+	//统一处理根据特殊孔文字标注更新螺栓孔信息	wxc-2020.5.9
+	if (g_pncSysPara.IsRecogHoleDimText())
 	{
-		for (CXhChar200 *pError = hashErrorStrByTextEntPtr.GetFirst(); pError; pError = hashErrorStrByTextEntPtr.GetNext())
+		for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
 		{
-			logerr.Log(*pError);
+			if (pRelaObj->ciEntType != RELA_ACADENTITY::TYPE_TEXT &&
+				pRelaObj->ciEntType != RELA_ACADENTITY::TYPE_DIM_D)
+				continue;
+			if (strlen(pRelaObj->sText) <= 0)
+				continue;
+			if (strstr(pRelaObj->sText, "%%C") == NULL && strstr(pRelaObj->sText, "%%c") == NULL &&
+				strstr(pRelaObj->sText, "Φ") == NULL)
+				continue;	//没有螺栓直径信息
+			//查找与螺栓标注距离最近的螺栓孔
+			CMinDouble xMinDis;
+			for (BOLT_INFO *pBoltInfo = boltList.GetFirst(); pBoltInfo; pBoltInfo = boltList.GetNext())
+			{
+				double dist = DISTANCE(pRelaObj->pos, GEPOINT(pBoltInfo->posX, pBoltInfo->posY));
+				xMinDis.Update(dist, pBoltInfo);
+			}
+			if (xMinDis.m_pRelaObj == NULL)
+				continue;
+			BOLT_INFO *pCurBolt = (BOLT_INFO *)xMinDis.m_pRelaObj;
+			CString ss(pRelaObj->sText);
+			bool bNeedDrillHole = (ss.Find("钻") >= 0);
+			bool bNeedPunchHole = (ss.Find("冲") >= 0);
+			if(pCurBolt->cFuncType == 0 && !bNeedPunchHole &&!bNeedDrillHole)
+				continue;	//标准螺栓图块，没有特殊加工工艺时不做处理
+			//搜索半径根据当前孔半径动态设置
+			//孔半径外扩10mm为搜索半径(M12螺栓单排为40，字体高度一般为3mm)，搜索范围太大会影响多个螺栓孔 wht 20-04-23
+			double org_hole_d = pCurBolt->bolt_d + pCurBolt->hole_d_increment;
+			const double TEXT_SEARCH_R = org_hole_d * 0.5 + 25;
+			if (xMinDis.number < TEXT_SEARCH_R)
+			{
+				ss.Replace("%%C", "|");
+				ss.Replace("%%c", "|");
+				ss.Replace("Φ", "|");
+				ss.Replace("钻", "");
+				ss.Replace("孔", "");
+				ss.Replace("冲", "");
+				CXhChar100 sText(ss);
+				std::vector<CXhChar16> numKeyArr;
+				for (char* sKey = strtok(sText, "-|，,:：Xx*"); sKey; sKey = strtok(NULL, "-|，,:：Xx*"))
+					numKeyArr.push_back(CXhChar16(sKey));
+				if (numKeyArr.size() == 1)
+				{
+					double hole_d = atof(numKeyArr[0]);
+					double dd = fabs(hole_d - org_hole_d);
+					if (dd < EPS2)
+					{	//钻孔或冲孔或非标准图块，识别为挂线孔 wht 20-04-27
+						pCurBolt->bolt_d = hole_d;
+						pCurBolt->hole_d_increment = 0;
+						pCurBolt->cFuncType = 2;
+						pCurBolt->cFlag = bNeedDrillHole ? 1 : 0;
+					}
+					if (dd > EPS2 && (bNeedPunchHole || bNeedDrillHole || pCurBolt->cFuncType != 0))
+					{
+						logerr.Log("%s#钢板，根据文字(%s)识别的直径与螺栓孔图面直径存在误差值(%.1f)，无法使用文字更新孔状态，请确认！",
+							(char*)xPlate.GetPartNo(), (char*)pRelaObj->sText, dd);
+					}
+				}
+			}
+			else
+			{
+				CXhChar100 sText(pRelaObj->sText);
+				std::vector<CXhChar16> numKeyArr;
+				for (char* sKey = strtok(sText, "-|，,:：Xx*"); sKey; sKey = strtok(NULL, "-|，,:：Xx*"))
+					numKeyArr.push_back(CXhChar16(sKey));
+				if (numKeyArr.size() == 1)
+				{	//当前文字标注是有效的孔径标注是才需要提醒用户 wht 20-04-28
+					logerr.Log("%s#钢板，文字(%s)与螺栓孔距离过远，无法使用文字更新孔状态，请调整后重试！",
+						(char*)xPlate.GetPartNo(), (char*)pRelaObj->sText);
+				}
+			}
 		}
 	}
-	//重新提取原有文件，找出可能错误的钢板时使用以下代码 wht 20-04-27
-	/*if (errorList.GetSize() > 0)
+	//统一处理特殊孔进行代孔操作
+	if (g_pncSysPara.m_bReplaceSH)
 	{
-		for (CXhChar200 *pError = errorList.GetFirst(); pError; pError = errorList.GetNext())
+		for (BOLT_INFO *pBoltInfo = boltList.GetFirst(); pBoltInfo; pBoltInfo = boltList.GetNext())
 		{
-			logerr.Log(*pError);
+			if (pBoltInfo->cFuncType == 2)
+			{
+				pBoltInfo->bolt_d = g_pncSysPara.m_nReplaceHD;
+				pBoltInfo->hole_d_increment = 1.5;
+			}
 		}
-	}*/
+	}
+	//圆形钢板时，查找是否有内轮廓
 	if (m_bCirclePlate)
-	{	//圆形钢板时，查找是否有内轮廓
+	{	
 		for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
 		{
 			if(pRelaObj->ciEntType!= RELA_ACADENTITY::TYPE_CIRCLE)

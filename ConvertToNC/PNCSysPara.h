@@ -48,9 +48,9 @@ public:
 	int m_iLayerMode;		//图层处理方式 0.指定轮廓边图层 1.过滤默认图层
 	int m_iAxisXCalType;	//加工坐标系X轴计算方式 0.最长边 1.螺栓射线平行边 2.焊接边
 	int m_nBoltPadDimSearchScope;	//螺栓垫板标注搜索范围，默认为50 wht 19-02-01
-	static const BYTE BOLT_RECOG_DEFAULT = 0;
-	static const BYTE BOLT_RECOG_NO_FILTER_PARTNO_CIR = 1;
-	BYTE m_ciBoltRecogMode;	//0.默认 1.关闭件号过滤
+	static const BYTE FILTER_PARTNO_CIR = 0X01;	//过滤件号特殊圆圈
+	static const BYTE RECOGN_HOLE_D_DIM = 0X02;	//识别孔径文字标注
+	BYTE m_ciBoltRecogMode;
 	static const BYTE FILTER_BY_LINETYPE = 0;
 	static const BYTE FILTER_BY_LAYER	 = 1;
 	static const BYTE FILTER_BY_COLOR	 = 2;
@@ -84,11 +84,13 @@ public:
 	BOOL IsNeedFilterLayer(const char* sLayer);
 	BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
 	BOOL IsProfileEnt(AcDbEntity* pEnt);
+	BOOL IsPartLabelTitle(const char* sText);
+	BOOL IsJgCardBlockName(const char* sBlockName);
+	BOOL IsFilterPartNoCir() { return m_ciBoltRecogMode & FILTER_PARTNO_CIR; }
+	BOOL IsRecogHoleDimText() { return m_ciBoltRecogMode & RECOGN_HOLE_D_DIM; }
 	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
 	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100,CPropTreeItem *pItem=NULL);//通过属性Id获取属性值
-	BOOL IsPartLabelTitle(const char* sText);
-	BOOL IsJgCardBlockName(const char* sBlockName);
 };
 extern CPNCSysPara g_pncSysPara;
 extern CSteelSealReactor *g_pSteelSealReactor;	

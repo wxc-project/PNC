@@ -209,9 +209,19 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_iLayerMode = valueStr[0] - '0';
 		UpdateFilterLayerProperty(pPropList, pItem);
 	}
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciBoltRecogMode"))
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("FilterPartNoCir"))
 	{
-		g_pncSysPara.m_ciBoltRecogMode = valueStr[0] - '0';
+		if(valueStr.CollateNoCase("过滤")==0)
+			g_pncSysPara.m_ciBoltRecogMode |= 0X01;
+		else
+			g_pncSysPara.m_ciBoltRecogMode &= 0X02;
+	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogHoleDimText"))
+	{
+		if (valueStr.CollateNoCase("处理") == 0)
+			g_pncSysPara.m_ciBoltRecogMode |= 0X02;
+		else
+			g_pncSysPara.m_ciBoltRecogMode &= 0X01;
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iRecogMode"))
 	{
@@ -883,9 +893,8 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 #endif
 	oper.InsertCmbListPropItem(pGroupItem, "m_bMKPos");
 	oper.InsertCmbListPropItem(pGroupItem, "AxisXCalType");
-	oper.InsertCmbListPropItem(pGroupItem, "m_ciBoltRecogMode");
-	//图层设置
-	pGroupItem = oper.InsertPropItem(pRootItem, "layer_set");
+	//识别模式
+	pGroupItem = oper.InsertPropItem(pRootItem, "RecogMode");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
 #ifdef __PIXEL_RECOG_
 	pPropItem->m_lpNodeInfo->m_cmbItems = "0.按线型识别|1.按图层识别|2.按颜色识别|3.按像素识别";
@@ -910,6 +919,10 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	{	//按像素识别
 		oper.InsertEditPropItem(pPropItem, "m_fPixelScale");
 	}
+	pPropItem = oper.InsertEditPropItem(pGroupItem, "m_ciBoltRecogMode");
+	pPropItem->SetReadOnly();
+	oper.InsertCmbListPropItem(pPropItem, "FilterPartNoCir");
+	oper.InsertCmbListPropItem(pPropItem, "RecogHoleDimText");
 	//绘图比例
 	pGroupItem = oper.InsertPropItem(pRootItem, "map_scale_set");
 	oper.InsertEditPropItem(pGroupItem, "m_fMapScale");	//图纸绘图比例

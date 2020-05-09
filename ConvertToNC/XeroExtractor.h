@@ -58,8 +58,7 @@ public:
 		char sText[100];	//ciEntType==RELA_ACADENTITY::TYPE_TEXT时记录文本内容 wht 18-12-30
 		GEPOINT pos;
 		double m_fSize;
-		int flag;
-		CAD_ENTITY(long idEnt=0,BYTE ciType=0){idCadEnt=idEnt;ciEntType=ciType;strcpy(sText,"");m_fSize=0;flag=0;}
+		CAD_ENTITY(long idEnt=0,BYTE ciType=0){idCadEnt=idEnt;ciEntType=ciType;strcpy(sText,"");m_fSize=0;}
 	};
 	ATOM_LIST<VERTEX> vertexList;
 	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02

@@ -67,7 +67,7 @@ void CPNCSysPara::Init()
 	m_fMapScale = 1;
 	m_iLayerMode = 0;
 	m_ciRecogMode = 0;
-	m_ciBoltRecogMode = BOLT_RECOG_DEFAULT;
+	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
 	m_ciProfileColorIndex = 1;		//红色
 	m_ciBendLineColorIndex = 190;	//紫色
 	m_sProfileLineType.Copy("CONTINUOUS");
@@ -148,15 +148,17 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_nMinDistance",PROPLIST_ITEM(id++,"最小间距","图形之间的最小间距"));
 	AddPropItem("m_bMKPos",PROPLIST_ITEM(id++,"提取钢印位置","提取钢印位置","是|否"));
 	AddPropItem("AxisXCalType",PROPLIST_ITEM(id++,"X轴计算方式","加工坐标系X轴的计算方式","0.最长边优先|1.螺栓平行边优先|2.焊接边优先"));
-	AddPropItem("m_ciBoltRecogMode", PROPLIST_ITEM(id++, "螺栓识别模式", "螺栓识别模式", "0.默认|1.不过滤件号圆圈"));
-	//图层设置
-	AddPropItem("layer_set",PROPLIST_ITEM(id++,"识别模式","识别模式"));
-	AddPropItem("m_iRecogMode",PROPLIST_ITEM(id++,"识别模式","钢板识别模式"));
+	//识别模式
+	AddPropItem("RecogMode",PROPLIST_ITEM(id++,"识别模式","识别模式"));
+	AddPropItem("m_iRecogMode",PROPLIST_ITEM(id++,"轮廓边识别模式","钢板识别模式"));
 	AddPropItem("m_iProfileLineTypeName", PROPLIST_ITEM(id++, "轮廓边线型", "钢板外轮廓边线型", "CONTINUOUS|HIDDEN|DASHDOT2X|DIVIDE|ZIGZAG"));
 	AddPropItem("m_iProfileColorIndex",PROPLIST_ITEM(id++,"轮廓边颜色","钢板外轮廓边颜色"));
 	AddPropItem("m_iBendLineColorIndex",PROPLIST_ITEM(id++,"火曲线颜色","钢板制弯线颜色"));
 	AddPropItem("layer_mode",PROPLIST_ITEM(id++,"图层处理方式","轮廓边图层处理方式","0.指定轮廓边图层|1.过滤默认图层"));
 	AddPropItem("m_fPixelScale", PROPLIST_ITEM(id++, "处理像素比例"));
+	AddPropItem("m_ciBoltRecogMode", PROPLIST_ITEM(id++, "螺栓识别模式", "螺栓识别模式"));
+	AddPropItem("FilterPartNoCir", PROPLIST_ITEM(id++, "件号专属圆圈", "", "过滤|不过滤"));
+	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "特殊孔径标注", "特殊孔径标注(文字说明或直径标注)", "处理|不处理"));
 	//图纸比例设置
 	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"比例识别","图纸比例设置"));
 	AddPropItem("m_fMapScale",PROPLIST_ITEM(id++,"缩放比例","绘图缩放比例"));
@@ -271,12 +273,19 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("%f", g_pncSysPara.m_fPixelScale);
 		SimplifiedNumString(sText);
 	}
-	else if (GetPropID("m_ciBoltRecogMode") == id)
+	else if (GetPropID("FilterPartNoCir") == id)
 	{
-		if (m_ciBoltRecogMode == BOLT_RECOG_NO_FILTER_PARTNO_CIR)
-			sText.Copy("1.不过滤件号圆圈");
-		else //if (m_ciBoltRecogMode == BOLT_RECOG_DEFAULT)
-			sText.Copy("0.默认");
+		if (IsFilterPartNoCir())
+			sText.Copy("过滤");
+		else
+			sText.Copy("不过滤");
+	}
+	else if (GetPropID("RecogHoleDimText") == id)
+	{
+		if (IsRecogHoleDimText())
+			sText.Copy("处理");
+		else
+			sText.Copy("不处理");
 	}
 	else if(GetPropID("m_iProfileColorIndex")==id)
 		sText.Printf("RGB%X",GetColorFromIndex(m_ciProfileColorIndex));
