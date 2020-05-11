@@ -100,7 +100,7 @@
     <ClCompile Include="..\PPE\Model\NcPlate.cpp">
       <Filter>Source Files\Model</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\XhCore\XeroCad\Localize\LocalDrawing.cpp">
+    <ClCompile Include="..\..\XhCore-dll\XeroCad\Localize\LocalDrawing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

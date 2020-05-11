@@ -211,17 +211,24 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("FilterPartNoCir"))
 	{
-		if(valueStr.CollateNoCase("过滤")==0)
+		if(valueStr.CompareNoCase("过滤")==0)
 			g_pncSysPara.m_ciBoltRecogMode |= 0X01;
 		else
 			g_pncSysPara.m_ciBoltRecogMode &= 0X02;
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogHoleDimText"))
 	{
-		if (valueStr.CollateNoCase("处理") == 0)
+		if (valueStr.CompareNoCase("处理") == 0)
 			g_pncSysPara.m_ciBoltRecogMode |= 0X02;
 		else
 			g_pncSysPara.m_ciBoltRecogMode &= 0X01;
+	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogLsCircle"))
+	{
+		if (valueStr.CompareNoCase("根据标准孔径判断") == 0)
+			g_pncSysPara.m_ciBoltRecogMode |= 0X04;
+		else
+			g_pncSysPara.m_ciBoltRecogMode &= 0X03;
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iRecogMode"))
 	{
@@ -921,6 +928,7 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	}
 	pPropItem = oper.InsertEditPropItem(pGroupItem, "m_ciBoltRecogMode");
 	pPropItem->SetReadOnly();
+	oper.InsertCmbListPropItem(pPropItem, "RecogLsCircle");
 	oper.InsertCmbListPropItem(pPropItem, "FilterPartNoCir");
 	oper.InsertCmbListPropItem(pPropItem, "RecogHoleDimText");
 	//绘图比例
