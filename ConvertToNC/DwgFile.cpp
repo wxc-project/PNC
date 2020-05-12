@@ -51,10 +51,7 @@ f2dRect CAngleProcessInfo::GetAngleDataRect(BYTE data_type)
 {
 	f2dRect rect;
 	if (data_type == ITEM_TYPE_PART_NO)
-	{	//有的件号过长，件号文字放到了方框下方，故需增大方框的区域
 		rect = g_pncSysPara.part_no_rect;
-		rect.bottomRight.y -= g_pncSysPara.part_no_rect.Height();
-	}
 	else if (data_type == ITEM_TYPE_DES_MAT)
 		rect = g_pncSysPara.mat_rect;
 	else if (data_type == ITEM_TYPE_DES_GUIGE)
@@ -529,89 +526,78 @@ void CDwgFileInfo::ModifyAngleDwgSumWeight()
 BOOL CDwgFileInfo::RetrieveAngles()
 {
 	CAcModuleResourceOverride resOverride;
-	ads_name ent_sel_set,entname;
-	CHashSet<AcDbObjectId> textIdHash;
-	//根据工艺卡块识别角钢
-#ifdef _ARX_2007
-	acedSSGet(L"ALL",NULL,NULL,NULL,ent_sel_set);
-#else
-	acedSSGet("ALL",NULL,NULL,NULL,ent_sel_set);
-#endif
-	AcDbEntity *pEnt=NULL;
-	AcDbObjectId entId,blockId;
-	long ll;
-	f3dPoint orig_pt;
-	acedSSLength(ent_sel_set,&ll);
-	for(long i=0;i<ll;i++)
-	{	
-		acedSSName(ent_sel_set,i,entname);
-		acdbGetObjectId(entId,entname);
-		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
-		if(pEnt==NULL)
+	//选择所有实体图元
+	CHashSet<AcDbObjectId> allEntIdSet;
+	SelCadEntSet(allEntIdSet, TRUE);
+	//根据角钢工艺卡块识别角钢
+	AcDbEntity *pEnt = NULL;
+	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext())
+	{
+		CAcDbObjLife objLife(entId);
+		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
-		pEnt->close();
-		CXhChar50 sText;
-		if(pEnt->isKindOf(AcDbText::desc()))
-		{	//角钢工艺卡非块，根据"件号"文字提取角钢信息
-			textIdHash.SetValue(entId.handle(),entId);
-			AcDbText* pText=(AcDbText*)pEnt;
+		if (!pEnt->isKindOf(AcDbBlockReference::desc()))
+			continue;
+		//根据角钢工艺卡块提取角钢信息
+		AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+		AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+		AcDbObjectId blockId = pReference->blockTableRecord();
+		acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+		if (pTempBlockTableRecord == NULL)
+			continue;
+		pTempBlockTableRecord->close();
+		CXhChar50 sName;
 #ifdef _ARX_2007
-			sText.Copy(_bstr_t(pText->textString()));
+		ACHAR* sValue = new ACHAR[50];
+		pTempBlockTableRecord->getName(sValue);
+		sName.Copy((char*)_bstr_t(sValue));
+		delete[] sValue;
 #else
-			sText.Copy(pText->textString());
+		char *sValue = new char[50];
+		pTempBlockTableRecord->getName(sValue);
+		sName.Copy(sValue);
+		delete[] sValue;
 #endif
-			if (!g_pncSysPara.IsPartLabelTitle(sText))
-				continue;
-			orig_pt= g_pncSysPara.GetJgCardOrigin(f3dPoint(pText->position().x,pText->position().y,0));
-		}
-		else if(pEnt->isKindOf(AcDbMText::desc()))
-		{	//角钢工艺卡非块，根据"件号"文字提取角钢信息
-			textIdHash.SetValue(entId.handle(),entId);
-			AcDbMText* pMText=(AcDbMText*)pEnt;
-#ifdef _ARX_2007
-			sText.Copy(_bstr_t(pMText->contents()));
-#else
-			sText.Copy(pMText->contents());
-#endif
-			if (!g_pncSysPara.IsPartLabelTitle(sText))
-				continue;
-			orig_pt= g_pncSysPara.GetJgCardOrigin(f3dPoint(pMText->location().x,pMText->location().y,0));
-		}
-		else if(pEnt->isKindOf(AcDbBlockReference::desc()))
-		{	//根据角钢工艺卡块提取角钢信息
-			AcDbBlockTableRecord *pTempBlockTableRecord=NULL;
-			AcDbBlockReference* pReference=(AcDbBlockReference*)pEnt;
-			blockId=pReference->blockTableRecord();
-			acdbOpenObject(pTempBlockTableRecord,blockId,AcDb::kForRead);
-			if(pTempBlockTableRecord==NULL)
-				continue;
-			pTempBlockTableRecord->close();
-			CXhChar50 sName;
-#ifdef _ARX_2007
-			ACHAR* sValue=new ACHAR[50];
-			pTempBlockTableRecord->getName(sValue);
-			sName.Copy((char*)_bstr_t(sValue));
-			delete[] sValue;
-#else
-			char *sValue=new char[50];
-			pTempBlockTableRecord->getName(sValue);
-			sName.Copy(sValue);
-			delete[] sValue;
-#endif
-			if (!g_pncSysPara.IsJgCardBlockName(sName))
-				continue;
-			orig_pt.Set(pReference->position().x,pReference->position().y,0);
-		}
-		else
+		if (!g_pncSysPara.IsJgCardBlockName(sName))
 			continue;
 		//添加角钢记录
-		CAngleProcessInfo* pJgInfo=NULL;
-		pJgInfo=m_hashJgInfo.Add(entId.handle());
-		pJgInfo->keyId=entId;
-		pJgInfo->SetOrig(orig_pt);
+		CAngleProcessInfo* pJgInfo = m_hashJgInfo.Add(entId.handle());
+		pJgInfo->keyId = entId;
+		pJgInfo->SetOrig(GEPOINT(pReference->position().x, pReference->position().y));
 		pJgInfo->CreateRgn();
 	}
-	acedSSFree(ent_sel_set);
+	//处理角钢工艺卡块打碎的情况：根据"件号"标题提取角钢信息
+	CHashSet<AcDbObjectId> textIdHash;
+	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext())
+	{
+		CAcDbObjLife objLife(entId);
+		if ((pEnt = objLife.GetEnt()) == NULL)
+			continue;
+		if(!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()))
+			continue;
+		textIdHash.SetValue(entId.handle(), entId);	//记录角钢工艺卡的实时文本
+		//根据件号关键字识别角钢
+		CXhChar100 sText = GetCadTextContent(pEnt);
+		if (!g_pncSysPara.IsPartLabelTitle(sText))
+			continue;	//无效的件号标题
+		GEPOINT testPt = GetCadTextDimPos(pEnt);
+		CAngleProcessInfo* pJgInfo = NULL;
+		for (pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())
+		{
+			if (pJgInfo->PtInAngleRgn(testPt))
+				break;
+		}
+		if (pJgInfo == NULL)
+		{	//添加角钢记录
+			//根据工艺卡模板中件号标记点计算该角钢工艺卡的原点位置
+			GEPOINT orig_pt = g_pncSysPara.GetJgCardOrigin(testPt);
+			//
+			pJgInfo = m_hashJgInfo.Add(entId.handle());
+			pJgInfo->keyId = entId;
+			pJgInfo->SetOrig(orig_pt);
+			pJgInfo->CreateRgn();
+		}
+	}
 	if(m_hashJgInfo.GetNodeNum()<=0)
 	{	
 		logerr.Log("%s文件提取角钢失败",(char*)m_sFileName);
@@ -620,34 +606,11 @@ BOOL CDwgFileInfo::RetrieveAngles()
 	//根据角钢数据位置获取角钢信息
 	for(AcDbObjectId objId=textIdHash.GetFirst();objId;objId=textIdHash.GetNext())
 	{
-		acdbOpenAcDbEntity(pEnt,objId,AcDb::kForRead);
-		if(pEnt==NULL)
+		CAcDbObjLife objLife(objId);
+		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
-		pEnt->close();
-		CXhChar50 sValue;
-		f3dPoint text_pos;
-		if(pEnt->isKindOf(AcDbText::desc()))
-		{
-			AcDbText* pText=(AcDbText*)pEnt;
-			text_pos.Set(pText->alignmentPoint().x,pText->alignmentPoint().y,pText->alignmentPoint().z);
-			if(text_pos.IsZero())
-				text_pos.Set(pText->position().x,pText->position().y,pText->position().z);
-#ifdef _ARX_2007
-			sValue.Copy(_bstr_t(pText->textString()));
-#else
-			sValue.Copy(pText->textString());
-#endif
-		}
-		else
-		{
-			AcDbMText* pMText=(AcDbMText*)pEnt;
-			text_pos.Set(pMText->location().x,pMText->location().y,pMText->location().z);//contents
-#ifdef _ARX_2007
-			sValue.Copy(_bstr_t(pMText->contents()));
-#else
-			sValue.Copy(pMText->contents());
-#endif
-		}
+		CXhChar50 sValue=GetCadTextContent(pEnt);
+		GEPOINT text_pos = GetCadTextDimPos(pEnt);
 		if(strlen(sValue)<=0)	//过滤空字符
 			continue;
 		CAngleProcessInfo* pJgInfo=FindAngleByPt(text_pos);

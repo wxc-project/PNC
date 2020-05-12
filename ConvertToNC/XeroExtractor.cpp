@@ -1071,83 +1071,52 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 {
 	if (strlen(sJgCardPath) <= 0)
 		return CARD_READ_FAIL;
-	f3dPoint startPt, endPt;
+	PRESET_ARRLIST(CXhChar100, partNoPosArr, 10);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;
-	PRESET_ARRLIST(CXhChar100, partNoPosArr, 10);
 #ifdef _ARX_2007
 	if ((retCode=blkDb.readDwgFile((ACHAR*)_bstr_t(sJgCardPath), _SH_DENYRW, true)) == Acad::eOk)
 #else
 	if ((retCode=blkDb.readDwgFile(sJgCardPath, _SH_DENYRW, true)) == Acad::eOk)
 #endif
 	{
-		AcDbEntity *pEnt;
-		AcDbBlockTable *pTempBlockTable;
+		AcDbBlockTable *pTempBlockTable = NULL;
 		blkDb.getBlockTable(pTempBlockTable, AcDb::kForRead);
-		//获得当前图形块表记录指针
-		AcDbBlockTableRecord *pTempBlockTableRecord;//定义块表记录指针
-		//以写方式打开模型空间，获得块表记录指针
+		AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
 		pTempBlockTable->getAt(ACDB_MODEL_SPACE, pTempBlockTableRecord, AcDb::kForRead);
-		pTempBlockTable->close();//关闭块表
+		pTempBlockTable->close();
+		if (pTempBlockTableRecord == NULL)
+			return CARD_READ_FAIL;
+		SCOPE_STRU scope;
 		AcDbBlockTableRecordIterator *pIterator = NULL;
 		pTempBlockTableRecord->newIterator(pIterator);
-		SCOPE_STRU scope;
-		CXhChar50 sText;
-		int nPartLabelCount = 0;
 		for (; !pIterator->done(); pIterator->step())
 		{
+			AcDbEntity *pEnt = NULL;
 			pIterator->getEntity(pEnt, AcDb::kForRead);
+			if(pEnt==NULL)
+				continue;
 			pEnt->close();
 			if (pEnt->isKindOf(AcDbLine::desc()))
 			{
 				AcDbLine* pLine = (AcDbLine*)pEnt;
-				Cpy_Pnt(startPt, pLine->startPoint());
-				Cpy_Pnt(endPt, pLine->endPoint());
-				scope.VerifyVertex(startPt);
-				scope.VerifyVertex(endPt);
+				scope.VerifyVertex(GEPOINT(pLine->startPoint().x,pLine->startPoint().y));
+				scope.VerifyVertex(GEPOINT(pLine->endPoint().x, pLine->endPoint().y));
 				continue;
 			}
-			if (pEnt->isKindOf(AcDbMText::desc()))
+			//记录工艺卡模板中的件号位置(作为工艺卡的标记点)，用于处理出图资料中角钢工艺卡打碎的情况
+			if (pEnt->isKindOf(AcDbMText::desc()) || pEnt->isKindOf(AcDbText::desc()))
 			{
-				AcDbMText* pMText = (AcDbMText*)pEnt;
-#ifdef _ARX_2007
-				sText.Copy(_bstr_t(pMText->contents()));
-#else
-				sText.Copy(pMText->contents());
-#endif
+				CXhChar100 sText=GetCadTextContent(pEnt);
 				if (g_pncSysPara.IsPartLabelTitle(sText))
 				{
-					double fPosX = pMText->location().x;
-					double fPosY = pMText->location().y;
-					if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
-					{
-						fPnDistX = fPosX;
-						fPnDistY = fPosY;
-						partNoPosArr.Append(CXhChar100("%s 位置(%.1f,%.1f)", (char*)sText, fPosX, fPosY));
+					GEPOINT pt = GetCadTextDimPos(pEnt);
+					if (fPnDistX<pt.x || fPnDistY>pt.y)
+					{	//
+						fPnDistX = pt.x;
+						fPnDistY = pt.y;
 					}
-					nPartLabelCount++;
-				}
-				continue;
-			}
-			if (pEnt->isKindOf(AcDbText::desc()))
-			{
-				AcDbText* pText = (AcDbText*)pEnt;
-#ifdef _ARX_2007
-				sText.Copy(_bstr_t(pText->textString()));
-#else
-				sText.Copy(pText->textString());
-#endif
-				if (g_pncSysPara.IsPartLabelTitle(sText))
-				{
-					double fPosX = pText->position().x;
-					double fPosY = pText->position().y;
-					if (nPartLabelCount == 0 || fPnDistX<fPosX || fPnDistY>fPosY)
-					{
-						fPnDistX = fPosX;
-						fPnDistY = fPosY;
-						partNoPosArr.Append(CXhChar100("%s 位置(%.1f,%.1f)",(char*)sText,fPosX,fPosY));
-					}
-					nPartLabelCount++;
+					partNoPosArr.Append(CXhChar100("%s 位置(%.1f,%.1f)", (char*)sText, pt.x, pt.y));
 				}
 				continue;
 			}
@@ -1270,20 +1239,17 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 		fMinY = scope.fMinY;
 		fMaxX = scope.fMaxX;
 		fMaxY = scope.fMaxY;
-
-		if (nPartLabelCount == 1)
-			return CARD_READ_SUCCEED;
-		else
+		//提示信息
+		if (partNoPosArr.GetSize() > 1)
 		{
-			if (partNoPosArr.GetSize() > 1)
-			{
-				logerr.LogString(CXhChar100("工艺卡图框{%s}中存在多个文件,请确认：", (char*)sJgCardPath));
-				for (CXhChar100 *pPartPos = partNoPosArr.GetFirst(); pPartPos; pPartPos = partNoPosArr.GetNext())
-					logerr.LogString(*pPartPos);
-				logerr.ShowToScreen();
-			}
+			logerr.LogString(CXhChar100("工艺卡图框{%s}中存在多个文件,请确认：", (char*)sJgCardPath));
+			for (CXhChar100 *pPartPos = partNoPosArr.GetFirst(); pPartPos; pPartPos = partNoPosArr.GetNext())
+				logerr.LogString(*pPartPos);
+			logerr.ShowToScreen();
 			return CARD_READ_ERROR_PARTNO;
 		}
+		else
+			return CARD_READ_SUCCEED;
 	}
 	return CARD_READ_FAIL;
 }
