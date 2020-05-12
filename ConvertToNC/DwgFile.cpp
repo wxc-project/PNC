@@ -292,6 +292,50 @@ void CAngleProcessInfo::RefreshAngleNum()
 		pEnt->close();
 	}
 }
+//更新角钢的单基数
+void CAngleProcessInfo::RefreshAngleSingleNum()
+{
+	CLockDocumentLife lockCurDocLife;
+	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_PART_NUM);
+	CXhChar16 sPartNum("%d", m_xAngle.GetPartNum());
+	if (singleNumId == NULL)
+	{	//添加角钢单基数
+		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+		if (pBlockTableRecord == NULL)
+		{
+			logerr.Log("块表打开失败");
+			return;
+		}
+		DimText(pBlockTableRecord, data_pt, sPartNum, TextStyleTable::hzfs.textStyleId,
+			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+		pBlockTableRecord->close();//关闭块表
+	}
+	else
+	{	//改写角钢单基数
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, singleNumId, AcDb::kForWrite);
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{
+			AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+			pText->setTextString(_bstr_t(sPartNum));
+#else
+			pText->setTextString(sPartNum);
+#endif
+		}
+		else
+		{
+			AcDbMText* pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+			pMText->setContents(_bstr_t(sPartNum));
+#else
+			pMText->setContents(sPartNum);
+#endif
+		}
+		pEnt->close();
+	}
+}
+//
 void CAngleProcessInfo::RefreshAngleSumWeight()
 {
 	CLockDocumentLife lockCurDocLife;
@@ -492,12 +536,34 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 			continue;
 		}
 		pJgInfo->m_xAngle.feature1= pBomJg->feature1;	//加工数
-		pJgInfo->m_xAngle.fSumWeight = pBomJg->fSumWeight;
 		pJgInfo->RefreshAngleNum();
-		pJgInfo->RefreshAngleSumWeight();
 	}
 	if(bFinish)
 		AfxMessageBox("角钢加工数修改完毕!");
+}
+//更新角钢单基数
+void CDwgFileInfo::ModifyAngleDwgSingleNum()
+{
+	if (m_hashJgInfo.GetNodeNum() <= 0)
+		return;
+	CAngleProcessInfo* pJgInfo = NULL;
+	BOMPART* pBomJg = NULL;
+	BOOL bFinish = TRUE;
+	for (pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg())
+	{
+		CXhChar16 sPartNo = pJgInfo->m_xAngle.sPartNo;
+		pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if (pBomJg == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("TMA材料表中没有%s角钢", (char*)sPartNo);
+			continue;
+		}
+		pJgInfo->m_xAngle.SetPartNum(pBomJg->GetPartNum());	//单基数
+		pJgInfo->RefreshAngleSingleNum();
+	}
+	if (bFinish)
+		AfxMessageBox("角钢单基数修改完毕!");
 }
 //更新角钢总重
 void CDwgFileInfo::ModifyAngleDwgSumWeight()
@@ -621,6 +687,8 @@ BOOL CDwgFileInfo::RetrieveAngles()
 				pJgInfo->partNumId = objId;
 			else if (cType == ITEM_TYPE_SUM_WEIGHT)
 				pJgInfo->sumWeightId = objId;
+			else if (cType == ITEM_TYPE_PART_NUM)
+				pJgInfo->singleNumId = objId;
 		}
 	}
 	//对提取的角钢信息进行合理性检查
