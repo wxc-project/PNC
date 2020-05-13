@@ -51,7 +51,10 @@ private:
 	SCOPE_STRU scope;
 public:
 	PART_ANGLE m_xAngle;
-	AcDbObjectId keyId,partNumId,sumWeightId;
+	AcDbObjectId keyId;
+	AcDbObjectId partNumId;		//加工数ID
+	AcDbObjectId singleNumId;	//单基数ID
+	AcDbObjectId sumWeightId;	//总重ID
 public:
 	CAngleProcessInfo();
 	~CAngleProcessInfo();
@@ -64,6 +67,7 @@ public:
 	f3dPoint GetAngleDataPos(BYTE data_type);
 	bool PtInDataRect(BYTE data_type,f3dPoint pt);
 	void RefreshAngleNum();
+	void RefreshAngleSingleNum();
 	void RefreshAngleSumWeight();
 	SCOPE_STRU GetCADEntScope(){return scope;}
 };
@@ -93,6 +97,7 @@ public:
 	CAngleProcessInfo* FindAngleByPt(f3dPoint data_pos);
 	CAngleProcessInfo* FindAngleByPartNo(const char* sPartNo);
 	void ModifyAngleDwgPartNum();
+	void ModifyAngleDwgSingleNum();
 	void ModifyAngleDwgSumWeight();
 	//钢板DWG操作
 	int GetPlateNum(){return m_xPncMode.GetPlateNum();}
@@ -195,8 +200,9 @@ public:
 	static const BYTE FUNC_BOM_COMPARE		 = 1;	//0X01料单校审
 	static const BYTE FUNC_BOM_AMEND		 = 2;	//0X02修正料单
 	static const BYTE FUNC_DWG_COMPARE		 = 3;	//0X04DWG数据校审
-	static const BYTE FUNC_DWG_AMEND_NUM	 = 4;	//0X08修正加工数
+	static const BYTE FUNC_DWG_AMEND_SUM_NUM = 4;	//0X08修正加工数
 	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X10修正重量
+	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
 	DWORD m_dwFunctionFlag;
 	//
 	struct BOM_TITLE
@@ -231,7 +237,7 @@ public:
 	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
 	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔(DWG校审|更新加工数)
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电(料单校审)
-	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新加工数)
+	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新单基数)
 	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈(DWG校审|更新加工数)
 	static UINT m_uiCustomizeSerial;
 	static CXhChar50 m_sCustomizeName;

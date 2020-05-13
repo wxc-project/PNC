@@ -241,7 +241,7 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\Query.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\XerocadDrawing.cpp" />
-    <ClCompile Include="..\..\XhCore\XeroCad\Localize\LocalDrawing.cpp" />
+    <ClCompile Include="..\..\XhCore-dll\XeroCad\Localize\LocalDrawing.cpp" />
     <ClCompile Include="..\PPE\Model\NcPlate.cpp" />
     <ClCompile Include="2DPtDlg.cpp" />
     <ClCompile Include="BoltHolePropDlg.cpp" />

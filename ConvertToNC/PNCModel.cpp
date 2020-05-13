@@ -520,19 +520,20 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			pBoltInfo->bolt_d=boltInfo.d;
 			pBoltInfo->hole_d_increment=boltInfo.increment;
 			pBoltInfo->cFuncType=(boltInfo.ciSymbolType == 0) ? 0 : 2;
-			//对于圆圈表示的螺栓，先根据圆圈直径和标准螺栓直径粗判是否归属于标准螺栓,然后再根据文字标注进行精判 wxc-2020-04-01
-			if (pEnt->isKindOf(AcDbCircle::desc()))
+			pBoltInfo->feature = pRelaObj->idCadEnt;	//记录螺栓对应的CAD实体
+			//对于圆圈表示的螺栓，根据圆圈直径和标准螺栓直径判断是否归属于标准螺栓, wxc-2020-04-01
+			if (g_pncSysPara.IsRecogCirByBoltD() && pEnt->isKindOf(AcDbCircle::desc()))
 			{
 				bool bStandardBolt = true;
 				double fHoleD = boltInfo.d;
 				short wBoltD = ftoi(fHoleD - 2.1);
-				if (wBoltD <= 12)
+				if (wBoltD <= 12 && fHoleD > 12)
 					wBoltD = 12;
-				else if (wBoltD <= 16)
+				else if (wBoltD <= 16 && fHoleD > 16)
 					wBoltD = 16;
-				else if (wBoltD <= 20)
+				else if (wBoltD <= 20 && fHoleD > 20)
 					wBoltD = 20;
-				else if (wBoltD <= 24)
+				else if (wBoltD <= 24 && fHoleD > 24)
 					wBoltD = 24;
 				else
 					bStandardBolt = false;
@@ -644,11 +645,26 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			CString ss(pRelaObj->sText);
 			bool bNeedDrillHole = (ss.Find("钻") >= 0);
 			bool bNeedPunchHole = (ss.Find("冲") >= 0);
-			if(pCurBolt->cFuncType == 0 && !bNeedPunchHole &&!bNeedDrillHole)
-				continue;	//标准螺栓图块，没有特殊加工工艺时不做处理
+			if (pCurBolt->cFuncType == 0 && pRelaObj->ciEntType == RELA_ACADENTITY::TYPE_TEXT &&
+				!bNeedPunchHole && !bNeedDrillHole)
+				continue;	//标准螺栓，没有特殊加工工艺文字标注时不做处理
 			//搜索半径根据当前孔半径动态设置
 			//孔半径外扩10mm为搜索半径(M12螺栓单排为40，字体高度一般为3mm)，搜索范围太大会影响多个螺栓孔 wht 20-04-23
 			double org_hole_d = pCurBolt->bolt_d + pCurBolt->hole_d_increment;
+			double org_hole_d2 = org_hole_d;
+			CAcDbObjLife objLife(MkCadObjId(pCurBolt->feature));
+			if ((pEnt = objLife.GetEnt()) && pEnt->isKindOf(AcDbBlockReference::desc()))
+			{
+				AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+				AcDbObjectId blockId = pReference->blockTableRecord();
+				AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+				acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+				if (pTempBlockTableRecord)
+				{
+					pTempBlockTableRecord->close();
+					org_hole_d2 = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+				}
+			}
 			const double TEXT_SEARCH_R = org_hole_d * 0.5 + 25;
 			if (xMinDis.number < TEXT_SEARCH_R)
 			{
@@ -660,23 +676,32 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				ss.Replace("冲", "");
 				CXhChar100 sText(ss);
 				std::vector<CXhChar16> numKeyArr;
-				for (char* sKey = strtok(sText, "-|，,:：Xx*"); sKey; sKey = strtok(NULL, "-|，,:：Xx*"))
-					numKeyArr.push_back(CXhChar16(sKey));
+				if (pRelaObj->ciEntType == RELA_ACADENTITY::TYPE_TEXT)
+				{	//特殊螺栓文字说明
+					for (char* sKey = strtok(sText, "-|，,:：Xx*"); sKey; sKey = strtok(NULL, "-|，,:：Xx*"))
+						numKeyArr.push_back(CXhChar16(sKey));
+				}
+				else
+				{	//特殊孔直径标注
+					for (char* sKey = strtok(sText, "|"); sKey; sKey = strtok(NULL, "|"))
+						numKeyArr.push_back(CXhChar16(sKey));
+				}
 				if (numKeyArr.size() == 1)
 				{
 					double hole_d = atof(numKeyArr[0]);
-					double dd = fabs(hole_d - org_hole_d);
-					if (dd < EPS2)
+					double dd1 = fabs(hole_d - org_hole_d);
+					double dd2 = fabs(hole_d - org_hole_d2);
+					if (dd1 < EPS2 || dd2<EPS2)
 					{	//钻孔或冲孔或非标准图块，识别为挂线孔 wht 20-04-27
 						pCurBolt->bolt_d = hole_d;
 						pCurBolt->hole_d_increment = 0;
 						pCurBolt->cFuncType = 2;
 						pCurBolt->cFlag = bNeedDrillHole ? 1 : 0;
 					}
-					if (dd > EPS2 && (bNeedPunchHole || bNeedDrillHole || pCurBolt->cFuncType != 0))
+					else
 					{
 						logerr.Log("%s#钢板，根据文字(%s)识别的直径与螺栓孔图面直径存在误差值(%.1f)，无法使用文字更新孔状态，请确认！",
-							(char*)xPlate.GetPartNo(), (char*)pRelaObj->sText, dd);
+							(char*)xPlate.GetPartNo(), (char*)pRelaObj->sText, dd1);
 					}
 				}
 			}

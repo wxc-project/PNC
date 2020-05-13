@@ -343,29 +343,30 @@ BOOL CPPEView::DisplayPlateProperty()
 			pPropItem=oper.InsertEditPropItem(pParentItem,"M24");
 			pPropItem->SetReadOnly();
 		}
-		if(pPlate->GetBoltNumByD(22)>0)
+		/*if(pPlate->GetBoltNumByD(22)>0)
 		{
 			pPropItem=oper.InsertEditPropItem(pParentItem,"M22");
 			pPropItem->SetReadOnly();
-			
-		}
+		}*/
 		if(pPlate->GetBoltNumByD(20)>0)
 		{
 			pPropItem=oper.InsertEditPropItem(pParentItem,"M20");
 			pPropItem->SetReadOnly();
-
 		}
-		if(pPlate->GetBoltNumByD(18)>0)
+		/*if(pPlate->GetBoltNumByD(18)>0)
 		{
 			pPropItem=oper.InsertEditPropItem(pParentItem,"M18");
 			pPropItem->SetReadOnly();
-
-		}
+		}*/
 		if(pPlate->GetBoltNumByD(16)>0)
 		{
 			pPropItem=oper.InsertEditPropItem(pParentItem,"M16");
 			pPropItem->SetReadOnly();
-
+		}
+		if (pPlate->GetSpecialHoleNum() > 0)
+		{
+			pPropItem = oper.InsertEditPropItem(pParentItem, "Other");
+			pPropItem->SetReadOnly();
 		}
 	}
 	pPropList->Redraw();

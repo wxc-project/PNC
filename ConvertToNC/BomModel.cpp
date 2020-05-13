@@ -1632,10 +1632,12 @@ bool CBomModel::IsValidFunc(int iFuncType)
 		return (GetSingleWord(CBomModel::FUNC_BOM_AMEND)&m_dwFunctionFlag) > 0;
 	else if (iFuncType == CBomModel::FUNC_DWG_COMPARE)
 		return (GetSingleWord(CBomModel::FUNC_DWG_COMPARE)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_NUM)
-		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_NUM)&m_dwFunctionFlag) > 0;
+	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SUM_NUM)
+		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_SUM_NUM)&m_dwFunctionFlag) > 0;
 	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_WEIGHT)
 		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_WEIGHT)&m_dwFunctionFlag) > 0;
+	else if(iFuncType==CBomModel::FUNC_DWG_AMEND_SING_N)
+		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_SING_N)&m_dwFunctionFlag) > 0;
 	else
 		return false;
 }
@@ -1648,8 +1650,8 @@ DWORD CBomModel::AddFuncType(int iFuncType)
 		dwFlag = GetSingleWord(CBomModel::FUNC_BOM_AMEND);
 	else if (iFuncType == CBomModel::FUNC_DWG_COMPARE)
 		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_COMPARE);
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_NUM)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_NUM);
+	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SUM_NUM)
+		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_SUM_NUM);
 	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_WEIGHT)
 		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_WEIGHT);
 	m_dwFunctionFlag |= dwFlag;

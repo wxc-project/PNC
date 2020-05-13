@@ -159,6 +159,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_ciBoltRecogMode", PROPLIST_ITEM(id++, "螺栓识别模式", "螺栓识别模式"));
 	AddPropItem("FilterPartNoCir", PROPLIST_ITEM(id++, "件号专属圆圈", "", "过滤|不过滤"));
 	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "特殊孔径标注", "特殊孔径标注(文字说明或直径标注)", "处理|不处理"));
+	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "普通螺栓圆圈", "", "按照特殊孔处理|根据标准孔径判断"));
 	//图纸比例设置
 	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"比例识别","图纸比例设置"));
 	AddPropItem("m_fMapScale",PROPLIST_ITEM(id++,"缩放比例","绘图缩放比例"));
@@ -286,6 +287,13 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 			sText.Copy("处理");
 		else
 			sText.Copy("不处理");
+	}
+	else if(GetPropID("RecogLsCircle")==id)
+	{
+		if (IsRecogCirByBoltD())
+			sText.Copy("根据标准孔径判断");
+		else
+			sText.Copy("按照特殊孔处理");
 	}
 	else if(GetPropID("m_iProfileColorIndex")==id)
 		sText.Printf("RGB%X",GetColorFromIndex(m_ciProfileColorIndex));

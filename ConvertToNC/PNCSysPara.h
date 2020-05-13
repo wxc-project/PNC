@@ -50,6 +50,7 @@ public:
 	int m_nBoltPadDimSearchScope;	//螺栓垫板标注搜索范围，默认为50 wht 19-02-01
 	static const BYTE FILTER_PARTNO_CIR = 0X01;	//过滤件号特殊圆圈
 	static const BYTE RECOGN_HOLE_D_DIM = 0X02;	//识别孔径文字标注
+	static const BYTE RECOGN_LS_CIRCLE  = 0X04; //处理普通螺栓圆圈
 	BYTE m_ciBoltRecogMode;
 	static const BYTE FILTER_BY_LINETYPE = 0;
 	static const BYTE FILTER_BY_LAYER	 = 1;
@@ -88,6 +89,7 @@ public:
 	BOOL IsJgCardBlockName(const char* sBlockName);
 	BOOL IsFilterPartNoCir() { return m_ciBoltRecogMode & FILTER_PARTNO_CIR; }
 	BOOL IsRecogHoleDimText() { return m_ciBoltRecogMode & RECOGN_HOLE_D_DIM; }
+	BOOL IsRecogCirByBoltD() { return m_ciBoltRecogMode & RECOGN_LS_CIRCLE; }
 	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
 	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100,CPropTreeItem *pItem=NULL);//通过属性Id获取属性值

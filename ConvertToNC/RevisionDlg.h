@@ -71,6 +71,7 @@ protected:
 	afx_msg void OnCompareData();
 	afx_msg void OnExportCompResult();
 	afx_msg void OnRefreshPartNum();
+	afx_msg void OnRefreshSingleNum();
 	afx_msg void OnModifyErpFile();
 	afx_msg void OnRetrievedAngles();
 	afx_msg void OnRetrievedPlates();

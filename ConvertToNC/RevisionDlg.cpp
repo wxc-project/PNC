@@ -178,6 +178,7 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_COMPARE_DATA,OnCompareData)
 	ON_COMMAND(ID_EXPORT_COMPARE_RESULT,OnExportCompResult)
 	ON_COMMAND(ID_REFRESH_PART_NUM,OnRefreshPartNum)
+	ON_COMMAND(ID_REFRESH_SINGLE_NUM, OnRefreshSingleNum)
 	ON_COMMAND(ID_MODIFY_ERP_FILE,OnModifyErpFile)
 	ON_COMMAND(ID_RETRIEVED_ANGLES, OnRetrievedAngles)
 	ON_COMMAND(ID_RETRIEVED_PLATES, OnRetrievedPlates)
@@ -752,8 +753,10 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, (char*)CXhChar50("%s数据校核", (char*)sName));
 			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出校审结果");
 		}
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_NUM))
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SUM_NUM))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_PART_NUM, "更新加工数");
+		if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SING_N))
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_SINGLE_NUM, "更新单基数");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_WEIGHT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
 		pMenu->AppendMenu(MF_SEPARATOR);
@@ -1173,7 +1176,7 @@ void CRevisionDlg::OnExportCompResult()
 	else
 		AfxMessageBox("比对结果相同!");
 }
-//
+//更新加工数
 void CRevisionDlg::OnRefreshPartNum()
 {
 	CLogErrorLife logErrLife;
@@ -1185,6 +1188,26 @@ void CRevisionDlg::OnRefreshPartNum()
 	CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
 	if(pDwgInfo->IsJgDwgInfo())
 		pDwgInfo->ModifyAngleDwgPartNum();
+	else
+		pDwgInfo->ModifyPlateDwgPartNum();
+#ifdef _ARX_2007
+	SendCommandToCad(L"RE ");
+#else
+	SendCommandToCad("RE ");
+#endif
+	RefreshListCtrl(hSelItem);
+}
+//更新单基数
+void CRevisionDlg::OnRefreshSingleNum()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo->IsJgDwgInfo())
+		pDwgInfo->ModifyAngleDwgSingleNum();
 	else
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
