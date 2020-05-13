@@ -805,6 +805,8 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	f2dRect rect=GetPnDimRect();
 	double fExternLen=fMaxExtern*3;
 	fExternLen=(fExternLen>2200)?2200:fExternLen;
+	if (g_pncSysPara.m_bUseMaxEdge)
+		fExternLen = g_pncSysPara.m_nMaxEdgeLen;
 	double fScale=(fExternLen-fMinExtern)/10;
 	//
 	HWND hMainWnd=adsw_acadMainWnd();
