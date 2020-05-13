@@ -52,6 +52,8 @@ void CPNCSysPara::Init()
 	m_iAxisXCalType = 0;
 	m_bReplaceSH = FALSE;
 	m_nReplaceHD = 20;
+	m_bUseMaxEdge = FALSE;
+	m_nMaxEdgeLen = 2200;
 	m_sJgCadName.Empty();
 	m_sPartLabelTitle.Empty();
 	m_sJgCardBlockName.Empty();
@@ -137,17 +139,10 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_bReplaceSH", PROPLIST_ITEM(id++, "启用特殊孔代孔", "将特殊功用类型的孔进行代孔处理", "是|否"));
 	AddPropItem("m_nReplaceHD", PROPLIST_ITEM(id++, "代孔直径", "进行代孔的螺栓直径", "12|16|20|24"));
 	AddPropItem("m_iPPiMode",PROPLIST_ITEM(id++,"文件生成模型","PPI文件生成模式","0.一板一号|1.一板多号"));
-	AddPropItem("m_bAutoLayout2", PROPLIST_ITEM(id++, "下料预审", "启用下料预审时，钢板提取之后按段排布，支持设定加工坐标系，支持设定钢印号位置。", "是|否"));
-	AddPropItem("CDrawDamBoard::BOARD_HEIGHT", PROPLIST_ITEM(id++, "档板高度", "档板高度"));
-	AddPropItem("CDrawDamBoard::m_bDrawAllBamBoard", PROPLIST_ITEM(id++, "档板显示模式", "档板显示模式", "0.仅显示选中钢板档板|1.显示所有档板"));
-	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
-	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
-	AddPropItem("m_bAutoLayout1",PROPLIST_ITEM(id++,"打印排版","打印排版","是|否"));
-	AddPropItem("m_nMapWidth",PROPLIST_ITEM(id++,"图纸宽度","图纸宽度"));
-	AddPropItem("m_nMapLength",PROPLIST_ITEM(id++,"图纸长度","图纸长度"));
-	AddPropItem("m_nMinDistance",PROPLIST_ITEM(id++,"最小间距","图形之间的最小间距"));
 	AddPropItem("m_bMKPos",PROPLIST_ITEM(id++,"提取钢印位置","提取钢印位置","是|否"));
 	AddPropItem("AxisXCalType",PROPLIST_ITEM(id++,"X轴计算方式","加工坐标系X轴的计算方式","0.最长边优先|1.螺栓平行边优先|2.焊接边优先"));
+	AddPropItem("m_bUseMaxEdge", PROPLIST_ITEM(id++, "启用特殊边长", "用于处理料片提取", "是|否"));
+	AddPropItem("m_nMaxEdgeLen", PROPLIST_ITEM(id++, "最大边长", "进行料片提取的特殊边长"));
 	//识别模式
 	AddPropItem("RecogMode",PROPLIST_ITEM(id++,"识别模式","识别模式"));
 	AddPropItem("m_iRecogMode",PROPLIST_ITEM(id++,"轮廓边识别模式","钢板识别模式"));
@@ -160,8 +155,19 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("FilterPartNoCir", PROPLIST_ITEM(id++, "件号专属圆圈", "", "过滤|不过滤"));
 	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "特殊孔径标注", "特殊孔径标注(文字说明或直径标注)", "处理|不处理"));
 	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "普通螺栓圆圈", "", "按照特殊孔处理|根据标准孔径判断"));
+	//显示模式
+	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式", "提取结果显示模式"));
+	AddPropItem("m_bAutoLayout1", PROPLIST_ITEM(id++, "打印排版", "打印排版", "是|否"));
+	AddPropItem("m_nMapWidth", PROPLIST_ITEM(id++, "图纸宽度", "图纸宽度"));
+	AddPropItem("m_nMapLength", PROPLIST_ITEM(id++, "图纸长度", "图纸长度"));
+	AddPropItem("m_nMinDistance", PROPLIST_ITEM(id++, "最小间距", "图形之间的最小间距"));
+	AddPropItem("m_bAutoLayout2", PROPLIST_ITEM(id++, "下料预审", "启用下料预审时，钢板提取之后按段排布，支持设定加工坐标系，支持设定钢印号位置。", "是|否"));
+	AddPropItem("CDrawDamBoard::BOARD_HEIGHT", PROPLIST_ITEM(id++, "档板高度", "档板高度"));
+	AddPropItem("CDrawDamBoard::m_bDrawAllBamBoard", PROPLIST_ITEM(id++, "档板显示模式", "档板显示模式", "0.仅显示选中钢板档板|1.显示所有档板"));
+	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
+	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
 	//图纸比例设置
-	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"比例识别","图纸比例设置"));
+	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"识别比例","图纸比例设置"));
 	AddPropItem("m_fMapScale",PROPLIST_ITEM(id++,"缩放比例","绘图缩放比例"));
 }
 int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100*/,CPropTreeItem *pItem/*=NULL*/)
@@ -191,6 +197,15 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if (GetPropID("m_nReplaceHD") == id)
 		sText.Printf("%d", g_pncSysPara.m_nReplaceHD);
+	else if (GetPropID("m_bUseMaxEdge") == id)
+	{
+		if (g_pncSysPara.m_bUseMaxEdge)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
+	}
+	else if (GetPropID("m_nMaxEdgeLen") == id)
+		sText.Printf("%d", g_pncSysPara.m_nMaxEdgeLen);
 	else if(GetPropID("m_iPPiMode")==id)
 	{
 		if(g_pncSysPara.m_iPPiMode==0)
