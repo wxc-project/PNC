@@ -294,8 +294,10 @@ int CPPEView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	g_pSolidSet->Init(m_hWnd);
 	char sFontFile[MAX_PATH],sBigFontFile[MAX_PATH],sAppPath[MAX_PATH];
 	GetSysPath(sAppPath);
-	sprintf(sFontFile,"%s\\sys\\simplex.shx",sAppPath);
-	bool bRetCode=g_pSolidSet->SetShxFontFile(sFontFile);
+	sprintf(sFontFile, "%s\\sys\\txt.shx", sAppPath);
+	bool bRetCode = g_pSolidSet->SetShxFontFile(sFontFile);
+	//sprintf(sFontFile,"%s\\sys\\simplex.shx",sAppPath);
+	//bool bRetCode=g_pSolidSet->SetShxFontFile(sFontFile);
 	sprintf(sBigFontFile,"%s\\sys\\GBHZFS.shx",sAppPath);
 	bRetCode=g_pSolidSet->SetBigFontFile(sBigFontFile);
 	char sPartLibPath[MAX_PATH];

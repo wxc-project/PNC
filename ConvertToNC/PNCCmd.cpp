@@ -305,7 +305,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 			if (baseInfo.m_idCadEntNum != 0)
 				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 		}
-		else
+		//else //焊接字样可能在基本信息中例如：141#正焊
 		{
 			CXhChar100 sText = GetCadTextContent(pEnt);
 			if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))

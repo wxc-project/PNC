@@ -805,6 +805,8 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	f2dRect rect=GetPnDimRect();
 	double fExternLen=fMaxExtern*3;
 	fExternLen=(fExternLen>2200)?2200:fExternLen;
+	if (g_pncSysPara.m_bUseMaxEdge)
+		fExternLen = g_pncSysPara.m_nMaxEdgeLen;
 	double fScale=(fExternLen-fMinExtern)/10;
 	//
 	HWND hMainWnd=adsw_acadMainWnd();
@@ -2991,6 +2993,10 @@ void CPNCModel::SplitManyPartNo()
 				//特殊工艺信息
 				pNewPlateInfo->xBomPlate.siZhiWan = pPlateInfo->xBomPlate.siZhiWan;
 				pNewPlateInfo->xBomPlate.bWeldPart = pPlateInfo->xBomPlate.bWeldPart;
+				//轮廓点
+				for(CPlateObject::VERTEX* pSrcVer=pPlateInfo->vertexList.GetFirst();pSrcVer;
+					pSrcVer=pPlateInfo->vertexList.GetNext())
+					pNewPlateInfo->vertexList.append(*pSrcVer);
 			}
 		}
 		m_hashPlateInfo.pop_stack();
