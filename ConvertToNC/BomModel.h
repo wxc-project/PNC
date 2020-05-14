@@ -221,6 +221,10 @@ public:
 	vector<BOM_TITLE> m_xBomTitleArr;
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg;
+	CXhChar500 m_sAngleCompareItemArr;	//角钢校审项
+	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
+	CHashStrList<BOOL> hashCompareItemOfAngle;
+	CHashStrList<BOOL> hashCompareItemOfPlate;
 public:
 	CBomModel(void);
 	~CBomModel(void);
@@ -230,6 +234,8 @@ public:
 	CDwgFileInfo *FindDwgFile(const char* file_path);
 	bool IsValidFunc(int iFuncType);
 	DWORD AddFuncType(int iFuncType);
+	bool ExtractAngleCompareItems();
+	bool ExtractPlateCompareItems();
 	//
 public:
 	//客户ID
@@ -239,14 +245,13 @@ public:
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电(料单校审)
 	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新单基数)
 	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈(DWG校审|更新加工数)
-	static UINT m_uiCustomizeSerial;
-	static CXhChar50 m_sCustomizeName;
-	static BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
-	static CXhChar200 m_sTMABomFileKeyStr;	//支持指定TMA Bom文件名关键字，TMA与ERP Excel文件格式一样时可通过关键字进行区分 wht 20-04-29
-	static CXhChar200 m_sERPBomFileKeyStr;
-	static CXhChar200 m_sTMABomSheetName;	//支持指定导入的Excel文件中的Sheet名称 wht 20-04-29
-	static CXhChar200 m_sERPBomSheetName;
-
+	UINT m_uiCustomizeSerial;
+	CXhChar50 m_sCustomizeName;
+	BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
+	CXhChar200 m_sTMABomFileKeyStr;	//支持指定TMA Bom文件名关键字，TMA与ERP Excel文件格式一样时可通过关键字进行区分 wht 20-04-29
+	CXhChar200 m_sERPBomFileKeyStr;
+	CXhChar200 m_sTMABomSheetName;	//支持指定导入的Excel文件中的Sheet名称 wht 20-04-29
+	CXhChar200 m_sERPBomSheetName;
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };

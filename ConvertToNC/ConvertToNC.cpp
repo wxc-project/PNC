@@ -363,10 +363,10 @@ void InitApplication()
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	g_xUbomModel.InitBomTblCfg();
 	CXhChar100 sWndText("UBOM");
-	if(CBomModel::m_sCustomizeName.GetLength()>0)
-		sWndText.Append(CBomModel::m_sCustomizeName, '-');
+	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)
+		sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');
 	::SetWindowText(adsw_acadMainWnd(), sWndText);
-	if(CBomModel::m_bExeRppWhenArxLoad)
+	if(g_xUbomModel.m_bExeRppWhenArxLoad)
 		RevisionPartProcess	();
 #endif
 }

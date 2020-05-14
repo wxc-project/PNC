@@ -2993,6 +2993,10 @@ void CPNCModel::SplitManyPartNo()
 				//特殊工艺信息
 				pNewPlateInfo->xBomPlate.siZhiWan = pPlateInfo->xBomPlate.siZhiWan;
 				pNewPlateInfo->xBomPlate.bWeldPart = pPlateInfo->xBomPlate.bWeldPart;
+				//轮廓点
+				for(CPlateObject::VERTEX* pSrcVer=pPlateInfo->vertexList.GetFirst();pSrcVer;
+					pSrcVer=pPlateInfo->vertexList.GetNext())
+					pNewPlateInfo->vertexList.append(*pSrcVer);
 			}
 		}
 		m_hashPlateInfo.pop_stack();

@@ -186,8 +186,8 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		g_pncSysPara.m_sPartLabelTitle = valueStr;
 	else if (GetPropID("m_sJgCardBlockName") == id)
 		g_pncSysPara.m_sJgCardBlockName = valueStr;
-	else if(GetPropID("m_fMaxLenErr")==id)
-		sText.Printf("%.f", g_pncSysPara.m_fMapScale);
+	else if (GetPropID("m_fMaxLenErr") == id)
+		sText.Printf("%.1f", g_pncSysPara.m_fMaxLenErr);
 	else if (GetPropID("m_bReplaceSH") == id)
 	{
 		if (g_pncSysPara.m_bReplaceSH)
@@ -503,7 +503,7 @@ BOOL CPNCSysPara::IsPartLabelTitle(const char* sText)
 		ss2 = ss2.Trim();
 		ss1.Remove(' ');
 		ss2.Remove(' ');
-		if (ss1.CompareNoCase(ss2) == 0)
+		if (ss2.GetLength()>1 && ss1.CompareNoCase(ss2) == 0)
 			return true;
 		else
 			return false;
@@ -519,8 +519,44 @@ BOOL CPNCSysPara::IsPartLabelTitle(const char* sText)
 	}
 }
 //////////////////////////////////////////////////////////////////////////
-//
-
+//读取UBOM的附加信息，保存到rule.set
+void PNCSysSetImportAttach()
+{
+	char file_name[MAX_PATH] = "", line_txt[MAX_PATH] = "", key_word[100] = "";
+	GetAppPath(file_name);
+	strcat(file_name, "rule.set");
+	FILE *fp = fopen(file_name, "rt");
+	if (fp == NULL)
+		return;
+	while (!feof(fp))
+	{
+		if (fgets(line_txt, MAX_PATH, fp) == NULL)
+			break;
+		char sText[MAX_PATH];
+		strcpy(sText, line_txt);
+		CString sLine(line_txt);
+		sLine.Replace('=', ' ');
+		sprintf(line_txt, "%s", sLine);
+		char *skey = strtok((char*)sText, "=,;");
+		strncpy(key_word, skey, 100);
+		if (_stricmp(key_word, "JgCardBlockName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sJgCardBlockName, "%s", skey);
+		}
+		else if (_stricmp(key_word, "PartLabelTitle") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			sprintf(g_pncSysPara.m_sPartLabelTitle, "%s", skey);
+		}
+		else if (_stricmp(key_word, "MaxLenErr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.m_fMaxLenErr = atof(skey);
+		}
+	}
+	fclose(fp);
+}
 void PNCSysSetImportDefault()
 {
 	char file_name[MAX_PATH]="", line_txt[MAX_PATH]="", key_word[100]="";
@@ -734,6 +770,10 @@ void PNCSysSetImportDefault()
 			break;
 		}
 	}
+#if defined(__UBOM_ONLY_)
+	//读取UBOM配置的附加信息，用户修改后存放到rule.set
+	PNCSysSetImportAttach();
+#endif
 }
 void PNCSysSetExportDefault()
 {
@@ -748,6 +788,7 @@ void PNCSysSetExportDefault()
 	}
 	fprintf(fp, "基本设置\n");
 	fprintf(fp, "JG_CARD=%s\n", (char*)g_pncSysPara.m_sJgCadName);
+	fprintf(fp, "MaxLenErr=%.1f ;角钢长度误差\n", g_pncSysPara.m_fMaxLenErr);
 	fprintf(fp, "PartLabelTitle=%s ;件号标题\n", (char*)g_pncSysPara.m_sPartLabelTitle);
 	fprintf(fp, "JgCardBlockName=%s ;角钢工艺卡块名称\n", (char*)g_pncSysPara.m_sJgCardBlockName);
 	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
