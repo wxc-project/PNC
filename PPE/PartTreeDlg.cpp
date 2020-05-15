@@ -62,6 +62,18 @@ BOOL CPartTreeDlg::OnInitDialog()
 	m_treeCtrl.SetImageList(&m_xModelImages,TVSIL_NORMAL);
 	return TRUE;
 }
+BOOL CPartTreeDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		if (pMsg->wParam == VK_ESCAPE)
+		{
+			CancelSelTreeItem();
+			return TRUE;
+		}
+	}
+	return CDialogEx::PreTranslateMessage(pMsg);
+}
 void CPartTreeDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogEx::OnSize(nType, cx, cy);
@@ -112,9 +124,21 @@ void CPartTreeDlg::OnTvnSelchangedTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 void CPartTreeDlg::OnTvnKeydownTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMTVKEYDOWN pTVKeyDown = reinterpret_cast<LPNMTVKEYDOWN>(pNMHDR);
-	if(pTVKeyDown->wVKey==VK_DELETE)
+	if (pTVKeyDown->wVKey == VK_DELETE)
 		OnDeleteItem();
+	else if (pTVKeyDown->wVKey == VK_ESCAPE)
+		CancelSelTreeItem();
 	*pResult = 0;
+}
+//
+void CPartTreeDlg::CancelSelTreeItem()
+{
+	GetTreeCtrl()->SelectItem(m_hPlateParentItem);
+	//刷新视图
+	CPPEView* pView = (CPPEView*)theApp.GetView();
+	pView->UpdateCurWorkPartByPartNo(NULL);
+	pView->SyncPartInfo(false, true);
+	pView->UpdatePropertyPage();
 }
 //删除中性文件
 void CPartTreeDlg::OnDeleteItem()

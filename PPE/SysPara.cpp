@@ -67,6 +67,7 @@ void CSysPara::InitPropHashtable()
 	//文件设置
 	AddPropItem("FileSet", PROPLIST_ITEM(id++, "文件设置"));
 	AddPropItem("FileFormat", PROPLIST_ITEM(id++, "输出文件格式"));
+	AddPropItem("OutputPath", PROPLIST_ITEM(id++, "输出文件路径"));
 	AddPropItem("PbjPara",PROPLIST_ITEM(id++,"PBJ设置"));
 	AddPropItem("pbj.m_iPbjMode",PROPLIST_ITEM(id++,"分类输出","生成PBJ文件时是否分类输出","0.无|1.按厚度"));
 	AddPropItem("pbj.m_bIncVertex",PROPLIST_ITEM(id++,"输出顶点","导出PBJ时，是否包括顶点","是|否"));
@@ -139,6 +140,8 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("crMode.crLS24",PROPLIST_ITEM(id++,"螺栓M24","M24孔径颜色"));
 	AddPropItem("crMode.crOtherLS",PROPLIST_ITEM(id++,"其他螺栓","其他孔径颜色"));
 	AddPropItem("crMode.crMarK",PROPLIST_ITEM(id++,"钢印号","钢印号颜色"));
+	AddPropItem("crMode.crEdge", PROPLIST_ITEM(id++, "轮廓边", "轮廓边的颜色"));
+	AddPropItem("crMode.crText", PROPLIST_ITEM(id++, "显示文本", "文本颜色"));
 	//
 	AddPropItem("JgDrawing",PROPLIST_ITEM(id++,"工艺卡"));
 	AddPropItem("jgDrawing.fDimTextSize",PROPLIST_ITEM(id++,"字体高度"));
@@ -263,6 +266,8 @@ CSysPara::CSysPara(void)
 	crMode.crLS24 = RGB(128,0,255);
 	crMode.crOtherLS = RGB( 46,0,91);
 	crMode.crMark = RGB(255,0,0);
+	crMode.crEdge = RGB(0, 0, 0);
+	crMode.crText = RGB(255, 0, 0);
 	//角钢构件图		
 	jgDrawing.iDimPrecision =0;			
 	jgDrawing.fRealToDraw=10;			
@@ -313,7 +318,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.5");
+	CString version("2.6");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -433,6 +438,7 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar << CString(model.m_sOperator);
 	ar << CString(model.m_sAuditor);
 	ar << CString(model.m_sCritic);
+	ar << CString(model.m_sOutputPath);
 	ar << model.file_format.m_sSplitters.size();
 	for (size_t i = 0; i < model.file_format.m_sSplitters.size(); i++)
 		ar << CString(model.file_format.m_sSplitters[i]);
@@ -451,6 +457,8 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("M24Color");
 	WriteSysParaToReg("OtherColor");
 	WriteSysParaToReg("MarkColor");
+	WriteSysParaToReg("EdgeColor");
+	WriteSysParaToReg("TextColor");
 	WriteSysParaToReg("TextHeight");
 	WriteSysParaToReg("LimitSH");
 	WriteSysParaToReg("NeedSH");
@@ -660,6 +668,12 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar >> sValue; model.m_sAuditor.Copy(sValue);
 		ar >> sValue; model.m_sCritic.Copy(sValue);
 	}
+	if (compareVersion(version, "2.6") >= 0)
+	{
+		CString sValue;
+		ar >> sValue;
+		model.m_sOutputPath.Copy(sValue);
+	}
 	if (compareVersion(version, "2.5") >= 0)
 	{
 		int nSize = 0;
@@ -689,6 +703,8 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("M24Color");
 	ReadSysParaFromReg("OtherColor");
 	ReadSysParaFromReg("MarkColor");
+	ReadSysParaFromReg("EdgeColor");
+	ReadSysParaFromReg("TextColor");
 	ReadSysParaFromReg("TextHeight");
 	ReadSysParaFromReg("LimitSH");
 	ReadSysParaFromReg("NeedSH");
@@ -756,6 +772,10 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "RGB%X", crMode.crOtherLS);
 		else if (stricmp(lpszEntry, "MarkColor") == 0)
 			sprintf(sValue, "RGB%X", crMode.crMark);
+		else if (stricmp(lpszEntry, "EdgeColor") == 0)
+			sprintf(sValue, "RGB%X", crMode.crEdge);
+		else if (stricmp(lpszEntry, "TextColor") == 0)
+			sprintf(sValue, "RGB%X", crMode.crText);
 		else if (stricmp(lpszEntry, "TextHeight") == 0)
 			sprintf(sValue, "%f", font.fTextHeight);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
@@ -930,6 +950,18 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			sprintf(tem_str,"%s",sValue);
 			memmove(tem_str, tem_str+3, 97);
 			sscanf(tem_str,"%X",&crMode.crMark);
+		}
+		else if (stricmp(lpszEntry, "EdgeColor") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crEdge);
+		}
+		else if (stricmp(lpszEntry, "TextColor") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crText);
 		}
 		else if(stricmp(lpszEntry,"m_cDisplayCutType")==0)
 			m_cDisplayCutType=atoi(sValue);
@@ -1178,6 +1210,8 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if (GetPropID("FileFormat") == id)
 		sText.Copy(model.file_format.GetFileFormatStr());
+	else if(GetPropID("OutputPath")==id)
+		sText.Copy(model.m_sOutputPath);
 	else if(GetPropID("pbj.m_iPbjMode")==id)
 	{
 		if(pbj.m_iPbjMode==0)
@@ -1341,6 +1375,10 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("RGB%X",crMode.crOtherLS);
 	else if(GetPropID("crMode.crMarK")==id)
 		sText.Printf("RGB%X",crMode.crMark);
+	else if(GetPropID("crMode.crEdge")==id)
+		sText.Printf("RGB%X",crMode.crEdge);
+	else if (GetPropID("crMode.crText") == id)
+		sText.Printf("RGB%X", crMode.crText);
 	else if(GetPropID("font.fDimTextSize")==id)
 	{
 		sText.Printf("%f",font.fDimTextSize);
