@@ -40,6 +40,7 @@ public:
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
 	virtual BOOL OnInitDialog();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 	virtual void OnOK();
 	virtual void OnCancel();
 	DECLARE_MESSAGE_MAP()
@@ -66,4 +67,5 @@ public:
 	void UpdatePlateTreeItem(int sortByPN0_TK1_MAT2=0);
 	void UpdateAngleTreeItem(int sortByPN0_SPEC1_MAT2=0);
 	void SmartSortBolts(BYTE ciAlgType);
+	void CancelSelTreeItem();
 };

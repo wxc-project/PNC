@@ -827,7 +827,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 	{	//支持螺栓优化功能
 		pPropItem=oper.InsertCmbListPropItem(pParentItem, "nc.m_bSortByHoleD");
-		if (TRUE)
+		if (g_sysPara.nc.m_bSortByHoleD)
 			oper.InsertCmbListPropItem(pPropItem, "nc.m_iGroupSortType");
 		//不开放自动优化螺栓孔，优化耗时长，影响操作流畅度
 		//oper.InsertCmbListPropItem(pParentItem, "nc.m_bAutoSortHole");		

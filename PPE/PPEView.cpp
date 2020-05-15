@@ -672,17 +672,22 @@ void CPPEView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	if(nChar==VK_ESCAPE)
 	{
 		OperOther();
-		if(m_xSelectEntity.GetSelectEntNum()>0)
+		if (m_xSelectEntity.GetSelectEntNum() > 0)
+		{	//取消选中构件的图元，重新刷新构件
 			m_xSelectEntity.Empty();
-		//else
-		//	UpdateCurWorkPartByPartNo(NULL);
-		if(m_pProcessPart)
-			g_p2dDraw->RenderDrawing();
+			if (m_pProcessPart)
+				g_p2dDraw->RenderDrawing();
+		}
+		else if (m_pProcessPart)
+		{	//取消选中构件
+			CPartTreeDlg *pPartTreeDlg = ((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
+			pPartTreeDlg->CancelSelTreeItem();
+		}
 		else
 		{
-			Refresh();
 			CPartTreeDlg *pPartTreeDlg=((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
 			pPartTreeDlg->GetTreeCtrl()->SelectItem(NULL);
+			Refresh();
 		}
 		if(g_pPromptMsg)
 			g_pPromptMsg->Destroy();
