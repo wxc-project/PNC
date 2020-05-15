@@ -109,6 +109,8 @@ public:
 		COLORREF crLS24;
 		COLORREF crOtherLS;
 		COLORREF crMark;
+		COLORREF crEdge;
+		COLORREF crText;
 	}crMode;
 	//角钢工艺卡参数
 	struct JGDRAWING_PARA{

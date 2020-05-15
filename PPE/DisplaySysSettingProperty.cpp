@@ -11,6 +11,7 @@
 #include "NcPart.h"
 #include "PlankConfigDlg.h"
 #include "FileFormatSetDlg.h"
+#include "folder_dialog.h"
 
 void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 {
@@ -518,7 +519,7 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		bUpdateHoleInc=TRUE;
 	}
 	else if(pItem->m_idProp>=CSysPara::GetPropID("crMode.crLS12") &&
-		pItem->m_idProp<=CSysPara::GetPropID("crMode.crMarK"))
+		pItem->m_idProp<=CSysPara::GetPropID("crMode.crText"))
 	{
 		COLORREF curClr = 0;
 		char tem_str[100]="";
@@ -554,6 +555,16 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		{
 			g_sysPara.crMode.crMark=curClr;
 			g_sysPara.WriteSysParaToReg("MarkColor");
+		}
+		if (pItem->m_idProp == CSysPara::GetPropID("crMode.crEdge"))
+		{
+			g_sysPara.crMode.crEdge = curClr;
+			g_sysPara.WriteSysParaToReg("EdgeColor");
+		}
+		if (pItem->m_idProp == CSysPara::GetPropID("crMode.crText"))
+		{
+			g_sysPara.crMode.crText = curClr;
+			g_sysPara.WriteSysParaToReg("TextColor");
 		}
 	}
 	else if(CSysPara::GetPropID("jgDrawing.sAngleCardPath")==pItem->m_idProp)
@@ -762,6 +773,16 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 		if(dlg.DoModal()==IDOK)
 			pPropList->SetItemPropValue(pItem->m_idProp, model.file_format.GetFileFormatStr());
 	}
+	else if (CSysPara::GetPropID("OutputPath") == pItem->m_idProp)
+	{
+		CString sFolder;
+		if (InvokeFolderPickerDlg(sFolder))
+		{
+			model.m_sOutputPath.Copy(sFolder);
+			pPropList->SetItemPropValue(pItem->m_idProp, sFolder);
+		}
+			
+	}
 	else 
 		return FALSE;
 	return TRUE;
@@ -859,6 +880,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//钢板输出设置
 	pParentItem = oper.InsertPropItem(pRootItem, "OutPutSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_PROCESSCARD_INFO);
+	oper.InsertButtonPropItem(pParentItem, "OutputPath");
 	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
 #ifdef __PROCESS_PLATE_
@@ -975,6 +997,8 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//颜色方案
 	pParentItem = oper.InsertPropItem(pRootItem, "CRMODE");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_DISPLAY);
+	oper.InsertCmbColorPropItem(pParentItem, "crMode.crEdge");
+	oper.InsertCmbColorPropItem(pParentItem, "crMode.crText");
 	oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS12");
 	oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS16");
 	oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS20");

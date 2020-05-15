@@ -34,6 +34,8 @@ public:
 	CXhChar16 m_sOperator;		//操作员（制表人）
 	CXhChar16 m_sAuditor;		//审核人
 	CXhChar16 m_sCritic;		//评审人
+	//文件输出路径
+	CXhChar500 m_sOutputPath;	//文件夹路径
 	//文件输出格式定制
 	static const CXhChar16 KEY_TA_TYPE;
 	static const CXhChar16 KEY_PART_NO;
@@ -77,7 +79,12 @@ public:
 	BOOL InitModelByFolderPath(const char *folder_path);
 	void InitPlateMcsAndCutPt(bool bSaveToFile=false);	//初始化钢板加工坐标系及切入点
 	void Empty();
-	CXhChar500 GetFolderPath(){return m_sFolderPath;}
+	CXhChar500 GetFolderPath(){
+		if (m_sOutputPath.GetLength() > 0)
+			return m_sOutputPath;
+		else
+			return m_sFolderPath;
+	}
 	//
 	CXhChar500 GetPartFilePath(const char *sPartNo);
 	bool SavePartToFile(CProcessPart *pPart);
