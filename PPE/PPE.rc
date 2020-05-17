@@ -355,26 +355,32 @@ BEGIN
         MENUITEM "翻转构件(&T)",                    ID_OVERTURN_PLATE
         MENUITEM "修正孔径增大值",                     ID_AMEND_HOLE_INCREMENT
         MENUITEM SEPARATOR
-        MENUITEM "输出钢板DXF(&D)\tCtrl+D",         ID_FILE_SAVE_DXF
-        MENUITEM "输出钢板TTP",                     ID_FILE_SAVE_TTP
-        MENUITEM "输出钢板WKF",                     ID_FILE_SAVE_WKF
-        MENUITEM SEPARATOR
         MENUITEM "显示钢板孔序\tF2",                  ID_DISPLAY_BOLT_SORT
         MENUITEM "优化孔序方案1\tF3",                 ID_SMART_SORT_BOLT
         MENUITEM "优化孔序方案2\tF4",                 ID_SMART_SORT_BOLT_2
         MENUITEM "优化孔序方案3\tF5",                 ID_SMART_SORT_BOLT_3
         MENUITEM "调整钢板孔序",                      ID_ADJUST_HOLE_ORDER
         MENUITEM "批量优化钢板孔序",                    ID_BATCH_SORT_HOLE
-        MENUITEM "输出钢板PBJ",                     ID_FILE_SAVE_PBJ
-        MENUITEM "输出钢板PMZ",                     ID_FILE_SAVE_PMZ
         MENUITEM SEPARATOR
         MENUITEM "定义钢板切入点(&D)",                 ID_DEF_CUT_IN_PT
         MENUITEM "预览钢板切割轨迹(P)",                 ID_PREVIEW_CUTTING_TRACK
-        MENUITEM "输出钢板NC",                      ID_FILE_SAVE_NC
-        MENUITEM "输出钢板TXT",                     ID_FILE_SAVE_TXT
-        MENUITEM "输出钢板CNC",                     ID_FILE_SAVE_CNC
         MENUITEM SEPARATOR
-        MENUITEM "一键生成NC数据",                    ID_CREATE_PLATE_NC_DATA
+		POPUP "生成钢板NC数据"
+		BEGIN
+			MENUITEM SEPARATOR
+			MENUITEM "生成钢板DXF(&D)\tCtrl+D",			ID_FILE_SAVE_DXF
+			MENUITEM "生成钢板TTP",						ID_FILE_SAVE_TTP
+			MENUITEM "生成钢板WKF",						ID_FILE_SAVE_WKF
+			MENUITEM "生成钢板PBJ",						ID_FILE_SAVE_PBJ
+			MENUITEM "生成钢板PMZ",						ID_FILE_SAVE_PMZ
+			MENUITEM "生成钢板NC",						ID_FILE_SAVE_NC
+			MENUITEM "生成钢板TXT",						ID_FILE_SAVE_TXT
+			MENUITEM "生成钢板CNC",						ID_FILE_SAVE_CNC
+		END
+		MENUITEM "生成切割NC数据",					  ID_CUT_MODE_NC_DATA
+		MENUITEM "生成板床NC数据",					  ID_PROCESS_MODE_NC_DATA
+		MENUITEM "生成激光NC数据",					  ID_LASER_MODE_NC_DATA
+		MENUITEM "一键生成NC数据",                    ID_CREATE_PLATE_NC_DATA
     END
     POPUP "工具(&W)"
     BEGIN

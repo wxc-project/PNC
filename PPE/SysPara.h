@@ -161,6 +161,7 @@ public:
 		double  fTextHeight;		//普通文字字体高度
 		double	fDimTextSize;		//长度尺寸标注文本高
 		double	fPartNoTextSize;	//构件编号文字高
+		double  fDxfTextSize;		//DXF文件中文字字体高度
 	}font;
 	BOOL Read(CString file_path);	//读配置文件
 	BOOL Write(CString file_path);	//写配置文件

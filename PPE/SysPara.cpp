@@ -193,7 +193,8 @@ void CSysPara::InitPropHashtable()
 		"角钢两肢夹角与90°的偏差值大于该阈值时认为需要进行开合角标注。"));
 	AddPropItem("jgDrawing.sAngleCardPath",PROPLIST_ITEM(id++,"角钢工艺卡"));
 	AddPropItem("Font",PROPLIST_ITEM(id++,"字体设置"));
-	AddPropItem("font.fTextHeight",PROPLIST_ITEM(id++,"普通文字字高"));
+	AddPropItem("font.fTextHeight",PROPLIST_ITEM(id++,"显示文字字高"));
+	AddPropItem("font.fDxfTextSize", PROPLIST_ITEM(id++, "DXF文字字高"));
 	AddPropItem("font.fDimTextSize",PROPLIST_ITEM(id++,"尺寸标注字高"));
 	AddPropItem("font.fPartNoTextSize",PROPLIST_ITEM(id++,"构件编号字高"));
 }
@@ -308,6 +309,7 @@ CSysPara::CSysPara(void)
 	jgDrawing.sAngleCardPath.Empty();
 	//
 	font.fTextHeight = 30;
+	font.fDxfTextSize = 2;
 	font.fDimTextSize=2.5;
 	font.fPartNoTextSize=3.0;
 }
@@ -460,6 +462,7 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("EdgeColor");
 	WriteSysParaToReg("TextColor");
 	WriteSysParaToReg("TextHeight");
+	WriteSysParaToReg("DxfTextSize");
 	WriteSysParaToReg("LimitSH");
 	WriteSysParaToReg("NeedSH");
 	WriteSysParaToReg("NeedMKRect");
@@ -706,6 +709,7 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("EdgeColor");
 	ReadSysParaFromReg("TextColor");
 	ReadSysParaFromReg("TextHeight");
+	ReadSysParaFromReg("DxfTextSize");
 	ReadSysParaFromReg("LimitSH");
 	ReadSysParaFromReg("NeedSH");
 	ReadSysParaFromReg("NeedMKRect");
@@ -778,6 +782,8 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "RGB%X", crMode.crText);
 		else if (stricmp(lpszEntry, "TextHeight") == 0)
 			sprintf(sValue, "%f", font.fTextHeight);
+		else if (stricmp(lpszEntry, "DxfTextSize") == 0)
+			sprintf(sValue, "%f", font.fDxfTextSize);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
 			sprintf(sValue, "%f", nc.m_fLimitSH);
 		else if (stricmp(lpszEntry, "NeedSH") == 0)
@@ -875,6 +881,8 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			nc.m_fBaffleHigh = atof(sValue);
 		else if (stricmp(lpszEntry, "TextHeight") == 0)
 			font.fTextHeight = atof(sValue);
+		else if (stricmp(lpszEntry, "DxfTextSize") == 0)
+			font.fDxfTextSize = atof(sValue);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
 			nc.m_fLimitSH = atof(sValue);
 		else if (stricmp(lpszEntry, "NeedSH") == 0)
@@ -1017,6 +1025,11 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	if(GetPropID("font.fTextHeight")==id)
 	{
 		sText.Printf("%f",font.fTextHeight);
+		SimplifiedNumString(sText);
+	}
+	else if (GetPropID("font.fDxfTextSize") == id)
+	{
+		sText.Printf("%f", font.fDxfTextSize);
 		SimplifiedNumString(sText);
 	}
 	else if(GetPropID("nc.m_bAutoSortHole")==id)

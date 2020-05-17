@@ -590,6 +590,9 @@
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
       <Filter>PartLib</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\CadColorTbl.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="ConvertToNC.rc">

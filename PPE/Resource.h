@@ -225,6 +225,9 @@
 #define ID_GROUP_BY_THICK_MATERIAL      33012
 #define ID_SMART_SORT_BOLT_2            33013
 #define ID_SMART_SORT_BOLT_3            33014
+#define ID_CUT_MODE_NC_DATA             33015
+#define ID_PROCESS_MODE_NC_DATA         33016
+#define ID_LASER_MODE_NC_DATA			33017
 
 // Next default values for new objects
 // 
@@ -232,7 +235,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        164
-#define _APS_NEXT_COMMAND_VALUE         33015
+#define _APS_NEXT_COMMAND_VALUE         33018
 #define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif

@@ -16,6 +16,7 @@
 #include "folder_dialog.h"
 #include "LicFuncDef.h"
 #include "ParseAdaptNo.h"
+#include "folder_dialog.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -52,6 +53,9 @@ BEGIN_MESSAGE_MAP(CPPEDoc, CDocument)
 	ON_COMMAND(ID_GEN_ANGLE_NC_FILE, &CPPEDoc::OnGenAngleNcFile)
 	ON_UPDATE_COMMAND_UI(ID_GEN_ANGLE_NC_FILE,OnUpdateGenAngleNcFile)
 	ON_COMMAND(ID_NEW_FILE, &CPPEDoc::OnNewFile)
+	ON_COMMAND(ID_CUT_MODE_NC_DATA, OnCreateCutNcData)
+	ON_COMMAND(ID_PROCESS_MODE_NC_DATA, OnCreateProcessNcData)
+	ON_COMMAND(ID_LASER_MODE_NC_DATA, OnCreateLaserNcData)
 	ON_COMMAND(ID_CREATE_PLATE_NC_DATA, OnCreatePlateNcData)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
@@ -253,7 +257,7 @@ void CPPEDoc::OnFileSaveWkf()
 {
 	CNCPart::CreateAllPlateFiles(CNCPart::PLATE_WKF_FILE);
 }
-void CreatePlateNcData(int iNcMode, int iNcFileType);
+
 void CPPEDoc::OnFileSavePbj()
 {
 #ifdef __PNC_
@@ -349,9 +353,48 @@ void CPPEDoc::OnUpdateFileSaveCnc(CCmdUI *pCmdUI)
 #endif
 	pCmdUI->Enable(bEnable);
 }
-
-static bool CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, char* thickSetStr,
-							   const char* mainFolder,int iNcMode,int iNcFileType,BOOL bIsPmzCheck=FALSE)
+void CPPEDoc::InitPlateGroupByThickMat(CHashStrList<PLATE_GROUP> &hashPlateByThickMat)
+{
+	hashPlateByThickMat.Empty();
+	for (CProcessPart *pPart = model.EnumPartFirst(); pPart; pPart = model.EnumPartNext())
+	{
+		if (!pPart->IsPlate())
+			continue;
+		int thick = (int)(pPart->GetThick());
+		CXhChar16 sMat;
+		QuerySteelMatMark(pPart->cMaterial, sMat);
+		CXhChar50 sKey("%s_%d", (char*)sMat, thick);
+		PLATE_GROUP* pPlateGroup = hashPlateByThickMat.GetValue(sKey);
+		if (pPlateGroup == NULL)
+		{
+			pPlateGroup = hashPlateByThickMat.Add(sKey);
+			pPlateGroup->thick = thick;
+			pPlateGroup->cMaterial = pPart->cMaterial;
+			pPlateGroup->sKey.Copy(sKey);
+		}
+		pPlateGroup->plateSet.append((CProcessPlate*)pPart);
+	}
+}
+void CPPEDoc::CreatePlateNcData(int iNcMode, int iNcFileType)
+{
+#ifdef __PNC_
+	//根据板厚对钢板进行分类
+	CHashStrList<PLATE_GROUP> hashPlateByThickMat;
+	InitPlateGroupByThickMat(hashPlateByThickMat);
+	if (hashPlateByThickMat.GetNodeNum() <= 0)
+		return;
+	//生成钢板所需NC数据
+	CXhChar500 sFolder = model.GetFolderPath();
+	CNCPart::m_bDeformedProfile = TRUE;	//PNC提取的钢板默认已考虑火曲变形
+	CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, iNcMode, iNcFileType);
+	if (CNCPart::PLATE_PMZ_FILE == iNcFileType && g_sysPara.pmz.m_bPmzCheck)	//输出钻床加工PMZ预审格式文件 wht 19-07-02
+		CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, iNcMode, CNCPart::PLATE_PMZ_FILE, TRUE);
+	//
+	ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
+#endif
+}
+bool CPPEDoc::CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, char* thickSetStr,
+							   const char* mainFolder,int iNcMode,int iNcFileType,BOOL bIsPmzCheck/*=FALSE*/)
 {
 	CXhChar16 sSubFolder;
 	if (CNCPart::CUT_MODE == iNcMode)
@@ -362,49 +405,50 @@ static bool CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, c
 		sSubFolder.Copy("激光复合机");
 	else
 		return false;
-	CXhChar16 sNcFileFolder, sNcExt;
+	CXhChar16 sNcExt;
 	if (CNCPart::PLATE_DXF_FILE == iNcFileType)		//钢板DXF类型文件
-		sNcFileFolder.Copy("DXF");
+		sNcExt.Copy("dxf");
 	else if (CNCPart::PLATE_NC_FILE == iNcFileType)	//钢板NC类型文件
-		sNcFileFolder.Copy("NC");
+		sNcExt.Copy("nc");
 	else if (CNCPart::PLATE_TXT_FILE == iNcFileType)	//钢板TXT类型文件
-		sNcFileFolder.Copy("TXT");
+		sNcExt.Copy("txt");
 	else if (CNCPart::PLATE_CNC_FILE == iNcFileType)	//钢板CNC类型文件
-		sNcFileFolder.Copy("CNC");
+		sNcExt.Copy("cnc");
 	else if (CNCPart::PLATE_PMZ_FILE == iNcFileType) //钢板PMZ类型文件
-		sNcFileFolder.Copy("PMZ");
+		sNcExt.Copy("pmz");
 	else if (CNCPart::PLATE_PBJ_FILE == iNcFileType) //钢板PBJ类型文件
-		sNcFileFolder.Copy("PBJ");
+		sNcExt.Copy("pbj");
 	else if (CNCPart::PLATE_TTP_FILE == iNcFileType)	//钢板TTP类型文件
-		sNcFileFolder.Copy("TTP");
+		sNcExt.Copy("ttp");
 	else if (CNCPart::PLATE_WKF_FILE == iNcFileType)	//济南法特WKF文件
-		sNcFileFolder.Copy("WKF");
+		sNcExt.Copy("wkf");
 	else
 		return false;
-	CFileFind fileFind;
-	CXhChar16 sMat;
-	CXhChar100 sTitle("进度");
-	CXhChar500 sFilePath;
-	sNcExt.Copy(sNcFileFolder);
-	sNcExt.ToLower();
-	sTitle.Printf("生成%s的%s文件进度", (char*)sSubFolder, (char*)sNcFileFolder);
-	CXhChar500 sNcFileDir("%s\\%s\\%s", (char*)mainFolder, (char*)sSubFolder,(char*)sNcFileFolder);
-	if (CNCPart::PLATE_PMZ_FILE == iNcFileType && bIsPmzCheck) 
+	CXhChar16 sNcFileFolder = sNcExt;
+	sNcFileFolder.ToUpper();
+	if (CNCPart::PLATE_PMZ_FILE == iNcFileType && bIsPmzCheck)
 		sNcFileFolder.Append("预审");	//钢板PMZ预审文件
 	CHashList<SEGI> thickHash;
 	if(thickSetStr)
 		GetSegNoHashTblBySegStr(thickSetStr, thickHash);
-	model.DisplayProcess(0, sTitle);
+	//
+	CFileFind fileFind;
+	CXhChar500 sNcFileDir, sFilePath;
+	CXhChar100 sTitle("生成%s的%s文件进度", (char*)sSubFolder, (char*)sNcFileFolder);
 	int index = 0, num = model.PartCount();
+	model.DisplayProcess(index, sTitle);
 	for (PLATE_GROUP *pPlateGroup = hashPlateByThickMat.GetFirst(); pPlateGroup; pPlateGroup = hashPlateByThickMat.GetNext())
 	{
 		if(thickHash.GetNodeNum()>0 && thickHash.GetValue(pPlateGroup->thick)==NULL)
 			continue;
-		if (g_sysPara.nc.m_iDxfMode == 1)	//按厚度创建文件目录
-		{
+		if (g_sysPara.nc.m_iDxfMode == 1)
+		{	//按厚度创建文件目录
+			CXhChar16 sMat;
 			QuerySteelMatMark(pPlateGroup->cMaterial, sMat);
 			sNcFileDir.Printf("%s\\%s\\%s\\厚度-%d-%s", (char*)mainFolder, (char*)sSubFolder, (char*)sNcFileFolder, pPlateGroup->thick, (char*)sMat);
 		}
+		else
+			sNcFileDir.Printf("%s\\%s\\%s", (char*)mainFolder, (char*)sSubFolder, (char*)sNcFileFolder);
 		if (!fileFind.FindFile(sNcFileDir))
 			MakeDirectory(sNcFileDir);
 		for (CProcessPlate *pPlate = pPlateGroup->plateSet.GetFirst(); pPlate; pPlate = pPlateGroup->plateSet.GetNext())
@@ -443,66 +487,155 @@ static bool CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, c
 	model.DisplayProcess(100, sTitle);
 	return true;
 }
-
-
-static void CreatePlateNcData(int iNcMode, int iNcFileType)
+//生成切割下料NC数据
+void CPPEDoc::OnCreateCutNcData()
 {
 #ifdef __PNC_
 	//根据板厚对钢板进行分类
 	CHashStrList<PLATE_GROUP> hashPlateByThickMat;
-	for (CProcessPart *pPart = model.EnumPartFirst(); pPart; pPart = model.EnumPartNext())
-	{
-		if (!pPart->IsPlate())
-			continue;
-		int thick = (int)(pPart->GetThick());
-		CXhChar16 sMat;
-		QuerySteelMatMark(pPart->cMaterial, sMat);
-		CXhChar50 sKey("%s_%d", (char*)sMat, thick);
-		PLATE_GROUP* pPlateGroup = hashPlateByThickMat.GetValue(sKey);
-		if (pPlateGroup == NULL)
-		{
-			pPlateGroup = hashPlateByThickMat.Add(sKey);
-			pPlateGroup->thick = thick;
-			pPlateGroup->cMaterial = pPart->cMaterial;
-			pPlateGroup->sKey.Copy(sKey);
-		}
-		pPlateGroup->plateSet.append((CProcessPlate*)pPart);
-	}
-	//生成钢板所需NC数据
+	InitPlateGroupByThickMat(hashPlateByThickMat);
+	if (hashPlateByThickMat.GetNodeNum() <= 0)
+		return;
+	//指定输出路径
 	CXhChar500 sFolder = model.GetFolderPath();
+	CString ss(sFolder);
+	if (InvokeFolderPickerDlg(ss))
+		sFolder.Copy(ss);
+	//生成钢板所需NC数据
 	CNCPart::m_bDeformedProfile = TRUE;	//PNC提取的钢板默认已考虑火曲变形
-	CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, iNcMode, iNcFileType);
-	if (CNCPart::PLATE_PMZ_FILE == iNcFileType && g_sysPara.pmz.m_bPmzCheck)	//输出钻床加工PMZ预审格式文件 wht 19-07-02
-		CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, iNcMode, CNCPart::PLATE_PMZ_FILE, TRUE);
+	int nValidBranch = 0;
+	if (g_sysPara.nc.m_bFlameCut)
+	{	//火焰切割，根据用户输入厚度范围过滤钢板
+		if (g_sysPara.nc.m_xFlamePara.IsValidFile(CNCPart::PLATE_TXT_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xFlamePara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_TXT_FILE);
+			nValidBranch++;
+		}
+		if (g_sysPara.nc.m_xFlamePara.IsValidFile(CNCPart::PLATE_CNC_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xFlamePara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_CNC_FILE);
+			nValidBranch++;
+		}
+		if (g_sysPara.nc.m_xFlamePara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xFlamePara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_DXF_FILE);
+			nValidBranch++;
+		}
+	}
+	if (g_sysPara.nc.m_bPlasmaCut)
+	{	//等离子切割，根据用户输入厚度范围过滤钢板
+		if (g_sysPara.nc.m_xPlasmaPara.IsValidFile(CNCPart::PLATE_NC_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPlasmaPara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_NC_FILE);
+			nValidBranch++;
+		}
+		if (g_sysPara.nc.m_xPlasmaPara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPlasmaPara.m_sThick, sFolder, CNCPart::CUT_MODE, CNCPart::PLATE_DXF_FILE);
+			nValidBranch++;
+		}
+	}
+	//
+	if (nValidBranch == 0)
+		AfxMessageBox("未设置钢板切割下料输出模式！请在系统设置=>输出=>输出设置中设置[钢板NC模式]。");
+	else
+		ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
+#endif
+}
+//生成板床加工NC数据
+void CPPEDoc::OnCreateProcessNcData()
+{
+#ifdef __PNC_
+	//根据板厚对钢板进行分类
+	CHashStrList<PLATE_GROUP> hashPlateByThickMat;
+	InitPlateGroupByThickMat(hashPlateByThickMat);
+	if (hashPlateByThickMat.GetNodeNum() <= 0)
+		return;
+	//指定输出路径
+	CXhChar500 sFolder = model.GetFolderPath();
+	CString ss(sFolder);
+	if (InvokeFolderPickerDlg(ss))
+		sFolder.Copy(ss);
+	//生成钢板所需NC数据
+	CNCPart::m_bDeformedProfile = TRUE;	//PNC提取的钢板默认已考虑火曲变形
+	int nValidBranch = 0;
+	if (g_sysPara.nc.m_bPunchPress)
+	{	//冲床，根据用户输入厚度范围过滤钢板
+		if (g_sysPara.nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_PBJ_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPunchPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PBJ_FILE);
+			nValidBranch++;
+		}
+		if (g_sysPara.nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_WKF_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPunchPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_WKF_FILE);
+			nValidBranch++;
+		}
+		if (g_sysPara.nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xPunchPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_DXF_FILE);
+			nValidBranch++;
+		}
+	}
+	if (g_sysPara.nc.m_bDrillPress)
+	{	//钻床，根据用户输入厚度范围过滤钢板
+		if (g_sysPara.nc.m_xDrillPara.IsValidFile(CNCPart::PLATE_PMZ_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PMZ_FILE);
+			nValidBranch++;
+		}
+		if (g_sysPara.pmz.m_bPmzCheck)	//输出钻床加工PMZ预审格式文件 wht 19-07-02
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_PMZ_FILE, TRUE);
+			nValidBranch++;
+		}
+		if (g_sysPara.nc.m_xDrillPara.IsValidFile(CNCPart::PLATE_DXF_FILE))
+		{
+			CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, CNCPart::PROCESS_MODE, CNCPart::PLATE_DXF_FILE);
+			nValidBranch++;
+		}
+	}
+	//
+	if (nValidBranch == 0)
+		AfxMessageBox("未设置钢板板床加工输出模式！请在系统设置=>输出=>输出设置中设置[钢板NC模式]。");
+	else
+		ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
+#endif
+}
+//生成激光工艺NC数据
+void CPPEDoc::OnCreateLaserNcData()
+{
+#ifdef __PNC_
+	//根据板厚对钢板进行分类
+	CHashStrList<PLATE_GROUP> hashPlateByThickMat;
+	InitPlateGroupByThickMat(hashPlateByThickMat);
+	if (hashPlateByThickMat.GetNodeNum() <= 0)
+		return;
+	CXhChar500 sFolder = model.GetFolderPath();
+	CString ss(sFolder);
+	if (InvokeFolderPickerDlg(ss))
+		sFolder.Copy(ss);
+	//生成钢板所需NC数据
+	CNCPart::m_bDeformedProfile = TRUE;	//PNC提取的钢板默认已考虑火曲变形
+	CreatePlateNcFiles(hashPlateByThickMat, NULL, sFolder, CNCPart::LASER_MODE, CNCPart::PLATE_DXF_FILE);
+	//
 	ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
 #endif
 }
-
+//一键生成设置好的所有NC数据
 void CPPEDoc::OnCreatePlateNcData()
 {
 #ifdef __PNC_
 	//根据板厚对钢板进行分类
 	CHashStrList<PLATE_GROUP> hashPlateByThickMat;
-	for (CProcessPart *pPart = model.EnumPartFirst(); pPart; pPart = model.EnumPartNext())
-	{
-		if (!pPart->IsPlate())
-			continue;
-		int thick = (int)(pPart->GetThick());
-		CXhChar16 sMat;
-		QuerySteelMatMark(pPart->cMaterial, sMat);
-		CXhChar50 sKey("%s_%d", (char*)sMat, thick);
-		PLATE_GROUP* pPlateGroup = hashPlateByThickMat.GetValue(sKey);
-		if (pPlateGroup == NULL)
-		{
-			pPlateGroup = hashPlateByThickMat.Add(sKey);
-			pPlateGroup->thick = thick;
-			pPlateGroup->cMaterial = pPart->cMaterial;
-			pPlateGroup->sKey.Copy(sKey);
-		}
-		pPlateGroup->plateSet.append((CProcessPlate*)pPart);
-	}
-	//生成钢板所需NC数据
+	InitPlateGroupByThickMat(hashPlateByThickMat);
+	if (hashPlateByThickMat.GetNodeNum() <= 0)
+		return;
 	CXhChar500 sFolder = model.GetFolderPath();
+	CString ss(sFolder);
+	if (InvokeFolderPickerDlg(ss))
+		sFolder.Copy(ss);
+	//生成钢板所需NC数据
 	CNCPart::m_bDeformedProfile = TRUE;	//PNC提取的钢板默认已考虑火曲变形
 	int nValidBranch = 0;
 	if (g_sysPara.IsValidNcFlag(CNCPart::CUT_MODE))

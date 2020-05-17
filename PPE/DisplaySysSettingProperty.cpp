@@ -64,6 +64,11 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		model.m_sAuditor.Copy(valueStr);
 	else if (CSysPara::GetPropID("model.m_sCritic") == pItem->m_idProp)
 		model.m_sCritic.Copy(valueStr);
+	else if (CSysPara::GetPropID("font.fDxfTextSize") == pItem->m_idProp)
+	{
+		g_sysPara.font.fDxfTextSize = atof(valueStr);
+		g_sysPara.WriteSysParaToReg("DxfTextSize");
+	}
 	else if (CSysPara::GetPropID("font.fTextHeight") == pItem->m_idProp)
 	{
 		g_sysPara.font.fTextHeight = atof(valueStr);
@@ -781,7 +786,6 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 			model.m_sOutputPath.Copy(sFolder);
 			pPropList->SetItemPropValue(pItem->m_idProp, sFolder);
 		}
-			
 	}
 	else 
 		return FALSE;
@@ -798,7 +802,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropDlg->m_arrPropGroupLabel.SetSize(3);
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_NCINFO-1,"常规");
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_PROCESSCARD_INFO - 1, "输出");
-	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_DISPLAY - 1, "显示");
+	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_DISPLAY - 1, "其他");
 #else
 	pPropDlg->m_arrPropGroupLabel.SetSize(3);
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_NCINFO-1,"常规");
@@ -1008,6 +1012,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//字体设置
 	pParentItem = oper.InsertPropItem(pRootItem, "Font");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_DISPLAY);
+	oper.InsertEditPropItem(pParentItem, "font.fDxfTextSize");
 	oper.InsertEditPropItem(pParentItem, "font.fTextHeight");
 #ifndef __PNC_
 	oper.InsertEditPropItem(pParentItem, "font.fDimTextSize");

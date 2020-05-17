@@ -1776,9 +1776,9 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 				if(CPEC::GetSysParaFromReg("TextHeight",sValue))
 					fTextHeight=atof(sValue);
 				CXhChar50 text("%d",pBoltInfo->keyId);
-				AppendDbText(pDrawing,cur_ls_pt,text,0,fTextHeight,IDbText::AlignMiddleCenter,plateId,0,RGB(61,145,64),2);
+				AppendDbText(pDrawing,cur_ls_pt,text,0,fTextHeight,IDbText::AlignMiddleCenter,plateId,0,crText,2);
 				if(pBoltInfo!=pFirstBolt)
-					AppendDbLine(pDrawing,pre_ls_pt,cur_ls_pt,HIBERID(pPlate->GetKey()),PS_DASH,color);
+					AppendDbLine(pDrawing,pre_ls_pt,cur_ls_pt,HIBERID(pPlate->GetKey()),PS_DASH, crText);
 			}
 			pre_ls_pt=cur_ls_pt;
 		}
