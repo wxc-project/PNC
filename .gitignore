@@ -294,3 +294,4 @@ __pycache__/
 *.manifest
 /ConvertToNC/UBOMDebugObj7/PNC07_manifest.rc
 *.txt
+/PEC/DebugForTMA/PEC_manifest.rc

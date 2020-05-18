@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="DebugForTMA|Win32">
+      <Configuration>DebugForTMA</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -44,6 +48,11 @@
     <UseOfMfc>Dynamic</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -59,12 +68,18 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.40219.1</_ProjectFileVersion>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">..\bin\DebugForTMA\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">DebugForTMA\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">true</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\LDS\bin\TMARelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">..\..\LDS\bin\TMARelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">..\Release\</OutDir>
@@ -75,8 +90,11 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">false</LinkIncremental>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRules Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'" />
     <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" />
+    <CodeAnalysisRuleAssemblies Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'" />
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
     <CodeAnalysisRuleSet Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">AllRules.ruleset</CodeAnalysisRuleSet>
@@ -95,6 +113,39 @@
       <Optimization>Disabled</Optimization>
       <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\XeroCad;..\..\XhCore-dll\XeroCad\Localize;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\PPE\Model</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_WINDLL;_AFXDLL;PEC_EXPORTS;__PNC_;__TAP_CONTEXT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <AdditionalDependencies>f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLicAgent2.lib;XhLdsLm2.lib;DrawSolid.lib;XeroCad.lib;PartLib.lib;LmaDlg10.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)PEC.dll</OutputFile>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhCore-dll\LmaDlg\Debug;..\..\XhCore-dll\PartLib\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\PPE\Model;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <ModuleDefinitionFile>.\PEC.def</ModuleDefinitionFile>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <ImportLibrary>$(OutDir)PEC.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+    </Link>
+    <Midl>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MkTypLibCompatible>false</MkTypLibCompatible>
+    </Midl>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <Culture>0x0804</Culture>
+      <AdditionalIncludeDirectories>$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\XhCore-dll\Graphics;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\DrawSolid;..\..\XhCore-dll\XeroCad;..\..\XhCore-dll\XeroCad\Localize;..\..\XhCore-dll\LmaDlg;..\..\XhCore-dll\PartLib;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\PPE\Model</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;_WINDLL;_AFXDLL;PEC_EXPORTS;__TMA_;__TAP_CONTEXT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -253,6 +304,7 @@
     <ClCompile Include="PEC.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">Create</PrecompiledHeader>
