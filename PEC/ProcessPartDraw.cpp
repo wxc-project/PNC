@@ -1625,26 +1625,37 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 	if(pPlate==NULL||pSolidSet==NULL||pDrawing==NULL)
 		return;
 	HIBERID plateId(pPlate->GetKey());
-	f3dPoint tube_len_vec;	//焊件父杆件延伸方向
 	if(pPlate->m_cFaceN==3 && !(pPlate->top_point.IsZero()))
 		AppendDbPoint(pDrawing,pPlate->top_point,plateId);
-	int i=0;
-	f3dLine line;
+	//获取颜色设置
+	char sValue[MAX_PATH] = "", tem_str[100] = "";
+	COLORREF crEdge = color, crText = color;
+	if (CPEC::GetSysParaFromReg("EdgeColor", sValue))
+	{
+		sprintf(tem_str, "%s", sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crEdge);
+	}
+	if (CPEC::GetSysParaFromReg("TextColor", sValue))
+	{
+		char tem_str[100] = "";
+		sprintf(tem_str, "%s", sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crText);
+	}
+	//绘制直线
+	int i = 0;
 	PROFILE_VER *pVertex=NULL,*pPrevPnt=pPlate->vertex_list.GetTail(),*pPrevPrevPnt=pPlate->vertex_list.GetPrev();
 	for(pVertex=pPlate->vertex_list.GetFirst();pVertex;pVertex=pPlate->vertex_list.GetNext(),i++)
 	{
 		pVertex->hiberId.masterId=pPlate->GetKey();
 		pPrevPnt->hiberId.masterId=pPlate->GetKey();
 		if(pPlate->mcsFlg.ciBottomEdge!=i)
-			AppendDbPoint(pDrawing,pVertex->vertex,pVertex->hiberId,PS_SOLID,color);
+			AppendDbPoint(pDrawing,pVertex->vertex,pVertex->hiberId,PS_SOLID,crEdge);
 		else
 			AppendDbPoint(pDrawing,pVertex->vertex,pVertex->hiberId,PS_SOLID,RGB(127, 255, 0),8);
 		//轮廓线
-		line.pen.style=PS_SOLID;
-		if(pPrevPnt->m_bWeldEdge)
-			line.pen.width=2;	//焊接边加粗显示(江电通过晓仲提出 wjh-2017.1.16)
-		else
-			line.pen.width=1;
+		int nPenWidth = pPrevPnt->m_bWeldEdge ? 2 : 1;	//焊接边加粗显示(江电通过晓仲提出 wjh-2017.1.16)
 		if((pPrevPrevPnt&&pPrevPrevPnt->m_bRollEdge&&pPrevPrevPnt->manu_space!=0)||
 			(pPrevPnt&&pPrevPnt->m_bRollEdge&&pPrevPnt->manu_space!=0)||pVertex->m_bRollEdge&&pVertex->manu_space!=0)
 		{	//有卷边工艺时，此处不绘制与卷边工艺轮廓边相连接的前后两条轮廓边（共三条边）
@@ -1654,34 +1665,24 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		}
 		if(pPlate->m_cFaceN<3||pPrevPnt->vertex.feature!=3||pVertex->vertex.feature!=2)
 		{
-			f3dArcLine arcLine;
-			arcLine.pen=line.pen;
-			int iFace=pPrevPnt->vertex.feature;
-			if(pPrevPnt->type==2)
+			if (pPrevPnt->type == 2)
 			{	//圆弧
-				IDbArcline *pArcLine=AppendDbArcLine(pDrawing,pPrevPnt->hiberId,PS_SOLID,color);
-				pArcLine->CreateMethod2(pPrevPnt->vertex,pVertex->vertex,pPrevPnt->work_norm,pPrevPnt->sector_angle);	
-				pArcLine->SetPen(line.pen);
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+				pArcLine->CreateMethod2(pPrevPnt->vertex, pVertex->vertex, pPrevPnt->work_norm, pPrevPnt->sector_angle);
 			}
-			else if(pPrevPnt->type==3)	//椭圆弧
-			{
-				IDbArcline *pArcLine=AppendDbArcLine(pDrawing,pPrevPnt->hiberId,PS_SOLID,color);
-				pArcLine->CreateEllipse(pPrevPnt->center,pPrevPnt->vertex,pVertex->vertex,pPrevPnt->column_norm,
-					pPrevPnt->work_norm,pPrevPnt->radius);
-				pArcLine->SetPen(line.pen);
+			else if (pPrevPnt->type == 3)	
+			{	//椭圆弧
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+				pArcLine->CreateEllipse(pPrevPnt->center, pPrevPnt->vertex, pVertex->vertex, pPrevPnt->column_norm,
+					pPrevPnt->work_norm, pPrevPnt->radius);
 			}
 			else	//直线
-			{
-				IDbLine* pLine=AppendDbLine(pDrawing,pPrevPnt->vertex,pVertex->vertex,pPrevPnt->hiberId,PS_SOLID,color);
-				pLine->SetPen(line.pen);
-			}
+				AppendDbLine(pDrawing, pPrevPnt->vertex, pVertex->vertex, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
 		}
 		else
 		{
-			IDbLine* pLine=AppendDbLine(pDrawing,pPrevPnt->vertex,pPlate->top_point,pPrevPnt->hiberId,PS_SOLID,color);
-			pLine->SetPen(line.pen);
-			pLine=AppendDbLine(pDrawing,pPlate->top_point,pVertex->vertex,pVertex->hiberId,PS_SOLID,color);
-			pLine->SetPen(line.pen);
+			AppendDbLine(pDrawing, pPrevPnt->vertex, pPlate->top_point, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+			AppendDbLine(pDrawing, pPlate->top_point, pVertex->vertex, pVertex->hiberId, PS_SOLID, crEdge, nPenWidth);
 		}
 		pPrevPrevPnt=pPrevPnt;
 		pPrevPnt = pVertex;
@@ -1723,43 +1724,26 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 					ptS = center - minorAxis * minorRadius;
 					ptE = center + majorAxis * majorRadius;
 				}
-				IDbArcline *pArcLine = AppendDbArcLine(pDrawing);
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, plateId, PS_SOLID, crEdge);
 				pArcLine->CreateEllipse(center, ptS, ptE, columnNorm, workNorm, minorRadius);
 			}
 		}
 		else
-		{
-			f3dCircle circle;
-			circle.norm.Set(0, 0, 1);
-			circle.centre = pPlate->m_tInnerOrigin;
-			circle.radius = pPlate->m_fInnerRadius;
-			circle.pen.width = 1;
-			circle.pen.crColor = PS_SOLID;
-			IDbCircle* pCir = AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius);
-			pCir->SetPen(circle.pen);
-		}
+			AppendDbCircle(pDrawing, pPlate->m_tInnerOrigin, f3dPoint(0,0,1), pPlate->m_fInnerRadius, plateId, PS_SOLID, crEdge);
 	}
 	//绘制火曲线
-	line.pen.style=PS_DASHDOTDOT;
-	line.pen.crColor=RGB(255,0,0);
-	line.pen.width=1;
-	line.feature=2;	//火曲线火曲
 	for(int i=2;i<=pPlate->m_cFaceN;i++)
 	{
+		f3dLine line;
 		if(pPlate->GetBendLineAt(i-2,&line)!=0)
 		{
-			line.ID=i-1;	//第一条火曲线
+			int ID=i-1;	//第一条火曲线
 			HIBERID huoquLineId(pPlate->GetKey(),HIBERARCHY(0,0,1,line.ID));
 			AppendDbLine(pDrawing,line.startPt,line.endPt,huoquLineId,PS_DASHDOT,RGB(255,0,0));
 		}
 		else
 			logerr.Log("第%d火曲线始末段绘制顶点查找失败",i-1);
 	}
-	
-	line.pen.style=PS_SOLID;
-	line.pen.crColor=0;
-	line.pen.width=1;
-	line.feature=0;//普通直线
 	//螺栓孔
 	if(pPlate->m_xBoltInfoList.GetNodeNum()>0)
 	{
@@ -1792,9 +1776,9 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 				if(CPEC::GetSysParaFromReg("TextHeight",sValue))
 					fTextHeight=atof(sValue);
 				CXhChar50 text("%d",pBoltInfo->keyId);
-				AppendDbText(pDrawing,cur_ls_pt,text,0,fTextHeight,IDbText::AlignMiddleCenter,plateId,0,RGB(61,145,64),2);
+				AppendDbText(pDrawing,cur_ls_pt,text,0,fTextHeight,IDbText::AlignMiddleCenter,plateId,0,crText,2);
 				if(pBoltInfo!=pFirstBolt)
-					AppendDbLine(pDrawing,pre_ls_pt,cur_ls_pt,HIBERID(pPlate->GetKey()),PS_DASH,color);
+					AppendDbLine(pDrawing,pre_ls_pt,cur_ls_pt,HIBERID(pPlate->GetKey()),PS_DASH, crText);
 			}
 			pre_ls_pt=cur_ls_pt;
 		}

@@ -294,10 +294,8 @@ int CPPEView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	g_pSolidSet->Init(m_hWnd);
 	char sFontFile[MAX_PATH],sBigFontFile[MAX_PATH],sAppPath[MAX_PATH];
 	GetSysPath(sAppPath);
-	sprintf(sFontFile, "%s\\sys\\txt.shx", sAppPath);
-	bool bRetCode = g_pSolidSet->SetShxFontFile(sFontFile);
-	//sprintf(sFontFile,"%s\\sys\\simplex.shx",sAppPath);
-	//bool bRetCode=g_pSolidSet->SetShxFontFile(sFontFile);
+	sprintf(sFontFile,"%s\\sys\\simplex.shx",sAppPath);
+	bool bRetCode=g_pSolidSet->SetShxFontFile(sFontFile);
 	sprintf(sBigFontFile,"%s\\sys\\GBHZFS.shx",sAppPath);
 	bRetCode=g_pSolidSet->SetBigFontFile(sBigFontFile);
 	char sPartLibPath[MAX_PATH];
@@ -672,17 +670,22 @@ void CPPEView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	if(nChar==VK_ESCAPE)
 	{
 		OperOther();
-		if(m_xSelectEntity.GetSelectEntNum()>0)
+		if (m_xSelectEntity.GetSelectEntNum() > 0)
+		{	//取消选中构件的图元，重新刷新构件
 			m_xSelectEntity.Empty();
-		//else
-		//	UpdateCurWorkPartByPartNo(NULL);
-		if(m_pProcessPart)
-			g_p2dDraw->RenderDrawing();
+			if (m_pProcessPart)
+				g_p2dDraw->RenderDrawing();
+		}
+		else if (m_pProcessPart)
+		{	//取消选中构件
+			CPartTreeDlg *pPartTreeDlg = ((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
+			pPartTreeDlg->CancelSelTreeItem();
+		}
 		else
 		{
-			Refresh();
 			CPartTreeDlg *pPartTreeDlg=((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
 			pPartTreeDlg->GetTreeCtrl()->SelectItem(NULL);
+			Refresh();
 		}
 		if(g_pPromptMsg)
 			g_pPromptMsg->Destroy();
@@ -1411,7 +1414,7 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 {
 	if(!theApp.starter.IsMultiPartsMode())
 		return;
-	if(part_no)
+	if(part_no && strlen(part_no)>1)
 		m_pProcessPart=model.FromPartNo(part_no);
 	else
 		m_pProcessPart=NULL;
@@ -1547,11 +1550,13 @@ void CPPEView::AmendHoleIncrement()
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM20;
 			else if(pBolt->bolt_d==24&&pBolt->cFuncType==0)
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM24;
-			else if(pBolt->bolt_d>=g_sysPara.nc.m_fLimitSH)
-				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fMSH;
-			//else	剩余螺栓进行手动修订
-				//pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fOther;
-			
+			else if (pBolt->cFuncType >= 2)
+			{	//特殊孔
+				if (pBolt->bolt_d >= g_sysPara.nc.m_fLimitSH)
+					pBolt->hole_d_increment = (float)g_sysPara.holeIncrement.m_fCutSH;
+				else
+					pBolt->hole_d_increment = (float)g_sysPara.holeIncrement.m_fProSH;
+			}
 		}
 		SyncPartInfo(true,false);
 	}

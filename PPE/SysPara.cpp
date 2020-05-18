@@ -60,13 +60,16 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.m_fMKRectL",PROPLIST_ITEM(id++,"字盒长度","字盒矩形长度"));
 	AddPropItem("nc.m_fBaffleHigh",PROPLIST_ITEM(id++,"挡板高度"));
 	AddPropItem("nc.m_iNcMode",PROPLIST_ITEM(id++,"钢板NC模式","生成钢板DXF文件的模式","切割|板床|激光|切割+板床|切割+板床+激光"));
-	AddPropItem("nc.m_fLimitSH",PROPLIST_ITEM(id++,"特殊孔最小值","特殊孔一般通过切割进行加工"));
+	AddPropItem("nc.m_fLimitSH",PROPLIST_ITEM(id++,"特殊孔界限值","特殊孔一般通过切割进行加工"));
+	AddPropItem("CutLimitSH", PROPLIST_ITEM(id++, "切割式特殊孔(大孔)", "通过切割工艺进行加工的特殊孔"));
+	AddPropItem("ProLimitSH", PROPLIST_ITEM(id++, "板床式特殊孔(小孔)", "通过板床工艺进行加工的特殊孔"));
 	AddPropItem("nc.m_sThickToPBJ",PROPLIST_ITEM(id++,"冲孔板厚范围"));
 	AddPropItem("nc.m_sThickToPMZ",PROPLIST_ITEM(id++,"钻孔板厚范围"));
 	AddPropItem("nc.m_sNcDriverPath",PROPLIST_ITEM(id++,"角钢NC驱动"));
 	//文件设置
 	AddPropItem("FileSet", PROPLIST_ITEM(id++, "文件设置"));
 	AddPropItem("FileFormat", PROPLIST_ITEM(id++, "输出文件格式"));
+	AddPropItem("OutputPath", PROPLIST_ITEM(id++, "输出文件路径"));
 	AddPropItem("PbjPara",PROPLIST_ITEM(id++,"PBJ设置"));
 	AddPropItem("pbj.m_iPbjMode",PROPLIST_ITEM(id++,"分类输出","生成PBJ文件时是否分类输出","0.无|1.按厚度"));
 	AddPropItem("pbj.m_bIncVertex",PROPLIST_ITEM(id++,"输出顶点","导出PBJ时，是否包括顶点","是|否"));
@@ -126,11 +129,12 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.LaserPara.m_bOutputBendType", PROPLIST_ITEM(id++, "输出制弯类型", "", "是|否"));
 	//
 	AddPropItem("holeIncrement.m_fDatum",PROPLIST_ITEM(id++,"孔径增大值"));
-	AddPropItem("holeIncrement.m_fM12",PROPLIST_ITEM(id++,"M12增量"));
-	AddPropItem("holeIncrement.m_fM16",PROPLIST_ITEM(id++,"M16增量"));
-	AddPropItem("holeIncrement.m_fM20",PROPLIST_ITEM(id++,"M20增量"));
-	AddPropItem("holeIncrement.m_fM24",PROPLIST_ITEM(id++,"M24增量"));
-	AddPropItem("holeIncrement.m_fMSH",PROPLIST_ITEM(id++,"特殊孔增量"));
+	AddPropItem("holeIncrement.m_fM12",PROPLIST_ITEM(id++,"M12标准增量"));
+	AddPropItem("holeIncrement.m_fM16",PROPLIST_ITEM(id++,"M16标准增量"));
+	AddPropItem("holeIncrement.m_fM20",PROPLIST_ITEM(id++,"M20标准增量"));
+	AddPropItem("holeIncrement.m_fM24",PROPLIST_ITEM(id++,"M24标准增量"));
+	AddPropItem("holeIncrement.m_fCutSH", PROPLIST_ITEM(id++, "切割特殊孔增量"));
+	AddPropItem("holeIncrement.m_fProSH", PROPLIST_ITEM(id++, "板床特殊孔增量"));
 	//颜色配置方案
 	AddPropItem("CRMODE",PROPLIST_ITEM(id++,"颜色方案"));
 	AddPropItem("crMode.crLS12",PROPLIST_ITEM(id++,"螺栓M12","M12孔径颜色"));
@@ -139,6 +143,8 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("crMode.crLS24",PROPLIST_ITEM(id++,"螺栓M24","M24孔径颜色"));
 	AddPropItem("crMode.crOtherLS",PROPLIST_ITEM(id++,"其他螺栓","其他孔径颜色"));
 	AddPropItem("crMode.crMarK",PROPLIST_ITEM(id++,"钢印号","钢印号颜色"));
+	AddPropItem("crMode.crEdge", PROPLIST_ITEM(id++, "轮廓边", "轮廓边的颜色"));
+	AddPropItem("crMode.crText", PROPLIST_ITEM(id++, "显示文本", "文本颜色"));
 	//
 	AddPropItem("JgDrawing",PROPLIST_ITEM(id++,"工艺卡"));
 	AddPropItem("jgDrawing.fDimTextSize",PROPLIST_ITEM(id++,"字体高度"));
@@ -190,7 +196,8 @@ void CSysPara::InitPropHashtable()
 		"角钢两肢夹角与90°的偏差值大于该阈值时认为需要进行开合角标注。"));
 	AddPropItem("jgDrawing.sAngleCardPath",PROPLIST_ITEM(id++,"角钢工艺卡"));
 	AddPropItem("Font",PROPLIST_ITEM(id++,"字体设置"));
-	AddPropItem("font.fTextHeight",PROPLIST_ITEM(id++,"普通文字字高"));
+	AddPropItem("font.fTextHeight",PROPLIST_ITEM(id++,"显示文字字高"));
+	AddPropItem("font.fDxfTextSize", PROPLIST_ITEM(id++, "DXF文字字高"));
 	AddPropItem("font.fDimTextSize",PROPLIST_ITEM(id++,"尺寸标注字高"));
 	AddPropItem("font.fPartNoTextSize",PROPLIST_ITEM(id++,"构件编号字高"));
 }
@@ -255,7 +262,8 @@ CSysPara::CSysPara(void)
 	holeIncrement.m_fM16=1.5;
 	holeIncrement.m_fM20=1.5;
 	holeIncrement.m_fM24=1.5;
-	holeIncrement.m_fMSH=0;
+	holeIncrement.m_fCutSH=0;
+	holeIncrement.m_fProSH = 0;
 	//颜色方案
 	crMode.crLS12 = RGB(128,0,64);
 	crMode.crLS16 = RGB(255,0,255);
@@ -263,6 +271,8 @@ CSysPara::CSysPara(void)
 	crMode.crLS24 = RGB(128,0,255);
 	crMode.crOtherLS = RGB( 46,0,91);
 	crMode.crMark = RGB(255,0,0);
+	crMode.crEdge = RGB(0, 0, 0);
+	crMode.crText = RGB(255, 0, 0);
 	//角钢构件图		
 	jgDrawing.iDimPrecision =0;			
 	jgDrawing.fRealToDraw=10;			
@@ -303,6 +313,7 @@ CSysPara::CSysPara(void)
 	jgDrawing.sAngleCardPath.Empty();
 	//
 	font.fTextHeight = 30;
+	font.fDxfTextSize = 2;
 	font.fDimTextSize=2.5;
 	font.fPartNoTextSize=3.0;
 }
@@ -313,7 +324,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.5");
+	CString version("2.7");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -345,7 +356,8 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar<<holeIncrement.m_fM16;
 	ar<<holeIncrement.m_fM20;
 	ar<<holeIncrement.m_fM24;
-	ar<<holeIncrement.m_fMSH;
+	ar<<holeIncrement.m_fCutSH;
+	ar<<holeIncrement.m_fProSH;
 	//等离子切割
 	ar<<m_cDisplayCutType;
 	ar<<CString(plasmaCut.m_sOutLineLen);
@@ -433,6 +445,7 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar << CString(model.m_sOperator);
 	ar << CString(model.m_sAuditor);
 	ar << CString(model.m_sCritic);
+	ar << CString(model.m_sOutputPath);
 	ar << model.file_format.m_sSplitters.size();
 	for (size_t i = 0; i < model.file_format.m_sSplitters.size(); i++)
 		ar << CString(model.file_format.m_sSplitters[i]);
@@ -451,7 +464,10 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("M24Color");
 	WriteSysParaToReg("OtherColor");
 	WriteSysParaToReg("MarkColor");
+	WriteSysParaToReg("EdgeColor");
+	WriteSysParaToReg("TextColor");
 	WriteSysParaToReg("TextHeight");
+	WriteSysParaToReg("DxfTextSize");
 	WriteSysParaToReg("LimitSH");
 	WriteSysParaToReg("NeedSH");
 	WriteSysParaToReg("NeedMKRect");
@@ -534,7 +550,9 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar>>holeIncrement.m_fM16;
 		ar>>holeIncrement.m_fM20;
 		ar>>holeIncrement.m_fM24;
-		ar>>holeIncrement.m_fMSH;
+		ar>>holeIncrement.m_fCutSH;
+		if (fVersion >= 2.7)
+			ar >> holeIncrement.m_fProSH;
 	}
 	if(fVersion>=1.8)
 	{	
@@ -660,6 +678,12 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar >> sValue; model.m_sAuditor.Copy(sValue);
 		ar >> sValue; model.m_sCritic.Copy(sValue);
 	}
+	if (compareVersion(version, "2.6") >= 0)
+	{
+		CString sValue;
+		ar >> sValue;
+		model.m_sOutputPath.Copy(sValue);
+	}
 	if (compareVersion(version, "2.5") >= 0)
 	{
 		int nSize = 0;
@@ -689,7 +713,10 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("M24Color");
 	ReadSysParaFromReg("OtherColor");
 	ReadSysParaFromReg("MarkColor");
+	ReadSysParaFromReg("EdgeColor");
+	ReadSysParaFromReg("TextColor");
 	ReadSysParaFromReg("TextHeight");
+	ReadSysParaFromReg("DxfTextSize");
 	ReadSysParaFromReg("LimitSH");
 	ReadSysParaFromReg("NeedSH");
 	ReadSysParaFromReg("NeedMKRect");
@@ -756,8 +783,14 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "RGB%X", crMode.crOtherLS);
 		else if (stricmp(lpszEntry, "MarkColor") == 0)
 			sprintf(sValue, "RGB%X", crMode.crMark);
+		else if (stricmp(lpszEntry, "EdgeColor") == 0)
+			sprintf(sValue, "RGB%X", crMode.crEdge);
+		else if (stricmp(lpszEntry, "TextColor") == 0)
+			sprintf(sValue, "RGB%X", crMode.crText);
 		else if (stricmp(lpszEntry, "TextHeight") == 0)
 			sprintf(sValue, "%f", font.fTextHeight);
+		else if (stricmp(lpszEntry, "DxfTextSize") == 0)
+			sprintf(sValue, "%f", font.fDxfTextSize);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
 			sprintf(sValue, "%f", nc.m_fLimitSH);
 		else if (stricmp(lpszEntry, "NeedSH") == 0)
@@ -855,6 +888,8 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			nc.m_fBaffleHigh = atof(sValue);
 		else if (stricmp(lpszEntry, "TextHeight") == 0)
 			font.fTextHeight = atof(sValue);
+		else if (stricmp(lpszEntry, "DxfTextSize") == 0)
+			font.fDxfTextSize = atof(sValue);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
 			nc.m_fLimitSH = atof(sValue);
 		else if (stricmp(lpszEntry, "NeedSH") == 0)
@@ -931,6 +966,18 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			memmove(tem_str, tem_str+3, 97);
 			sscanf(tem_str,"%X",&crMode.crMark);
 		}
+		else if (stricmp(lpszEntry, "EdgeColor") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crEdge);
+		}
+		else if (stricmp(lpszEntry, "TextColor") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crText);
+		}
 		else if(stricmp(lpszEntry,"m_cDisplayCutType")==0)
 			m_cDisplayCutType=atoi(sValue);
 		else if(stricmp(lpszEntry,"flameCut.m_bInitPosFarOrg")==0)
@@ -974,8 +1021,10 @@ void CSysPara::UpdateHoleIncrement(double fHoleInc)
 		holeIncrement.m_fM20=fHoleInc;
 	if(fabs(holeIncrement.m_fM24-holeIncrement.m_fDatum)<=EPS)
 		holeIncrement.m_fM24=fHoleInc;
-	if(fabs(holeIncrement.m_fMSH-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fMSH=fHoleInc;
+	if(fabs(holeIncrement.m_fCutSH-holeIncrement.m_fDatum)<=EPS)
+		holeIncrement.m_fCutSH=fHoleInc;
+	if (fabs(holeIncrement.m_fProSH-holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fProSH=fHoleInc;
 	holeIncrement.m_fDatum=fHoleInc;
 	CNCPart::m_fHoleIncrement = holeIncrement.m_fDatum;
 }
@@ -985,6 +1034,11 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	if(GetPropID("font.fTextHeight")==id)
 	{
 		sText.Printf("%f",font.fTextHeight);
+		SimplifiedNumString(sText);
+	}
+	else if (GetPropID("font.fDxfTextSize") == id)
+	{
+		sText.Printf("%f", font.fDxfTextSize);
 		SimplifiedNumString(sText);
 	}
 	else if(GetPropID("nc.m_bAutoSortHole")==id)
@@ -1044,6 +1098,10 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("%f",nc.m_fLimitSH);
 		SimplifiedNumString(sText);
 	}
+	else if (GetPropID("CutLimitSH") == id)
+		sText.Printf(">= %g", nc.m_fLimitSH);
+	else if (GetPropID("ProLimitSH") == id)
+		sText.Printf("< %g", nc.m_fLimitSH);
 	else if(GetPropID("nc.m_bNeedSH")==id)
 	{
 		if(nc.m_bNeedSH)
@@ -1178,6 +1236,8 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if (GetPropID("FileFormat") == id)
 		sText.Copy(model.file_format.GetFileFormatStr());
+	else if(GetPropID("OutputPath")==id)
+		sText.Copy(model.m_sOutputPath);
 	else if(GetPropID("pbj.m_iPbjMode")==id)
 	{
 		if(pbj.m_iPbjMode==0)
@@ -1324,9 +1384,14 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("%f",holeIncrement.m_fM24);
 		SimplifiedNumString(sText);
 	}
-	else if(GetPropID("holeIncrement.m_fMSH")==id)
+	else if(GetPropID("holeIncrement.m_fCutSH")==id)
 	{
-		sText.Printf("%f",holeIncrement.m_fMSH);
+		sText.Printf("%f",holeIncrement.m_fCutSH);
+		SimplifiedNumString(sText);
+	}
+	else if (GetPropID("holeIncrement.m_fProSH") == id)
+	{
+		sText.Printf("%f", holeIncrement.m_fProSH);
 		SimplifiedNumString(sText);
 	}
 	else if(GetPropID("crMode.crLS12")==id)
@@ -1341,6 +1406,10 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("RGB%X",crMode.crOtherLS);
 	else if(GetPropID("crMode.crMarK")==id)
 		sText.Printf("RGB%X",crMode.crMark);
+	else if(GetPropID("crMode.crEdge")==id)
+		sText.Printf("RGB%X",crMode.crEdge);
+	else if (GetPropID("crMode.crText") == id)
+		sText.Printf("RGB%X", crMode.crText);
 	else if(GetPropID("font.fDimTextSize")==id)
 	{
 		sText.Printf("%f",font.fDimTextSize);

@@ -9,6 +9,7 @@
 #include "LicFuncDef.h"
 #include "ParseAdaptNo.h"
 #include "XhMath.h"
+#include "CadColorTbl.h"
 
 BOOL CNCPart::m_bDisplayLsOrder=FALSE;
 BOOL CNCPart::m_bSortHole=FALSE;
@@ -175,7 +176,29 @@ BOOL GetSysParaFromReg(const char* sEntry,char* sValue)
 		strcpy(sValue,sStr);
 	return TRUE;
 }
-
+int GetNearestACI(COLORREF color)
+{
+	if (color == 0xCFFFFFFF)
+		return 0;	//未设置颜色 wht 20-02-11
+	long min_dist = 2147483647L;
+	long dist = 0;
+	int min_index = 0;
+	long red = GetRValue(color);
+	long green = GetGValue(color);
+	long blue = GetBValue(color);
+	for (int i = 1; i < 256; i++)
+	{
+		dist = abs(AcadRGB[i].R - red) + abs(AcadRGB[i].G - green) + abs(AcadRGB[i].B - blue);
+		if (dist < min_dist)
+		{
+			min_index = i;
+			min_dist = dist;
+		}
+	}
+	return min_index;
+}
+//////////////////////////////////////////////////////////////////////////
+//
 //ttp格式
 //13字节文件名称
 //1字节标识为（0x80）标识钢板
@@ -439,8 +462,27 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		bNeedSH=atoi(sValue);
 	if (dxf_mode == CNCPart::CUT_MODE && GetSysParaFromReg("ShapeAddDist", sValue))
 		fShapeAddDist=atof(sValue);
-	if (GetSysParaFromReg("TextHeight", sValue))
+	if (GetSysParaFromReg("DxfTextSize", sValue))
 		fFontH = atof(sValue);
+	int nEdgeClrIndex = -1, nTextClrIndex = -1;
+	if (GetSysParaFromReg("EdgeColor", sValue))
+	{
+		char tem_str[100] = "";
+		COLORREF crEdge;
+		sprintf(tem_str, "%s", (char*)sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crEdge);
+		nEdgeClrIndex = GetNearestACI(crEdge);
+	}
+	if (GetSysParaFromReg("TextColor", sValue))
+	{
+		char tem_str[100] = "";
+		COLORREF crText;
+		sprintf(tem_str, "%s", (char*)sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crText);
+		nTextClrIndex = GetNearestACI(crText);
+	}
 	//移除共线点之前获取火曲线位置 wht 19-09-26
 	f3dLine huoquLine[2] = {};
 	if (dxf_mode == CNCPart::LASER_MODE)
@@ -566,6 +608,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 					}
 					f3dArcLine arcLine;
 					arcLine.CreateEllipse(center, ptS, ptE, columnNorm, workNorm, minorRadius);
+					//file.NewEllipse();
 				}
 			}
 			else
@@ -585,10 +628,17 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 			else if (dxf_mode == CNCPart::PROCESS_MODE)
 			{	//板床打孔模式下
-				if (pHole->bolt_d <= 24 || pHole->bolt_d < fSpecialD)	//对普通连接螺栓孔进行加工
+				if (pHole->cFuncType == 0)
+				{	//标准螺栓
 					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
-				if (bNeedSH&&pHole->bolt_d >= fSpecialD)		//对于需保留特殊孔要求的，对特殊孔进行加工
-					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				}
+				else
+				{	//特殊孔
+					if (pHole->bolt_d < fSpecialD)	//对小号特殊孔进行加工
+						file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+					if (bNeedSH && pHole->bolt_d >= fSpecialD)		//对于需保留特殊孔要求的，对大号特殊孔进行加工
+						file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				}
 			}
 			else if (dxf_mode == CNCPart::LASER_MODE)
 			{	//激光加工模式下，生成所有孔
@@ -672,7 +722,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 						GEPOINT offVec(-sin(fRotAngle), cos(fRotAngle));
 						GEPOINT dimPos = 0.5*(ptS + ptE);
 						dimPos = dimPos - dimVec * fTextW*0.5 + offVec * 2;
-						file.NewText(sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, 7);
+						file.NewText(sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, nTextClrIndex);
 					}
 				}
 			}
@@ -797,7 +847,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				for (int i = 0; i < sNoteArr.GetSize(); i++)
 				{
 					f3dPoint dimPos = dimPt + offsetVec * fLineH*i - dimVec * fTextW*0.5;
-					file.NewText(sNoteArr[i], dimPos, fFontH);
+					file.NewText(sNoteArr[i], dimPos, fFontH, 0, nTextClrIndex);
 				}
 			}
 		}

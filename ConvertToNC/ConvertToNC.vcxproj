@@ -3034,6 +3034,7 @@
     <ClCompile Include="XeroExtractor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\ToolKits\ToolCode\CadColorTbl.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />

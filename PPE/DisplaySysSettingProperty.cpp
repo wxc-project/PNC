@@ -11,6 +11,7 @@
 #include "NcPart.h"
 #include "PlankConfigDlg.h"
 #include "FileFormatSetDlg.h"
+#include "folder_dialog.h"
 
 void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 {
@@ -36,10 +37,14 @@ void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParent
 	fValue=g_sysPara.holeIncrement.m_fM24;
 	if(fabs(fValue-fDatum)>EPS)
 		oper.InsertEditPropItem(pParentItem,"holeIncrement.m_fM24", "", "", -1, TRUE);
-	//MSH
-	fValue=g_sysPara.holeIncrement.m_fMSH;
+	//CutSH
+	fValue=g_sysPara.holeIncrement.m_fCutSH;
 	if(fabs(fValue-fDatum)>EPS)
-		oper.InsertEditPropItem(pParentItem,"holeIncrement.m_fMSH", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem,"holeIncrement.m_fCutSH", "", "", -1, TRUE);
+	//ProSH
+	fValue = g_sysPara.holeIncrement.m_fProSH;
+	if (fabs(fValue - fDatum) > EPS)
+		oper.InsertEditPropItem(pParentItem, "holeIncrement.m_fProSH", "", "", -1, TRUE);
 }
 BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CString &valueStr)
 {
@@ -63,6 +68,11 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		model.m_sAuditor.Copy(valueStr);
 	else if (CSysPara::GetPropID("model.m_sCritic") == pItem->m_idProp)
 		model.m_sCritic.Copy(valueStr);
+	else if (CSysPara::GetPropID("font.fDxfTextSize") == pItem->m_idProp)
+	{
+		g_sysPara.font.fDxfTextSize = atof(valueStr);
+		g_sysPara.WriteSysParaToReg("DxfTextSize");
+	}
 	else if (CSysPara::GetPropID("font.fTextHeight") == pItem->m_idProp)
 	{
 		g_sysPara.font.fTextHeight = atof(valueStr);
@@ -122,6 +132,9 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	{
 		g_sysPara.nc.m_fLimitSH=atof(valueStr);
 		g_sysPara.WriteSysParaToReg("LimitSH");
+		//
+		oper.UpdatePropItemValue("CutLimitSH");
+		oper.UpdatePropItemValue("ProLimitSH");
 	}
 	else if(CSysPara::GetPropID("nc.m_bNeedSH")==pItem->m_idProp)
 	{
@@ -512,13 +525,18 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.holeIncrement.m_fM24=atof(valueStr);
 		bUpdateHoleInc=TRUE;
 	}
-	else if(CSysPara::GetPropID("holeIncrement.m_fMSH")==pItem->m_idProp)
+	else if(CSysPara::GetPropID("holeIncrement.m_fCutSH")==pItem->m_idProp)
 	{	
-		g_sysPara.holeIncrement.m_fMSH=atof(valueStr);
+		g_sysPara.holeIncrement.m_fCutSH=atof(valueStr);
 		bUpdateHoleInc=TRUE;
 	}
+	else if (CSysPara::GetPropID("holeIncrement.m_fProSH") == pItem->m_idProp)
+	{
+		g_sysPara.holeIncrement.m_fProSH = atof(valueStr);
+		bUpdateHoleInc = TRUE;
+	}
 	else if(pItem->m_idProp>=CSysPara::GetPropID("crMode.crLS12") &&
-		pItem->m_idProp<=CSysPara::GetPropID("crMode.crMarK"))
+		pItem->m_idProp<=CSysPara::GetPropID("crMode.crText"))
 	{
 		COLORREF curClr = 0;
 		char tem_str[100]="";
@@ -554,6 +572,16 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		{
 			g_sysPara.crMode.crMark=curClr;
 			g_sysPara.WriteSysParaToReg("MarkColor");
+		}
+		if (pItem->m_idProp == CSysPara::GetPropID("crMode.crEdge"))
+		{
+			g_sysPara.crMode.crEdge = curClr;
+			g_sysPara.WriteSysParaToReg("EdgeColor");
+		}
+		if (pItem->m_idProp == CSysPara::GetPropID("crMode.crText"))
+		{
+			g_sysPara.crMode.crText = curClr;
+			g_sysPara.WriteSysParaToReg("TextColor");
 		}
 	}
 	else if(CSysPara::GetPropID("jgDrawing.sAngleCardPath")==pItem->m_idProp)
@@ -743,9 +771,13 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 		else
 			g_sysPara.holeIncrement.m_fM24=fDatum;
 		if(dlg.m_arrIsCanUse[4])
-			g_sysPara.holeIncrement.m_fMSH=dlg.m_fSpcIncrement;
+			g_sysPara.holeIncrement.m_fCutSH=dlg.m_fCutIncrement;
 		else
-			g_sysPara.holeIncrement.m_fMSH=fDatum;
+			g_sysPara.holeIncrement.m_fCutSH=fDatum;
+		if (dlg.m_arrIsCanUse[5])
+			g_sysPara.holeIncrement.m_fProSH = dlg.m_fCutIncrement;
+		else
+			g_sysPara.holeIncrement.m_fProSH = fDatum;
 		UpdateHoleIncrementProperty(pPropList,pItem);
 		//
 		CPPEView *pView=(CPPEView*)theApp.GetView();
@@ -762,6 +794,15 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 		if(dlg.DoModal()==IDOK)
 			pPropList->SetItemPropValue(pItem->m_idProp, model.file_format.GetFileFormatStr());
 	}
+	else if (CSysPara::GetPropID("OutputPath") == pItem->m_idProp)
+	{
+		CString sFolder;
+		if (InvokeFolderPickerDlg(sFolder))
+		{
+			model.m_sOutputPath.Copy(sFolder);
+			pPropList->SetItemPropValue(pItem->m_idProp, sFolder);
+		}
+	}
 	else 
 		return FALSE;
 	return TRUE;
@@ -777,7 +818,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropDlg->m_arrPropGroupLabel.SetSize(3);
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_NCINFO-1,"常规");
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_PROCESSCARD_INFO - 1, "输出");
-	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_DISPLAY - 1, "显示");
+	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_DISPLAY - 1, "其他");
 #else
 	pPropDlg->m_arrPropGroupLabel.SetSize(3);
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_NCINFO-1,"常规");
@@ -792,7 +833,8 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropList->m_nObjClassTypeId = 0;
 	pPropList->SetModifyValueFunc(ModifySyssettingProperty);
 	pPropList->SetButtonClickFunc(SyssettingButtonClick);
-	CPropTreeItem *pParentItem=NULL,*pPropItem=NULL,*pRootItem = pPropList->GetRootItem();
+	CPropTreeItem *pRootItem = pPropList->GetRootItem();
+	CPropTreeItem *pParentItem = NULL, *pGroupItem = NULL, *pPropItem = NULL;
 	CPropertyListOper<CSysPara> oper(pPropList, &g_sysPara);
 	//文件属性
 	pParentItem = oper.InsertPropItem(pRootItem, "Model");
@@ -813,21 +855,28 @@ BOOL CPPEView::DisplaySysSettingProperty()
 #if defined(__PNC_)||defined(__PROCESS_PLATE_)
 	oper.InsertEditPropItem(pParentItem,"nc.m_fBaffleHigh");
 	oper.InsertEditPropItem(pParentItem,"nc.m_fMKHoleD");
-	pPropItem=oper.InsertCmbListPropItem(pParentItem,"nc.m_bDispMkRect");
+	pGroupItem =oper.InsertCmbListPropItem(pParentItem,"nc.m_bDispMkRect");
 	if(g_sysPara.nc.m_bDispMkRect)
 	{
-		oper.InsertEditPropItem(pPropItem,"nc.m_fMKRectL");
-		oper.InsertEditPropItem(pPropItem,"nc.m_fMKRectW");
+		oper.InsertEditPropItem(pGroupItem,"nc.m_fMKRectL");
+		oper.InsertEditPropItem(pGroupItem,"nc.m_fMKRectW");
 	}
-	oper.InsertEditPropItem(pParentItem,"nc.m_fLimitSH");
-	pPropItem=oper.InsertBtnEditPropItem(pParentItem,"holeIncrement.m_fDatum");
-	UpdateHoleIncrementProperty(pPropList,pPropItem);
+	pGroupItem = oper.InsertEditPropItem(pParentItem,"nc.m_fLimitSH");
+	if (g_sysPara.nc.m_fLimitSH > 0)
+	{
+		pPropItem = oper.InsertEditPropItem(pGroupItem, "CutLimitSH");
+		pPropItem->SetReadOnly();
+		pPropItem = oper.InsertEditPropItem(pGroupItem, "ProLimitSH");
+		pPropItem->SetReadOnly();
+	}
+	pGroupItem =oper.InsertBtnEditPropItem(pParentItem,"holeIncrement.m_fDatum");
+	UpdateHoleIncrementProperty(pPropList, pGroupItem);
 #endif
 #ifdef __PNC_
 	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 	{	//支持螺栓优化功能
 		pPropItem=oper.InsertCmbListPropItem(pParentItem, "nc.m_bSortByHoleD");
-		if (TRUE)
+		if (g_sysPara.nc.m_bSortByHoleD)
 			oper.InsertCmbListPropItem(pPropItem, "nc.m_iGroupSortType");
 		//不开放自动优化螺栓孔，优化耗时长，影响操作流畅度
 		//oper.InsertCmbListPropItem(pParentItem, "nc.m_bAutoSortHole");		
@@ -859,6 +908,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//钢板输出设置
 	pParentItem = oper.InsertPropItem(pRootItem, "OutPutSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_PROCESSCARD_INFO);
+	oper.InsertButtonPropItem(pParentItem, "OutputPath");
 	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
 #ifdef __PROCESS_PLATE_
@@ -875,7 +925,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 #else
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iNcMode");
 	//切割下料
-	CPropTreeItem *pGroupItem = oper.InsertEditPropItem(pParentItem, "CutInfo");
+	pGroupItem = oper.InsertEditPropItem(pParentItem, "CutInfo");
 	oper.InsertEditPropItem(pGroupItem, "nc.m_fShapeAddDist");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.bFlameCut");
 	if (g_sysPara.nc.m_bFlameCut)
@@ -975,6 +1025,8 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//颜色方案
 	pParentItem = oper.InsertPropItem(pRootItem, "CRMODE");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_DISPLAY);
+	oper.InsertCmbColorPropItem(pParentItem, "crMode.crEdge");
+	oper.InsertCmbColorPropItem(pParentItem, "crMode.crText");
 	oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS12");
 	oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS16");
 	oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS20");
@@ -984,6 +1036,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//字体设置
 	pParentItem = oper.InsertPropItem(pRootItem, "Font");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_DISPLAY);
+	oper.InsertEditPropItem(pParentItem, "font.fDxfTextSize");
 	oper.InsertEditPropItem(pParentItem, "font.fTextHeight");
 #ifndef __PNC_
 	oper.InsertEditPropItem(pParentItem, "font.fDimTextSize");
