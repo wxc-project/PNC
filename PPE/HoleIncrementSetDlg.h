@@ -13,12 +13,13 @@ public:
 
 // 对话框数据
 	enum { IDD = IDD_HOLE_INCREMENT_DLG };
-	BOOL	m_arrIsCanUse[5];
+	BOOL	m_arrIsCanUse[6];
 	double  m_fM12Increment;
 	double  m_fM16Increment;
 	double  m_fM20Increment;
 	double  m_fM24Increment;
-	double  m_fSpcIncrement;
+	double  m_fCutIncrement;
+	double  m_fProIncrement;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -27,5 +28,6 @@ protected:
 	afx_msg void OnChkM16();
 	afx_msg void OnChkM20();
 	afx_msg void OnChkM24();
-	afx_msg void OnChkMSH();
+	afx_msg void OnChkCutSH();
+	afx_msg void OnChkProSH();
 };

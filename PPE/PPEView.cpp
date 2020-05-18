@@ -1414,7 +1414,7 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 {
 	if(!theApp.starter.IsMultiPartsMode())
 		return;
-	if(part_no)
+	if(part_no && strlen(part_no)>1)
 		m_pProcessPart=model.FromPartNo(part_no);
 	else
 		m_pProcessPart=NULL;
@@ -1550,11 +1550,13 @@ void CPPEView::AmendHoleIncrement()
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM20;
 			else if(pBolt->bolt_d==24&&pBolt->cFuncType==0)
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM24;
-			else if(pBolt->bolt_d>=g_sysPara.nc.m_fLimitSH)
-				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fMSH;
-			//else	Ê£ÓàÂÝË¨½øÐÐÊÖ¶¯ÐÞ¶©
-				//pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fOther;
-			
+			else if (pBolt->cFuncType >= 2)
+			{	//ÌØÊâ¿×
+				if (pBolt->bolt_d >= g_sysPara.nc.m_fLimitSH)
+					pBolt->hole_d_increment = (float)g_sysPara.holeIncrement.m_fCutSH;
+				else
+					pBolt->hole_d_increment = (float)g_sysPara.holeIncrement.m_fProSH;
+			}
 		}
 		SyncPartInfo(true,false);
 	}

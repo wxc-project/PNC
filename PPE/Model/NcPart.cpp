@@ -628,10 +628,17 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 			else if (dxf_mode == CNCPart::PROCESS_MODE)
 			{	//板床打孔模式下
-				if (pHole->bolt_d <= 24 || pHole->bolt_d < fSpecialD)	//对普通连接螺栓孔进行加工
+				if (pHole->cFuncType == 0)
+				{	//标准螺栓
 					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
-				if (bNeedSH&&pHole->bolt_d >= fSpecialD)		//对于需保留特殊孔要求的，对特殊孔进行加工
-					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				}
+				else
+				{	//特殊孔
+					if (pHole->bolt_d < fSpecialD)	//对小号特殊孔进行加工
+						file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+					if (bNeedSH && pHole->bolt_d >= fSpecialD)		//对于需保留特殊孔要求的，对大号特殊孔进行加工
+						file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				}
 			}
 			else if (dxf_mode == CNCPart::LASER_MODE)
 			{	//激光加工模式下，生成所有孔

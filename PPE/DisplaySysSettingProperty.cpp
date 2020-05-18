@@ -37,10 +37,14 @@ void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParent
 	fValue=g_sysPara.holeIncrement.m_fM24;
 	if(fabs(fValue-fDatum)>EPS)
 		oper.InsertEditPropItem(pParentItem,"holeIncrement.m_fM24", "", "", -1, TRUE);
-	//MSH
-	fValue=g_sysPara.holeIncrement.m_fMSH;
+	//CutSH
+	fValue=g_sysPara.holeIncrement.m_fCutSH;
 	if(fabs(fValue-fDatum)>EPS)
-		oper.InsertEditPropItem(pParentItem,"holeIncrement.m_fMSH", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem,"holeIncrement.m_fCutSH", "", "", -1, TRUE);
+	//ProSH
+	fValue = g_sysPara.holeIncrement.m_fProSH;
+	if (fabs(fValue - fDatum) > EPS)
+		oper.InsertEditPropItem(pParentItem, "holeIncrement.m_fProSH", "", "", -1, TRUE);
 }
 BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CString &valueStr)
 {
@@ -128,6 +132,9 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	{
 		g_sysPara.nc.m_fLimitSH=atof(valueStr);
 		g_sysPara.WriteSysParaToReg("LimitSH");
+		//
+		oper.UpdatePropItemValue("CutLimitSH");
+		oper.UpdatePropItemValue("ProLimitSH");
 	}
 	else if(CSysPara::GetPropID("nc.m_bNeedSH")==pItem->m_idProp)
 	{
@@ -518,10 +525,15 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.holeIncrement.m_fM24=atof(valueStr);
 		bUpdateHoleInc=TRUE;
 	}
-	else if(CSysPara::GetPropID("holeIncrement.m_fMSH")==pItem->m_idProp)
+	else if(CSysPara::GetPropID("holeIncrement.m_fCutSH")==pItem->m_idProp)
 	{	
-		g_sysPara.holeIncrement.m_fMSH=atof(valueStr);
+		g_sysPara.holeIncrement.m_fCutSH=atof(valueStr);
 		bUpdateHoleInc=TRUE;
+	}
+	else if (CSysPara::GetPropID("holeIncrement.m_fProSH") == pItem->m_idProp)
+	{
+		g_sysPara.holeIncrement.m_fProSH = atof(valueStr);
+		bUpdateHoleInc = TRUE;
 	}
 	else if(pItem->m_idProp>=CSysPara::GetPropID("crMode.crLS12") &&
 		pItem->m_idProp<=CSysPara::GetPropID("crMode.crText"))
@@ -759,9 +771,13 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 		else
 			g_sysPara.holeIncrement.m_fM24=fDatum;
 		if(dlg.m_arrIsCanUse[4])
-			g_sysPara.holeIncrement.m_fMSH=dlg.m_fSpcIncrement;
+			g_sysPara.holeIncrement.m_fCutSH=dlg.m_fCutIncrement;
 		else
-			g_sysPara.holeIncrement.m_fMSH=fDatum;
+			g_sysPara.holeIncrement.m_fCutSH=fDatum;
+		if (dlg.m_arrIsCanUse[5])
+			g_sysPara.holeIncrement.m_fProSH = dlg.m_fCutIncrement;
+		else
+			g_sysPara.holeIncrement.m_fProSH = fDatum;
 		UpdateHoleIncrementProperty(pPropList,pItem);
 		//
 		CPPEView *pView=(CPPEView*)theApp.GetView();
@@ -817,7 +833,8 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropList->m_nObjClassTypeId = 0;
 	pPropList->SetModifyValueFunc(ModifySyssettingProperty);
 	pPropList->SetButtonClickFunc(SyssettingButtonClick);
-	CPropTreeItem *pParentItem=NULL,*pPropItem=NULL,*pRootItem = pPropList->GetRootItem();
+	CPropTreeItem *pRootItem = pPropList->GetRootItem();
+	CPropTreeItem *pParentItem = NULL, *pGroupItem = NULL, *pPropItem = NULL;
 	CPropertyListOper<CSysPara> oper(pPropList, &g_sysPara);
 	//文件属性
 	pParentItem = oper.InsertPropItem(pRootItem, "Model");
@@ -838,15 +855,22 @@ BOOL CPPEView::DisplaySysSettingProperty()
 #if defined(__PNC_)||defined(__PROCESS_PLATE_)
 	oper.InsertEditPropItem(pParentItem,"nc.m_fBaffleHigh");
 	oper.InsertEditPropItem(pParentItem,"nc.m_fMKHoleD");
-	pPropItem=oper.InsertCmbListPropItem(pParentItem,"nc.m_bDispMkRect");
+	pGroupItem =oper.InsertCmbListPropItem(pParentItem,"nc.m_bDispMkRect");
 	if(g_sysPara.nc.m_bDispMkRect)
 	{
-		oper.InsertEditPropItem(pPropItem,"nc.m_fMKRectL");
-		oper.InsertEditPropItem(pPropItem,"nc.m_fMKRectW");
+		oper.InsertEditPropItem(pGroupItem,"nc.m_fMKRectL");
+		oper.InsertEditPropItem(pGroupItem,"nc.m_fMKRectW");
 	}
-	oper.InsertEditPropItem(pParentItem,"nc.m_fLimitSH");
-	pPropItem=oper.InsertBtnEditPropItem(pParentItem,"holeIncrement.m_fDatum");
-	UpdateHoleIncrementProperty(pPropList,pPropItem);
+	pGroupItem = oper.InsertEditPropItem(pParentItem,"nc.m_fLimitSH");
+	if (g_sysPara.nc.m_fLimitSH > 0)
+	{
+		pPropItem = oper.InsertEditPropItem(pGroupItem, "CutLimitSH");
+		pPropItem->SetReadOnly();
+		pPropItem = oper.InsertEditPropItem(pGroupItem, "ProLimitSH");
+		pPropItem->SetReadOnly();
+	}
+	pGroupItem =oper.InsertBtnEditPropItem(pParentItem,"holeIncrement.m_fDatum");
+	UpdateHoleIncrementProperty(pPropList, pGroupItem);
 #endif
 #ifdef __PNC_
 	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
@@ -901,7 +925,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 #else
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iNcMode");
 	//切割下料
-	CPropTreeItem *pGroupItem = oper.InsertEditPropItem(pParentItem, "CutInfo");
+	pGroupItem = oper.InsertEditPropItem(pParentItem, "CutInfo");
 	oper.InsertEditPropItem(pGroupItem, "nc.m_fShapeAddDist");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.bFlameCut");
 	if (g_sysPara.nc.m_bFlameCut)

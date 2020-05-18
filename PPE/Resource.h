@@ -57,7 +57,8 @@
 #define IDC_S_PART_NO                   1007
 #define IDC_CHK_M20                     1007
 #define IDC_CHK_M24                     1008
-#define IDC_CHK_SH                      1009
+#define IDC_CHK_CUT_SH                  1009
+#define IDC_CHK_PRO_SH                  1010
 #define IDC_E_M12                       1011
 #define IDC_E_M16                       1012
 #define IDC_S_VERSION                   1012
@@ -67,10 +68,11 @@
 #define IDC_PROPERTY_LIST               1014
 #define IDC_LIST_PART_INFO              1015
 #define IDC_E_NORM_X                    1016
-#define IDC_E_MSH                       1016
 #define IDC_E_EDIT_LINE                 1016
+#define IDC_E_CUT_SH                    1016
 #define IDC_E_NORM_Y                    1017
 #define IDC_BN_CLEAR_EDIT_LINE          1017
+#define IDC_E_PRO_SH                    1017
 #define IDC_E_NORM_Z                    1018
 #define IDC_BN_ADD_EDIT_LINE            1018
 #define IDC_BN_DEL_CURRENT_LINE         1019
@@ -227,14 +229,14 @@
 #define ID_SMART_SORT_BOLT_3            33014
 #define ID_CUT_MODE_NC_DATA             33015
 #define ID_PROCESS_MODE_NC_DATA         33016
-#define ID_LASER_MODE_NC_DATA			33017
+#define ID_LASER_MODE_NC_DATA           33017
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        164
+#define _APS_NEXT_RESOURCE_VALUE        165
 #define _APS_NEXT_COMMAND_VALUE         33018
 #define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101

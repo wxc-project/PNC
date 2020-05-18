@@ -99,7 +99,8 @@ public:
 		double m_fM16;		//M16
 		double m_fM20;		//M20
 		double m_fM24;		//M24
-		double m_fMSH;		//特殊孔径增大值
+		double m_fCutSH;	//切割式特殊孔径增大值
+		double m_fProSH;	//板床式特殊孔径增大值
 	}holeIncrement;
 	//颜色方案
 	struct COLOR_MODE{

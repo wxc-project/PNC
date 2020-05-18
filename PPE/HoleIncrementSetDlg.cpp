@@ -33,12 +33,14 @@ void CHoleIncrementSetDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHK_M16, m_arrIsCanUse[1]);
 	DDX_Check(pDX, IDC_CHK_M20, m_arrIsCanUse[2]);
 	DDX_Check(pDX, IDC_CHK_M24, m_arrIsCanUse[3]);
-	DDX_Check(pDX, IDC_CHK_SH, m_arrIsCanUse[4]);
+	DDX_Check(pDX, IDC_CHK_CUT_SH, m_arrIsCanUse[4]);
+	DDX_Check(pDX, IDC_CHK_PRO_SH, m_arrIsCanUse[5]);
 	DDX_Text(pDX, IDC_E_M12, m_fM12Increment);
 	DDX_Text(pDX, IDC_E_M16, m_fM16Increment);
 	DDX_Text(pDX, IDC_E_M20, m_fM20Increment);
 	DDX_Text(pDX, IDC_E_M24, m_fM24Increment);
-	DDX_Text(pDX, IDC_E_MSH, m_fSpcIncrement);
+	DDX_Text(pDX, IDC_E_CUT_SH, m_fCutIncrement);
+	DDX_Text(pDX, IDC_E_PRO_SH, m_fProIncrement);
 }
 
 
@@ -47,7 +49,8 @@ BEGIN_MESSAGE_MAP(CHoleIncrementSetDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_M16, OnChkM16)
 	ON_BN_CLICKED(IDC_CHK_M20, OnChkM20)
 	ON_BN_CLICKED(IDC_CHK_M24, OnChkM24)
-	ON_BN_CLICKED(IDC_CHK_SH, OnChkMSH)
+	ON_BN_CLICKED(IDC_CHK_CUT_SH, OnChkCutSH)
+	ON_BN_CLICKED(IDC_CHK_PRO_SH, OnChkProSH)
 END_MESSAGE_MAP()
 
 
@@ -77,10 +80,16 @@ BOOL CHoleIncrementSetDlg::OnInitDialog()
 		m_arrIsCanUse[3]=TRUE;
 	((CEdit*)GetDlgItem(IDC_E_M24))->SetReadOnly(!m_arrIsCanUse[3]);
 	//SH
-	m_fSpcIncrement=g_sysPara.holeIncrement.m_fMSH;
-	if(fabs(m_fSpcIncrement-fDatum)>EPS)
+	m_fCutIncrement=g_sysPara.holeIncrement.m_fCutSH;
+	if(fabs(m_fCutIncrement-fDatum)>EPS)
 		m_arrIsCanUse[4]=TRUE;
-	((CEdit*)GetDlgItem(IDC_E_MSH))->SetReadOnly(!m_arrIsCanUse[4]);
+	((CEdit*)GetDlgItem(IDC_E_CUT_SH))->SetReadOnly(!m_arrIsCanUse[4]);
+	//SH
+	m_fProIncrement = g_sysPara.holeIncrement.m_fProSH;
+	if (fabs(m_fProIncrement - fDatum) > EPS)
+		m_arrIsCanUse[5] = TRUE;
+	((CEdit*)GetDlgItem(IDC_E_PRO_SH))->SetReadOnly(!m_arrIsCanUse[5]);
+	//
 	UpdateData(FALSE);
 	return TRUE;
 }
@@ -104,8 +113,13 @@ void CHoleIncrementSetDlg::OnChkM24()
 	m_arrIsCanUse[3]=!m_arrIsCanUse[3];
 	((CEdit*)GetDlgItem(IDC_E_M24))->SetReadOnly(!m_arrIsCanUse[3]);
 }
-void CHoleIncrementSetDlg::OnChkMSH()
+void CHoleIncrementSetDlg::OnChkCutSH()
 {
 	m_arrIsCanUse[4]=!m_arrIsCanUse[4];
-	((CEdit*)GetDlgItem(IDC_E_MSH))->SetReadOnly(!m_arrIsCanUse[4]);
+	((CEdit*)GetDlgItem(IDC_E_CUT_SH))->SetReadOnly(!m_arrIsCanUse[4]);
+}
+void CHoleIncrementSetDlg::OnChkProSH()
+{
+	m_arrIsCanUse[5] = !m_arrIsCanUse[5];
+	((CEdit*)GetDlgItem(IDC_E_PRO_SH))->SetReadOnly(!m_arrIsCanUse[5]);
 }

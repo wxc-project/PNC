@@ -60,7 +60,9 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.m_fMKRectL",PROPLIST_ITEM(id++,"字盒长度","字盒矩形长度"));
 	AddPropItem("nc.m_fBaffleHigh",PROPLIST_ITEM(id++,"挡板高度"));
 	AddPropItem("nc.m_iNcMode",PROPLIST_ITEM(id++,"钢板NC模式","生成钢板DXF文件的模式","切割|板床|激光|切割+板床|切割+板床+激光"));
-	AddPropItem("nc.m_fLimitSH",PROPLIST_ITEM(id++,"特殊孔最小值","特殊孔一般通过切割进行加工"));
+	AddPropItem("nc.m_fLimitSH",PROPLIST_ITEM(id++,"特殊孔界限值","特殊孔一般通过切割进行加工"));
+	AddPropItem("CutLimitSH", PROPLIST_ITEM(id++, "切割式特殊孔(大孔)", "通过切割工艺进行加工的特殊孔"));
+	AddPropItem("ProLimitSH", PROPLIST_ITEM(id++, "板床式特殊孔(小孔)", "通过板床工艺进行加工的特殊孔"));
 	AddPropItem("nc.m_sThickToPBJ",PROPLIST_ITEM(id++,"冲孔板厚范围"));
 	AddPropItem("nc.m_sThickToPMZ",PROPLIST_ITEM(id++,"钻孔板厚范围"));
 	AddPropItem("nc.m_sNcDriverPath",PROPLIST_ITEM(id++,"角钢NC驱动"));
@@ -127,11 +129,12 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.LaserPara.m_bOutputBendType", PROPLIST_ITEM(id++, "输出制弯类型", "", "是|否"));
 	//
 	AddPropItem("holeIncrement.m_fDatum",PROPLIST_ITEM(id++,"孔径增大值"));
-	AddPropItem("holeIncrement.m_fM12",PROPLIST_ITEM(id++,"M12增量"));
-	AddPropItem("holeIncrement.m_fM16",PROPLIST_ITEM(id++,"M16增量"));
-	AddPropItem("holeIncrement.m_fM20",PROPLIST_ITEM(id++,"M20增量"));
-	AddPropItem("holeIncrement.m_fM24",PROPLIST_ITEM(id++,"M24增量"));
-	AddPropItem("holeIncrement.m_fMSH",PROPLIST_ITEM(id++,"特殊孔增量"));
+	AddPropItem("holeIncrement.m_fM12",PROPLIST_ITEM(id++,"M12标准增量"));
+	AddPropItem("holeIncrement.m_fM16",PROPLIST_ITEM(id++,"M16标准增量"));
+	AddPropItem("holeIncrement.m_fM20",PROPLIST_ITEM(id++,"M20标准增量"));
+	AddPropItem("holeIncrement.m_fM24",PROPLIST_ITEM(id++,"M24标准增量"));
+	AddPropItem("holeIncrement.m_fCutSH", PROPLIST_ITEM(id++, "切割特殊孔增量"));
+	AddPropItem("holeIncrement.m_fProSH", PROPLIST_ITEM(id++, "板床特殊孔增量"));
 	//颜色配置方案
 	AddPropItem("CRMODE",PROPLIST_ITEM(id++,"颜色方案"));
 	AddPropItem("crMode.crLS12",PROPLIST_ITEM(id++,"螺栓M12","M12孔径颜色"));
@@ -259,7 +262,8 @@ CSysPara::CSysPara(void)
 	holeIncrement.m_fM16=1.5;
 	holeIncrement.m_fM20=1.5;
 	holeIncrement.m_fM24=1.5;
-	holeIncrement.m_fMSH=0;
+	holeIncrement.m_fCutSH=0;
+	holeIncrement.m_fProSH = 0;
 	//颜色方案
 	crMode.crLS12 = RGB(128,0,64);
 	crMode.crLS16 = RGB(255,0,255);
@@ -320,7 +324,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.6");
+	CString version("2.7");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -352,7 +356,8 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar<<holeIncrement.m_fM16;
 	ar<<holeIncrement.m_fM20;
 	ar<<holeIncrement.m_fM24;
-	ar<<holeIncrement.m_fMSH;
+	ar<<holeIncrement.m_fCutSH;
+	ar<<holeIncrement.m_fProSH;
 	//等离子切割
 	ar<<m_cDisplayCutType;
 	ar<<CString(plasmaCut.m_sOutLineLen);
@@ -545,7 +550,9 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar>>holeIncrement.m_fM16;
 		ar>>holeIncrement.m_fM20;
 		ar>>holeIncrement.m_fM24;
-		ar>>holeIncrement.m_fMSH;
+		ar>>holeIncrement.m_fCutSH;
+		if (fVersion >= 2.7)
+			ar >> holeIncrement.m_fProSH;
 	}
 	if(fVersion>=1.8)
 	{	
@@ -1014,8 +1021,10 @@ void CSysPara::UpdateHoleIncrement(double fHoleInc)
 		holeIncrement.m_fM20=fHoleInc;
 	if(fabs(holeIncrement.m_fM24-holeIncrement.m_fDatum)<=EPS)
 		holeIncrement.m_fM24=fHoleInc;
-	if(fabs(holeIncrement.m_fMSH-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fMSH=fHoleInc;
+	if(fabs(holeIncrement.m_fCutSH-holeIncrement.m_fDatum)<=EPS)
+		holeIncrement.m_fCutSH=fHoleInc;
+	if (fabs(holeIncrement.m_fProSH-holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fProSH=fHoleInc;
 	holeIncrement.m_fDatum=fHoleInc;
 	CNCPart::m_fHoleIncrement = holeIncrement.m_fDatum;
 }
@@ -1089,6 +1098,10 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("%f",nc.m_fLimitSH);
 		SimplifiedNumString(sText);
 	}
+	else if (GetPropID("CutLimitSH") == id)
+		sText.Printf(">= %g", nc.m_fLimitSH);
+	else if (GetPropID("ProLimitSH") == id)
+		sText.Printf("< %g", nc.m_fLimitSH);
 	else if(GetPropID("nc.m_bNeedSH")==id)
 	{
 		if(nc.m_bNeedSH)
@@ -1371,9 +1384,14 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("%f",holeIncrement.m_fM24);
 		SimplifiedNumString(sText);
 	}
-	else if(GetPropID("holeIncrement.m_fMSH")==id)
+	else if(GetPropID("holeIncrement.m_fCutSH")==id)
 	{
-		sText.Printf("%f",holeIncrement.m_fMSH);
+		sText.Printf("%f",holeIncrement.m_fCutSH);
+		SimplifiedNumString(sText);
+	}
+	else if (GetPropID("holeIncrement.m_fProSH") == id)
+	{
+		sText.Printf("%f", holeIncrement.m_fProSH);
 		SimplifiedNumString(sText);
 	}
 	else if(GetPropID("crMode.crLS12")==id)
