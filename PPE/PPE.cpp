@@ -423,6 +423,14 @@ BOOL CPPEApp::InitInstance()
 		RUNTIME_CLASS(CMFCToolTipCtrl), &ttParams);
 	// Register the application's document templates.  Document templates
 	//  serve as the connection between documents, frame windows and views.
+	//初始化工作空间布局路径
+	CString versionStr;
+	GetProductVersion(versionStr);
+#ifdef __PNC_
+	m_strRegSection = "V" + versionStr + "\\WorkspacePNC";
+#else
+	m_strRegSection = "V" + versionStr + "\\WorkspaceTMA";
+#endif
 #ifdef __PNC_
 	m_nMainMenuID=IDR_MAINFRAME_PNC;
 #else
