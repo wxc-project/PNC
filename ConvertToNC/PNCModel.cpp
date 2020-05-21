@@ -1759,7 +1759,38 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 		DRAGSET.EndBlockRecord(pBlockTableRecord,*pPlateCenter);
 	pBlockTableRecord->close();
 }
-
+void CPlateProcessInfo::DrawPlateProfile()
+{
+	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+	if (pBlockTableRecord == NULL)
+	{
+		AfxMessageBox("»ñÈ¡¿é±í¼ÇÂ¼Ê§°Ü!");
+		return;
+	}
+	if (vertexList.GetNodeNum() <= 3)
+		return;
+	AcDbObjectId entId;
+	//»æÖÆÂÖÀª±ß
+	int n = vertexList.GetNodeNum();
+	for (int i = 0; i < n; i++)
+	{
+		VERTEX *pCurVer = vertexList.GetByIndex(i);
+		VERTEX *pNextVer = vertexList.GetByIndex((i + 1) % n);
+		if (pCurVer->ciEdgeType == 1)
+			CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos);
+		else
+		{	//Ô²»¡
+			GEPOINT ptS = pCurVer->pos, ptE = pNextVer->pos, org = pCurVer->arc.center, norm = pCurVer->arc.work_norm;
+			f3dArcLine arcline;
+			arcline.CreateMethod3(ptS, ptE, norm, pCurVer->arc.radius, org);
+			CreateAcadArcLine(pBlockTableRecord, arcline.Center(), arcline.Start(), arcline.SectorAngle(), arcline.WorkNorm());
+		}
+	}
+	//»æÖÆÂÝË¨
+	for (BOLT_INFO* pHole = boltList.GetFirst(); pHole; pHole = boltList.GetNext())
+		CreateAcadCircle(pBlockTableRecord, f3dPoint(pHole->posX, pHole->posY, 0), pHole->bolt_d*0.5);
+	pBlockTableRecord->close();
+}
 static BOOL IsInSector(double start_ang,double sector_ang,double verify_ang,BOOL bClockWise=TRUE)
 {
 	double ang=0;
