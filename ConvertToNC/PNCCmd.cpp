@@ -308,7 +308,9 @@ void SmartExtractPlate(CPNCModel *pModel)
 		//else //焊接字样可能在基本信息中例如：141#正焊
 		{
 			CXhChar100 sText = GetCadTextContent(pEnt);
-			if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))
+			if (strstr(sText, "卷边") || strstr(sText, "火曲") || 
+				strstr(sText, "外曲") || strstr(sText, "内曲")||
+				strstr(sText, "正曲") || strstr(sText, "反曲"))
 				pPlateInfo->xBomPlate.siZhiWan = 1;
 			if (strstr(sText,"焊"))
 				pPlateInfo->xBomPlate.bWeldPart = TRUE;
