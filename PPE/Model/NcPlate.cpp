@@ -50,15 +50,6 @@ GEPOINT CNCPlate::ProcessPoint(const double* coord,BYTE cCSMode/*=0*/)
 	}
 	return vertex;
 }
-/*
- * pPlate:		当前切割钢板
- * iNo:			程序号
- * cutter_pos:	刀头位置
- * cCSMode:		0.横X+纵Y+ 1.横Y+纵X-
- * bClockwise：	TRUE 顺指针，FALSE 逆时针
- * nExtraInLen:	额外的引入长度
- * nExtraOutLen:额外的引出长度
- */
 #ifdef PEC_EXPORTS
 BOOL GetSysParaFromReg(const char* sEntry, char* sValue)
 {
@@ -81,98 +72,50 @@ BOOL GetSysParaFromReg(const char* sEntry, char* sValue)
 #else
 BOOL GetSysParaFromReg(const char* sEntry, char* sValue);	//From NcPart.cpp
 #endif
-CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE cCSMode/*=0*/,bool bClockwise/*=true*/,
-				   int nInLineLen/*=-1*/,int nOutLineLen/*=-1*/,int nExtraInLen/*=0*/,int nExtraOutLen/*=0*/,int nEnlargedSpace/*=0*/,
-				   BOOL bCutSpecialHole /*= FALSE*/)
+//////////////////////////////////////////////////////////////////////////
+//CNCPlate
+CNCPlate::CNCPlate(CProcessPlate *pPlate,int iNo/*=0*/)
 {
-	if(pPlate==NULL||!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
+	m_pPlate = pPlate;
+	m_iNo = iNo;
+	m_cCSMode = 0;
+	m_bClockwise = FALSE;
+	m_nInLineLen = pPlate ? pPlate->m_xCutPt.cInLineLen : 0;
+	m_nOutLineLen = pPlate ? pPlate->m_xCutPt.cOutLineLen : 0;
+	m_nExtraInLen = m_nExtraOutLen = 0;
+	m_nEnlargedSpace = 0;
+	m_bCutSpecialHole = FALSE;
+}
+//
+void CNCPlate::InitPlateNcInfo()
+{
+	if (m_pPlate == NULL || !VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
 		return;
-	if(nInLineLen>=0)
-		pPlate->m_xCutPt.cInLineLen=nInLineLen;
-	if(nOutLineLen>=0)
-		pPlate->m_xCutPt.cOutLineLen=nOutLineLen;
-	BOOL bInvertedTraverse=FALSE;	//反向遍历
-	if(bClockwise)
-		bInvertedTraverse=TRUE;
-	if(pPlate->mcsFlg.ciOverturn)
-		bInvertedTraverse=!bInvertedTraverse;
-	m_iNo=iNo;
-	m_pPlate=pPlate;
-	//1.将钢板转换至加工坐标系下
 	CLogErrorLife logErrLife;
-	CProcessPlate tempPlate;
-	pPlate->ClonePart(&tempPlate);
+	//初始化钢板加工坐标系
+	BOOL bInvertedTraverse = m_bClockwise ? TRUE : FALSE;
+	if (m_pPlate->mcsFlg.ciOverturn)
+		bInvertedTraverse = !bInvertedTraverse;
 	GECS mcs;
-	pPlate->GetMCS(mcs);
-	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
-	f3dPoint prevPt=cutter_pos,curPt;
+	m_pPlate->GetMCS(mcs);
+	CProcessPlate tempPlate;
+	m_pPlate->ClonePart(&tempPlate);
+	CProcessPlate::TransPlateToMCS(&tempPlate, mcs);
 	//2.初始化螺栓孔切入点
-	for(CUT_POINT *pCutPt=pPlate->m_hashHoleCutPtByKey.GetFirst();pCutPt;pCutPt=pPlate->m_hashHoleCutPtByKey.GetNext())
+	GEPOINT prevPt = m_xStartPt, curPt;
+	if (m_bCutSpecialHole)
 	{
-
-	}
-	//计算圆孔切割点 wht 19-09-24
-	//G0Y430.		//移动刀头至圆孔外侧切点
-	//G41			//刀径左向补齐
-	//M04           //主轴反转  
-	//G3I - 35.		//绘制半径为35的整圆
-	//M03           //主轴正转
-	//G40           //取消刀径补齐
-	double fSpecialD = 0;
-	int bNeedSH=FALSE;
-	CXhChar100 sValue;
-	if (GetSysParaFromReg("LimitSH", sValue))
-		fSpecialD = atof(sValue);
-	if (GetSysParaFromReg("NeedSH", sValue))
-		bNeedSH = atoi(sValue);
-	//3.初始化钢板切入点
-	DWORD nCount=pPlate->vertex_list.GetNodeNum();
-	int iCurVertex=pPlate->m_xCutPt.hEntId;
-	int iPrevVertex=(pPlate->m_xCutPt.hEntId-1)<=0?nCount:pPlate->m_xCutPt.hEntId-1;
-	int iNextVertex=(pPlate->m_xCutPt.hEntId+1)>nCount?1:pPlate->m_xCutPt.hEntId+1;
-	PROFILE_VER *pCurVertex=tempPlate.vertex_list.GetValue(iCurVertex);
-	PROFILE_VER *pPrevVertex=tempPlate.vertex_list.GetValue(iPrevVertex);
-	PROFILE_VER *pNextVertex=tempPlate.vertex_list.GetValue(iNextVertex);
-	if(bInvertedTraverse)
-	{
-		PROFILE_VER *pTempVertex=pPrevVertex;
-		pPrevVertex=pNextVertex;
-		pNextVertex=pTempVertex;
-	}
-	PROFILE_VER *pFirstVertex=pCurVertex;
-	if(pCurVertex==NULL||pPrevVertex==NULL||pNextVertex==NULL)
-		return;
-	GEPOINT prev_vec=pCurVertex->vertex-pPrevVertex->vertex;
-	GEPOINT next_vec=pCurVertex->vertex-pNextVertex->vertex;
-	normalize(prev_vec);
-	normalize(next_vec);
-	GEPOINT prev_norm(prev_vec.y,-prev_vec.x);	//顺时针旋转90度
-	GEPOINT next_norm(-next_vec.y,next_vec.x);	//逆时针旋转90度
-	if(bClockwise)
-	{	//顺时针旋转需要翻转法线方向 wht 17-05-23
-		prev_norm*=-1.0;
-		next_norm*=-1.0;
-	}
-	if(nExtraInLen>0)
-	{
-		curPt=pCurVertex->vertex+next_vec*(pPlate->m_xCutPt.cInLineLen+nExtraInLen+nEnlargedSpace);
-		m_cutPt.bHasExtraInVertex=TRUE;
-		m_cutPt.extraInVertex=ProcessPoint(curPt-prevPt,cCSMode);
-		prevPt=curPt;
-	}
-	curPt=pCurVertex->vertex+next_vec*(pPlate->m_xCutPt.cInLineLen+nEnlargedSpace);
-	if(nEnlargedSpace>0)
-		curPt+=(next_norm*nEnlargedSpace);
-	m_cutPt.vertex=ProcessPoint(curPt-prevPt,cCSMode);
-	prevPt=curPt;
-	if (bCutSpecialHole)
-	{	//在切入点之后，初始化切大孔 wht 19-10-22
+		CXhChar100 sValue;
+		double fSpecialD = (GetSysParaFromReg("LimitSH", sValue)) ? atof(sValue) : 0;
 		for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
 		{
 			double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
 			if (hole_d < fSpecialD)
 				continue;
-			CUT_PT *pCutPt = m_xCutHoleList.append();
+			//初始化螺栓孔切入点
+
+			//初始化螺栓切割路径
+			/*CUT_PT *pCutPt = m_xCutHoleList.append();
 			pCutPt->radius = hole_d * 0.5;
 			pCutPt->cByte = CUT_PT::HOLE_CIR;
 			pCutPt->bClockwise = FALSE;
@@ -180,263 +123,301 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo/*=0*/,BYTE c
 			curPt.Set(cir_center.x + pCutPt->radius, cir_center.y);
 			pCutPt->vertex = ProcessPoint(curPt - prevPt, cCSMode);
 			pCutPt->centerPt = ProcessPoint(cir_center - f3dPoint(prevPt), cCSMode);
-			prevPt = curPt;
+			prevPt = curPt;*/
 		}
 	}
-	//4.初始化轮廓点信息
-	iCurVertex=0;
-	int initIndex=pPlate->m_xCutPt.hEntId;
-	f3dLine prev_line,next_line;
-	while(initIndex>0)
+	//3.初始化钢板切入点
+	DWORD nCount = m_pPlate->vertex_list.GetNodeNum();
+	int iCurVertex = m_pPlate->m_xCutPt.hEntId;
+	int iPrevVertex = (m_pPlate->m_xCutPt.hEntId - 1) <= 0 ? nCount : m_pPlate->m_xCutPt.hEntId - 1;
+	int iNextVertex = (m_pPlate->m_xCutPt.hEntId + 1) > nCount ? 1 : m_pPlate->m_xCutPt.hEntId + 1;
+	PROFILE_VER *pCurVertex = tempPlate.vertex_list.GetValue(iCurVertex);
+	PROFILE_VER *pPrevVertex = tempPlate.vertex_list.GetValue(iPrevVertex);
+	PROFILE_VER *pNextVertex = tempPlate.vertex_list.GetValue(iNextVertex);
+	if (pCurVertex == NULL || pPrevVertex == NULL || pNextVertex == NULL)
+		return;
+	if (bInvertedTraverse)
 	{
-		BOOL bFinished=(iCurVertex==initIndex);
-		BOOL bFirstVertex=(iCurVertex==0);
-		if(iCurVertex==0)
-			iCurVertex=initIndex;
-		if(bInvertedTraverse)
+		PROFILE_VER *pTempVertex = pPrevVertex;
+		pPrevVertex = pNextVertex;
+		pNextVertex = pTempVertex;
+	}
+	GEPOINT prev_vec = (pCurVertex->vertex - pPrevVertex->vertex).normalized();
+	GEPOINT next_vec = (pCurVertex->vertex - pNextVertex->vertex).normalized();
+	GEPOINT prev_norm(prev_vec.y, -prev_vec.x);	//顺时针旋转90度
+	GEPOINT next_norm(-next_vec.y, next_vec.x);	//逆时针旋转90度
+	if (m_bClockwise)
+	{	//顺时针旋转需要翻转法线方向 wht 17-05-23
+		prev_norm *= -1.0;
+		next_norm *= -1.0;
+	}
+	if (m_nExtraInLen > 0)
+	{
+		curPt = pCurVertex->vertex + next_vec * (m_nInLineLen + m_nExtraInLen + m_nEnlargedSpace);
+		m_cutPt.bHasExtraInVertex = TRUE;
+		m_cutPt.extraInVertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+		prevPt = curPt;
+	}
+	curPt = pCurVertex->vertex + next_vec * (m_nInLineLen + m_nExtraInLen);
+	if (m_nEnlargedSpace > 0)
+		curPt += (next_norm*m_nEnlargedSpace);
+	m_cutPt.vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+	prevPt = curPt;
+	//4.初始化轮廓点信息
+	iCurVertex = 0;
+	int initIndex = m_pPlate->m_xCutPt.hEntId;
+	f3dLine prev_line, next_line;
+	while (initIndex > 0)
+	{
+		BOOL bFinished = (iCurVertex == initIndex);
+		BOOL bFirstVertex = (iCurVertex == 0);
+		if (iCurVertex == 0)
+			iCurVertex = initIndex;
+		if (bInvertedTraverse)
 		{
-			iPrevVertex=(iCurVertex+1)>(int)nCount?1:iCurVertex+1;
-			iNextVertex=(iCurVertex-1)==0?nCount:iCurVertex-1;
+			iPrevVertex = (iCurVertex + 1) > (int)nCount ? 1 : iCurVertex + 1;
+			iNextVertex = (iCurVertex - 1) == 0 ? nCount : iCurVertex - 1;
 		}
 		else
 		{
-			iPrevVertex=(iCurVertex-1)==0?nCount:iCurVertex-1;
-			iNextVertex=(iCurVertex+1)>(int)nCount?1:iCurVertex+1;
+			iPrevVertex = (iCurVertex - 1) == 0 ? nCount : iCurVertex - 1;
+			iNextVertex = (iCurVertex + 1) > (int)nCount ? 1 : iCurVertex + 1;
 		}
-		pPrevVertex=tempPlate.vertex_list.GetValue(iPrevVertex);
-		pCurVertex=tempPlate.vertex_list.GetValue(iCurVertex);
-		pNextVertex=tempPlate.vertex_list.GetValue(iNextVertex);
-		if(!bFirstVertex)
+		pPrevVertex = tempPlate.vertex_list.GetValue(iPrevVertex);
+		pCurVertex = tempPlate.vertex_list.GetValue(iCurVertex);
+		pNextVertex = tempPlate.vertex_list.GetValue(iNextVertex);
+		if (!bFirstVertex)
 		{
-			PROFILE_VER *pNextFeatureVertex=bInvertedTraverse?pNextVertex:pCurVertex;
-			PROFILE_VER *pPrevFeatureVertex=bInvertedTraverse?pCurVertex:pPrevVertex;
-			if(pNextFeatureVertex->type>1)
+			PROFILE_VER *pNextFeatureVertex = bInvertedTraverse ? pNextVertex : pCurVertex;
+			PROFILE_VER *pPrevFeatureVertex = bInvertedTraverse ? pCurVertex : pPrevVertex;
+			if (pNextFeatureVertex->type > 1)
 			{
-				if(pPrevFeatureVertex->type>1)
+				if (pPrevFeatureVertex->type > 1)
 				{
 					f3dArcLine arcLine;
-					PROFILE_VER *pOtherVertex=bInvertedTraverse?pCurVertex:pNextVertex;
-					pNextFeatureVertex->RetrieveArcLine(arcLine,pOtherVertex->vertex,NULL);
-					if( (bInvertedTraverse&&pNextFeatureVertex->work_norm.z>0)||
-						(!bInvertedTraverse&&pNextFeatureVertex->work_norm.z<0))
-						next_norm=f3dPoint(arcLine.Center())-pCurVertex->vertex;
+					PROFILE_VER *pOtherVertex = bInvertedTraverse ? pCurVertex : pNextVertex;
+					pNextFeatureVertex->RetrieveArcLine(arcLine, pOtherVertex->vertex, NULL);
+					if ((bInvertedTraverse&&pNextFeatureVertex->work_norm.z > 0) ||
+						(!bInvertedTraverse&&pNextFeatureVertex->work_norm.z < 0))
+						next_norm = f3dPoint(arcLine.Center()) - pCurVertex->vertex;
 					else
-						next_norm=pCurVertex->vertex-f3dPoint(arcLine.Center());
+						next_norm = pCurVertex->vertex - f3dPoint(arcLine.Center());
 					normalize(next_norm);
 				}
-				prev_norm=next_norm;	//后一线段为圆弧时next_norm与prev_norm一致
+				prev_norm = next_norm;	//后一线段为圆弧时next_norm与prev_norm一致
 			}
 			else
 			{
-				prev_norm=next_norm;
-				GEPOINT next_vec=pCurVertex->vertex-pNextVertex->vertex;
+				prev_norm = next_norm;
+				GEPOINT next_vec = pCurVertex->vertex - pNextVertex->vertex;
 				normalize(next_vec);
-				next_norm.Set(-next_vec.y,next_vec.x);
-				if(bClockwise)
-					next_norm*=-1.0;
-				if(pPrevFeatureVertex->type>1)
-					prev_norm=next_norm;	//前一线段为圆弧时next_norm与prev_norm一致
+				next_norm.Set(-next_vec.y, next_vec.x);
+				if (m_bClockwise)
+					next_norm *= -1.0;
+				if (pPrevFeatureVertex->type > 1)
+					prev_norm = next_norm;	//前一线段为圆弧时next_norm与prev_norm一致
 			}
 		}
-		PROFILE_VER *pFeatureVertex=bInvertedTraverse?pCurVertex:pPrevVertex;
-		PROFILE_VER *pOtherVertex=bInvertedTraverse?pPrevVertex:pCurVertex;
-		curPt=pCurVertex->vertex;
-		if(nEnlargedSpace>0)
+		PROFILE_VER *pFeatureVertex = bInvertedTraverse ? pCurVertex : pPrevVertex;
+		PROFILE_VER *pOtherVertex = bInvertedTraverse ? pPrevVertex : pCurVertex;
+		curPt = pCurVertex->vertex;
+		if (m_nEnlargedSpace > 0)
 		{
-			if(bFirstVertex||bFinished)
-				curPt+=next_vec*nEnlargedSpace+next_norm*nEnlargedSpace;
+			if (bFirstVertex || bFinished)
+				curPt += next_vec * m_nEnlargedSpace + next_norm * m_nEnlargedSpace;
 			else
-				curPt+=prev_norm*nEnlargedSpace;
+				curPt += prev_norm * m_nEnlargedSpace;
 		}
-		if(pFeatureVertex->type==1||bFirstVertex)
+		if (pFeatureVertex->type == 1 || bFirstVertex)
 		{	//直线
-			CUT_PT *pPt=m_xCutPtList.append();
-			pPt->cByte=CUT_PT::EDGE_LINE;
-			pPt->vertex=ProcessPoint(curPt-prevPt,cCSMode);
-			prev_line.startPt=prevPt;	//当前节点之前的一条轮廓标
-			prev_line.endPt=curPt;
-			f3dPoint oldPrevPt=prevPt;
-			prevPt=curPt;
-			if(!bFirstVertex&&!bFinished&&nEnlargedSpace>0)
+			CUT_PT *pPt = m_xCutPtList.append();
+			pPt->cByte = CUT_PT::EDGE_LINE;
+			pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+			prev_line.startPt = prevPt;	//当前节点之前的一条轮廓标
+			prev_line.endPt = curPt;
+			f3dPoint oldPrevPt = prevPt;
+			prevPt = curPt;
+			if (!bFirstVertex && !bFinished&&m_nEnlargedSpace > 0)
 			{
-				curPt=pCurVertex->vertex+next_norm*nEnlargedSpace;
-				next_line.startPt=curPt;	//当前节点所在的下一条轮廓边
-				next_line.endPt=pNextVertex->vertex+next_norm*nEnlargedSpace;
+				curPt = pCurVertex->vertex + next_norm * m_nEnlargedSpace;
+				next_line.startPt = curPt;	//当前节点所在的下一条轮廓边
+				next_line.endPt = pNextVertex->vertex + next_norm * m_nEnlargedSpace;
 				f3dPoint inters_pt;
-				int nRetCode=Int3dll(prev_line,next_line,inters_pt);
-				if(nRetCode==1||nRetCode==2)
+				int nRetCode = Int3dll(prev_line, next_line, inters_pt);
+				if (nRetCode == 1 || nRetCode == 2)
 				{	//交叉点为线段端点或内侧点(处理凹点或共线点) wht-17.06.08
-					pPt->vertex=ProcessPoint(inters_pt-oldPrevPt,cCSMode);
-					prevPt=inters_pt;
+					pPt->vertex = ProcessPoint(inters_pt - oldPrevPt, m_cCSMode);
+					prevPt = inters_pt;
 				}
 				else
 				{
 					f3dArcLine arcLine;
 					PROFILE_VER featureVertex;
-					featureVertex.type=4;
-					featureVertex.radius=nEnlargedSpace;	//此处弧均为逆时针弧 wht 17-05-23
-					featureVertex.vertex=prevPt;
-					featureVertex.center=pCurVertex->vertex;
-					featureVertex.RetrieveArcLine(arcLine,curPt,NULL);
-					if(prev_norm!=next_norm)
+					featureVertex.type = 4;
+					featureVertex.radius = m_nEnlargedSpace;	//此处弧均为逆时针弧 wht 17-05-23
+					featureVertex.vertex = prevPt;
+					featureVertex.center = pCurVertex->vertex;
+					featureVertex.RetrieveArcLine(arcLine, curPt, NULL);
+					if (prev_norm != next_norm)
 					{
-						pPt=m_xCutPtList.append();
-						pPt->vertex=ProcessPoint(curPt-prevPt,cCSMode);
-						if(fabs(arcLine.SectorAngle())>0.3*Pi)
+						pPt = m_xCutPtList.append();
+						pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+						if (fabs(arcLine.SectorAngle()) > 0.3*Pi)
 						{
-							pPt->cByte=CUT_PT::EDGE_ARC;
-							pPt->bClockwise=FALSE;
-							pPt->centerPt=ProcessPoint(pCurVertex->vertex-prevPt,cCSMode);
-							pPt->fSectorAngle=arcLine.SectorAngle();
+							pPt->cByte = CUT_PT::EDGE_ARC;
+							pPt->bClockwise = FALSE;
+							pPt->centerPt = ProcessPoint(pCurVertex->vertex - prevPt, m_cCSMode);
+							pPt->fSectorAngle = arcLine.SectorAngle();
 						}
 					}
-					prevPt=curPt;
+					prevPt = curPt;
 				}
 			}
 		}
-		else if(pFeatureVertex->type==2)
+		else if (pFeatureVertex->type == 2)
 		{	//圆弧
 			f3dArcLine arcLine;
-			pFeatureVertex->RetrieveArcLine(arcLine,pOtherVertex->vertex,NULL);
-			if(!bFirstVertex&&!bFinished&&nEnlargedSpace>0)
+			pFeatureVertex->RetrieveArcLine(arcLine, pOtherVertex->vertex, NULL);
+			if (!bFirstVertex && !bFinished&&m_nEnlargedSpace > 0)
 			{
 				PROFILE_VER featureVertex;
-				featureVertex.type=4;
-				featureVertex.radius=arcLine.Radius()+nEnlargedSpace;
-				featureVertex.center=arcLine.Center();
-				if( (bInvertedTraverse&&pFeatureVertex->work_norm.z>0)||
-					(!bInvertedTraverse&&pFeatureVertex->work_norm.z<0))
-					featureVertex.radius*=-1.0;
-				if( (!bInvertedTraverse&&pFeatureVertex==pPrevVertex)||
-					(bInvertedTraverse&&pFeatureVertex==pCurVertex))
+				featureVertex.type = 4;
+				featureVertex.radius = arcLine.Radius() + m_nEnlargedSpace;
+				featureVertex.center = arcLine.Center();
+				if ((bInvertedTraverse&&pFeatureVertex->work_norm.z > 0) ||
+					(!bInvertedTraverse&&pFeatureVertex->work_norm.z < 0))
+					featureVertex.radius *= -1.0;
+				if ((!bInvertedTraverse&&pFeatureVertex == pPrevVertex) ||
+					(bInvertedTraverse&&pFeatureVertex == pCurVertex))
 				{
-					featureVertex.vertex=prevPt;
-					featureVertex.RetrieveArcLine(arcLine,curPt,NULL);
+					featureVertex.vertex = prevPt;
+					featureVertex.RetrieveArcLine(arcLine, curPt, NULL);
 				}
 				else
 				{
-					featureVertex.vertex=curPt;
-					featureVertex.RetrieveArcLine(arcLine,prevPt,NULL);
+					featureVertex.vertex = curPt;
+					featureVertex.RetrieveArcLine(arcLine, prevPt, NULL);
 				}
 			}
-			CUT_PT *pPt=m_xCutPtList.append();
-			pPt->cByte=CUT_PT::EDGE_ARC;
-			pPt->vertex=ProcessPoint(curPt-prevPt,cCSMode);
-			pPt->centerPt=ProcessPoint(arcLine.Center()-GEPOINT(prevPt),cCSMode);
-			pPt->fSectorAngle=arcLine.SectorAngle();
-			if( (bInvertedTraverse&&pFeatureVertex->work_norm.z>0)||
-				(!bInvertedTraverse&&pFeatureVertex->work_norm.z<0))
-				pPt->fSectorAngle*=-1;
-			pPt->bClockwise=pPt->fSectorAngle<0;	//顺时针圆弧
-			prevPt=curPt;
+			CUT_PT *pPt = m_xCutPtList.append();
+			pPt->cByte = CUT_PT::EDGE_ARC;
+			pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+			pPt->centerPt = ProcessPoint(arcLine.Center() - GEPOINT(prevPt), m_cCSMode);
+			pPt->fSectorAngle = arcLine.SectorAngle();
+			if ((bInvertedTraverse&&pFeatureVertex->work_norm.z > 0) ||
+				(!bInvertedTraverse&&pFeatureVertex->work_norm.z < 0))
+				pPt->fSectorAngle *= -1;
+			pPt->bClockwise = pPt->fSectorAngle < 0;	//顺时针圆弧
+			prevPt = curPt;
 		}
-		else if(pFeatureVertex->type==3)
+		else if (pFeatureVertex->type == 3)
 		{	//椭圆弧
 			f3dArcLine arcLine;
-			pFeatureVertex->RetrieveArcLine(arcLine,pOtherVertex->vertex,NULL);
-			if((!bFirstVertex&&!bFinished&&nEnlargedSpace>0)||bInvertedTraverse)
+			pFeatureVertex->RetrieveArcLine(arcLine, pOtherVertex->vertex, NULL);
+			if ((!bFirstVertex && !bFinished&&m_nEnlargedSpace > 0) || bInvertedTraverse)
 			{
 				PROFILE_VER featureVertex;
-				featureVertex.type=3;
-				featureVertex.radius=arcLine.Radius()+nEnlargedSpace;
-				featureVertex.center=arcLine.Center();
-				if(bInvertedTraverse)
-					featureVertex.column_norm=arcLine.ColumnNorm()*-1.0;
+				featureVertex.type = 3;
+				featureVertex.radius = arcLine.Radius() + m_nEnlargedSpace;
+				featureVertex.center = arcLine.Center();
+				if (bInvertedTraverse)
+					featureVertex.column_norm = arcLine.ColumnNorm()*-1.0;
 				else
-					featureVertex.column_norm=arcLine.ColumnNorm();
-				if( (bInvertedTraverse&&pFeatureVertex->work_norm.z>0)||
-					(!bInvertedTraverse&&pFeatureVertex->work_norm.z<0))
-					featureVertex.radius*=-1.0;
-				if( (!bInvertedTraverse&&pFeatureVertex==pPrevVertex)||
-					(bInvertedTraverse&&pFeatureVertex==pCurVertex))
+					featureVertex.column_norm = arcLine.ColumnNorm();
+				if ((bInvertedTraverse&&pFeatureVertex->work_norm.z > 0) ||
+					(!bInvertedTraverse&&pFeatureVertex->work_norm.z < 0))
+					featureVertex.radius *= -1.0;
+				if ((!bInvertedTraverse&&pFeatureVertex == pPrevVertex) ||
+					(bInvertedTraverse&&pFeatureVertex == pCurVertex))
 				{
-					featureVertex.vertex=prevPt;
-					featureVertex.RetrieveArcLine(arcLine,curPt,NULL);
+					featureVertex.vertex = prevPt;
+					featureVertex.RetrieveArcLine(arcLine, curPt, NULL);
 				}
 				else
 				{
-					featureVertex.vertex=curPt;
-					featureVertex.RetrieveArcLine(arcLine,prevPt,NULL);
+					featureVertex.vertex = curPt;
+					featureVertex.RetrieveArcLine(arcLine, prevPt, NULL);
 				}
 			}
-			int nSlices= CalArcResolution(arcLine.Radius(),arcLine.SectorAngle(),1.0,3.0,10);
-			double slice_angle = arcLine.SectorAngle()/nSlices;
-			prevPt=pPrevVertex->vertex;
+			int nSlices = CalArcResolution(arcLine.Radius(), arcLine.SectorAngle(), 1.0, 3.0, 10);
+			double slice_angle = arcLine.SectorAngle() / nSlices;
+			prevPt = pPrevVertex->vertex;
 			ATOM_LIST<f3dPoint> ptList;
-			for(int i=1;i<=nSlices;i++)
+			for (int i = 1; i <= nSlices; i++)
 			{
-				f3dPoint pt=arcLine.PositionInAngle(i*slice_angle);
+				f3dPoint pt = arcLine.PositionInAngle(i*slice_angle);
 				ptList.append(pt);
 			}
-			int nPtCount=ptList.GetNodeNum();
-			for(int i=0;i<nPtCount;i++)
+			int nPtCount = ptList.GetNodeNum();
+			for (int i = 0; i < nPtCount; i++)
 			{
-				curPt=ptList[i];
+				curPt = ptList[i];
 				//直线
-				CUT_PT *pPt=m_xCutPtList.append();
-				pPt->cByte=CUT_PT::EDGE_LINE;
-				pPt->vertex=ProcessPoint(curPt-prevPt,cCSMode);
-				prev_line.startPt=prevPt;	//当前节点之前的一条轮廓标
-				prev_line.endPt=curPt;
-				f3dPoint oldPrevPt=prevPt;
-				prevPt=curPt;
-				if(!bFirstVertex&&!bFinished&&nEnlargedSpace>0)
+				CUT_PT *pPt = m_xCutPtList.append();
+				pPt->cByte = CUT_PT::EDGE_LINE;
+				pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+				prev_line.startPt = prevPt;	//当前节点之前的一条轮廓标
+				prev_line.endPt = curPt;
+				f3dPoint oldPrevPt = prevPt;
+				prevPt = curPt;
+				if (!bFirstVertex && !bFinished&&m_nEnlargedSpace > 0)
 				{
-					curPt=pCurVertex->vertex+next_norm*nEnlargedSpace;
-					next_line.startPt=curPt;	//当前节点所在的下一条轮廓边
-					next_line.endPt=pNextVertex->vertex+next_norm*nEnlargedSpace;
+					curPt = pCurVertex->vertex + next_norm * m_nEnlargedSpace;
+					next_line.startPt = curPt;	//当前节点所在的下一条轮廓边
+					next_line.endPt = pNextVertex->vertex + next_norm * m_nEnlargedSpace;
 					f3dPoint inters_pt;
-					int nRetCode=Int3dll(prev_line,next_line,inters_pt);
-					if(nRetCode==1||nRetCode==2)
+					int nRetCode = Int3dll(prev_line, next_line, inters_pt);
+					if (nRetCode == 1 || nRetCode == 2)
 					{	//交叉点为线段端点或内侧点(处理凹点或共线点) wht-17.06.08
-						pPt->vertex=ProcessPoint(inters_pt-oldPrevPt,cCSMode);
-						prevPt=inters_pt;
+						pPt->vertex = ProcessPoint(inters_pt - oldPrevPt, m_cCSMode);
+						prevPt = inters_pt;
 					}
 					else
 					{
 						f3dArcLine arcLine;
 						PROFILE_VER featureVertex;
-						featureVertex.type=4;
-						featureVertex.radius=nEnlargedSpace;	//此处弧均为逆时针弧 wht 17-05-23
-						featureVertex.vertex=prevPt;
-						featureVertex.center=pCurVertex->vertex;
-						featureVertex.RetrieveArcLine(arcLine,curPt,NULL);
-						if(prev_norm!=next_norm)
+						featureVertex.type = 4;
+						featureVertex.radius = m_nEnlargedSpace;	//此处弧均为逆时针弧 wht 17-05-23
+						featureVertex.vertex = prevPt;
+						featureVertex.center = pCurVertex->vertex;
+						featureVertex.RetrieveArcLine(arcLine, curPt, NULL);
+						if (prev_norm != next_norm)
 						{
-							pPt=m_xCutPtList.append();
-							pPt->vertex=ProcessPoint(curPt-prevPt,cCSMode);
-							if(fabs(arcLine.SectorAngle())>0.3*Pi)
+							pPt = m_xCutPtList.append();
+							pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+							if (fabs(arcLine.SectorAngle()) > 0.3*Pi)
 							{
-								pPt->cByte=CUT_PT::EDGE_ARC;
-								pPt->bClockwise=FALSE;
-								pPt->centerPt=ProcessPoint(pCurVertex->vertex-prevPt,cCSMode);
-								pPt->fSectorAngle=arcLine.SectorAngle();
+								pPt->cByte = CUT_PT::EDGE_ARC;
+								pPt->bClockwise = FALSE;
+								pPt->centerPt = ProcessPoint(pCurVertex->vertex - prevPt, m_cCSMode);
+								pPt->fSectorAngle = arcLine.SectorAngle();
 							}
 						}
-						prevPt=curPt;
+						prevPt = curPt;
 					}
 				}
 			}
 		}
-		if(bFinished)
+		if (bFinished)
 			break;
-		if(bInvertedTraverse)
-			iCurVertex=(iCurVertex-1)==0?nCount:iCurVertex-1;
+		if (bInvertedTraverse)
+			iCurVertex = (iCurVertex - 1) == 0 ? nCount : iCurVertex - 1;
 		else
-			iCurVertex=(iCurVertex+1)>(int)nCount?1:iCurVertex+1;
+			iCurVertex = (iCurVertex + 1) > (int)nCount ? 1 : iCurVertex + 1;
 	}
-	curPt+=prev_vec*pPlate->m_xCutPt.cOutLineLen;
-	m_cutPt.vertex2=ProcessPoint(curPt-prevPt,cCSMode);
-	prevPt=curPt;
-	if(nExtraOutLen>0)
+	curPt += prev_vec * m_nOutLineLen;
+	m_cutPt.vertex2 = ProcessPoint(curPt - prevPt, m_cCSMode);
+	prevPt = curPt;
+	if (m_nExtraOutLen > 0)
 	{
-		m_cutPt.bHasExtraOutVertex=TRUE;
-		curPt=pFirstVertex->vertex+prev_vec*(pPlate->m_xCutPt.cOutLineLen+nExtraOutLen);
-		m_cutPt.extraOutVertex=ProcessPoint(curPt-prevPt,cCSMode);
-		prevPt=curPt;
+		PROFILE_VER* pVertex = tempPlate.vertex_list.GetValue(m_pPlate->m_xCutPt.hEntId);
+		curPt = pVertex->vertex + prev_vec * (m_nOutLineLen + m_nExtraOutLen);
+		m_cutPt.bHasExtraOutVertex = TRUE;
+		m_cutPt.extraOutVertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+		prevPt = curPt;
 	}
 	//
-	m_cutPt.vertex3=ProcessPoint(f3dPoint(cutter_pos)-prevPt,cCSMode);
+	m_cutPt.vertex3 = ProcessPoint(m_xStartPt - prevPt, m_cCSMode);
 }
 bool CNCPlate::CreatePlateTxtFile(const char* file_path)
 {	//写入文件

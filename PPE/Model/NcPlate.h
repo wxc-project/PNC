@@ -5,9 +5,18 @@
 #ifdef __PNC_
 class CNCPlate
 {
-	int m_iNo;
 	CProcessPlate *m_pPlate;
 public:
+	int m_iNo;				//程序号
+	BYTE m_cCSMode;			//0.横X+纵Y+ 1.横Y+纵X-
+	BOOL m_bClockwise;		//TRUE 顺时针，FALSE 逆时针
+	int m_nInLineLen;		//引入长度
+	int m_nOutLineLen;		//引出长度
+	int m_nExtraInLen;		//额外的引入长度
+	int m_nExtraOutLen;		//额外的引出长度
+	int m_nEnlargedSpace;	//轮廓边增大值
+	BOOL m_bCutSpecialHole;	//是否切割大孔
+	GEPOINT m_xStartPt;		//
 	GEPOINT m_ptCutter;			//刀头位置
 	struct CUT_PT{
 		static const BYTE EDGE_LINE		= 0;
@@ -28,21 +37,16 @@ public:
 	CUT_PT m_cutPt;
 	ATOM_LIST<CUT_PT> m_xCutPtList;
 	ATOM_LIST<CUT_PT> m_xCutHoleList;	//孔切割数据 wht 19-09-24
-	/*
-	 * pPlate:		当前切割钢板
-	 * iNo:			程序号
-	 * cutter_pos:	刀头位置
-	 * cCSMode:		0.横X+纵Y+ 1.横Y+纵X-
-	 * bClockwise：	TRUE 顺指针，FALSE 逆时针
-	 * nExtraInLen:	额外的引入长度
-	 * nExtraOutLen:额外的引出长度
-	 * nEnlargedSpace: 轮廓边增大值
-	 */
-	CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo=0,BYTE cCSMode=0,bool bClockwise=false,
+public:
+	CNCPlate(CProcessPlate *pPlate, int iNo = 0);
+	/*CNCPlate(CProcessPlate *pPlate,GEPOINT cutter_pos,int iNo=0,BYTE cCSMode=0,bool bClockwise=false,
 			 int nInLineLen=0,int nOutLineLen=0,int nExtraInLen=0,int nExtraOutLen=0,int nEnlargedSpace=0,
-			 BOOL bCutSpecialHole=FALSE);
+			 BOOL bCutSpecialHole=FALSE);*/
+	//
+	void InitPlateNcInfo();
 	bool CreatePlateTxtFile(const char* file_path);
 	bool CreatePlateNcFile(const char* file_path);
+public:
 	static GEPOINT ProcessPoint(const double* coord,BYTE cCSMode=0);
 	static bool InitVertextListByNcFile(CProcessPlate *pPlate,const char* file_path);
 };

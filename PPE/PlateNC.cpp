@@ -270,8 +270,8 @@ void CPPEView::OnUpdateBatchSortHole(CCmdUI *pCmdUI)
 {
 	BOOL bEnable=FALSE;
 #ifdef __PNC_
-	if(VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		bEnable=(g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)&&(m_pProcessPart&&m_pProcessPart->m_cPartType==CProcessPart::TYPE_PLATE);
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
+		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 }
