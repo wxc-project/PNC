@@ -495,7 +495,10 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	}
 	else if (CSysPara::GetPropID("flameCut.m_bCutSpecialHole") == pItem->m_idProp)
 	{
-		g_sysPara.flameCut.m_bCutSpecialHole = atoi(valueStr);
+		if(valueStr.CompareNoCase("ÊÇ")==0)
+			g_sysPara.flameCut.m_bCutSpecialHole = TRUE;
+		else
+			g_sysPara.flameCut.m_bCutSpecialHole = FALSE;
 		g_sysPara.WriteSysParaToReg("flameCut.m_bCutSpecialHole");
 	}
 #endif
@@ -898,7 +901,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pPropItem,"plasmaCut.m_bCutPosInInitPos");
 	oper.InsertCmbEditPropItem(pPropItem,"plasmaCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem,"plasmaCut.m_sOutLineLen");
-	//oper.InsertCmbListPropItem(pPropItem, "plasmaCut.m_bCutSpecialHole");
+	//oper.InsertCmbListPropItem(pPropItem,"plasmaCut.m_bCutSpecialHole");
 	pPropItem->m_bHideChildren=(g_sysPara.m_cDisplayCutType==0);
 #endif
 #ifndef __PNC_

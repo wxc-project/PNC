@@ -2,6 +2,7 @@
 #include "NcPlate.h"
 #include "LicFuncDef.h"
 
+#define	 COORD_EPS	0.002
 //////////////////////////////////////////////////////////////////////////
 // CNCPlate
 #ifdef __PNC_
@@ -9,7 +10,6 @@ CXhChar100 PointToString(const double* coord,bool bInsertSpace=false,bool bIsIJ=
 {
 	GEPOINT vertex(coord);
 	CXhChar100 sCoord;
-	const double COORD_EPS=0.002;
 	CXhChar16 sCoordX("%.3f",vertex.x),sCoordY("%.3f",vertex.y);
 	SimplifiedNumString(sCoordX);
 	SimplifiedNumString(sCoordY);
@@ -31,24 +31,6 @@ CXhChar100 PointToString(const double* coord,bool bInsertSpace=false,bool bIsIJ=
 			sCoord.Printf("%C%s%C%s",cX,(char*)sCoordX,cY,(char*)sCoordY);
 	}
 	return sCoord;
-}
-GEPOINT CNCPlate::ProcessPoint(const double* coord,BYTE cCSMode/*=0*/)
-{
-	GEPOINT vertex(coord);
-	const double COORD_EPS=0.002;
-	if(fabs(vertex.x)<COORD_EPS)
-		vertex.x=0;
-	if(fabs(vertex.y)<COORD_EPS)
-		vertex.y=0;
-	if(fabs(vertex.z)<COORD_EPS)
-		vertex.z=0;
-	if(cCSMode==1)
-	{
-		double temp=vertex.x;
-		vertex.x=-vertex.y;
-		vertex.y=temp;
-	}
-	return vertex;
 }
 #ifdef PEC_EXPORTS
 BOOL GetSysParaFromReg(const char* sEntry, char* sValue)
@@ -80,11 +62,31 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,int iNo/*=0*/)
 	m_iNo = iNo;
 	m_cCSMode = 0;
 	m_bClockwise = FALSE;
+	m_ciStartId = pPlate ? (BYTE)pPlate->m_xCutPt.hEntId : 0;
 	m_nInLineLen = pPlate ? pPlate->m_xCutPt.cInLineLen : 0;
 	m_nOutLineLen = pPlate ? pPlate->m_xCutPt.cOutLineLen : 0;
 	m_nExtraInLen = m_nExtraOutLen = 0;
 	m_nEnlargedSpace = 0;
 	m_bCutSpecialHole = FALSE;
+	m_bCutFullCircle = FALSE;
+}
+//
+GEPOINT CNCPlate::ProcessPoint(const double* coord)
+{
+	GEPOINT vertex(coord);
+	if (fabs(vertex.x) < COORD_EPS)
+		vertex.x = 0;
+	if (fabs(vertex.y) < COORD_EPS)
+		vertex.y = 0;
+	if (fabs(vertex.z) < COORD_EPS)
+		vertex.z = 0;
+	if (m_cCSMode == 1)
+	{
+		double temp = vertex.x;
+		vertex.x = -vertex.y;
+		vertex.y = temp;
+	}
+	return vertex;
 }
 //
 void CNCPlate::InitPlateNcInfo()
@@ -101,7 +103,7 @@ void CNCPlate::InitPlateNcInfo()
 	CProcessPlate tempPlate;
 	m_pPlate->ClonePart(&tempPlate);
 	CProcessPlate::TransPlateToMCS(&tempPlate, mcs);
-	//2.初始化螺栓孔切入点
+	//2.初始化螺栓孔切割路径
 	GEPOINT prevPt = m_xStartPt, curPt;
 	if (m_bCutSpecialHole)
 	{
@@ -110,27 +112,76 @@ void CNCPlate::InitPlateNcInfo()
 		for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
 		{
 			double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
-			if (hole_d < fSpecialD)
+			if (fSpecialD >0 && hole_d < fSpecialD)
 				continue;
-			//初始化螺栓孔切入点
-
-			//初始化螺栓切割路径
-			/*CUT_PT *pCutPt = m_xCutHoleList.append();
-			pCutPt->radius = hole_d * 0.5;
-			pCutPt->cByte = CUT_PT::HOLE_CIR;
-			pCutPt->bClockwise = FALSE;
-			f3dPoint cir_center(pBoltInfo->posX, pBoltInfo->posY);
-			curPt.Set(cir_center.x + pCutPt->radius, cir_center.y);
-			pCutPt->vertex = ProcessPoint(curPt - prevPt, cCSMode);
-			pCutPt->centerPt = ProcessPoint(cir_center - f3dPoint(prevPt), cCSMode);
-			prevPt = curPt;*/
+			CUT_HOLE_PATH* pCutHole = m_xCutHole.append();
+			pCutHole->fHoleR = hole_d * 0.5;
+			pCutHole->orgPt.Set(pBoltInfo->posX, pBoltInfo->posY, 0);
+			//计算点火位置
+			GEPOINT cenPt;
+			curPt.x = pBoltInfo->posX - hole_d * 0.5 + m_nInLineLen;
+			curPt.y = pBoltInfo->posY + m_nInLineLen;
+			pCutHole->ignitionPt = ProcessPoint(curPt - prevPt);
+			prevPt = curPt;
+			//计算切割路径
+			if (m_bCutFullCircle)
+			{	//切整圆
+				curPt.Set(pBoltInfo->posX - hole_d * 0.5, pBoltInfo->posY, 0);
+				CUT_PT *pCutPt = pCutHole->cutPtArr.append();
+				pCutPt->cByte = CUT_PT::HOLE_CIR;
+				pCutPt->bClockwise = FALSE;
+				pCutPt->radius = pCutHole->fHoleR;
+				pCutPt->vertex = ProcessPoint(curPt - prevPt);
+				pCutPt->center = ProcessPoint(pCutHole->orgPt - prevPt);
+				prevPt = curPt;
+			}
+			else
+			{	//分段切
+				double fArcR = 0;
+				int slices = 8, nCutPt = slices + 1;
+				double fSliceAngle = 2 * Pi / slices;
+				for (int ii = 0; ii <= nCutPt; ii++)
+				{
+					if (ii == 0)
+					{	//起始点
+						curPt.x = pBoltInfo->posX - hole_d * 0.5;
+						curPt.y = pBoltInfo->posY;
+						cenPt.Set(curPt.x + m_nInLineLen, curPt.y, 0);
+						fArcR = m_nInLineLen;
+					}
+					else if (ii == nCutPt)
+					{	//结束引出点
+						curPt.x = pBoltInfo->posX - hole_d * 0.5 + m_nOutLineLen;
+						curPt.y = pBoltInfo->posY - m_nOutLineLen;
+						cenPt.Set(curPt.x, pBoltInfo->posY, 0);
+						fArcR = m_nOutLineLen;
+					}
+					else
+					{	//圆孔上的切割点
+						curPt = prevPt;
+						rotate_point_around_axis(curPt, fSliceAngle, pCutHole->orgPt, f3dPoint(pBoltInfo->posX, pBoltInfo->posY, 1));
+						cenPt = pCutHole->orgPt;
+						fArcR = pCutHole->fHoleR;
+					}
+					f3dArcLine arc_line;
+					if (arc_line.CreateMethod3(prevPt, curPt, f3dPoint(0, 0, 1),fArcR,cenPt))
+					{
+						CUT_PT *pCutPt = pCutHole->cutPtArr.append();
+						pCutPt->cByte = CUT_PT::EDGE_ARC;
+						pCutPt->bClockwise = FALSE;
+						pCutPt->vertex = ProcessPoint(curPt - prevPt);
+						pCutPt->center = ProcessPoint(arc_line.Center() - f3dPoint(prevPt));
+						prevPt = curPt;
+					}
+				}
+			}
 		}
 	}
 	//3.初始化钢板切入点
-	DWORD nCount = m_pPlate->vertex_list.GetNodeNum();
-	int iCurVertex = m_pPlate->m_xCutPt.hEntId;
-	int iPrevVertex = (m_pPlate->m_xCutPt.hEntId - 1) <= 0 ? nCount : m_pPlate->m_xCutPt.hEntId - 1;
-	int iNextVertex = (m_pPlate->m_xCutPt.hEntId + 1) > nCount ? 1 : m_pPlate->m_xCutPt.hEntId + 1;
+	int nCount = m_pPlate->vertex_list.GetNodeNum();
+	int iCurVertex = m_ciStartId;
+	int iPrevVertex = (m_ciStartId - 1) <= 0 ? nCount : m_ciStartId - 1;
+	int iNextVertex = (m_ciStartId + 1) > nCount ? 1 : m_ciStartId + 1;
 	PROFILE_VER *pCurVertex = tempPlate.vertex_list.GetValue(iCurVertex);
 	PROFILE_VER *pPrevVertex = tempPlate.vertex_list.GetValue(iPrevVertex);
 	PROFILE_VER *pNextVertex = tempPlate.vertex_list.GetValue(iNextVertex);
@@ -154,18 +205,17 @@ void CNCPlate::InitPlateNcInfo()
 	if (m_nExtraInLen > 0)
 	{
 		curPt = pCurVertex->vertex + next_vec * (m_nInLineLen + m_nExtraInLen + m_nEnlargedSpace);
-		m_cutPt.bHasExtraInVertex = TRUE;
-		m_cutPt.extraInVertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+		m_xCutEdge.extraInVertex = ProcessPoint(curPt - prevPt);
 		prevPt = curPt;
 	}
 	curPt = pCurVertex->vertex + next_vec * (m_nInLineLen + m_nExtraInLen);
 	if (m_nEnlargedSpace > 0)
 		curPt += (next_norm*m_nEnlargedSpace);
-	m_cutPt.vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+	m_xCutEdge.cutInVertex = ProcessPoint(curPt - prevPt);
 	prevPt = curPt;
 	//4.初始化轮廓点信息
 	iCurVertex = 0;
-	int initIndex = m_pPlate->m_xCutPt.hEntId;
+	int initIndex = m_ciStartId;
 	f3dLine prev_line, next_line;
 	while (initIndex > 0)
 	{
@@ -230,9 +280,9 @@ void CNCPlate::InitPlateNcInfo()
 		}
 		if (pFeatureVertex->type == 1 || bFirstVertex)
 		{	//直线
-			CUT_PT *pPt = m_xCutPtList.append();
+			CUT_PT *pPt = m_xCutEdge.cutPtArr.append();
 			pPt->cByte = CUT_PT::EDGE_LINE;
-			pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+			pPt->vertex = ProcessPoint(curPt - prevPt);
 			prev_line.startPt = prevPt;	//当前节点之前的一条轮廓标
 			prev_line.endPt = curPt;
 			f3dPoint oldPrevPt = prevPt;
@@ -246,7 +296,7 @@ void CNCPlate::InitPlateNcInfo()
 				int nRetCode = Int3dll(prev_line, next_line, inters_pt);
 				if (nRetCode == 1 || nRetCode == 2)
 				{	//交叉点为线段端点或内侧点(处理凹点或共线点) wht-17.06.08
-					pPt->vertex = ProcessPoint(inters_pt - oldPrevPt, m_cCSMode);
+					pPt->vertex = ProcessPoint(inters_pt - oldPrevPt);
 					prevPt = inters_pt;
 				}
 				else
@@ -260,14 +310,13 @@ void CNCPlate::InitPlateNcInfo()
 					featureVertex.RetrieveArcLine(arcLine, curPt, NULL);
 					if (prev_norm != next_norm)
 					{
-						pPt = m_xCutPtList.append();
-						pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+						pPt = m_xCutEdge.cutPtArr.append();
+						pPt->vertex = ProcessPoint(curPt - prevPt);
 						if (fabs(arcLine.SectorAngle()) > 0.3*Pi)
 						{
 							pPt->cByte = CUT_PT::EDGE_ARC;
 							pPt->bClockwise = FALSE;
-							pPt->centerPt = ProcessPoint(pCurVertex->vertex - prevPt, m_cCSMode);
-							pPt->fSectorAngle = arcLine.SectorAngle();
+							pPt->center = ProcessPoint(pCurVertex->vertex - prevPt);
 						}
 					}
 					prevPt = curPt;
@@ -299,15 +348,16 @@ void CNCPlate::InitPlateNcInfo()
 					featureVertex.RetrieveArcLine(arcLine, prevPt, NULL);
 				}
 			}
-			CUT_PT *pPt = m_xCutPtList.append();
-			pPt->cByte = CUT_PT::EDGE_ARC;
-			pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
-			pPt->centerPt = ProcessPoint(arcLine.Center() - GEPOINT(prevPt), m_cCSMode);
-			pPt->fSectorAngle = arcLine.SectorAngle();
+			double  fSectorAngle = arcLine.SectorAngle();
 			if ((bInvertedTraverse&&pFeatureVertex->work_norm.z > 0) ||
 				(!bInvertedTraverse&&pFeatureVertex->work_norm.z < 0))
-				pPt->fSectorAngle *= -1;
-			pPt->bClockwise = pPt->fSectorAngle < 0;	//顺时针圆弧
+				fSectorAngle *= -1;
+			//
+			CUT_PT *pPt = m_xCutEdge.cutPtArr.append();
+			pPt->cByte = CUT_PT::EDGE_ARC;
+			pPt->vertex = ProcessPoint(curPt - prevPt);
+			pPt->center = ProcessPoint(arcLine.Center() - GEPOINT(prevPt));
+			pPt->bClockwise = (fSectorAngle < 0) ? TRUE : FALSE;	//顺时针圆弧
 			prevPt = curPt;
 		}
 		else if (pFeatureVertex->type == 3)
@@ -353,9 +403,9 @@ void CNCPlate::InitPlateNcInfo()
 			{
 				curPt = ptList[i];
 				//直线
-				CUT_PT *pPt = m_xCutPtList.append();
+				CUT_PT *pPt = m_xCutEdge.cutPtArr.append();
 				pPt->cByte = CUT_PT::EDGE_LINE;
-				pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+				pPt->vertex = ProcessPoint(curPt - prevPt);
 				prev_line.startPt = prevPt;	//当前节点之前的一条轮廓标
 				prev_line.endPt = curPt;
 				f3dPoint oldPrevPt = prevPt;
@@ -369,7 +419,7 @@ void CNCPlate::InitPlateNcInfo()
 					int nRetCode = Int3dll(prev_line, next_line, inters_pt);
 					if (nRetCode == 1 || nRetCode == 2)
 					{	//交叉点为线段端点或内侧点(处理凹点或共线点) wht-17.06.08
-						pPt->vertex = ProcessPoint(inters_pt - oldPrevPt, m_cCSMode);
+						pPt->vertex = ProcessPoint(inters_pt - oldPrevPt);
 						prevPt = inters_pt;
 					}
 					else
@@ -383,14 +433,13 @@ void CNCPlate::InitPlateNcInfo()
 						featureVertex.RetrieveArcLine(arcLine, curPt, NULL);
 						if (prev_norm != next_norm)
 						{
-							pPt = m_xCutPtList.append();
-							pPt->vertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+							pPt = m_xCutEdge.cutPtArr.append();
+							pPt->vertex = ProcessPoint(curPt - prevPt);
 							if (fabs(arcLine.SectorAngle()) > 0.3*Pi)
 							{
 								pPt->cByte = CUT_PT::EDGE_ARC;
 								pPt->bClockwise = FALSE;
-								pPt->centerPt = ProcessPoint(pCurVertex->vertex - prevPt, m_cCSMode);
-								pPt->fSectorAngle = arcLine.SectorAngle();
+								pPt->center = ProcessPoint(pCurVertex->vertex - prevPt);
 							}
 						}
 						prevPt = curPt;
@@ -406,18 +455,17 @@ void CNCPlate::InitPlateNcInfo()
 			iCurVertex = (iCurVertex + 1) > (int)nCount ? 1 : iCurVertex + 1;
 	}
 	curPt += prev_vec * m_nOutLineLen;
-	m_cutPt.vertex2 = ProcessPoint(curPt - prevPt, m_cCSMode);
+	m_xCutEdge.cutOutVertex = ProcessPoint(curPt - prevPt);
 	prevPt = curPt;
 	if (m_nExtraOutLen > 0)
 	{
 		PROFILE_VER* pVertex = tempPlate.vertex_list.GetValue(m_pPlate->m_xCutPt.hEntId);
 		curPt = pVertex->vertex + prev_vec * (m_nOutLineLen + m_nExtraOutLen);
-		m_cutPt.bHasExtraOutVertex = TRUE;
-		m_cutPt.extraOutVertex = ProcessPoint(curPt - prevPt, m_cCSMode);
+		m_xCutEdge.extraOutVertex = ProcessPoint(curPt - prevPt);
 		prevPt = curPt;
 	}
 	//
-	m_cutPt.vertex3 = ProcessPoint(m_xStartPt - prevPt, m_cCSMode);
+	m_xCutEdge.cutStartVertex = ProcessPoint(m_xStartPt - prevPt);
 }
 bool CNCPlate::CreatePlateTxtFile(const char* file_path)
 {	//写入文件
@@ -428,51 +476,54 @@ bool CNCPlate::CreatePlateTxtFile(const char* file_path)
 		return false;
 	fprintf(fp,"G21\n");			//公制(单位mm)
 	fprintf(fp,"G91\n");			//增量尺寸	G90绝对尺寸
-	//输出圆孔切割点 wht 19-09-24
-	//G0Y430.		//移动刀头至圆孔外侧切点
-	//G41			//刀径左向补齐
-	//M04           //主轴反转  
-	//G3I - 35.		//绘制半径为35的整圆
-	//M03           //主轴正转
-	//G40           //取消刀径补齐
-	for (CUT_PT *pCutPt = m_xCutHoleList.GetFirst(); pCutPt; pCutPt = m_xCutHoleList.GetNext())
+	//输出圆孔切割路径
+	for (CNCPlate::CUT_HOLE_PATH* pHolePath = m_xCutHole.GetFirst(); pHolePath; pHolePath = m_xCutHole.GetNext())
 	{
-		fprintf(fp, "G00 %s\n", (char*)PointToString(pCutPt->vertex, true));//移动刀头至圆孔外侧切点
-		fprintf(fp, "G41\n");						//刀径左向补齐
-		fprintf(fp, "M04\n");						//主轴反转  
-		fprintf(fp, "G03 I-%.1f\n",pCutPt->radius);	//绘制半径为35的整圆,因切入点在右侧，圆心在左侧
-		fprintf(fp, "M03\n");						//主轴正转
-		fprintf(fp, "G40\n");						//取消刀径补齐
+		if (m_bCutFullCircle)
+		{
+			CUT_PT* pCutPt = pHolePath->cutPtArr.GetFirst();
+			if (pCutPt == NULL)
+				continue;
+			fprintf(fp, "G00 %s\n", (char*)PointToString(pCutPt->vertex, true));//移动刀头至圆孔外侧切点
+			fprintf(fp, "G41\n");						//刀径左向补齐
+			fprintf(fp, "M04\n");						//主轴反转  
+			fprintf(fp, "G03 I-%.1f\n", pCutPt->radius);	//绘制半径为35的整圆,因切入点在右侧，圆心在左侧
+			fprintf(fp, "M03\n");						//主轴正转
+			fprintf(fp, "G40\n");
+		}
+		else
+		{
+			fprintf(fp, "G00 %s\n", (char*)PointToString(pHolePath->ignitionPt, true));	//点火位置
+			fprintf(fp, "G41\n");			//G41左割缝补偿
+			fprintf(fp, "M07\n");			//开始切割
+			for (CUT_PT* pCutPt = pHolePath->cutPtArr.GetFirst(); pCutPt; pCutPt = pHolePath->cutPtArr.GetNext())
+				fprintf(fp, "G03 %s %s\n", (char*)PointToString(pCutPt->vertex, true), (char*)PointToString(pCutPt->center, true, true));
+			fprintf(fp, "M08\n");			//停止切割
+			fprintf(fp, "G40\n");			//关闭补偿
+		}
 	}
-	if(m_cutPt.bHasExtraInVertex)
-		fprintf(fp,"G00 %s\n",(char*)PointToString(m_cutPt.extraInVertex,true));	//额外的引入点
+	//输出轮廓切割路径
+	if(m_nExtraInLen>0)
+		fprintf(fp,"G00 %s\n",(char*)PointToString(m_xCutEdge.extraInVertex,true));	//额外的引入点
 	else
-		fprintf(fp,"G00 %s\n",(char*)PointToString(m_cutPt.vertex,true));			//引入点
+		fprintf(fp,"G00 %s\n",(char*)PointToString(m_xCutEdge.cutInVertex,true));			//引入点
 	fprintf(fp,"G42\n");			//G42左割缝补偿 G41右割缝补偿
 	fprintf(fp,"M07\n");			//开始切割
-	if(m_cutPt.bHasExtraInVertex)
-		fprintf(fp,"G01 %s\n",(char*)PointToString(m_cutPt.vertex,true));
-	for(CUT_PT *pPt=m_xCutPtList.GetFirst();pPt;pPt=m_xCutPtList.GetNext())
+	if(m_nExtraInLen > 0)
+		fprintf(fp,"G01 %s\n",(char*)PointToString(m_xCutEdge.cutInVertex,true));
+	for(CUT_PT *pPt= m_xCutEdge.cutPtArr.GetFirst();pPt;pPt= m_xCutEdge.cutPtArr.GetNext())
 	{
 		if(pPt->cByte==CUT_PT::EDGE_LINE)
 			fprintf(fp,"G01 %s\n",(char*)PointToString(pPt->vertex,true));
 		else if(pPt->cByte==CUT_PT::EDGE_ARC)
-			fprintf(fp,"G0%d %s %s\n",pPt->bClockwise?2:3,(char*)PointToString(pPt->vertex,true),(char*)PointToString(pPt->centerPt,true,true));
-		else if(pPt->cByte==CUT_PT::HOLE_CUT_IN)
-		{
-
-		}
-		else if(pPt->cByte==CUT_PT::HOLE_CUT_OUT)
-		{
-
-		}
+			fprintf(fp,"G0%d %s %s\n",pPt->bClockwise?2:3,(char*)PointToString(pPt->vertex,true),(char*)PointToString(pPt->center,true,true));
 	}
-	fprintf(fp,"G01 %s\n",(char*)PointToString(m_cutPt.vertex2,true));
-	if(m_cutPt.bHasExtraOutVertex)
-		fprintf(fp,"G01 %s\n",(char*)PointToString(m_cutPt.extraOutVertex,true));
+	fprintf(fp,"G01 %s\n",(char*)PointToString(m_xCutEdge.cutOutVertex,true));
+	if(m_nExtraOutLen>0)
+		fprintf(fp,"G01 %s\n",(char*)PointToString(m_xCutEdge.extraOutVertex,true));
 	fprintf(fp,"M08\n");			//停止切割
 	fprintf(fp,"G40\n");			//关闭补偿
-	fprintf(fp,"G00 %s\n",(char*)PointToString(m_cutPt.vertex3,true));
+	fprintf(fp,"G00 %s\n",(char*)PointToString(m_xCutEdge.cutStartVertex,true));
 	fprintf(fp,"M02\n");			//停止+返回起点
 	fclose(fp);
 	return true;
@@ -494,10 +545,10 @@ bool CNCPlate::CreatePlateNcFile(const char* file_path)
 	fprintf(fp,"G91\n");			//增量指令
 	fprintf(fp,"G92X0.Y0.C0.A0\n");	//坐标系设定
 	fprintf(fp,"M7000\n");			//图形跟随点
-	if(m_cutPt.bHasExtraInVertex)
-		fprintf(fp,"G00%s\n",(char*)PointToString(m_cutPt.extraInVertex));	//额外的引入点
+	if(m_nExtraInLen>0)
+		fprintf(fp,"G00%s\n",(char*)PointToString(m_xCutEdge.extraInVertex));	//额外的引入点
 	else
-		fprintf(fp,"G00%s\n",(char*)PointToString(m_cutPt.vertex));			//快速移动至引入点
+		fprintf(fp,"G00%s\n",(char*)PointToString(m_xCutEdge.cutInVertex));			//快速移动至引入点
 	fprintf(fp,"N1\n");				//第一个穿孔点
 	fprintf(fp,"M54\n");			//0-CUT指令
 	fprintf(fp,"M45\n");			//初始高度设定
@@ -506,31 +557,23 @@ bool CNCPlate::CreatePlateNcFile(const char* file_path)
 	fprintf(fp,"G41G01Y-0.1F4000D12\n");//G41补偿 D补偿代码
 	fprintf(fp,"G42.1G01Y-0.9\n");		//G42.1法线
 	fprintf(fp,"M17\n");			//穿孔开始
-	if(m_cutPt.bHasExtraInVertex)
-		fprintf(fp,"G01%s\n",(char*)PointToString(m_cutPt.vertex));
-	for(CUT_PT *pPt=m_xCutPtList.GetFirst();pPt;pPt=m_xCutPtList.GetNext())
+	if(m_nExtraInLen>0)
+		fprintf(fp,"G01%s\n",(char*)PointToString(m_xCutEdge.cutInVertex));
+	for(CUT_PT *pPt= m_xCutEdge.cutPtArr.GetFirst();pPt;pPt= m_xCutEdge.cutPtArr.GetNext())
 	{
 		if(pPt->cByte==CUT_PT::EDGE_LINE)
 			fprintf(fp,"G01%s\n",(char*)PointToString(pPt->vertex));
 		else if(pPt->cByte==CUT_PT::EDGE_ARC)
-			fprintf(fp,"G0%d%s%s\n",pPt->bClockwise?2:3,(char*)PointToString(pPt->vertex),(char*)PointToString(pPt->centerPt,false,true));
-		else if(pPt->cByte==CUT_PT::HOLE_CUT_IN)
-		{
-
-		}
-		else if(pPt->cByte==CUT_PT::HOLE_CUT_OUT)
-		{
-
-		}
+			fprintf(fp,"G0%d%s%s\n",pPt->bClockwise?2:3,(char*)PointToString(pPt->vertex),(char*)PointToString(pPt->center,false,true));
 	}
-	fprintf(fp,"G01%s\n",(char*)PointToString(m_cutPt.vertex2));
-	if(m_cutPt.bHasExtraOutVertex)
-		fprintf(fp,"G40.1G40G01%sM16\n",(char*)PointToString(m_cutPt.extraOutVertex));//等离子关
+	fprintf(fp,"G01%s\n",(char*)PointToString(m_xCutEdge.cutOutVertex));
+	if(m_nExtraOutLen>0)
+		fprintf(fp,"G40.1G40G01%sM16\n",(char*)PointToString(m_xCutEdge.extraOutVertex));//等离子关
 	else
 		fprintf(fp,"G40.1G40M16\n");//等离子关
 	fprintf(fp,"G01A4.F6000\n");
 	fprintf(fp,"M88\n");			//中间上升
-	fprintf(fp,"G01%s\n",(char*)PointToString(m_cutPt.vertex3));
+	fprintf(fp,"G01%s\n",(char*)PointToString(m_xCutEdge.cutStartVertex));
 	fprintf(fp,"M31\n");
 	fprintf(fp,"M27\n");
 	fprintf(fp,"M14\n");			//蜂鸣器

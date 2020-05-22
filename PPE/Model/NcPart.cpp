@@ -1852,9 +1852,9 @@ bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 	ncPlate.m_nOutLineLen = -1;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_PLASMA_CUT);
-		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_PLASMA_CUT);
-		ncPlate.m_bCutSpecialHole = CPPEModel::sysPara->IsCutSpecialHole(ISysPara::TYPE_PLASMA_CUT);
+		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_bCutSpecialHole = CPPEModel::sysPara->IsCutSpecialHole(ISysPara::TYPE_FLAME_CUT);
 	}
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);

@@ -616,10 +616,10 @@ bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& 
 		if (fgets(line_txt, 200, fp) == NULL)
 			continue;
 		CXhChar200 sLine(line_txt);
-		sLine.Replace('X', ' ');
-		sLine.Replace('Y', ' ');
-		sLine.Replace('I', ' ');
-		sLine.Replace('J', ' ');
+		BOOL bHasX = (sLine.Replace('X', ' ') > 0) ? TRUE : FALSE;
+		BOOL bHasY = (sLine.Replace('Y', ' ') > 0) ? TRUE : FALSE;
+		BOOL bHasI = (sLine.Replace('I', ' ') > 0) ? TRUE : FALSE;
+		BOOL bHasJ = (sLine.Replace('J', ' ') > 0) ? TRUE : FALSE;
 		strcpy(line_txt, sLine);
 		char szTokens[] = " =\n";
 		char* skey = strtok(line_txt, szTokens);
@@ -629,12 +629,18 @@ bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& 
 		CPlateObject::VERTEX vertrex;
 		if (strstr(skey, "G00"))
 		{	//快速定位点
-			skey = strtok(NULL, szTokens);
-			if(skey)
-				x = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				y = atof(skey);
+			if (bHasX)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					x = atof(skey);
+			}
+			if (bHasY)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					y = atof(skey);
+			}
 			curPt.x = prevPt.x + x;
 			curPt.y = prevPt.y + y;
 			//
@@ -645,12 +651,18 @@ bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& 
 		}
 		else if (strstr(skey, "G01"))
 		{	//直线插补
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				x = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				y = atof(skey);
+			if (bHasX)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					x = atof(skey);
+			}
+			if (bHasY)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					y = atof(skey);
+			}
 			curPt.x = prevPt.x + x;
 			curPt.y = prevPt.y + y;
 			//
@@ -658,72 +670,53 @@ bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& 
 			vertexArr.push_back(vertrex);
 			prevPt = curPt;
 		}
-		else if (strstr(skey, "G02"))
+		else if (strstr(skey, "G02")|| strstr(skey, "G03"))
 		{	//顺时针圆弧插补
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				x = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				y = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				i = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				j = atof(skey);
+			if (bHasX)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					x = atof(skey);
+			}
+			if (bHasY)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					y = atof(skey);
+			}
+			if (bHasI)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					i = atof(skey);
+			}
+			if (bHasJ)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					j = atof(skey);
+			}
 			curPt.x = prevPt.x + x;
 			curPt.y = prevPt.y + y;
-			center.x = curPt.x + i;
-			center.y = curPt.y + j;
-			//
+			center.x = prevPt.x + i;
+			center.y = prevPt.y + j;
+			//查找前一个顶点
 			for (int index = 0; index < vertexArr.size(); index++)
 			{
-				if (vertexArr.at(index).pos.IsEqual(prevPt, EPS2))
+				if (vertexArr.at(index).pos.IsEqual(prevPt, EPS2)&&
+					vertexArr.at(index).ciEdgeType == 1)
 				{
 					vertexArr.at(index).ciEdgeType = 2;
 					vertexArr.at(index).arc.center = center;
-					vertexArr.at(index).arc.work_norm.Set(0, 0, -1);
 					vertexArr.at(index).arc.radius = DISTANCE(center, curPt);
+					if(strstr(skey, "G02"))
+						vertexArr.at(index).arc.work_norm.Set(0, 0, -1);
+					else
+						vertexArr.at(index).arc.work_norm.Set(0, 0, 1);
 					break;
 				}
 			}
-			//
-			vertrex.pos = curPt;
-			vertexArr.push_back(vertrex);
-			prevPt = curPt;
-		}
-		else if (strstr(skey, "G03"))
-		{	//逆时针圆弧插补
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				x = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				y = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				i = atof(skey);
-			skey = strtok(NULL, szTokens);
-			if (skey)
-				j = atof(skey);
-			curPt.x = prevPt.x + x;
-			curPt.y = prevPt.y + y;
-			center.x = curPt.x + i;
-			center.y = curPt.y + j;
-			//
-			for (int index = 0; index < vertexArr.size(); index++)
-			{
-				if (vertexArr.at(index).pos.IsEqual(prevPt, EPS2))
-				{
-					vertexArr.at(index).ciEdgeType = 2;
-					vertexArr.at(index).arc.center = center;
-					vertexArr.at(index).arc.work_norm.Set(0, 0, 1);
-					vertexArr.at(index).arc.radius = DISTANCE(center, curPt);
-					break;
-				}
-			}
-			//
+			//添加新顶点
 			vertrex.pos = curPt;
 			vertexArr.push_back(vertrex);
 			prevPt = curPt;
