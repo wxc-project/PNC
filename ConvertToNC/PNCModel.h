@@ -142,6 +142,7 @@ public:
 	f2dRect GetPnDimRect();
 	void CreatePPiFile(const char* file_path);
 	void DrawPlate(f3dPoint *pOrgion=NULL,BOOL bCreateDimPos=FALSE,BOOL bDrawAsBlock=FALSE,GEPOINT *pPlateCenter=NULL);
+	void DrawPlateProfile();
 	void InitMkPos(GEPOINT &mk_pos,GEPOINT &mk_vec);
 	void CalEquidistantShape(double minDistance,ATOM_LIST<VERTEX> *pDestList);
 	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt);

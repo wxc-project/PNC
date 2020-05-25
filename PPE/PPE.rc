@@ -369,10 +369,12 @@ BEGIN
         BEGIN
             MENUITEM SEPARATOR
             MENUITEM "生成钢板DXF(&D)\tCtrl+D",         ID_FILE_SAVE_DXF
+			MENUITEM SEPARATOR
             MENUITEM "生成钢板TTP",                     ID_FILE_SAVE_TTP
             MENUITEM "生成钢板WKF",                     ID_FILE_SAVE_WKF
             MENUITEM "生成钢板PBJ",                     ID_FILE_SAVE_PBJ
             MENUITEM "生成钢板PMZ",                     ID_FILE_SAVE_PMZ
+			MENUITEM SEPARATOR
             MENUITEM "生成钢板NC",                      ID_FILE_SAVE_NC
             MENUITEM "生成钢板TXT",                     ID_FILE_SAVE_TXT
             MENUITEM "生成钢板CNC",                     ID_FILE_SAVE_CNC

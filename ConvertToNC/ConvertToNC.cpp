@@ -162,8 +162,8 @@ void RegisterServerComponents ()
 		&InsertMKRect);
 	//通过读取Txt文件绘制外形
 	acedRegCmds->addCommand("PNC-MENU",   // Group name
-		"DrawByTxtFile",					// Global function name
-		"DrawByTxtFile",					// Local function name
+		"TXT",					// Global function name
+		"TXT",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&DrawProfileByTxtFile);				// Function pointer
 	//打碎文本

@@ -1847,15 +1847,16 @@ void CNCPart::CreatePlatePmzFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &pl
 }
 bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 {
-	BOOL bCutSpecialHole = FALSE;
-	int nInLineLen=-1,nOutLineLen=-1;
+	CNCPlate ncPlate(pPlate);
+	ncPlate.m_nInLineLen = -1;
+	ncPlate.m_nOutLineLen = -1;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_PLASMA_CUT);
-		nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_PLASMA_CUT);
-		bCutSpecialHole = CPPEModel::sysPara->IsCutSpecialHole(ISysPara::TYPE_PLASMA_CUT);
+		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_bCutSpecialHole = CPPEModel::sysPara->IsCutSpecialHole(ISysPara::TYPE_FLAME_CUT);
 	}
-	CNCPlate ncPlate(pPlate,GEPOINT(0,0,0),0,0,false,nInLineLen,nOutLineLen,0,0,0,bCutSpecialHole);
+	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
 }
 
@@ -1868,13 +1869,19 @@ void CNCPart::CreatePlateTxtFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &pl
 
 bool CNCPart::CreatePlateNcFile(CProcessPlate *pPlate,const char* file_path)
 {	
-	int nInLineLen=-1,nOutLineLen=-1;
+	CNCPlate ncPlate(pPlate);
+	ncPlate.m_cCSMode = 1;
+	ncPlate.m_bClockwise = TRUE;
+	ncPlate.m_nInLineLen = -1;
+	ncPlate.m_nOutLineLen = -1;
+	ncPlate.m_nExtraInLen = 5;
+	ncPlate.m_nExtraOutLen = 2;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
 	}
-	CNCPlate ncPlate(pPlate,GEPOINT(),0,1,true,nInLineLen,nOutLineLen,5,2);
+	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateNcFile(file_path);
 }
 
@@ -1887,14 +1894,16 @@ void CNCPart::CreatePlateNcFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &pla
 
 bool CNCPart::CreatePlateCncFile(CProcessPlate *pPlate,const char* file_path)
 {	
-	int nInLineLen=-1,nOutLineLen=-1,nEnlargedSpace=0;
+	CNCPlate ncPlate(pPlate);
+	ncPlate.m_nInLineLen = -1;
+	ncPlate.m_nOutLineLen = -1;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		nEnlargedSpace=CPPEModel::sysPara->GetCutEnlargedSpaceLen(ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		ncPlate.m_nEnlargedSpace=CPPEModel::sysPara->GetCutEnlargedSpaceLen(ISysPara::TYPE_FLAME_CUT);
 	}
-	CNCPlate ncPlate(pPlate,GEPOINT(0,0,0),0,0,false,nInLineLen,nOutLineLen,0,0,nEnlargedSpace);
+	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
 }
 

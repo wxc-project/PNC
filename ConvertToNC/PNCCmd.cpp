@@ -308,7 +308,9 @@ void SmartExtractPlate(CPNCModel *pModel)
 		//else //焊接字样可能在基本信息中例如：141#正焊
 		{
 			CXhChar100 sText = GetCadTextContent(pEnt);
-			if (strstr(sText, "卷边") || strstr(sText, "火曲") || strstr(sText, "外曲") || strstr(sText, "内曲"))
+			if (strstr(sText, "卷边") || strstr(sText, "火曲") || 
+				strstr(sText, "外曲") || strstr(sText, "内曲")||
+				strstr(sText, "正曲") || strstr(sText, "反曲"))
 				pPlateInfo->xBomPlate.siZhiWan = 1;
 			if (strstr(sText,"焊"))
 				pPlateInfo->xBomPlate.bWeldPart = TRUE;
@@ -600,73 +602,178 @@ void InsertMKRect()
 //通过读取Txt文件绘制外形
 //ReadVertexArrFromFile
 //////////////////////////////////////////////////////////////////////////
-bool ReadVertexArrFromFile(const char* filePath, fPtList &ptList)
+bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& vertexArr)
 {
 	if (filePath == NULL)
 		return false;
 	FILE *fp = fopen(filePath, "rt");
 	if (fp == NULL)
 		return false;
-	char line_txt[200] = { 0 };
-	CXhChar200 sLine;
-	f3dPoint *pPrevPt = NULL;
+	char line_txt[MAX_PATH] = { 0 };
+	GEPOINT prevPt, curPt, center;
 	while (!feof(fp))
 	{
 		if (fgets(line_txt, 200, fp) == NULL)
 			continue;
-		strcpy(sLine, line_txt);
-		sLine.Replace('X', ' ');
-		sLine.Replace('Y', ' ');
-		sLine.Replace('I', ' ');
-		sLine.Replace('J', ' ');
+		CXhChar200 sLine(line_txt);
+		BOOL bHasX = (sLine.Replace('X', ' ') > 0) ? TRUE : FALSE;
+		BOOL bHasY = (sLine.Replace('Y', ' ') > 0) ? TRUE : FALSE;
+		BOOL bHasI = (sLine.Replace('I', ' ') > 0) ? TRUE : FALSE;
+		BOOL bHasJ = (sLine.Replace('J', ' ') > 0) ? TRUE : FALSE;
 		strcpy(line_txt, sLine);
 		char szTokens[] = " =\n";
-		double x = 0, y = 0;
 		char* skey = strtok(line_txt, szTokens);
 		if (skey == NULL)
 			continue;
-		x = atof(skey);
-		skey = strtok(NULL, szTokens);
-		if (skey == NULL)
-			y = 0;
-		else
-			y = atof(skey);
-		f3dPoint *pPt = ptList.append();
-		if (pPrevPt != NULL)
-		{
-			pPt->x = pPrevPt->x + x;
-			pPt->y = pPrevPt->y + y;
+		double x = 0, y = 0, i = 0, j = 0;
+		CPlateObject::VERTEX vertrex;
+		if (strstr(skey, "G00"))
+		{	//快速定位点
+			if (bHasX)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					x = atof(skey);
+			}
+			if (bHasY)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					y = atof(skey);
+			}
+			curPt.x = prevPt.x + x;
+			curPt.y = prevPt.y + y;
+			//
+			vertrex.pos = curPt;
+			vertrex.tag.lParam = 1;
+			vertexArr.push_back(vertrex);
+			prevPt = curPt;
+		}
+		else if (strstr(skey, "G01"))
+		{	//直线插补
+			if (bHasX)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					x = atof(skey);
+			}
+			if (bHasY)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					y = atof(skey);
+			}
+			curPt.x = prevPt.x + x;
+			curPt.y = prevPt.y + y;
+			//
+			vertrex.pos = curPt;
+			vertexArr.push_back(vertrex);
+			prevPt = curPt;
+		}
+		else if (strstr(skey, "G02")|| strstr(skey, "G03"))
+		{	//顺时针圆弧插补
+			if (bHasX)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					x = atof(skey);
+			}
+			if (bHasY)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					y = atof(skey);
+			}
+			if (bHasI)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					i = atof(skey);
+			}
+			if (bHasJ)
+			{
+				skey = strtok(NULL, szTokens);
+				if (skey)
+					j = atof(skey);
+			}
+			curPt.x = prevPt.x + x;
+			curPt.y = prevPt.y + y;
+			center.x = prevPt.x + i;
+			center.y = prevPt.y + j;
+			//查找前一个顶点
+			for (int index = 0; index < vertexArr.size(); index++)
+			{
+				if (vertexArr.at(index).pos.IsEqual(prevPt, EPS2)&&
+					vertexArr.at(index).ciEdgeType == 1)
+				{
+					vertexArr.at(index).ciEdgeType = 2;
+					vertexArr.at(index).arc.center = center;
+					vertexArr.at(index).arc.radius = DISTANCE(center, curPt);
+					if(strstr(skey, "G02"))
+						vertexArr.at(index).arc.work_norm.Set(0, 0, -1);
+					else
+						vertexArr.at(index).arc.work_norm.Set(0, 0, 1);
+					break;
+				}
+			}
+			//添加新顶点
+			vertrex.pos = curPt;
+			vertexArr.push_back(vertrex);
+			prevPt = curPt;
 		}
 		else
-		{
-			pPt->x = x;
-			pPt->y = y;
-		}
-		pPrevPt = pPt;
+			continue;
 	}
 	fclose(fp);
 	return true;
 }
 
 void DrawProfileByTxtFile()
-{	//1.读取轮廓顶点
-	fPtList ptList;
-	ReadVertexArrFromFile("D:\\Text.txt", ptList);
-	ARRAY_LIST<f3dPoint> ptArr;
-	for (f3dPoint *pPt = ptList.GetFirst(); pPt; pPt = ptList.GetNext())
-	{
-		ptArr.append(*pPt);
-	}
-	//2.绘制外形
+{	
+	CFileDialog dlg(TRUE, "txt", "切割NC文件", 
+		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, "工程文件(*.txt)|*.txt||");
+	if (dlg.DoModal() != IDOK)
+		return;
+	//
+	vector <CPlateObject::VERTEX> vertexArr;
+	ReadVertexArrFromFile(dlg.GetPathName(), vertexArr);
+	//
 	DRAGSET.ClearEntSet();
-	AcDbBlockTableRecord *pBlockTblRec = GetBlockTableRecord();
-	CreateAcadPolyLine(pBlockTblRec, ptArr.Data(), ptArr.Count, 1);
-	pBlockTblRec->close();
-	ads_point insert_pos;
-#ifdef AFX_TARG_ENU_ENGLISH
-	int retCode = DragEntSet(insert_pos, "input the insertion point\n");
+	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+	//绘制轮廓边
+	int n = vertexArr.size();
+	for (int i = 0; i < n-1; i++)
+	{
+		CPlateObject::VERTEX curVer = vertexArr.at(i);
+		CPlateObject::VERTEX nxtVer = vertexArr.at((i + 1) % n);
+		CreateAcadPoint(pBlockTableRecord, curVer.pos);
+		DimText(pBlockTableRecord, curVer.pos, CXhChar16("%d", i),
+			TextStyleTable::hzfs.textStyleId, 2, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+		//路径
+		if (nxtVer.tag.lParam == 1)
+			continue;	//下段路径的起始
+		GEPOINT ptS = curVer.pos, ptE = nxtVer.pos;
+		if (curVer.ciEdgeType == 1)
+			CreateAcadLine(pBlockTableRecord, ptS, ptE);
+		else
+		{	//圆弧
+			GEPOINT org = curVer.arc.center, norm = curVer.arc.work_norm;
+			f3dArcLine arcline;
+			arcline.CreateMethod3(ptS, ptE, norm, curVer.arc.radius, org);
+			CreateAcadArcLine(pBlockTableRecord, arcline.Center(), arcline.Start(), arcline.SectorAngle(), arcline.WorkNorm());
+		}
+	}
+	pBlockTableRecord->close();
+	//
+	ads_point base;
+	base[X] = 0;
+	base[Y] = 0;
+	base[Z] = 0;
+	DragEntSet(base, "请点取构件图的插入点");
+#ifdef _ARX_2007
+	acedCommand(RTSTR, L"PDMODE", RTSTR, L"34", RTNONE);	//显示点
 #else
-	int retCode = DragEntSet(insert_pos, "输入插入点\n");
+	acedCommand(RTSTR, "PDMODE", RTSTR, "34", RTNONE);		//显示点 X
 #endif
 }
 //////////////////////////////////////////////////////////////////////////

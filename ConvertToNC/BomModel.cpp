@@ -378,7 +378,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "脚钉"))
+			if (sValue.Equal("*") || strstr(sValue, "带脚钉"))
 				bFootNail = TRUE;
 		}
 		//材质、规格、单基数、加工数同时为空时，此行为无效行
@@ -428,7 +428,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 					pBomJg->bKaiJiao = TRUE;
 				if (strstr(pBomPart->sNotes, "合角"))
 					pBomJg->bHeJiao = TRUE;
-				if (strstr(pBomJg->sNotes, "脚钉"))
+				if (strstr(pBomJg->sNotes, "带脚钉"))
 					pBomJg->bHasFootNail = TRUE;
 				if (bPushFlat)
 					pBomJg->nPushFlat = 1;

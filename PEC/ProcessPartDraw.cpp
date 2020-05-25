@@ -1994,83 +1994,133 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 		if(pEnt->GetHiberId().IsEqual(HIBERID(0)))
 			pDrawing->DeleteDbEntity(pEnt->GetId());
 	}
-	COLORREF cutLineClr=RGB(255,0,0),otherLineClr=RGB(0,0,0),ptClr=RGB(181,0,181);
-	bool bClockwise=false;
-	if(AfxMessageBox("预览等离子切割(YES)，火焰切割(NO)?",MB_YESNO)==IDYES)
-		bClockwise=true;
-	//if(((CProcessPlate*)m_pPart)->mcsFlg.ciOverturn)
-	//	bClockwise=!bClockwise;	//绘制钢板时已考虑过反转此处应根据是否反转调整bClockwise
+	CNCPlate ncPlate((CProcessPlate*)m_pPart);
+	//初始化切割路径
 	CXhChar100 sValue;
-	BOOL bCutSpecialHole = FALSE;
-	int nEnlargedSpace=0,nIntoLineLen=-1,nOutLineLen=-1;
-	GetCutParamFromReg(bClockwise?1:0,m_pPart->m_fThick,&nIntoLineLen,&nOutLineLen,&nEnlargedSpace,FALSE,FALSE,&bCutSpecialHole);
-	CNCPlate ncPlate((CProcessPlate*)m_pPart,GEPOINT(0,0),0,0,bClockwise,nIntoLineLen,nOutLineLen,0,0,nEnlargedSpace,bCutSpecialHole);
-	GEPOINT startPt=ncPlate.m_ptCutter,endPt=startPt+ncPlate.m_cutPt.vertex;
-	GEPOINT drawStartPt=startPt,drawEndPt=endPt;
-	AppendDbLine(pDrawing,drawStartPt,drawEndPt,0,PS_SOLID,otherLineClr,3);
-	AppendDbPoint(pDrawing,drawEndPt,0,PS_SOLID,ptClr,8);
-	p2dDraw->RenderDrawing();
-	Sleep(ftol(interval*1000));
-	if (bCutSpecialHole)
+	BYTE cCutType = (CPEC::GetSysParaFromReg("m_cDisplayCutType", sValue)) ? atoi(sValue) : 0;
+	if (cCutType == 0)
+	{	//火焰切割(逆时针)
+		ncPlate.m_bClockwise = FALSE;
+		if (CPEC::GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
+			ncPlate.m_nOutLineLen = GetLineLenFromExpression(m_pPart->m_fThick, sValue);
+		if (CPEC::GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
+			ncPlate.m_nInLineLen = GetLineLenFromExpression(m_pPart->m_fThick, sValue);
+		if (CPEC::GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+			ncPlate.m_nEnlargedSpace = atoi(sValue);
+		if (CPEC::GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
+			ncPlate.m_bCutSpecialHole = atoi(sValue);
+	}
+	else
+	{	//等离子切割（顺时针）,目前生成NC数据时不考虑轮廓边增大值和特殊孔  wxc-20.05.22
+		ncPlate.m_bClockwise = TRUE;
+		if (CPEC::GetSysParaFromReg("plasmaCut.m_sOutLineLen", sValue))
+			ncPlate.m_nOutLineLen = GetLineLenFromExpression(m_pPart->m_fThick, sValue);
+		if (CPEC::GetSysParaFromReg("plasmaCut.m_sIntoLineLen", sValue))
+			ncPlate.m_nInLineLen = GetLineLenFromExpression(m_pPart->m_fThick, sValue);
+		//if (CPEC::GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
+			//ncPlate.m_nEnlargedSpace = atoi(sValue);
+		//if (CPEC::GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
+			//ncPlate.m_bCutSpecialHole = atoi(sValue);
+	}
+	ncPlate.InitPlateNcInfo();
+	//绘制特殊孔切割路径
+	COLORREF cutLineClr = RGB(255, 0, 0), otherLineClr = RGB(0, 0, 0), ptClr = RGB(181, 0, 181);
+	GEPOINT ptS = ncPlate.GetCutStartPt(), ptE;
+	for (CNCPlate::CUT_HOLE_PATH* pHolePath = ncPlate.m_xCutHole.GetFirst(); pHolePath; pHolePath = ncPlate.m_xCutHole.GetNext())
 	{
-		for (CNCPlate::CUT_PT *pCutPt = ncPlate.m_xCutHoleList.GetFirst(); pCutPt; pCutPt = ncPlate.m_xCutHoleList.GetNext())
+		ptE = ptS+pHolePath->ignitionPt;
+		AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
+		AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
+		p2dDraw->RenderDrawing();
+		Sleep(ftol(interval * 1000));
+		ptS = ptE;
+		if (ncPlate.m_bCutFullCircle)
 		{
-			startPt = endPt;
-			endPt = startPt + pCutPt->vertex;
-			drawStartPt = startPt, drawEndPt = endPt;
-			GEPOINT center(endPt.x - pCutPt->radius, endPt.y);
+			CUT_PT* pCutPt = pHolePath->cutPtArr.GetFirst();
+			if(pCutPt==NULL)
+				continue;
+			ptE = ptS + pCutPt->vertex;
+			GEPOINT center(ptE.x + pCutPt->radius, ptE.y);
 			AppendDbCircle(pDrawing, center, GEPOINT(0, 0, 1), pCutPt->radius, 0, PS_SOLID, ptClr, 3);
-			/*
-			fprintf(fp, "G00 %s\n", (char*)PointToString(pCutPt->vertex, true));//移动刀头至圆孔外侧切点
-			fprintf(fp, "G41\n");						//刀径左向补齐
-			fprintf(fp, "M04\n");						//主轴反转
-			fprintf(fp, "G03 I-%.1f\n", pCutPt->radius);	//绘制半径为35的整圆,因切入点在右侧，圆心在左侧
-			fprintf(fp, "M03\n");						//主轴正转
-			fprintf(fp, "G40\n");						//取消刀径补齐
-			*/
-		}
-	}
-	//
-	for(CNCPlate::CUT_PT *pPt=ncPlate.m_xCutPtList.GetFirst();pPt;pPt=ncPlate.m_xCutPtList.GetNext())
-	{
-		if(pPt->cByte==CNCPlate::CUT_PT::EDGE_LINE||pPt->cByte==CNCPlate::CUT_PT::EDGE_ARC)
-		{
-			startPt=endPt;
-			endPt=startPt+pPt->vertex;
-			drawStartPt=startPt,drawEndPt=endPt;
-			if(pPt->cByte==CNCPlate::CUT_PT::EDGE_LINE)
-				AppendDbLine(pDrawing,drawStartPt,drawEndPt,0,PS_SOLID,cutLineClr,3);
-			else 
-			{
-				IDbArcline *pArcLine=AppendDbArcLine(pDrawing,0,PS_SOLID,cutLineClr,3);
-				pArcLine->CreateMethod2(drawStartPt,drawEndPt,GEPOINT(0,0,1),pPt->fSectorAngle);
-			}
-			AppendDbPoint(pDrawing,drawEndPt,0,PS_SOLID,ptClr,8);
 			p2dDraw->RenderDrawing();
-			Sleep(ftol(interval*1000));
+			Sleep(ftol(interval * 1000));
+			ptS = ptE;
 		}
-		else if(pPt->cByte==CNCPlate::CUT_PT::HOLE_CUT_IN)
+		else
 		{
-
-		}
-		else if(pPt->cByte==CNCPlate::CUT_PT::HOLE_CUT_OUT)
-		{
-
+			for (CUT_PT* pCutPt = pHolePath->cutPtArr.GetFirst(); pCutPt; pCutPt = pHolePath->cutPtArr.GetNext())
+			{
+				ptE = ptS + pCutPt->vertex;
+				GEPOINT center = ptS + pCutPt->center;
+				GEPOINT norm = pCutPt->bClockwise ? GEPOINT(0, 0, -1) : GEPOINT(0, 0, 1);
+				double radius = (pCutPt->radius > 0) ? pCutPt->radius : DISTANCE(center, ptE);
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, 0, PS_SOLID, cutLineClr, 3);
+				pArcLine->CreateMethod3(ptS, ptE, norm, radius, center);
+				p2dDraw->RenderDrawing();
+				Sleep(ftol(interval * 1000));
+				ptS = ptE;
+			}
 		}
 	}
-	startPt=endPt;
-	endPt=startPt+ncPlate.m_cutPt.vertex2;
-	drawStartPt=startPt,drawEndPt=endPt;
-	AppendDbLine(pDrawing,drawStartPt,drawEndPt,0,PS_SOLID,otherLineClr,3);
-	AppendDbPoint(pDrawing,drawEndPt,0,PS_SOLID,ptClr,8);
+	//绘制额外引出线
+	if (ncPlate.m_nExtraInLen)
+	{	
+		ptE = ptS + ncPlate.m_xCutEdge.extraInVertex;
+		AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
+		AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
+		p2dDraw->RenderDrawing();
+		Sleep(ftol(interval * 1000));
+		ptS = ptE;
+	}
+	//绘制引出线
+	ptE = ptS + ncPlate.m_xCutEdge.cutInVertex;
+	AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
+	AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
+	p2dDraw->RenderDrawing();
+	Sleep(ftol(interval * 1000));
+	ptS = ptE;
+	//绘制轮廓边
+	for(CUT_PT *pPt=ncPlate.m_xCutEdge.cutPtArr.GetFirst();pPt;pPt= ncPlate.m_xCutEdge.cutPtArr.GetNext())
+	{
+		ptE = ptS + pPt->vertex;
+		if(pPt->cByte==CUT_PT::EDGE_LINE)
+		{
+			AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, cutLineClr, 3);
+			AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);	
+		}
+		else if (pPt->cByte == CUT_PT::EDGE_ARC)
+		{
+			GEPOINT center = ptS + pPt->center;
+			GEPOINT norm = pPt->bClockwise ? GEPOINT(0, 0, -1) : GEPOINT(0, 0, 1);
+			double radius = (pPt->radius > 0) ? pPt->radius : DISTANCE(center, ptE);
+			IDbArcline *pArcLine = AppendDbArcLine(pDrawing, 0, PS_SOLID, cutLineClr, 3);
+			pArcLine->CreateMethod3(ptS, ptE, norm, radius, center);
+		}
+		p2dDraw->RenderDrawing();
+		Sleep(ftol(interval * 1000));
+		ptS = ptE;
+	}
+	//绘制引出线
+	ptE = ptS + ncPlate.m_xCutEdge.cutOutVertex;
+	AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
+	AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
 	p2dDraw->RenderDrawing();
 	Sleep(ftol(interval*1000));
-	//
-	startPt=endPt;
-	endPt=startPt+ncPlate.m_cutPt.vertex3;
-	drawStartPt=startPt,drawEndPt=endPt;
-	AppendDbLine(pDrawing,drawStartPt,drawEndPt,0,PS_SOLID,otherLineClr,3);
-	AppendDbPoint(pDrawing,drawEndPt,0,PS_SOLID,ptClr,8);
+	ptS = ptE;
+	//绘制额外引出线
+	if (ncPlate.m_nExtraOutLen > 0)
+	{
+		ptE = ptS + ncPlate.m_xCutEdge.extraOutVertex;
+		AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
+		AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
+		p2dDraw->RenderDrawing();
+		Sleep(ftol(interval * 1000));
+		ptS = ptE;
+	}
+	//回到起始点
+	ptE = ptS + ncPlate.m_xCutEdge.cutStartVertex;
+	AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
+	AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
 	p2dDraw->RenderDrawing();
 	Sleep(ftol(interval*1000));
 #endif

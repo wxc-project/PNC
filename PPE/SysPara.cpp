@@ -1738,9 +1738,9 @@ BOOL CSysPara::GetCutPosInInitPos(BYTE cType/*=-1*/)
 BOOL CSysPara::IsCutSpecialHole(BYTE cType/*=-1*/)
 {
 	if (TYPE_FLAME_CUT == cType)
-		return g_sysPara.flameCut.m_bCutPosInInitPos;
+		return g_sysPara.flameCut.m_bCutSpecialHole;
 	else if(TYPE_PLASMA_CUT==cType)
-		return g_sysPara.plasmaCut.m_bCutPosInInitPos;
+		return g_sysPara.plasmaCut.m_bCutSpecialHole;
 	else
 		return FALSE;
 }

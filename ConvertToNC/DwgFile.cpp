@@ -173,7 +173,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	else if (PtInDataRect(ITEM_TYPE_PART_NOTES, data_pos))	//±¸×¢
 	{
 		strcpy(m_xAngle.sNotes,sValue);
-		if (strstr(m_xAngle.sNotes, "½Å¶¤"))
+		if (strstr(m_xAngle.sNotes, "´ø½Å¶¤"))
 			m_xAngle.bHasFootNail = TRUE;
 		cType = ITEM_TYPE_PART_NOTES;
 	}
