@@ -1698,6 +1698,8 @@ bool CBomModel::IsValidFunc(int iFuncType)
 		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_WEIGHT)&m_dwFunctionFlag) > 0;
 	else if(iFuncType==CBomModel::FUNC_DWG_AMEND_SING_N)
 		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_SING_N)&m_dwFunctionFlag) > 0;
+	else if (iFuncType == CBomModel::FUNC_DWG_BATCH_PRINT)
+		return (GetSingleWord(CBomModel::FUNC_DWG_BATCH_PRINT)&m_dwFunctionFlag) > 0;
 	else
 		return false;
 }
@@ -1714,6 +1716,10 @@ DWORD CBomModel::AddFuncType(int iFuncType)
 		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_SUM_NUM);
 	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_WEIGHT)
 		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_WEIGHT);
+	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SING_N)
+		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_SING_N);
+	else if (iFuncType == CBomModel::FUNC_DWG_BATCH_PRINT)
+		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_BATCH_PRINT);
 	m_dwFunctionFlag |= dwFlag;
 	return m_dwFunctionFlag;
 }

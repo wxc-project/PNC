@@ -10,6 +10,7 @@
 #include "folder_dialog.h"
 #include "MsgBox.h"
 #include "ComparePartNoString.h"
+#include "OptimalSortDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -183,6 +184,7 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_RETRIEVED_ANGLES, OnRetrievedAngles)
 	ON_COMMAND(ID_RETRIEVED_PLATES, OnRetrievedPlates)
 	ON_COMMAND(ID_REVISE_TEH_PLATE, OnRetrievedPlate)
+	ON_COMMAND(ID_BATCH_PRINT_PART, OnBatchPrintPart)
 	ON_COMMAND(ID_DELETE_ITEM,OnDeleteItem)
 	ON_BN_CLICKED(IDC_BTN_SEARCH, OnSearchPart)
 	ON_MESSAGE(WM_ACAD_KEEPFOCUS, OnAcadKeepFocus)
@@ -759,7 +761,8 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_SINGLE_NUM, "更新单基数");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_WEIGHT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
-		pMenu->AppendMenu(MF_SEPARATOR);
+		if(pMenu->GetMenuItemCount()>0)
+			pMenu->AppendMenu(MF_SEPARATOR);
 		if (pItemInfo->itemType == ANGLE_DWG_ITEM)
 			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_ANGLES, "重新提取角钢");
 		else
@@ -767,6 +770,10 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_PLATES, "重新提取钢板");
 			pMenu->AppendMenu(MF_STRING, ID_REVISE_TEH_PLATE, "修正特定钢板");
 		}
+		if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
+			pMenu->AppendMenu(MF_STRING, ID_BATCH_PRINT_PART, "批量打印");
+		if (pMenu->GetMenuItemCount() > 0)
+			pMenu->AppendMenu(MF_SEPARATOR);
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 	}
 	pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, scr_point.x, scr_point.y, this);
@@ -1403,4 +1410,115 @@ LRESULT CRevisionDlg::OnAcadKeepFocus(WPARAM, LPARAM)
 {
 	return TRUE;
 }
+
+void CRevisionDlg::OnBatchPrintPart()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo;
+	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL || (pItemInfo->itemType != ANGLE_DWG_ITEM && pItemInfo->itemType!=PLATE_DWG_ITEM))
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo == NULL)
+		return;
+	CAcModuleResourceOverride resOverride;
+	COptimalSortDlg dlg;
+	dlg.Init(pDwgInfo);
+	if (dlg.DoModal() == IDOK)
+	{	//判断打印机是否合理
+		AcApLayoutManager *pLayMan = NULL;
+		pLayMan = (AcApLayoutManager *)acdbHostApplicationServices()->layoutManager();
+		AcDbLayout *pLayout = pLayMan->findLayoutNamed(pLayMan->findActiveLayout(TRUE), TRUE);
+		if (pLayout == NULL)
+			return;
+		pLayout->close();
+		AcDbPlotSettings* pPlotSetting = (AcDbPlotSettings*)pLayout;
+		CXhChar500 sPlotCfgName;
+		Acad::ErrorStatus retCode;
+#ifdef _ARX_2007
+		const ACHAR* sValue;
+		retCode = pPlotSetting->getPlotCfgName(sValue);
+		sPlotCfgName.Copy((char*)_bstr_t(sValue));
+#else
+		char *sValue;
+		retCode = pPlotSetting->getPlotCfgName(sValue);
+		sPlotCfgName.Copy(sValue);
+#endif
+		if (retCode != Acad::eOk || stricmp(sPlotCfgName, "无") == 0)
+		{//获取输出设备名称
+#ifdef _ARX_2007
+			acutPrintf(L"\n当前激活打印设备不可用,请优先进行页面设置!\n");
+#else
+			acutPrintf("\n当前激活打印设备不可用,请优先进行页面设置!\n");
+#endif
+			return;
+		}
+		//进行批量打印
+		BOOL bSendCmd = TRUE;
+		for (SCOPE_STRU* pScopy = dlg.m_xPrintScopyList.GetFirst(); pScopy; pScopy = dlg.m_xPrintScopyList.GetNext())
+		{
+			ads_point L_T, R_B;
+			L_T[0] = pScopy->fMinX;
+			L_T[1] = pScopy->fMaxY;
+			L_T[2] = 0;
+			R_B[0] = pScopy->fMaxX;
+			R_B[1] = pScopy->fMinY;
+			R_B[2] = 0;
+#ifdef _ARX_2007
+			acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
+			acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
+				RTSTR, L"",							//布局名
+				RTSTR, L"",							//输出设备的名称
+				RTSTR, L"",							//图纸尺寸:<A4>
+				RTSTR, L"",							//图纸单位:<毫米>
+				RTSTR, L"",							//图形方向:<横向|纵向>
+				RTSTR, L"",							//是否反向打印
+				RTSTR, L"w",							//打印区域:<指定窗口>
+				RTPOINT, L_T, RTPOINT, R_B,			//左上角、右下角
+				RTSTR, L"",							//打印比例:<布满>
+				RTSTR, L"",							//打印偏移：<居中>
+				RTSTR, L"",							//是否按样式打印
+				RTSTR, L"",							//打印样式名称
+				RTSTR, L"",							//打印线宽
+				RTSTR, L"",							//着色打印设置
+				RTSTR, L"",							//打印到文件
+				RTSTR, L"",							//是否保存页面设置更改
+				RTSTR, L"",							//是否继续打印
+				RTNONE);
+#else
+			if (bSendCmd)
+			{
+				SendCommandToCad("CMDECHO 0\n");		//设置命令行是否产生回显
+				CXhChar500 sCmd("-plot y\n\n\n\n\n\n w %s %s\n\n\n\n\n\n\n\n\n\n", (char*)CXhChar16("%.1f,%.1f", L_T[0], L_T[1]), (char*)CXhChar16("%.1f,%.1f", R_B[0], R_B[1]));
+				SendCommandToCad(sCmd);
+			}
+			else
+			{
+				acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
+				acedCommand(RTSTR, "-plot", RTSTR, "y",	//是否需要详细打印配置[是(Y)/否(N)]
+					RTSTR, "",							//布局名
+					RTSTR, "",							//输出设备的名称
+					RTSTR, "",							//图纸尺寸:<A4>
+					RTSTR, "",							//图纸单位:<毫米>
+					RTSTR, "",							//图形方向:<横向|纵向>
+					RTSTR, "",							//是否反向打印
+					RTSTR, "w",							//打印区域:<指定窗口>
+					RTPOINT, L_T, RTPOINT, R_B,			//左上角、右下角
+					RTSTR, "",							//打印比例:<布满>
+					RTSTR, "",							//打印偏移：<居中>
+					RTSTR, "",							//是否按样式打印
+					RTSTR, "",							//打印样式名称
+					RTSTR, "",							//打印线宽
+					RTSTR, "",							//着色打印设置
+					RTSTR, "",							//打印到文件
+					RTSTR, "",							//是否保存页面设置更改
+					RTSTR, "",							//是否继续打印
+					RTNONE);
+			}
+#endif
+		}
+	}
+}
+
 #endif

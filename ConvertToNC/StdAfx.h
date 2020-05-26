@@ -132,6 +132,7 @@
 #include "dbxrecrd.h"
 #include "dbmain.h"
 #include "dbregion.h"
+#include "acaplmgr.h"
 #include "AcExtensionModule.h"  // Utility class for extension dlls
 
 #ifdef _DEBUG_WAS_DEFINED

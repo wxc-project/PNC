@@ -78,6 +78,7 @@ protected:
 	afx_msg void OnRetrievedPlate();
 	afx_msg void OnDeleteItem();
 	afx_msg void OnSearchPart();
+	afx_msg void OnBatchPrintPart();
 	afx_msg LRESULT OnAcadKeepFocus(WPARAM, LPARAM);
 public:
 	CXhTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}

@@ -137,6 +137,24 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		if (strstr(sSpec, "X"))
 			sSpec.Replace("X", "*");
 		m_xAngle.sSpec.Copy(sSpec);
+		//根据规格识别构件类型
+		if (strstr(sSpec, "∠") || strstr(sSpec, "L"))	//角钢
+			m_ciType = TYPE_JG;
+		else if (strstr(sSpec, "-"))
+			m_ciType = TYPE_FLAT;
+		else if (strstr(sSpec, "%c"))
+		{	//钢管/圆钢
+			sSpec.Replace("%c", "Φ");
+			if (strstr(sSpec, "/"))
+				m_ciType = TYPE_TUBE;
+			else
+				m_ciType = TYPE_YG;
+		}
+		else if (strstr(sSpec, "C"))
+			m_ciType = TYPE_JIG;
+		else if (strstr(sSpec, "G"))
+			m_ciType = TYPE_GGS;
+		//
 		int nWidth=0,nThick=0;
 		//从规格中提取材质 wht 19-08-05
 		CXhChar16 sMaterial;

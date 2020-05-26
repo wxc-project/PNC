@@ -59,11 +59,11 @@
 #define IDC_E_FILE_NAME                 142
 #define IDC_E_NUM                       143
 #define IDD_PROC_BAR_DLG                287
+#define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
 #define IDC_PROGRESS_BAR                1185
 #define IDC_NUMERIC_PROC                1186
 #define IDC_JG_LIST                     6000
-#define IDD_OPTIMAL_SORT_DLG            6000
 #define IDC_CHE_JG                      6001
 #define IDC_CHE_YG                      6002
 #define IDC_CHE_TUBE                    6003
@@ -77,18 +77,22 @@
 #define IDC_CHE_Q460                    6011
 #define IDC_E_WIDTH                     6012
 #define IDC_E_THICK                     6013
+#define IDC_CHE_CUT_ANGLE               6014
 #define IDC_CHE_PLATE                   6015
 #define IDC_CHE_Q355                    6016
-#define IDC_E_CARD_PATH                 6018
-#define IDC_BTN_JG_CARD                 6019
+#define IDC_CHE_KAIHE                   6017
+#define IDC_CHE_PUSH_FLAT               6018
+#define IDC_CHE_CUT_ROOT                6019
+#define IDC_CHE_CUT_BER                 6020
+#define IDC_CHE_BEND                    6021
+#define IDC_CHE_OTHER_ANGLE             6022
+#define IDC_CHE_COMMON_ANGLE            6022
 #define ID_MODIFY_TMA_FILE              32766
 #define ID_MARK_FILTER                  32767
 #define ID_CANCEL_FILTER                32768
 #define ID_NEW_ITEM                     32769
 #define ID_LOAD_PROJECT                 32770
-#define ID_32770                        32770
 #define ID_IMPORT_TMA_FILE              32771
-#define ID_32771                        32771
 #define ID_IMPORT_ERP_FILE              32772
 #define ID_MENU_PNCSYS_ADD              32772
 #define ID_IMPORT_ANGLE_DWG             32773
@@ -113,13 +117,14 @@
 #define ID_EXPLODE_ITEM                 32789
 #define ID_CLOSE_ITEM                   32790
 #define ID_REFRESH_SINGLE_NUM           32791
+#define ID_BATCH_PRINT_PART             32792
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        128
-#define _APS_NEXT_COMMAND_VALUE         32792
+#define _APS_NEXT_COMMAND_VALUE         32793
 #define _APS_NEXT_CONTROL_VALUE         136
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

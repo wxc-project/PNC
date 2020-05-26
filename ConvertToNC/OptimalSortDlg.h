@@ -1,5 +1,5 @@
 #pragma once
-#include "resource.h"
+#include ".\resource.h"
 #include "supergridctrl.h"
 #include "BomModel.h"
 #include "ArrayList.h"
@@ -13,12 +13,16 @@ class COptimalSortDlg : public CDialog
 	ARRAY_LIST<CAngleProcessInfo*> m_xJgList;
 	ARRAY_LIST<CPlateProcessInfo*> m_xPlateList;
 	CDwgFileInfo *m_pDwgFile;
+	int m_nQ235Count, m_nQ345Count, m_nQ355Count, m_nQ390Count, m_nQ420Count, m_nQ460Count;
+	int m_nJgCount, m_nPlateCount, m_nYGCount, m_nTubeCount, m_nJiaCount, m_nFlatCount, m_nGgsCount;
+	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle;
 public:
 	COptimalSortDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COptimalSortDlg();
 	//
-	void UpdateJgInfoList();
+	void UpdatePartList();
 	void RefeshListCtrl();
+	void Init(CDwgFileInfo *pDwgFile);
 // 对话框数据
 	enum { IDD = IDD_OPTIMAL_SORT_DLG };
 	CSuperGridCtrl m_xListCtrl;
@@ -35,9 +39,15 @@ public:
 	BOOL m_bSelQ390;
 	BOOL m_bSelQ420;
 	BOOL m_bSelQ460;
+	BOOL m_bCutAngle;
+	BOOL m_bKaiHe;
+	BOOL m_bPushFlat;
+	BOOL m_bCutRoot;
+	BOOL m_bCutBer;
+	BOOL m_bBend;
+	BOOL m_bCommonAngle;
 	CString m_sWidth;
 	CString m_sThick;
-	CString m_sCardPath;
 	int m_nRecord;
 	//
 	ATOM_LIST<SCOPE_STRU> m_xPrintScopyList;
@@ -52,4 +62,5 @@ protected:
 	afx_msg void OnBnClickedBtnJgCard();
 public:
 	afx_msg void OnBnClickedOk();
+	
 };

@@ -212,6 +212,7 @@ public:
 	static const BYTE FUNC_DWG_AMEND_SUM_NUM = 4;	//0X08修正加工数
 	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X10修正重量
 	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
+	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x40批量打印 wht 20-05-26
 	DWORD m_dwFunctionFlag;
 	//工艺描述
 	const static BYTE TYPE_ZHI_WAN		= 0;
