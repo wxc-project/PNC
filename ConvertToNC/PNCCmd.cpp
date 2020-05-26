@@ -285,7 +285,9 @@ void SmartExtractPlate(CPNCModel *pModel)
 	{
 		CAcDbObjLife objLife(objId);
 		AcDbEntity *pEnt = objLife.GetEnt();
-		if (pEnt==NULL || !pEnt->isKindOf(AcDbText::desc()))
+		if (pEnt==NULL)
+			continue;
+		if(!pEnt->isKindOf(AcDbText::desc())&&!pEnt->isKindOf(AcDbMText::desc()))
 			continue;
 		GEPOINT dim_pos=GetCadTextDimPos(pEnt);
 		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos);

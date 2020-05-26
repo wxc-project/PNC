@@ -1038,7 +1038,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;__TIMER_COUNT_;__ALFA_TEST_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
@@ -2706,6 +2706,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\ToolKits\ToolCode\ExcelOper.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\TimerCount.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp" />
     <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -3037,6 +3038,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\CadColorTbl.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\TimerCount.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>

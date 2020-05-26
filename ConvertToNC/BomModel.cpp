@@ -315,7 +315,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "火曲") || strstr(sValue, "卷边") || strstr(sValue, "制弯"))
+			if (sValue.Equal("*") || g_xUbomModel.IsZhiWan(sValue))
 				bZhiWan = TRUE;
 		}
 		//切角
@@ -324,7 +324,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "切角"))
+			if (sValue.Equal("*") || g_xUbomModel.IsCutAngle(sValue))
 				bCutAngle = TRUE;
 		}
 		//压扁
@@ -333,7 +333,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "压扁"))
+			if (sValue.Equal("*") || g_xUbomModel.IsPushFlat(sValue))
 				bPushFlat = TRUE;
 		}
 		//刨根
@@ -342,7 +342,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "刨根"))
+			if (sValue.Equal("*") || g_xUbomModel.IsCutRoot(sValue))
 				bCutRoot = TRUE;
 		}
 		//铲背
@@ -351,7 +351,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "铲背"))
+			if (sValue.Equal("*") || g_xUbomModel.IsCutBer(sValue))
 				bCutBer = TRUE;
 		}
 		//开角
@@ -360,7 +360,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "开角"))
+			if (sValue.Equal("*") || g_xUbomModel.IsKaiJiao(sValue))
 				bKaiJiao = TRUE;
 		}
 		//合角
@@ -369,7 +369,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "合角"))
+			if (sValue.Equal("*") || g_xUbomModel.IsHeJiao(sValue))
 				bHeJiao = TRUE;
 		}
 		//带脚钉
@@ -378,7 +378,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "带脚钉"))
+			if (sValue.Equal("*") || g_xUbomModel.IsFootNail(sValue))
 				bFootNail = TRUE;
 		}
 		//材质、规格、单基数、加工数同时为空时，此行为无效行
@@ -1649,10 +1649,40 @@ CBomModel::CBomModel(void)
 	m_bExeRppWhenArxLoad = TRUE;
 	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
 	pProject->m_sProjName.Copy("新建工程");
+	//
+	m_sProcessDescArr[TYPE_ZHI_WAN].Copy("火曲|卷边|制弯|");
+	m_sProcessDescArr[TYPE_CUT_ANGLE].Copy("切角|切肢|");
+	m_sProcessDescArr[TYPE_CUT_ROOT].Copy("清根|刨根|");
+	m_sProcessDescArr[TYPE_CUT_BER].Copy("铲背|");
+	m_sProcessDescArr[TYPE_PUSH_FLAT].Copy("压扁|打扁|");
+	m_sProcessDescArr[TYPE_KAI_JIAO].Copy("开角");
+	m_sProcessDescArr[TYPE_HE_JIAO].Copy("合角");
+	m_sProcessDescArr[TYPE_FOO_NAIL].Copy("脚钉");
 }
 CBomModel::~CBomModel(void)
 {
 	
+}
+BOOL CBomModel::IsHasTheProcess(const char* sValue, BYTE ciType)
+{
+	if (strlen(sValue) < 2)
+		return FALSE;
+	if (ciType == TYPE_FOO_NAIL)
+	{	//
+		if (strstr(sValue, "脚钉") && strstr(sValue, "无脚钉") == NULL 
+			&& strstr(sValue, "不带脚钉") == NULL)
+			return TRUE;
+	}
+	//工艺判断
+	CXhChar500 sText(m_sProcessDescArr[ciType]);
+	for (char *skey = strtok((char*)sText, "|"); skey; skey = strtok(NULL, "|"))
+	{
+		if (strlen(skey) <= 0)
+			continue;
+		if (strstr(sValue, skey))
+			return TRUE;
+	}
+	return FALSE;
 }
 bool CBomModel::IsValidFunc(int iFuncType)
 {
@@ -1814,6 +1844,78 @@ void CBomModel::InitBomTblCfg()
 			{
 				m_sPlateCompareItemArr.Copy(skey);
 				m_sPlateCompareItemArr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ZHIWAN_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_ZHI_WAN].Copy(skey);
+				m_sProcessDescArr[TYPE_ZHI_WAN].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "CUT_ANGLE_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_CUT_ANGLE].Copy(skey);
+				m_sProcessDescArr[TYPE_CUT_ANGLE].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "CUT_ROOT_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_CUT_ROOT].Copy(skey);
+				m_sProcessDescArr[TYPE_CUT_ROOT].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "CUT_BER_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_CUT_BER].Copy(skey);
+				m_sProcessDescArr[TYPE_CUT_BER].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "PUSH_FLAT_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_PUSH_FLAT].Copy(skey);
+				m_sProcessDescArr[TYPE_PUSH_FLAT].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "KAI_JIAO_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_KAI_JIAO].Copy(skey);
+				m_sProcessDescArr[TYPE_KAI_JIAO].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "HE_JIAO_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_HE_JIAO].Copy(skey);
+				m_sProcessDescArr[TYPE_HE_JIAO].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "FOO_NAIL_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessDescArr[TYPE_FOO_NAIL].Copy(skey);
+				m_sProcessDescArr[TYPE_FOO_NAIL].Remove(' ');
 			}
 		}
 	}
