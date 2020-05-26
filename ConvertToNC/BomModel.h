@@ -50,6 +50,15 @@ private:
 	POLYGON region;
 	SCOPE_STRU scope;
 public:
+	static const BYTE TYPE_JG = 1;		//½Ç¸Ö
+	static const BYTE TYPE_YG = 2;		//Ô²¸Ö
+	static const BYTE TYPE_TUBE = 3;	//¸Ö¹Ü
+	static const BYTE TYPE_FLAT = 4;	//±âÌú
+	static const BYTE TYPE_JIG = 5;		//¼Ð¾ß
+	static const BYTE TYPE_GGS = 6;		//¸Ö¸ñÕ¤
+	static const BYTE TYPE_PLATE = 7;	//½Ç¸Ö
+	BYTE m_ciType;				//
+	//
 	PART_ANGLE m_xAngle;
 	AcDbObjectId keyId;
 	AcDbObjectId partNumId;		//¼Ó¹¤ÊýID

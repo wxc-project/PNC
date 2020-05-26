@@ -2707,6 +2707,7 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\ExcelOper.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp" />
+    <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp" />
     <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
@@ -2974,6 +2975,7 @@
     <ClCompile Include="FilterLayerDlg.cpp" />
     <ClCompile Include="InputMKRectDlg.cpp" />
     <ClCompile Include="MonoImage.cpp" />
+    <ClCompile Include="OptimalSortDlg.cpp" />
     <ClCompile Include="PartListDlg.cpp" />
     <ClCompile Include="PNCCmd.cpp" />
     <ClCompile Include="PNCModel.cpp" />
@@ -3038,6 +3040,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
+    <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h" />
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
@@ -3215,6 +3218,7 @@
     <ClInclude Include="IExtractor.h" />
     <ClInclude Include="InputMKRectDlg.h" />
     <ClInclude Include="MonoImage.h" />
+    <ClInclude Include="OptimalSortDlg.h" />
     <ClInclude Include="PartListDlg.h" />
     <ClInclude Include="PNCCmd.h" />
     <ClInclude Include="PNCModel.h" />

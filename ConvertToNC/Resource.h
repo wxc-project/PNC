@@ -62,6 +62,25 @@
 #define IDC_LIST_REPORT                 1025
 #define IDC_PROGRESS_BAR                1185
 #define IDC_NUMERIC_PROC                1186
+#define IDC_JG_LIST                     6000
+#define IDD_OPTIMAL_SORT_DLG            6000
+#define IDC_CHE_JG                      6001
+#define IDC_CHE_YG                      6002
+#define IDC_CHE_TUBE                    6003
+#define IDC_CHE_FLAT                    6004
+#define IDC_CHE_JIG                     6005
+#define IDC_CHE_GGS                     6006
+#define IDC_CHE_Q345                    6007
+#define IDC_CHE_Q235                    6008
+#define IDC_CHE_Q390                    6009
+#define IDC_CHE_Q420                    6010
+#define IDC_CHE_Q460                    6011
+#define IDC_E_WIDTH                     6012
+#define IDC_E_THICK                     6013
+#define IDC_CHE_PLATE                   6015
+#define IDC_CHE_Q355                    6016
+#define IDC_E_CARD_PATH                 6018
+#define IDC_BTN_JG_CARD                 6019
 #define ID_MODIFY_TMA_FILE              32766
 #define ID_MARK_FILTER                  32767
 #define ID_CANCEL_FILTER                32768
@@ -92,13 +111,14 @@
 #define ID_SAVE_ITEM                    32787
 #define ID_IMPORT_ITEM                  32788
 #define ID_EXPLODE_ITEM                 32789
-#define ID_CLOSE_ITEM					32790
-#define ID_REFRESH_SINGLE_NUM			32791
+#define ID_CLOSE_ITEM                   32790
+#define ID_REFRESH_SINGLE_NUM           32791
+
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        127
+#define _APS_NEXT_RESOURCE_VALUE        128
 #define _APS_NEXT_COMMAND_VALUE         32792
 #define _APS_NEXT_CONTROL_VALUE         136
 #define _APS_NEXT_SYMED_VALUE           102
