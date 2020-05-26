@@ -2373,15 +2373,15 @@ void CPlateProcessInfo::RefreshPlateNum()
 	}
 	else if (pEnt->isKindOf(AcDbMText::desc()))
 	{
-		CXhChar500 sText;
+		CXhChar500 sContents;
 		AcDbMText *pMText = (AcDbMText*)pEnt;
 #ifdef _ARX_2007
-		sText.Copy(_bstr_t(pMText->contents()));
+		sContents.Copy(_bstr_t(pMText->contents()));
 #else
-		sText.Copy(pMText->contents());
+		sContents.Copy(pMText->contents());
 #endif
-		CXhChar500 sTempText(sText);
-		for (char* sKey = strtok(sTempText, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
+		CString sText(sContents);
+		for (char* sKey = strtok(sContents, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
 		{
 			CXhChar200 sTemp(sKey);
 			if (g_pncSysPara.m_iDimStyle == 1 &&
