@@ -519,18 +519,14 @@ BOOL CBomFile::ImportErpExcelFile()
 	//读取sheet内容
 	int nSheetNum = excelobj.GetWorkSheetCount();
 	int iValidSheet = (nSheetNum >= 1) ? 1 : 0;
-	BOOL bRetCode = FALSE;
 	if (g_xUbomModel.m_sERPBomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
 		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sERPBomSheetName);
-	//获取Excel内容存储至sheetContentMap中,建立列标题与列索引映射表hashColIndexByColTitle
-	CVariant2dArray sheetContentMap(1,1);
-	if (g_xUbomModel.m_sTMABomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
-		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName);
+	//获取Excel内容存储至sheetContentMap中
 	//最大支持52行，不设置最大列数时如果整行设置背景色会导致自动获取到的列数过大，加载Excel速度慢 wht 19-12-30
-	//if(!CExcelOper::GetExcelContentOfSpecifySheet(m_sFileName,sheetContentMap,1,52))
+	CVariant2dArray sheetContentMap(1, 1);
 	if (!CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet,52))
 		return false;
-	//获取定制列信息
+	//获取定制列信息,建立列标题与列索引映射表hashColIndexByColTitle
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	g_xUbomModel.m_xErpTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = g_xUbomModel.m_xErpTblCfg.m_nStartRow-1;
@@ -657,8 +653,7 @@ BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox 
 		if (!CExcelOper::GetExcelContentOfSpecifySheet(sFilePath, sheetContentMap, 1))
 			return FALSE;
 		BOOL bValid = FALSE;
-		int nColNum = hashColIndex.GetNodeNum();
-		for (int iCol = 0; iCol < nColNum; iCol++)
+		for (int iCol = 0; iCol < CBomTblTitleCfg::T_COL_COUNT; iCol++)
 		{
 			CXhChar50 sCol(CBomTblTitleCfg::GetColName(iCol));
 			DWORD* pColIndex = hashColIndex.GetValue(sCol);
@@ -725,8 +720,7 @@ BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox 
 		if (!CExcelOper::GetExcelContentOfSpecifySheet(sFilePath, sheetContentMap, 1))
 			return FALSE;
 		BOOL bValid = FALSE;
-		int nColNum = hashColIndex.GetNodeNum();
-		for (int iCol = 0; iCol < nColNum; iCol++)
+		for (int iCol = 0; iCol < CBomTblTitleCfg::T_COL_COUNT; iCol++)
 		{
 			CXhChar50 sCol(CBomTblTitleCfg::GetColName(iCol));
 			DWORD* pColIndex = hashColIndex.GetValue(sCol);
