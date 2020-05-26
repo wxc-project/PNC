@@ -213,6 +213,16 @@ public:
 	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X10修正重量
 	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
 	DWORD m_dwFunctionFlag;
+	//工艺描述
+	const static BYTE TYPE_ZHI_WAN		= 0;
+	const static BYTE TYPE_CUT_ANGLE	= 1;
+	const static BYTE TYPE_CUT_ROOT		= 2;
+	const static BYTE TYPE_CUT_BER		= 3;
+	const static BYTE TYPE_PUSH_FLAT	= 4;
+	const static BYTE TYPE_KAI_JIAO		= 5;
+	const static BYTE TYPE_HE_JIAO		= 6;
+	const static BYTE TYPE_FOO_NAIL		= 7;
+	CXhChar100 m_sProcessDescArr[8];
 	//
 	struct BOM_TITLE
 	{
@@ -246,6 +256,15 @@ public:
 	bool ExtractAngleCompareItems();
 	bool ExtractPlateCompareItems();
 	//
+	BOOL IsHasTheProcess(const char* sText, BYTE ciType);
+	BOOL IsZhiWan(const char* sText) { return IsHasTheProcess(sText, TYPE_ZHI_WAN); }
+	BOOL IsPushFlat(const char* sText) { return IsHasTheProcess(sText, TYPE_PUSH_FLAT); }
+	BOOL IsCutAngle(const char* sText) { return IsHasTheProcess(sText, TYPE_CUT_ANGLE); }
+	BOOL IsCutRoot(const char* sText) { return IsHasTheProcess(sText, TYPE_CUT_ROOT); }
+	BOOL IsCutBer(const char* sText) { return IsHasTheProcess(sText, TYPE_CUT_BER); }
+	BOOL IsKaiJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_KAI_JIAO); }
+	BOOL IsHeJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_HE_JIAO); }
+	BOOL IsFootNail(const char* sText) { return IsHasTheProcess(sText, TYPE_FOO_NAIL); }
 public:
 	//客户ID
 	static const BYTE ID_AnHui_HongYuan		= 1;	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
@@ -254,6 +273,7 @@ public:
 	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电(料单校审)
 	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新单基数)
 	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈(DWG校审|更新加工数)
+	static const BYTE ID_QingDao_QLGJG		= 7;	//青岛强力刚结构(DWG校审|更新加工数)
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
 	BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24

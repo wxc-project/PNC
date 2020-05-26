@@ -543,11 +543,13 @@ void PNCSysSetImportAttach()
 		{
 			skey = strtok(NULL, "=,;");
 			sprintf(g_pncSysPara.m_sJgCardBlockName, "%s", skey);
+			g_pncSysPara.m_sJgCardBlockName.Replace(" ", "");
 		}
 		else if (_stricmp(key_word, "PartLabelTitle") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			sprintf(g_pncSysPara.m_sPartLabelTitle, "%s", skey);
+			g_pncSysPara.m_sPartLabelTitle.Replace(" ", "");
 		}
 		else if (_stricmp(key_word, "MaxLenErr") == 0)
 		{

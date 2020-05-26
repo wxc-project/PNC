@@ -336,6 +336,9 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\TimerCount.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -604,6 +607,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h">
       <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\TimerCount.h">
+      <Filter>ToolCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

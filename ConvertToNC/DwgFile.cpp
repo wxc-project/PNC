@@ -239,6 +239,24 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 				m_xAngle.siZhiWan = 1;
 		}
 	}
+	else
+	{	//处理草图区域的特殊文字说明
+		if (strstr(sValue, "带脚钉"))
+		{
+			m_xAngle.bHasFootNail = TRUE;
+			cType = ITEM_TYPE_PART_NOTES;
+		}
+		else if (strstr(sValue, "焊接件"))
+		{
+			m_xAngle.bWeldPart = TRUE;
+			cType = ITEM_TYPE_PART_NOTES;
+		}
+		else if (strstr(sValue, "压扁"))
+		{
+			m_xAngle.nPushFlat = 1;
+			cType = ITEM_TYPE_PART_NOTES;
+		}
+	}
 	return cType;
 }
 //获取角钢数据点坐标
