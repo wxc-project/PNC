@@ -122,6 +122,14 @@ void RegisterServerComponents ()
 		ACRX_CMD_MODAL,							// Type
 		&RevisionPartProcess);					// Function pointer
 #endif
+#ifdef __ALFA_TEST_
+//测试
+	acedRegCmds->addCommand(L"PNC-MENU",   // Group name
+		L"TEST",					// Global function name
+		L"TEST",					// Local function name
+		ACRX_CMD_MODAL,							// Type
+		&InternalTest);					// Function pointer
+#endif
 #else
 	// 智能提取板信息
 	acedRegCmds->addCommand( "PNC-MENU",           // Group name
@@ -180,6 +188,14 @@ void RegisterServerComponents ()
 		"RPP",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&RevisionPartProcess);					// Function pointer
+#endif
+#ifdef __ALFA_TEST_
+	//测试
+	acedRegCmds->addCommand("PNC-MENU",   // Group name
+		"TEST",					// Global function name
+		"TEST",					// Local function name
+		ACRX_CMD_MODAL,							// Type
+		&InternalTest);					// Function pointer
 #endif
 #endif
 }

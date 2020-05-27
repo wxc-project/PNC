@@ -5,6 +5,7 @@
 #include "ArrayList.h"
 // COptimalSortDlg ¶Ô»°¿ò
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 class COptimalSortDlg : public CDialog
 {
 	DECLARE_DYNAMIC(COptimalSortDlg)
@@ -64,3 +65,4 @@ public:
 	afx_msg void OnBnClickedOk();
 	
 };
+#endif

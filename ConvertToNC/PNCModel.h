@@ -195,6 +195,7 @@ public:
 	void Empty();
 	void ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet);
+	void FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols);
 	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
 	void SplitManyPartNo();

@@ -9,6 +9,7 @@
 #include "ParseAdaptNo.h"
 //#include "SelectJgCardDlg.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 //½âÎö¿í¶È,ºñ¶È×Ö·û´®
 DWORD GetJgInfoHashTblByStr(const char* sValueStr,CHashList<int> &infoHashTbl)
 {
@@ -560,3 +561,4 @@ void COptimalSortDlg::Init(CDwgFileInfo *pDwgFile)
 		}
 	}
 }
+#endif

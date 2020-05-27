@@ -3034,6 +3034,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug2007|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="SteelSealReactor.cpp" />
+    <ClCompile Include="TestCode.cpp" />
     <ClCompile Include="XeroExtractor.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -3232,6 +3233,7 @@
     <ClInclude Include="RevisionDlg.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="SteelSealReactor.h" />
+    <ClInclude Include="TestCode.h" />
     <ClInclude Include="Version.h" />
     <ClInclude Include="XeroExtractor.h" />
   </ItemGroup>
