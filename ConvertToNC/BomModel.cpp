@@ -173,6 +173,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	if (iStartRow <= 0)
 		iStartRow = iContentRow;
 	CStringArray repeatPartLabelArr;
+	CHashStrList<BOMPART*> hashBomPartByRepeatLabel;
 	int nRowCount = sheetContentMap.RowsCount();
 	for(int i=iStartRow;i<= nRowCount;i++)
 	{
@@ -390,7 +391,15 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			continue;	//异常数据
 		BOMPART* pBomPart = NULL;
 		if (pBomPart = m_hashPartByPartNo.GetValue(sPartNo))
-			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d",(char*)sPartNo,sProcessNum));
+		{
+			if (hashBomPartByRepeatLabel.GetValue(sPartNo) == NULL)
+			{
+				hashBomPartByRepeatLabel.SetValue(sPartNo, pBomPart);
+				//添加sPartNo对应的第一个构件 wht 20-05-28
+				repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, pBomPart->feature1));
+			}
+			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, atoi(sProcessNum)));
+		}
 			//logerr.Log("存在重复件号：%s", (char*)sPartNo);
 		int nWidth = 0, nThick = 0;
 		CProcessPart::RestoreSpec(sSpec, &nWidth, &nThick);
