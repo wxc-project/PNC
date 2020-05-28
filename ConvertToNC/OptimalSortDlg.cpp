@@ -9,6 +9,7 @@
 #include "ParseAdaptNo.h"
 //#include "SelectJgCardDlg.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 
 typedef CAngleProcessInfo* AngleInfoPtr;
 typedef BOMPART* PART_PTR;
@@ -614,3 +615,4 @@ void COptimalSortDlg::Init(CDwgFileInfo *pDwgFile)
 		}
 	}
 }
+#endif

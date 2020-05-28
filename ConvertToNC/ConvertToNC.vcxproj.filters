@@ -339,6 +339,9 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\TimerCount.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
+    <ClCompile Include="TestCode.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -610,6 +613,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\TimerCount.h">
       <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="TestCode.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

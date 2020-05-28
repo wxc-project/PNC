@@ -190,6 +190,7 @@ public:
 	f2dRect cut_angle_SX_rect, cut_angle_EX_rect;
 	f2dRect cut_angle_SY_rect, cut_angle_EY_rect;
 	f2dRect huoqu_fst_rect, huoqu_sec_rect;
+	f2dRect draw_rect;
 	double fMaxX, fMaxY, fMinX, fMinY;
 	double fTextHigh;
 	double fPnDistX, fPnDistY;

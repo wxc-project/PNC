@@ -257,7 +257,14 @@ void SmartExtractPlate(CPNCModel *pModel)
 	}
 	//将提取的钢板信息导出到中性文件中
 	CString file_path;
+#ifdef __ALFA_TEST_
+	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
+		GetCurWorkPath(file_path, TRUE, "pixel", TRUE);
+	else
+		GetCurWorkPath(file_path, TRUE, "rule", TRUE);
+#else
 	GetCurWorkPath(file_path);
+#endif
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE))
 	{	//生成PPI文件,保存到到当前工作路径下
 		if(pPlateProcess->vertexList.GetNodeNum()>3)
@@ -825,5 +832,16 @@ void RevisionPartProcess()
 	CRevisionDlg* pRevisionDlg = g_xDockBarManager.GetRevisionDlgPtr();
 	if (pRevisionDlg)
 		pRevisionDlg->DisplayProcess = DisplayProcess;
+}
+#endif
+//////////////////////////////////////////////////////////////////////////
+//内部测试代码
+//InternalTest
+//////////////////////////////////////////////////////////////////////////
+#ifdef __ALFA_TEST_
+#include "TestCode.h"
+void InternalTest()
+{
+	return TestPnc();
 }
 #endif

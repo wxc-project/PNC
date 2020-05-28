@@ -18,4 +18,7 @@ void ExplodeText();			//打碎文本(文本类型转换为多段线)
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 void RevisionPartProcess();	//校审构件工艺信息
 #endif
+#ifdef __ALFA_TEST_
+void InternalTest();		//测试代码
+#endif
 #endif

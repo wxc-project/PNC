@@ -75,6 +75,7 @@ public:
 	f2dRect GetAngleDataRect(BYTE data_type);
 	f3dPoint GetAngleDataPos(BYTE data_type);
 	bool PtInDataRect(BYTE data_type,f3dPoint pt);
+	bool PtInDrawRect(f3dPoint pt);
 	void RefreshAngleNum();
 	void RefreshAngleSingleNum();
 	void RefreshAngleSumWeight();
