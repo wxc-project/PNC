@@ -9,6 +9,59 @@
 #include "ParseAdaptNo.h"
 //#include "SelectJgCardDlg.h"
 
+
+typedef CAngleProcessInfo* AngleInfoPtr;
+typedef BOMPART* PART_PTR;
+static int CompareBomPartPtrFunc(const PART_PTR& partPtr1, const PART_PTR& partPtr2, BOOL bAscending)
+{
+	int nRetCode = 0;
+	if (partPtr1->wide > partPtr2->wide)
+		nRetCode = 1;
+	else if (partPtr1->wide < partPtr2->wide)
+		nRetCode = -1;
+	else if (partPtr1->thick > partPtr2->thick)
+		nRetCode = 1;
+	else if (partPtr1->thick < partPtr2->thick)
+		nRetCode = -1;
+	if (nRetCode == 0)
+	{	//然后根据材质进行排序(从小到大)
+		int iMatMark1 = CProcessPart::QuerySteelMatIndex(partPtr1->cMaterial);
+		int iMatMark2 = CProcessPart::QuerySteelMatIndex(partPtr2->cMaterial);
+		if (iMatMark1 > iMatMark2)
+			nRetCode = 1;
+		else if (iMatMark1 < iMatMark2)
+			nRetCode = -1;
+		else
+		{	//件号从小到大
+			CXhChar16 sPartNo1 = partPtr1->sPartNo;
+			CXhChar16 sPartNo2 = partPtr2->sPartNo;
+			nRetCode = ComparePartNoString(sPartNo1, sPartNo2, "SHhGPT");
+		}
+	}
+	else
+	{
+		if (!bAscending)	//规格支持从小到大排序或从大到小排序，但材质和件号始终是从小到大排序
+			nRetCode *= -1;
+	}
+	return nRetCode;
+}
+static int CompareJgPtrFun(const AngleInfoPtr& jginfo1, const AngleInfoPtr& jginfo2)
+{
+	//首先根据材料名称进行排序
+	if (jginfo1->m_ciType > jginfo2->m_ciType)
+		return 1;
+	else if (jginfo1->m_ciType < jginfo2->m_ciType)
+		return -1;
+	//根据规格排序(从大到小)
+	return CompareBomPartPtrFunc(&jginfo1->m_xAngle, &jginfo2->m_xAngle,FALSE);
+}
+
+typedef CPlateProcessInfo* PlateInfoPtr;
+static int ComparePlatePtrFun(const PlateInfoPtr& platePtr1, const PlateInfoPtr& platePtr2)
+{	//根据规格排序(从大到小)
+	return CompareBomPartPtrFunc(&platePtr1->xBomPlate, &platePtr2->xBomPlate,FALSE);
+}
+
 //解析宽度,厚度字符串
 DWORD GetJgInfoHashTblByStr(const char* sValueStr,CHashList<int> &infoHashTbl)
 {
@@ -49,13 +102,47 @@ static int FireCompareItem(const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem1,c
 	CString sText1=pItem1->m_lpNodeInfo->GetSubItemText(iSubItem);
 	CString sText2=pItem2->m_lpNodeInfo->GetSubItemText(iSubItem);
 	int result=0;
-	if(iSubItem==3)
-	{
-		result=ComparePartNoString(sText1,sText2);
+	if (iSubItem == 1 || iSubItem == 2)
+	{	//点击规格、材质列，按规格、材质、件号
+		CString sPartType1 = pItem1->m_lpNodeInfo->GetSubItemText(0);
+		CString sPartType2 = pItem2->m_lpNodeInfo->GetSubItemText(0);
+		BOMPART *pBomPart1 = NULL, *pBomPart2 = NULL;
+		if (sPartType1.CompareNoCase("钢板") == 0)
+		{
+			CPlateProcessInfo* pSelPlateInfo = (CPlateProcessInfo*)pItem1->m_idProp;
+			pBomPart1 = &pSelPlateInfo->xBomPlate;
+		}
+		else
+		{
+			CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pItem1->m_idProp;
+			pBomPart1 = &pSelJgInfo->m_xAngle;
+		}
+		if (sPartType2.CompareNoCase("钢板") == 0)
+		{
+			CPlateProcessInfo* pSelPlateInfo = (CPlateProcessInfo*)pItem2->m_idProp;
+			pBomPart2 = &pSelPlateInfo->xBomPlate;
+		}
+		else
+		{
+			CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pItem2->m_idProp;
+			pBomPart2 = &pSelJgInfo->m_xAngle;
+		}
+		if (pBomPart1&&pBomPart2)
+		{
+			result = CompareBomPartPtrFunc(pBomPart1, pBomPart2, bAscending);
+		}
+	}
+	else if(iSubItem==3)
+	{	//按角钢排序
+		result=ComparePartNoString(sText1,sText2,"SHhPGT");
 		if(!bAscending)
 			result*=-1;
 	}
 	return result;
+}
+static int FireColmunClick(CSuperGridCtrl* pListCtrl, int iSubItem, bool bAscending)
+{
+	return 0;
 }
 // COptimalSortDlg 对话框
 IMPLEMENT_DYNAMIC(COptimalSortDlg, CDialog)
@@ -170,8 +257,9 @@ BOOL COptimalSortDlg::OnInitDialog()
 	m_xListCtrl.AddColumnHeader("件号",65);
 	m_xListCtrl.AddColumnHeader("加工数",60);
 	m_xListCtrl.InitListCtrl(NULL,FALSE);
-	m_xListCtrl.EnableSortItems(false);
+	m_xListCtrl.EnableSortItems(true);
 	m_xListCtrl.SetItemChangedFunc(FireItemChanged);
+	m_xListCtrl.SetCompareItemFunc(FireCompareItem);
 	//
 	GetDlgItem(IDC_CHE_JG)->EnableWindow(m_nJgCount > 0);
 	GetDlgItem(IDC_CHE_PLATE)->EnableWindow(m_nPlateCount > 0);
@@ -239,7 +327,7 @@ void COptimalSortDlg::RefeshListCtrl()
 		lpInfo->SetSubItemText(1,sMat,TRUE);//材质	
 		lpInfo->SetSubItemText(2,pJgInfo->m_xAngle.GetSpec(),TRUE);			//规格
 		lpInfo->SetSubItemText(3,pJgInfo->m_xAngle.GetPartNo(),TRUE);		//件号
-		lpInfo->SetSubItemText(4,CXhChar50("%d",pJgInfo->m_xAngle.GetPartNum()),TRUE);	//件数
+		lpInfo->SetSubItemText(4,CXhChar50("%d",pJgInfo->m_xAngle.feature1),TRUE);	//件数
 		pItem=m_xListCtrl.InsertRootItem(lpInfo, FALSE);
 		pItem->m_idProp=(long)pJgInfo;
 	}
@@ -254,67 +342,12 @@ void COptimalSortDlg::RefeshListCtrl()
 		lpInfo->SetSubItemText(1, sMat, TRUE);//材质	
 		lpInfo->SetSubItemText(2, pPlateInfo->xBomPlate.GetSpec(), TRUE);			//规格
 		lpInfo->SetSubItemText(3, pPlateInfo->xBomPlate.GetPartNo(), TRUE);		//件号
-		lpInfo->SetSubItemText(4, CXhChar50("%d", pPlateInfo->xBomPlate.GetPartNum()), TRUE);	//件数
+		lpInfo->SetSubItemText(4, CXhChar50("%d", pPlateInfo->xBomPlate.feature1), TRUE);	//件数
 		pItem = m_xListCtrl.InsertRootItem(lpInfo,FALSE);
 		pItem->m_idProp = (long)pPlateInfo;
 	}
 	m_xListCtrl.Redraw();
 	UpdateData(FALSE);
-}
-typedef CAngleProcessInfo* AngleInfoPtr;
-static int CompareJgPtrFun(const AngleInfoPtr& jginfo1,const AngleInfoPtr& jginfo2)
-{
-	//首先根据材料名称进行排序
-	if(jginfo1->m_ciType>jginfo2->m_ciType)
-		return 1;
-	else if(jginfo1->m_ciType<jginfo2->m_ciType)
-		return -1;
-	//然后根据材质进行排序
-	int iMatMark1=CProcessPart::QuerySteelMatIndex(jginfo1->m_xAngle.cMaterial);
-	int iMatMark2= CProcessPart::QuerySteelMatIndex(jginfo2->m_xAngle.cMaterial);
-	if(iMatMark1>iMatMark2)
-		return 1;
-	else if(iMatMark1<iMatMark2)
-		return -1;
-	//最后根据材质
-	if(jginfo1->m_ciType==1)
-	{
-		if(jginfo1->m_xAngle.wide> jginfo2->m_xAngle.wide)
-			return 1;
-		else if(jginfo1->m_xAngle.wide < jginfo2->m_xAngle.wide)
-			return -1;
-		if (jginfo1->m_xAngle.thick > jginfo2->m_xAngle.thick)
-			return 1;
-		else if(jginfo1->m_xAngle.thick < jginfo2->m_xAngle.thick)
-			return -1;
-	}
-	CXhChar16 sPartNo1 = jginfo1->m_xAngle.sPartNo;
-	CXhChar16 sPartNo2 = jginfo2->m_xAngle.sPartNo;
-	return ComparePartNoString(sPartNo1,sPartNo2);
-}
-
-typedef CPlateProcessInfo* PlateInfoPtr;
-static int ComparePlatePtrFun(const PlateInfoPtr& platePtr1, const PlateInfoPtr& platePtr2)
-{
-	//然后根据材质进行排序
-	int iMatMark1 = CProcessPart::QuerySteelMatIndex(platePtr1->xBomPlate.cMaterial);
-	int iMatMark2 = CProcessPart::QuerySteelMatIndex(platePtr2->xBomPlate.cMaterial);
-	if (iMatMark1 > iMatMark2)
-		return 1;
-	else if (iMatMark1 < iMatMark2)
-		return -1;
-	//最后根据材质
-	if (platePtr1->xBomPlate.wide > platePtr2->xBomPlate.wide)
-		return 1;
-	else if (platePtr1->xBomPlate.wide < platePtr2->xBomPlate.wide)
-		return -1;
-	if (platePtr1->xBomPlate.thick > platePtr2->xBomPlate.thick)
-		return 1;
-	else if (platePtr1->xBomPlate.thick < platePtr2->xBomPlate.thick)
-		return -1;
-	CXhChar16 sPartNo1 = platePtr1->xBomPlate.sPartNo;
-	CXhChar16 sPartNo2 = platePtr2->xBomPlate.sPartNo;
-	return ComparePartNoString(sPartNo1, sPartNo2);
 }
 
 static bool IsCommonAngle(CAngleProcessInfo *pJgInfo)
@@ -442,6 +475,7 @@ void COptimalSortDlg::OnEnChangeEWidth()
 void COptimalSortDlg::OnOK()
 {
 	m_xPrintScopyList.Empty();
+	const int MARGIN = 1;
 	POSITION pos = m_xListCtrl.GetFirstSelectedItemPosition();
 	while(pos!=NULL)
 	{
@@ -451,12 +485,22 @@ void COptimalSortDlg::OnOK()
 		if (sTypeName.CompareNoCase("钢板") == 0)
 		{
 			CPlateProcessInfo* pSelPlateInfo = (CPlateProcessInfo*)pItem->m_idProp;
-			m_xPrintScopyList.append(pSelPlateInfo->GetCADEntScope());
+			SCOPE_STRU scope = pSelPlateInfo->GetCADEntScope();
+			scope.fMaxX += MARGIN;
+			scope.fMaxY += MARGIN;
+			scope.fMinX -= MARGIN;
+			scope.fMinY -= MARGIN;
+			m_xPrintScopyList.append(scope);
 		}
 		else
 		{
 			CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pItem->m_idProp;
-			m_xPrintScopyList.append(pSelJgInfo->GetCADEntScope());
+			SCOPE_STRU scope = pSelJgInfo->GetCADEntScope();
+			scope.fMaxX += MARGIN;
+			scope.fMaxY += MARGIN;
+			scope.fMinX -= MARGIN;
+			scope.fMinY -= MARGIN;
+			m_xPrintScopyList.append(scope);
 		}
 	}
 	if (m_xPrintScopyList.GetNodeNum() == 1)
@@ -467,13 +511,23 @@ void COptimalSortDlg::OnOK()
 		{
 			if (ppAngle == NULL || *ppAngle == NULL)
 				continue;
-			m_xPrintScopyList.append((*ppAngle)->GetCADEntScope());
+			SCOPE_STRU scope = (*ppAngle)->GetCADEntScope();
+			scope.fMaxX += MARGIN;
+			scope.fMaxY += MARGIN;
+			scope.fMinX -= MARGIN;
+			scope.fMinY -= MARGIN;
+			m_xPrintScopyList.append(scope);
 		}
 		for (CPlateProcessInfo** ppPlate = m_xPlateList.GetFirst(); ppPlate; ppPlate = m_xPlateList.GetNext())
 		{
 			if (ppPlate == NULL || *ppPlate == NULL)
 				continue;
-			m_xPrintScopyList.append((*ppPlate)->GetCADEntScope());
+			SCOPE_STRU scope = (*ppPlate)->GetCADEntScope();
+			scope.fMaxX += MARGIN;
+			scope.fMaxY += MARGIN;
+			scope.fMinX -= MARGIN;
+			scope.fMinY -= MARGIN;
+			m_xPrintScopyList.append(scope);
 		}
 	}
 	return CDialog::OnOK();
