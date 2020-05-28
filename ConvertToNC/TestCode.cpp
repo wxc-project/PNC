@@ -54,7 +54,7 @@ void PLATE_COMPARE::RunCompare()
 		for (pDestVer = m_pDestPlate->vertex_list.GetFirst(); pDestVer;
 			pDestVer = m_pDestPlate->vertex_list.GetNext())
 		{
-			if(pSrcVer->vertex.IsEqual(pSrcVer->vertex,EPS2))
+			if(pSrcVer->vertex.IsEqual(pDestVer->vertex,EPS2))
 				break;
 		}
 		if (pDestVer == NULL)
@@ -64,7 +64,7 @@ void PLATE_COMPARE::RunCompare()
 		}
 		if (pSrcVer->type != pDestVer->type)
 		{
-			MyLogFile.Log("\t¸Ö°åÂÖÀª±ßÀàĞÍ²»Ò»ÖÂ!");
+			MyLogFile.Log("\t¸Ö°åÂÖÀª±ßÀàĞÍ²»Ò»ÖÂ{%d!=%d}!", pSrcVer->type, pDestVer->type);
 			return;
 		}
 	}

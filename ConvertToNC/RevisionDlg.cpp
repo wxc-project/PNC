@@ -408,6 +408,10 @@ typedef CPlateProcessInfo* CPlateInfoPtr;
 typedef CAngleProcessInfo* CAngleInfoPtr;
 typedef BOMPART* BomPartPtr;
 int ComparePlatePtrByPartNo(const CPlateInfoPtr &plate1, const CPlateInfoPtr &plate2);
+int CompareByPartNo(const CXhChar50& item1, const CXhChar50& item2)
+{
+	return ComparePartNoString(item1, item2, "SHGPT");
+}
 int CompareAnglePtrByPartNo(const CAngleInfoPtr &angle1, const CAngleInfoPtr &angle2)
 {
 	CXhChar50 sPartNo1 = angle1->m_xAngle.GetPartNo();
@@ -516,13 +520,25 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		CProjectTowerType::COMPARE_PART_RESULT *pResult=NULL;
 		CProjectTowerType* pProject=GetProject(hItem);
 		m_sRecordNum.Format("%d", pProject->GetResultCount());
+		//对校审结果进行排序
+		ARRAY_LIST<CXhChar50> keyStrArr;
+		for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult())
+		{
+			if (pResult->pLoftPart)
+				keyStrArr.append(CXhChar50(pResult->pLoftPart->sPartNo));
+			else
+				keyStrArr.append(CXhChar50(pResult->pOrgPart->sPartNo));
+		}
+		CQuickSort<CXhChar50>::QuickSort(keyStrArr.m_pData, keyStrArr.GetSize(), CompareByPartNo);
+		//
 		if(m_iCompareMode==CProjectTowerType::COMPARE_BOM_FILE)
 		{
 			nNum = pProject->GetResultCount();
-			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult(),index++)
+			for (index = 0; index < keyStrArr.GetSize();index++)
 			{	
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				pResult = pProject->GetResult(keyStrArr[index]);
 				//添加新行并设置背景色
 				if (pResult->pOrgPart)
 				{
@@ -547,10 +563,11 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		{
 			CDwgFileInfo* pJgDwg=(CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pProject->GetResultCount();
-			for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult(),index++)
+			for (index = 0; index < keyStrArr.GetSize(); index++)
 			{
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				pResult = pProject->GetResult(keyStrArr[index]);
 				if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
 				{
 					CAngleProcessInfo *pAngleInfo=pJgDwg->FindAngleByPartNo(pResult->pOrgPart->sPartNo);
@@ -577,10 +594,11 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		{
 			CDwgFileInfo* pPlateDwg=(CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pProject->GetResultCount();
-			for (pResult = pProject->EnumFirstResult(); pResult; pResult = pProject->EnumNextResult(), index++)
+			for (index = 0; index < keyStrArr.GetSize(); index++)
 			{
 				if (DisplayProcess)
 					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				pResult = pProject->GetResult(keyStrArr[index]);
 				if (pResult->pOrgPart && pResult->pOrgPart->cPartType==BOMPART::PLATE)
 				{
 					CPlateProcessInfo *pPlateInfo = pPlateDwg->FindPlateByPartNo(pResult->pOrgPart->sPartNo);

@@ -1125,7 +1125,12 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 			GRID_DATA_STRU grid_data;
 			if (!GetGridKey((AcDbPoint*)pEnt, &grid_data))
 				continue;
-			if (grid_data.type_id == ITEM_TYPE_PART_NO)		//¼þºÅ
+			if (grid_data.data_type == 3)	//²ÝÍ¼ÇøÓò
+			{	
+				draw_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				draw_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
+			else if (grid_data.type_id == ITEM_TYPE_PART_NO)		//¼þºÅ
 			{
 				part_no_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
 				part_no_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
