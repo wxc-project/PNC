@@ -46,15 +46,6 @@ void DisplayProcess(int percent, char *sTitle)
 		pProcDlg->SetTitle("进度");
 	pProcDlg->Refresh(percent);
 }
-
-void UpdatePartList()
-{
-#ifndef __UBOM_ONLY_
-	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-	if (pPartListDlg != NULL)
-		pPartListDlg->UpdatePartList();
-#endif
-}
 //////////////////////////////////////////////////////////////////////////
 //智能提取板的信息,提取成功后支持排版
 //SmartExtractPlate
@@ -74,10 +65,10 @@ void SmartExtractPlate()
 	else
 		SmartExtractPlate(&model);
 #else
-	CString file_path;
-	GetCurWorkPath(file_path);
-	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
 	{	//下料预审模式，保留上次提取的钢板信息，避免重复提取
+		CString file_path;
+		GetCurWorkPath(file_path);
 		if (!model.m_sWorkPath.EqualNoCase(file_path))
 		{
 			model.Empty();
@@ -232,7 +223,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 			if(DISTANCE(pPlateProcess->dim_pos,*pPt)<HOLE_SEARCH_SCOPE)
 			{
 				pPlateProcess->inner_dim_pos=*pPt;
-				pPlateProcess->m_bHasInnerDimPos=TRUE;
+				//目前赋值为FALSE,不通过备用点提取轮廓边,对于文字标注到钢板外的情况通过Log进行提示 wxc 20-05-28
+				pPlateProcess->m_bHasInnerDimPos=FALSE;	
 				break;
 			}
 		}
@@ -269,22 +261,22 @@ void SmartExtractPlate(CPNCModel *pModel)
 	{	//生成PPI文件,保存到到当前工作路径下
 		if(pPlateProcess->vertexList.GetNodeNum()>3)
 			pPlateProcess->CreatePPiFile(file_path);
-	}
-	//绘制提取的钢板外形--支持排版
-	pModel->LayoutPlates(g_pncSysPara.m_bAutoLayout);
-	//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
-	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(TRUE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(TRUE))
-	{	
+		//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
 		pPlateProcess->m_bNeedExtract = FALSE;
 	}
 	//写工程塔型配置文件 wht 19-01-12
-	CString cfg_path;
-	cfg_path.Format("%sconfig.ini",file_path);
-	pModel->WritePrjTowerInfoToCfgFile(cfg_path);
-	//
-	UpdatePartList();
-	//
-	AfxMessageBox(CXhChar100("共提取钢板%d个，成功%d个，失败%d!",nSum,nValid,nSum-nValid));
+	if (pModel->m_sTaType.GetLength() > 0)
+	{
+		CString cfg_path = file_path + "config.ini";
+		cfg_path.Format("%sconfig.ini", file_path);
+		pModel->WritePrjTowerInfoToCfgFile(cfg_path);
+	}
+	//绘制提取的钢板外形--支持排版
+	pModel->DrawPlates();
+	//更新构件列表
+	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+	if (pPartListDlg != NULL)
+		pPartListDlg->UpdatePartList();
 #else
 	//UBOM只需要更新钢板的基本信息
 	pModel->MergeManyPartNo();
@@ -401,9 +393,11 @@ void ManualExtractPlate(CPNCModel *pModel)
 	if(pExistPlate->vertexList.GetNodeNum()>3)
 		pExistPlate->CreatePPiFile(file_path);
 	//绘制提取的钢板外形--支持排版
-	pModel->LayoutPlates(g_pncSysPara.m_bAutoLayout);
-	//
-	UpdatePartList();
+	pModel->DrawPlates();
+	//更新构件列表
+	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+	if (pPartListDlg != NULL)
+		pPartListDlg->UpdatePartList();
 #else
 	pExistPlate->xBomPlate.cMaterial = pExistPlate->xPlate.cMaterial;
 	pExistPlate->xBomPlate.cQualityLevel = pExistPlate->xPlate.cQuality;
@@ -535,7 +529,7 @@ void SendPartEditor()
 void LayoutPlates()
 {	
 	CLogErrorLife logeErrLife;
-	model.LayoutPlates(TRUE);
+	model.DrawPlatesToLayout();
 }
 //////////////////////////////////////////////////////////////////////////
 //实时插入钢印区

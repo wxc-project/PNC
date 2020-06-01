@@ -24,6 +24,18 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //开放给用户的钢板识别定制化接口函数
+enum ENTITY_TYPE {
+	TYPE_OTHER = 0,
+	TYPE_LINE,
+	TYPE_ARC,
+	TYPE_CIRCLE,
+	TYPE_ELLIPSE,
+	TYPE_SPLINE,
+	TYPE_TEXT,
+	TYPE_MTEXT,
+	TYPE_BLOCKREF,
+	TYPE_DIM_D
+};
 class CPlateObject
 {
 	POLYGON region;
@@ -53,18 +65,16 @@ public:
 		}
 	};
 	struct CAD_ENTITY{
-		BYTE ciEntType;
+		ENTITY_TYPE ciEntType;
 		unsigned long idCadEnt;
-		char sText[100];	//ciEntType==RELA_ACADENTITY::TYPE_TEXT时记录文本内容 wht 18-12-30
+		char sText[100];	//ciEntType==TYPE_TEXT时记录文本内容 wht 18-12-30
 		GEPOINT pos;
 		double m_fSize;
-		CAD_ENTITY(long idEnt=0,BYTE ciType=0){idCadEnt=idEnt;ciEntType=ciType;strcpy(sText,"");m_fSize=0;}
+		CAD_ENTITY(long idEnt=0){idCadEnt=idEnt;ciEntType= TYPE_OTHER;strcpy(sText,"");m_fSize=0;}
 	};
 	ATOM_LIST<VERTEX> vertexList;
 	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
 protected:
-	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;	//钢板关联实体
-	//
 	virtual BOOL IsValidVertexs();
 	virtual void ReverseVertexs();
 	virtual void DeleteAssisstPts();
@@ -74,8 +84,6 @@ public:
 	CPlateObject();
 	~CPlateObject();
 	//
-	CAD_ENTITY *EnumFirstEnt(){return m_xHashRelaEntIdList.GetFirst();}
-	CAD_ENTITY *EnumNextEnt(){return m_xHashRelaEntIdList.GetNext();}
 	virtual bool IsInPlate(const double* poscoord);
 	virtual bool IsInPlate(const double* start,const double* end);
 	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);

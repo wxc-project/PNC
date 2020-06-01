@@ -13,31 +13,37 @@ class CPartListDlg : public CDialog
 #endif
 {
 	DECLARE_DYNCREATE(CPartListDlg)
-	void SelectPart(int iCurSel);
+	
 	CDamBoardManager m_xDamBoardManager;
 	CBitmap m_bmpLeftRotate,m_bmpRightRotate,m_bmpMirror,m_bmpMove,m_bmpMoveMk;
+	static int m_nDlgWidth;
 public:
 	CPartListDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CPartListDlg();
-	CXhListCtrl m_partList;
+	
 // 对话框数据
 	enum { IDD = IDD_PART_LIST_DLG };
-
+	BOOL m_bEditMK;
+	CXhListCtrl m_partList;
+public:
+	BOOL CreateDlg();
+	BOOL UpdatePartList();
+	void RefreshCtrlState();
+	void SelectPart(int iCurSel);
+	void ProcessKeyDown(WORD wVKey);
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
-	afx_msg void OnOK();
-	afx_msg void OnCancel();
-	afx_msg void OnSize(UINT nType, int cx, int cy);
-	DECLARE_MESSAGE_MAP()
-public:
-	BOOL UpdatePartList();
-	void ProcessKeyDown(WORD wVKey);
+	virtual BOOL OnInitDialog();
+	virtual void PreSubclassWindow();
 #if defined (_ARX_2007) && defined (__SUPPORT_DOCK_UI_) && !defined _UNICODE
 	virtual BOOL    FindContextHelpFullPath(LPCWSTR fileName, CString& fullPath) { return FALSE; }
 	virtual LPCTSTR AppRootKey() { return ""; }
 #endif
-	BOOL CreateDlg();
-	virtual BOOL OnInitDialog();
+	DECLARE_MESSAGE_MAP()
+	afx_msg void OnOK();
+	afx_msg void OnCancel();
+	afx_msg void OnClose();
+	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMClickPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedBtnSendToPpe();
@@ -48,7 +54,5 @@ public:
 	afx_msg void OnBnClickedBtnMove();
 	afx_msg void OnBnClickedBtnMoveMkRect();
 	afx_msg void OnBnClickedChkEditMk();
-	virtual void PreSubclassWindow();
-	BOOL m_bEditMK;
 };
 #endif

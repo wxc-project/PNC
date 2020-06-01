@@ -1038,7 +1038,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__SUPPORT_DOCK_UI_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;__TIMER_COUNT_;__ALFA_TEST_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;__TIMER_COUNT_;__ALFA_TEST_;__MONO_IMAGE_;__SUPPORT_DOCK_UI_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
