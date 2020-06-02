@@ -16,6 +16,46 @@ typedef BOMPART* PART_PTR;
 static int CompareBomPartPtrFunc(const PART_PTR& partPtr1, const PART_PTR& partPtr2, BOOL bAscending)
 {
 	int nRetCode = 0;
+	//然后根据材质进行排序(从大到小)
+	int iMatMark1 = CProcessPart::QuerySteelMatIndex(partPtr1->cMaterial);
+	int iMatMark2 = CProcessPart::QuerySteelMatIndex(partPtr2->cMaterial);
+	if (iMatMark1 > iMatMark2)
+		nRetCode = 1;
+	else if (iMatMark1 < iMatMark2)
+		nRetCode = -1;
+	if (nRetCode == 0)
+	{	//规格从大到小
+		if (partPtr1->wide > partPtr2->wide)
+			nRetCode = 1;
+		else if (partPtr1->wide < partPtr2->wide)
+			nRetCode = -1;
+		else if (partPtr1->thick > partPtr2->thick)
+			nRetCode = 1;
+		else if (partPtr1->thick < partPtr2->thick)
+			nRetCode = -1;
+
+		if(nRetCode==0)
+		{	//件号从小到大
+			CXhChar16 sPartNo1 = partPtr1->sPartNo;
+			CXhChar16 sPartNo2 = partPtr2->sPartNo;
+			nRetCode = ComparePartNoString(sPartNo1, sPartNo2, "SHhGPT");
+		}
+		else
+		{
+			if (!bAscending)	//规格支持从小到大排序或从大到小排序，但材质和件号始终是从小到大排序
+				nRetCode *= -1;
+		}
+	}
+	else
+	{
+		if (!bAscending)	//规格支持从小到大排序或从大到小排序，但材质和件号始终是从小到大排序
+			nRetCode *= -1;
+	}
+	return nRetCode;
+}
+static int CompareBomPartPtrFunc2(const PART_PTR& partPtr1, const PART_PTR& partPtr2, BOOL bAscending)
+{
+	int nRetCode = 0;
 	if (partPtr1->wide > partPtr2->wide)
 		nRetCode = 1;
 	else if (partPtr1->wide < partPtr2->wide)
@@ -277,6 +317,15 @@ BOOL COptimalSortDlg::OnInitDialog()
 	GetDlgItem(IDC_CHE_Q420)->EnableWindow(m_nQ420Count > 0);
 	GetDlgItem(IDC_CHE_Q460)->EnableWindow(m_nQ460Count > 0);
 
+	GetDlgItem(IDC_CHE_CUT_ANGLE)->EnableWindow(m_nCutAngle > 0);
+	GetDlgItem(IDC_CHE_KAIHE)->EnableWindow(m_nKaiHe > 0);
+	GetDlgItem(IDC_CHE_PUSH_FLAT)->EnableWindow(m_nPushFlat > 0);
+	GetDlgItem(IDC_CHE_CUT_ROOT)->EnableWindow(m_nCutRoot > 0);
+	GetDlgItem(IDC_CHE_CUT_BER)->EnableWindow(m_nCutBer > 0);
+	GetDlgItem(IDC_CHE_BEND)->EnableWindow(m_nBend > 0);
+	GetDlgItem(IDC_CHE_COMMON_ANGLE)->EnableWindow(m_bCommonAngle > 0);
+
+
 	m_bSelJg = m_nJgCount > 0;
 	m_bSelPlate = m_nPlateCount > 0;
 	m_bSelYg = m_nYGCount > 0;
@@ -340,8 +389,8 @@ void COptimalSortDlg::RefeshListCtrl()
 		CListCtrlItemInfo *lpInfo = new CListCtrlItemInfo();
 		lpInfo->SetSubItemText(0, "钢板", TRUE);
 		CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(&pPlateInfo->xBomPlate);
-		lpInfo->SetSubItemText(1, sMat, TRUE);//材质	
-		lpInfo->SetSubItemText(2, pPlateInfo->xBomPlate.GetSpec(), TRUE);			//规格
+		lpInfo->SetSubItemText(1, sMat, TRUE);	//材质	
+		lpInfo->SetSubItemText(2, pPlateInfo->xBomPlate.GetSpec(), TRUE);		//规格
 		lpInfo->SetSubItemText(3, pPlateInfo->xBomPlate.GetPartNo(), TRUE);		//件号
 		lpInfo->SetSubItemText(4, CXhChar50("%d", pPlateInfo->xBomPlate.feature1), TRUE);	//件数
 		pItem = m_xListCtrl.InsertRootItem(lpInfo,FALSE);
