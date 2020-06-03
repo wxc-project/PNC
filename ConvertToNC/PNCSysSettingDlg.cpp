@@ -55,6 +55,9 @@ void UpdateFilterLayerProperty(CPropertyList *pPropList,CPropTreeItem *pParentIt
 }
 static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pItem, CString &valueStr)
 {
+	CPNCSysSettingDlg *pSysSettingDlg = (CPNCSysSettingDlg*)pPropList->GetParent();
+	if (pSysSettingDlg == NULL)
+		return FALSE;
 	CPropertyListOper<CPNCSysPara> oper(pPropList, &g_pncSysPara);
 	CLogErrorLife logErrLife;
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fMapScale"))
@@ -114,82 +117,16 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_iPPiMode=valueStr[0]-'0';
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("AxisXCalType"))
 		g_pncSysPara.m_iAxisXCalType=valueStr[0]-'0';
-#ifdef __LAYOUT_
-	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_bAutoLayout1"))
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciLayoutMode"))
 	{
-		if (valueStr.Compare("是") == 0)
-			g_pncSysPara.m_bAutoLayout = CPNCSysPara::LAYOUT_PRINT;
-		else
-			g_pncSysPara.m_bAutoLayout = CPNCSysPara::LAYOUT_NONE;
-		pPropList->DeleteAllSonItems(pItem);
-		if(g_pncSysPara.m_bAutoLayout==CPNCSysPara::LAYOUT_PRINT)
-		{
-			oper.InsertEditPropItem(pItem,"m_nMapWidth","","",-1,TRUE);
-			oper.InsertEditPropItem(pItem,"m_nMapLength","","",-1,TRUE);
-			oper.InsertEditPropItem(pItem,"m_nMinDistance","","",-1,TRUE);
-		}
-		//
-		CXhChar200 sText;
-		long idProp = CPNCSysPara::GetPropID("m_bAutoLayout2");
-		if (g_pncSysPara.GetPropValueStr(idProp, sText) > 0)
-			pPropList->SetItemPropValue(idProp, sText);
-		//
-		CPropTreeItem *pOtherItem = pPropList->FindItemByPropId(idProp, NULL);
-		if (pOtherItem)
-		{
-			pPropList->DeleteAllSonItems(pOtherItem);
-			if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-			{
-				oper.InsertEditPropItem(pOtherItem, "CDrawDamBoard::BOARD_HEIGHT", "", "", -1, TRUE);
-				oper.InsertCmbListPropItem(pOtherItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
-				oper.InsertEditPropItem(pOtherItem, "m_nMkRectLen", "", "", -1, TRUE);
-				oper.InsertEditPropItem(pOtherItem, "m_nMkRectWidth", "", "", -1, TRUE);
-			}
-			#ifndef __UBOM_ONLY_
-			if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-				g_xDockBarManager.DisplayPartListDockBar();
-			else
-				g_xDockBarManager.HidePartListDockBar();
-			#endif
-		}
-	}
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bAutoLayout2"))
-	{
-		if (valueStr.Compare("是") == 0)
-			g_pncSysPara.m_bAutoLayout = CPNCSysPara::LAYOUT_SEG;
-		else
-			g_pncSysPara.m_bAutoLayout = CPNCSysPara::LAYOUT_NONE;
-		pPropList->DeleteAllSonItems(pItem);
-		if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-		{
-			oper.InsertEditPropItem(pItem, "CDrawDamBoard::BOARD_HEIGHT", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
-			oper.InsertEditPropItem(pItem, "m_nMkRectLen", "", "", -1, TRUE);
-			oper.InsertEditPropItem(pItem, "m_nMkRectWidth", "", "", -1, TRUE);
-		}
+		g_pncSysPara.m_ciLayoutMode = valueStr[0] - '0';
+		pSysSettingDlg->UpdateLayoutProperty(pItem);
 #ifndef __UBOM_ONLY_
-		if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-			g_xDockBarManager.DisplayPartListDockBar();
-		else
-			g_xDockBarManager.HidePartListDockBar();
+		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+		if (pPartListDlg != NULL)
+			pPartListDlg->RefreshCtrlState();
 #endif
-		CXhChar200 sText;
-		long idProp = CPNCSysPara::GetPropID("m_bAutoLayout1");
-		if (g_pncSysPara.GetPropValueStr(idProp, sText) > 0)
-			pPropList->SetItemPropValue(idProp, sText);
-		CPropTreeItem *pOtherItem = pPropList->FindItemByPropId(idProp, NULL);
-		if (pOtherItem)
-		{
-			pPropList->DeleteAllSonItems(pOtherItem);
-			if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_PRINT)
-			{
-				oper.InsertEditPropItem(pOtherItem, "m_nMapWidth", "", "", -1, TRUE);
-				oper.InsertEditPropItem(pOtherItem, "m_nMapLength", "", "", -1, TRUE);
-				oper.InsertEditPropItem(pOtherItem, "m_nMinDistance", "", "", -1, TRUE);
-			}
-		}
 	}
-#endif
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapWidth"))
 		g_pncSysPara.m_nMapWidth=atoi(valueStr);
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapLength"))
@@ -201,7 +138,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	{
 		CDrawDamBoard::BOARD_HEIGHT = atoi(valueStr);
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg&&g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("CDrawDamBoard::m_bDrawAllBamBoard"))
@@ -209,7 +146,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		CDrawDamBoard::m_bDrawAllBamBoard = valueStr[0] - '0';
 		CLockDocumentLife lockDocument;
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg&&g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
+		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
 #endif
@@ -880,34 +817,26 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	m_propList.SetButtonClickFunc(ButtonClickSystemSetting);
 	m_propList.SetPopMenuClickFunc(FireSystemSettingPopMenuClick);
 	m_propList.SetPickColorFunc(FirePickColor);
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+	UpdateUbomSettingProp();
+#else
+	UpdatePncSettingProp();
+#endif
+	//
+	m_propList.Redraw();
+}
+void CPNCSysSettingDlg::UpdateUbomSettingProp()
+{
 	CPropertyListOper<CPNCSysPara> oper(&m_propList, &g_pncSysPara);
 	CPropTreeItem* pRootItem = m_propList.GetRootItem();
 	CPropTreeItem *pPropItem = NULL, *pGroupItem = NULL, *pItem = NULL;
 	//常规设置
 	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	oper.InsertEditPropItem(pGroupItem, "m_sJgCadName");
 	oper.InsertEditPropItem(pGroupItem, "m_fMaxLenErr");
-#else
-	oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");
-	if (g_pncSysPara.m_bReplaceSH)
-		oper.InsertCmbListPropItem(pPropItem, "m_nReplaceHD");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bUseMaxEdge");
-	if(g_pncSysPara.m_bUseMaxEdge)
-		oper.InsertCmbListPropItem(pPropItem, "m_nMaxEdgeLen");
-	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");
-	oper.InsertCmbListPropItem(pGroupItem, "m_bMKPos");
-	oper.InsertCmbListPropItem(pGroupItem, "AxisXCalType");
-#endif
 	//识别模式
 	pGroupItem = oper.InsertPropItem(pRootItem, "RecogMode");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
-#ifdef __PIXEL_RECOG_
-	pPropItem->m_lpNodeInfo->m_cmbItems = "0.按线型识别|1.按图层识别|2.按颜色识别|3.按像素识别";
-#else
-	pPropItem->m_lpNodeInfo->m_cmbItems = "0.按线型识别|1.按图层识别|2.按颜色识别";
-#endif
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
 	{	//按颜色识别
 		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");
@@ -926,39 +855,78 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	{	//按像素识别
 		oper.InsertEditPropItem(pPropItem, "m_fPixelScale");
 	}
-#ifndef __UBOM_ONLY_
+}
+void CPNCSysSettingDlg::UpdatePncSettingProp()
+{
+	CPropertyListOper<CPNCSysPara> oper(&m_propList, &g_pncSysPara);
+	CPropTreeItem* pRootItem = m_propList.GetRootItem();
+	CPropTreeItem *pPropItem = NULL, *pGroupItem = NULL, *pItem = NULL;
+	//常规设置
+	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
+	oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");
+	if (g_pncSysPara.m_bReplaceSH)
+		oper.InsertCmbListPropItem(pPropItem, "m_nReplaceHD");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bUseMaxEdge");
+	if(g_pncSysPara.m_bUseMaxEdge)
+		oper.InsertCmbListPropItem(pPropItem, "m_nMaxEdgeLen");
+	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");
+	oper.InsertCmbListPropItem(pGroupItem, "m_bMKPos");
+	oper.InsertCmbListPropItem(pGroupItem, "AxisXCalType");
+	//识别模式设置
+	pGroupItem = oper.InsertPropItem(pRootItem, "RecogMode");
+	//oper.InsertEditPropItem(pGroupItem, "m_fMapScale");	//图纸绘图比例
+	//轮廓边识别
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
+	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
+	{	//按颜色识别
+		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");
+		oper.InsertCmbColorPropItem(pPropItem, "m_iBendLineColorIndex");
+	}
+	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
+	{	//按图层识别
+		pItem = oper.InsertPopMenuItem(pPropItem, "layer_mode");
+		UpdateFilterLayerProperty(&m_propList, pItem);
+	}
+	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
+	{	//按线型识别
+		oper.InsertCmbListPropItem(pPropItem, "m_iProfileLineTypeName");
+	}
+	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
+	{	//按像素识别
+		oper.InsertEditPropItem(pPropItem, "m_fPixelScale");
+	}
+	//螺栓识别
 	pPropItem = oper.InsertEditPropItem(pGroupItem, "m_ciBoltRecogMode");
 	pPropItem->SetReadOnly();
 	oper.InsertCmbListPropItem(pPropItem, "RecogLsCircle");
 	oper.InsertCmbListPropItem(pPropItem, "FilterPartNoCir");
 	oper.InsertCmbListPropItem(pPropItem, "RecogHoleDimText");
-#endif
 	//提取结果显示模式
-#ifdef __LAYOUT_
 	pGroupItem = oper.InsertPropItem(pRootItem, "DisplayMode");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bAutoLayout1");
-	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_PRINT)
-	{
-		oper.InsertEditPropItem(pPropItem, "m_nMapWidth");
-		oper.InsertEditPropItem(pPropItem, "m_nMapLength");
-		oper.InsertEditPropItem(pPropItem, "m_nMinDistance");
-	}
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bAutoLayout2");
-	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-	{
-		oper.InsertEditPropItem(pPropItem, "CDrawDamBoard::BOARD_HEIGHT");
-		oper.InsertCmbListPropItem(pPropItem, "CDrawDamBoard::m_bDrawAllBamBoard");
-		oper.InsertEditPropItem(pPropItem, "m_nMkRectLen");
-		oper.InsertEditPropItem(pPropItem, "m_nMkRectWidth");
-	}
-#endif
-	//绘图比例
-	pGroupItem = oper.InsertPropItem(pRootItem, "map_scale_set");
-	oper.InsertEditPropItem(pGroupItem, "m_fMapScale");	//图纸绘图比例
-	//
-	m_propList.Redraw();
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_ciLayoutMode");
+	UpdateLayoutProperty(pPropItem);
 }
-
+void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
+{
+	if (pParentItem == NULL)
+		return;
+	CPropertyListOper<CPNCSysPara> oper(&m_propList, &g_pncSysPara);
+	m_propList.DeleteAllSonItems(pParentItem);
+	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PRINT)
+	{	//自动排版
+		oper.InsertEditPropItem(pParentItem, "m_nMapWidth", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem, "m_nMapLength", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem, "m_nMinDistance", "", "", -1, TRUE);
+	}
+	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+	{	//下料预审
+		oper.InsertEditPropItem(pParentItem, "CDrawDamBoard::BOARD_HEIGHT", "", "", -1, TRUE);
+		oper.InsertCmbListPropItem(pParentItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem, "m_nMkRectLen", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem, "m_nMkRectWidth", "", "", -1, TRUE);
+	}
+}
 void CPNCSysSettingDlg::OnBnClickedBtnDefault()
 {
 	g_pncSysPara.Init();

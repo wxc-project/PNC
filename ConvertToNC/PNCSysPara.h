@@ -39,10 +39,11 @@ public:
 	int m_nMkRectLen;		//钢印字盒长度
 	int m_nMkRectWidth;		//钢印字盒宽度
 
-	static const BYTE LAYOUT_NONE	= 0;
-	static const BYTE LAYOUT_PRINT	= 1;
-	static const BYTE LAYOUT_SEG	= 2;
-	BOOL m_bAutoLayout;		//是否自动排版 0.不排版 1.打印排版 2.分段排版
+	static const BYTE LAYOUT_NONE	 = 0;	//
+	static const BYTE LAYOUT_COMPARE = 1;
+	static const BYTE LAYOUT_PRINT	 = 2;
+	static const BYTE LAYOUT_SEG	 = 3;
+	BYTE m_ciLayoutMode;	//显示模式 0.克隆模式|1.对比模式|2.排版模式|3.预审模式
 	int m_nMapLength;		//图纸长度 0表示不设置纸张长度
 	int m_nMapWidth;		//图纸宽度
 	int m_nMinDistance;		//最小间距

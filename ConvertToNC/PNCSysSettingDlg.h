@@ -17,7 +17,6 @@ public:
 	CPNCSysSettingDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CPNCSysSettingDlg();
 
-	afx_msg void OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult);
 // 对话框数据
 	enum { IDD = IDD_SYSTEM_SETTING_DLG };
 	CPropertyList	m_propList;
@@ -27,22 +26,25 @@ public:
 	long m_idEventProp;		//记录触发中断的属性ID,恢复窗口时使用
 public:
 	void DisplaySystemSetting();
-	void OnPNCSysDel();
+	void UpdatePncSettingProp();
+	void UpdateUbomSettingProp();
+	void UpdateLayoutProperty(CPropTreeItem* pParentItem);
 #ifdef __PNC_
 	void SelectEntObj(int nResultEnt=1);	//选择对象节点或线
 	void FinishSelectObjOper();				//完成选择对象的后续操作
 #endif
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);
-	// DDX/DDV 支持
-	void OnPNCSysAdd();
-	void OnPNCSysGroupDel();
-	void OnPNCSysGroupAdd();
 	virtual BOOL OnInitDialog();
-	afx_msg void OnClose();
-	afx_msg void OnOK();
-	afx_msg void OnCancel();
+	virtual void OnOK();
+	virtual void OnCancel();
 	DECLARE_MESSAGE_MAP()
 public:
+	afx_msg void OnClose();
 	afx_msg void OnBnClickedBtnDefault();
+	afx_msg void OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnPNCSysDel();
+	afx_msg void OnPNCSysAdd();
+	afx_msg void OnPNCSysGroupDel();
+	afx_msg void OnPNCSysGroupAdd();
 };

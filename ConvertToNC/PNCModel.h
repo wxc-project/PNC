@@ -69,23 +69,7 @@ struct ACAD_CIRCLE{
 			return false;
 	}
 };
-struct RELA_ACADENTITY{
-	static const BYTE TYPE_OTHER	=0;
-	static const BYTE TYPE_LINE		=1;
-	static const BYTE TYPE_ARC		=2;
-	static const BYTE TYPE_CIRCLE	=3;
-	static const BYTE TYPE_ELLIPSE	=4;
-	static const BYTE TYPE_SPLINE	=5;
-	static const BYTE TYPE_TEXT		=6;
-	static const BYTE TYPE_MTEXT	=7;
-	static const BYTE TYPE_BLOCKREF =8;
-	static const BYTE TYPE_DIM_D	=9;
-	BYTE ciEntType;
-	AcDbObjectId idCadEnt;
-	RELA_ACADENTITY(){ciEntType=0;}
-	RELA_ACADENTITY(AcDbObjectId idEnt){idCadEnt=idEnt;ciEntType=0;}
-};
-AcDbObjectId MkCadObjId(unsigned long idOld);//{ return AcDbObjectId((AcDbStub*)idOld); }
+
 class CPlateProcessInfo : public CPlateObject
 {
 	struct LAYOUT_VERTEX{
@@ -93,6 +77,11 @@ class CPlateProcessInfo : public CPlateObject
 		GEPOINT srcPos;		//轮廓点坐标
 		GEPOINT offsetPos;	//相对于最小包络记性左上角的偏移位置
 		LAYOUT_VERTEX(){index=0;}
+		void Init() {
+			index = 0;
+			srcPos.Set();
+			offsetPos.Set();
+		}
 	};
 private:
 	GECS ucs;
@@ -115,45 +104,57 @@ public:
 	BASIC_INFO m_xBaseInfo;
 	CHashSet<AcDbObjectId> pnTxtIdList;
 	ATOM_LIST<BOLT_INFO> boltList;
+	//钢板关联实体
+	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;	
 	CHashList<ACAD_LINEID> m_hashCloneEdgeEntIdByIndex;
 	CHashList<ULONG> m_hashColneEntIdBySrcId;
 	ARRAY_LIST<ULONG> m_cloneEntIdList;
+	ARRAY_LIST<ULONG> m_newAddEntIdList;
+	AcDbObjectId m_layoutBlockId;	//自动排版时添加的块引用
 	BOOL m_bNeedExtract;	//记录当前构件是否需要提取，分批多次提取时使用 wht 19-04-02
-	void InitEdgeEntIdMap();
-	void UpdateEdgeEntPos();
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
 	void PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet, int *piInvalidCirCountForText);
+	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt);
 	void InternalExtractPlateRelaEnts();
 public:
 	CPlateProcessInfo();
+	//
+	CXhChar16 GetPartNo() { return xPlate.GetPartNo(); }
+	//获取钢板相关区域
+	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
+	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL);
 	SCOPE_STRU GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK=TRUE);
-	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
-	f2dRect GetMinWrapRect(double minDistance=0, fPtList *pVertexList=NULL);
-	CXhChar16 GetPartNo(){return xPlate.GetPartNo();}
+	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
+	//初始化钢板轮廓边信息
 	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
 	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);
 	BOOL InitProfileByAcdbLineList(ARRAY_LIST<ACAD_LINEID>& xLineArr);
 	BOOL InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_LIST<ACAD_LINEID>& xLineArr);
+	//更新钢板信息
+	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	void ExtractPlateRelaEnts();
 	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
-	f2dRect GetPnDimRect();
+	//生成中性文件
 	void CreatePPiFile(const char* file_path);
+	//绘制钢板
+	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
+	void InitEdgeEntIdMap();
+	void InitLayoutVertex();
 	void DrawPlate(f3dPoint *pOrgion=NULL,BOOL bCreateDimPos=FALSE,BOOL bDrawAsBlock=FALSE,GEPOINT *pPlateCenter=NULL);
-	void DrawPlateProfile();
-	void InitMkPos(GEPOINT &mk_pos,GEPOINT &mk_vec);
-	void CalEquidistantShape(double minDistance,ATOM_LIST<VERTEX> *pDestList);
-	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt);
-	int GetRelaEntIdList(ARRAY_LIST<AcDbObjectId> &entIdList);
+	void DrawPlateProfile(f3dPoint *pOrgion = NULL);
+	//钢板钢印位置处理
+	void InitMkPos(GEPOINT &mk_pos, GEPOINT &mk_vec);
 	bool SyncSteelSealPos();
 	bool AutoCorrectedSteelSealPos();
 	bool GetSteelSealPos(GEPOINT &pos);
 	bool UpdateSteelSealPos(GEPOINT &pos);
+	//
+	void UpdateEdgeEntPos();
+	//刷新钢板显示数量
 	void RefreshPlateNum();
-	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope=FALSE);
-	bool IsMarkPosCadEnt(int idCadEnt);
 };
 class CPlateReactorLife
 {	//钢板反应器生命周期控制类
@@ -199,7 +200,12 @@ public:
 	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
 	void SplitManyPartNo();
-	void LayoutPlates(BOOL bRelayout);
+	//绘制钢板
+	void DrawPlates();
+	void DrawPlatesToLayout();
+	void DrawPlatesToCompare();
+	void DrawPlatesToProcess();
+	void DrawPlatesToClone();
 	//
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }

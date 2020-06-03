@@ -58,7 +58,7 @@ void CPNCSysPara::Init()
 	m_sPartLabelTitle.Empty();
 	m_sJgCardBlockName.Empty();
 	//自动排版设置
-	m_bAutoLayout = FALSE;
+	m_ciLayoutMode = 0;
 	m_nMapWidth = 1500;
 	m_nMapLength = 0;
 	m_nMinDistance = 0;
@@ -73,7 +73,7 @@ void CPNCSysPara::Init()
 	m_ciProfileColorIndex = 1;		//红色
 	m_ciBendLineColorIndex = 190;	//紫色
 	m_sProfileLineType.Copy("CONTINUOUS");
-	m_fPixelScale = 0.8;
+	m_fPixelScale = 0.6;
 	m_fMaxLenErr = 0.5;
 	//默认过滤图层名
 	//默认加载文字识别设置
@@ -145,7 +145,12 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_nMaxEdgeLen", PROPLIST_ITEM(id++, "最大边长", "进行料片提取的特殊边长"));
 	//识别模式
 	AddPropItem("RecogMode",PROPLIST_ITEM(id++,"识别模式","识别模式"));
-	AddPropItem("m_iRecogMode",PROPLIST_ITEM(id++,"轮廓边识别模式","钢板识别模式"));
+	AddPropItem("m_fMapScale", PROPLIST_ITEM(id++, "识别比例", "绘图缩放比例"));
+#ifdef __PIXEL_RECOG_
+	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别模式", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别|3.按像素识别"));
+#else
+	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别模式", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别"));
+#endif
 	AddPropItem("m_iProfileLineTypeName", PROPLIST_ITEM(id++, "轮廓边线型", "钢板外轮廓边线型", "CONTINUOUS|HIDDEN|DASHDOT2X|DIVIDE|ZIGZAG"));
 	AddPropItem("m_iProfileColorIndex",PROPLIST_ITEM(id++,"轮廓边颜色","钢板外轮廓边颜色"));
 	AddPropItem("m_iBendLineColorIndex",PROPLIST_ITEM(id++,"火曲线颜色","钢板制弯线颜色"));
@@ -156,19 +161,15 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "特殊孔径标注", "特殊孔径标注(文字说明或直径标注)", "处理|不处理"));
 	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "普通螺栓圆圈", "", "按照特殊孔处理|根据标准孔径判断"));
 	//显示模式
-	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式", "提取结果显示模式"));
-	AddPropItem("m_bAutoLayout1", PROPLIST_ITEM(id++, "打印排版", "打印排版", "是|否"));
+	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
+	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","0.图元克隆|1.钢板对比|2.自动排版|3.下料预审"));
 	AddPropItem("m_nMapWidth", PROPLIST_ITEM(id++, "图纸宽度", "图纸宽度"));
 	AddPropItem("m_nMapLength", PROPLIST_ITEM(id++, "图纸长度", "图纸长度"));
 	AddPropItem("m_nMinDistance", PROPLIST_ITEM(id++, "最小间距", "图形之间的最小间距"));
-	AddPropItem("m_bAutoLayout2", PROPLIST_ITEM(id++, "下料预审", "启用下料预审时，钢板提取之后按段排布，支持设定加工坐标系，支持设定钢印号位置。", "是|否"));
 	AddPropItem("CDrawDamBoard::BOARD_HEIGHT", PROPLIST_ITEM(id++, "档板高度", "档板高度"));
 	AddPropItem("CDrawDamBoard::m_bDrawAllBamBoard", PROPLIST_ITEM(id++, "档板显示模式", "档板显示模式", "0.仅显示选中钢板档板|1.显示所有档板"));
 	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
 	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
-	//图纸比例设置
-	AddPropItem("map_scale_set",PROPLIST_ITEM(id++,"识别比例","图纸比例设置"));
-	AddPropItem("m_fMapScale",PROPLIST_ITEM(id++,"缩放比例","绘图缩放比例"));
 }
 int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100*/,CPropTreeItem *pItem/*=NULL*/)
 {
@@ -231,19 +232,16 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if(GetPropID("m_fMapScale")==id)
 		sText.Printf("%.f",g_pncSysPara.m_fMapScale);
-	else if(GetPropID("m_bAutoLayout1")==id)
+	else if (GetPropID("m_ciLayoutMode") == id)
 	{
-		if(m_bAutoLayout==CPNCSysPara::LAYOUT_PRINT)
-			sText.Copy("是");
-		else 
-			sText.Copy("否");
-	}
-	else if (GetPropID("m_bAutoLayout2") == id)
-	{
-		if (m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-			sText.Copy("是");
-		else
-			sText.Copy("否");
+		if (g_pncSysPara.m_ciLayoutMode == 0)
+			sText.Copy("0.图元克隆");
+		else if (g_pncSysPara.m_ciLayoutMode == 1)
+			sText.Copy("1.钢板对比");
+		else if (g_pncSysPara.m_ciLayoutMode == 2)
+			sText.Copy("2.自动排版");
+		else //if (g_pncSysPara.m_ciLayoutMode == 3)
+			sText.Copy("3.下料预审");
 	}
 	else if(GetPropID("m_nMapLength")==id)
 		sText.Printf("%d",g_pncSysPara.m_nMapLength);
@@ -628,22 +626,25 @@ void PNCSysSetImportDefault()
 		{
 			sscanf(line_txt, "%s%d", key_word, &nTemp);
 			g_pncSysPara.m_ciBoltRecogMode = nTemp;
-			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciBoltRecogMode);
 		}
 		else if (_stricmp(key_word, "BendLineColorIndex") == 0)
 		{
 			sscanf(line_txt, "%s%d", key_word, &nTemp);
 			g_pncSysPara.m_ciBendLineColorIndex = nTemp;
-			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciBendLineColorIndex);
 		}
 		else if (_stricmp(key_word, "ProfileColorIndex") == 0)
 		{
 			sscanf(line_txt, "%s%d", key_word, &nTemp);
 			g_pncSysPara.m_ciProfileColorIndex = nTemp;
-			//sscanf(line_txt, "%s%hhu", key_word, &g_pncSysPara.m_ciProfileColorIndex);
 		}
 		else if (_stricmp(key_word, "ProfileLineType") == 0)
 			sscanf(line_txt, "%s%s", key_word, &g_pncSysPara.m_sProfileLineType);
+		else if (_stricmp(key_word, "PixelScale") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey)
+				g_pncSysPara.m_fPixelScale = atof(skey);
+		}
 		else if (_stricmp(key_word, "BoltDKey") == 0)
 		{
 			skey = strtok(NULL, "=,;");
@@ -717,8 +718,8 @@ void PNCSysSetImportDefault()
 		}
 		else if (_stricmp(key_word, "PPIMode") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iPPiMode);
-		else if (_stricmp(key_word, "AutoLayout") == 0)
-			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_bAutoLayout);
+		else if (_stricmp(key_word, "LayoutMode") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_ciLayoutMode);
 		else if (_stricmp(key_word, "MapLength") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMapLength);
 		else if (_stricmp(key_word, "MapWidth") == 0)
@@ -795,7 +796,7 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "JgCardBlockName=%s ;角钢工艺卡块名称\n", (char*)g_pncSysPara.m_sJgCardBlockName);
 	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
 	fprintf(fp, "PPIMode=%d ;PPI文件模式\n", g_pncSysPara.m_iPPiMode);
-	fprintf(fp, "AutoLayout=%d ;自动排版\n", g_pncSysPara.m_bAutoLayout);
+	fprintf(fp, "LayoutMode=%d ;显示模式\n", g_pncSysPara.m_ciLayoutMode);
 	fprintf(fp, "MapWidth=%d ;图纸宽度\n", g_pncSysPara.m_nMapWidth);
 	fprintf(fp, "MapLength=%d ;图纸长度\n", g_pncSysPara.m_nMapLength);
 	fprintf(fp, "MinDistance=%d ;最小间距\n", g_pncSysPara.m_nMinDistance);
@@ -812,6 +813,7 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "ProfileColorIndex=%d ;轮廓边颜色\n", g_pncSysPara.m_ciProfileColorIndex);
 	fprintf(fp, "BendLineColorIndex=%d ;制弯线颜色\n", g_pncSysPara.m_ciBendLineColorIndex);
 	fprintf(fp, "ProfileLineType=%s ;轮廓边线型\n", (char*)g_pncSysPara.m_sProfileLineType);
+	fprintf(fp, "PixelScale=%.1f ;轮廓边线型\n", g_pncSysPara.m_fPixelScale);
 	fprintf(fp, "文字识别设置\n");
 	fprintf(fp, "DimStyle=%d ;文字标注类型\n", g_pncSysPara.m_iDimStyle);
 	fprintf(fp, "PnKey=%s ;件号标识符\n", (char*)g_pncSysPara.m_sPnKey);

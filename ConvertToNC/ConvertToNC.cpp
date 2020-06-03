@@ -373,8 +373,7 @@ void InitApplication()
 	//œ‘ æ∂‘ª∞øÚ
 #ifndef __UBOM_ONLY_
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
-	if (g_pncSysPara.m_bAutoLayout == CPNCSysPara::LAYOUT_SEG)
-		g_xDockBarManager.DisplayPartListDockBar();
+	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 #endif
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	g_xUbomModel.InitBomTblCfg();

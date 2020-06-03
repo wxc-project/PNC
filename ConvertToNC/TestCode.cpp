@@ -192,7 +192,7 @@ void TestPnc()
 	CLogErrorLife logErrLife(&MyLogFile);
 	CHashStrList<PLATE_COMPARE> plateCompareItems;
 	if (srcPlateHash.GetNodeNum() != destPlateHash.GetNodeNum())
-		MyLogFile.Log("钢板数量不一样");
+		MyLogFile.Log("钢板数量不一样{%d!=%d}",srcPlateHash.GetNodeNum(),destPlateHash.GetNodeNum());
 	PLATE_COMPARE* pCmpItem = NULL;
 	CProcessPlate* pPlate = NULL;
 	for (pPlate = srcPlateHash.GetFirst(); pPlate; pPlate = srcPlateHash.GetNext())
