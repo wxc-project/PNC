@@ -349,10 +349,10 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 	}
 }
 
-void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet, int *piInvalidCirCountForText)
+void CPlateProcessInfo::PreprocessorBoltEnt(int *piInvalidCirCountForText)
 {	//合并圆心相同的圆，同一圆心只保留直径最大的圆
 	CHashStrList<CAD_ENTITY*> hashEntPtrByCenterStr;	//记录圆心对应的直径最大的螺栓实体
-	hashInvalidBoltCirPtrSet.Empty();
+	m_xHashInvalidBoltCir.Empty();
 	for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
 	{
 		if (pEnt->ciEntType != TYPE_BLOCKREF &&
@@ -368,7 +368,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 			if ((m_bCirclePlate && cir_center.IsEqual(pEnt->pos)) ||
 				(pEnt->m_fSize<0 || pEnt->m_fSize>CPlateExtractor::MAX_BOLT_HOLE))
 			{	//环型板的同心圆和直径超过100的圆都不可能时螺栓孔 wxc 20-04-15
-				hashInvalidBoltCirPtrSet.SetValue((DWORD)pEnt, pEnt);
+				m_xHashInvalidBoltCir.SetValue((DWORD)pEnt, pEnt);
 				continue;
 			}
 		}
@@ -379,11 +379,11 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 		{
 			if ((*ppEntPtr)->m_fSize > pEnt->m_fSize)
 			{	//pEnt直径较小为螺栓内圆需要忽略
-				hashInvalidBoltCirPtrSet.SetValue((DWORD)pEnt, pEnt);
+				m_xHashInvalidBoltCir.SetValue((DWORD)pEnt, pEnt);
 			}
 			else
 			{	//**ppEntPtr螺栓直径较小为螺栓内圆需要忽略
-				hashInvalidBoltCirPtrSet.SetValue((DWORD)(*ppEntPtr), *ppEntPtr);
+				m_xHashInvalidBoltCir.SetValue((DWORD)(*ppEntPtr), *ppEntPtr);
 				hashEntPtrByCenterStr.DeleteNode(sKey);
 				hashEntPtrByCenterStr.SetValue(sKey, pEnt);
 			}
@@ -434,7 +434,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBo
 				scope.fMinZ = scope.fMaxZ = 0;
 				if (scope.IsIncludePoint(pEnt->pos))
 				{
-					hashInvalidBoltCirPtrSet.SetValue((DWORD)pCirEnt, pCirEnt);
+					m_xHashInvalidBoltCir.SetValue((DWORD)pCirEnt, pCirEnt);
 					hashEntPtrByCenterStr.DeleteCursor();
 					nInvalidCount++;
 				}
@@ -473,16 +473,15 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	boltList.Empty();
 	xPlate.m_cFaceN=1;
 	DeleteAssisstPts();
-	CHashSet<CAD_ENTITY*> hashInvalidBoltCirPtrSet;
 	int nInvalidCirCountForText = 0;
-	PreprocessorBoltEnt(hashInvalidBoltCirPtrSet, &nInvalidCirCountForText);
+	PreprocessorBoltEnt(&nInvalidCirCountForText);
 	if (nInvalidCirCountForText > 0)
 		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！",(char*)xPlate.GetPartNo(),nInvalidCirCountForText);
 	//baseInfo应定义在For循环外，否则多行多次提取会导致之前的提取到的结果被冲掉 wht 19-10-22
 	BASIC_INFO baseInfo;
 	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
 	{
-		if (hashInvalidBoltCirPtrSet.GetValue((DWORD)pRelaObj))
+		if (m_xHashInvalidBoltCir.GetValue((DWORD)pRelaObj))
 			continue;	//过滤掉无效的螺栓实体（大圆内的小圆、件号标注） wht 19-07-20
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
 		if ((pEnt = objLife.GetEnt()) == NULL)
@@ -1633,18 +1632,17 @@ SCOPE_STRU CPlateProcessInfo::GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK/*=T
 	}
 	return scope;
 }
-void CPlateProcessInfo::InitLayoutVertex()
+void CPlateProcessInfo::InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType)
 {
 	datumStartVertex.Init();
 	datumEndVertex.Init();
-	//
-	if (vertexList.GetNodeNum() > 3)
-	{
-		SCOPE_STRU scope = GetCADEntScope();
-		GEPOINT ptLeftBtm(scope.fMinX, scope.fMinY);
-		datumStartVertex.srcPos = ptLeftBtm;
-		datumEndVertex.srcPos = datumStartVertex.srcPos;
-	}
+	GEPOINT datumPt;
+	if (ciLayoutType == 0)	//水平排布时，以左下角为基准点
+		datumPt.Set(scope.fMinX, scope.fMinY);
+	else                    //竖直排布时，以左上角为基准点
+		datumPt.Set(scope.fMinX, scope.fMaxY);
+	datumStartVertex.srcPos = datumPt;
+	datumEndVertex.srcPos = datumStartVertex.srcPos;
 }
 void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/*=FALSE*/,BOOL bDrawAsBlock/*=FALSE*/, GEPOINT *pPlateCenter /*= NULL*/)
 {	
@@ -1765,8 +1763,6 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 		AfxMessageBox("获取块表记录失败!");
 		return;
 	}
-	vector<AcDbObjectId> newAddCadEnt;
-	//绘制文本标注位置
 	AcDbObjectId entId;
 	if (vertexList.GetNodeNum() > 3)
 	{
@@ -1776,11 +1772,11 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 			VERTEX *pCurVer = vertexList.GetByIndex(i);
 			VERTEX *pNextVer = vertexList.GetByIndex((i + 1) % n);
 			entId = DimText(pBlockTableRecord, pCurVer->pos, CXhChar16("%d", i),
-				TextStyleTable::hzfs.textStyleId, 2, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+				TextStyleTable::hzfs.textStyleId, 2, 0, AcDb::kTextCenter, AcDb::kTextVertMid, AcDbObjectId::kNull, g_pncSysPara.crMode.crEdge);
 			m_newAddEntIdList.append(entId.asOldId());
 			if (pCurVer->ciEdgeType == 1)
 			{
-				entId = CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos);
+				entId = CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, g_pncSysPara.crMode.crEdge);
 				m_newAddEntIdList.append(entId.asOldId());
 			}
 			else
@@ -1788,28 +1784,38 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 				GEPOINT ptS = pCurVer->pos, ptE = pNextVer->pos, org = pCurVer->arc.center, norm = pCurVer->arc.work_norm;
 				f3dArcLine arcline;
 				arcline.CreateMethod3(ptS, ptE, norm, pCurVer->arc.radius, org);
-				entId = CreateAcadArcLine(pBlockTableRecord, arcline.Center(), arcline.Start(), arcline.SectorAngle(), arcline.WorkNorm());
+				entId = CreateAcadArcLine(pBlockTableRecord, arcline.Center(), arcline.Start(), arcline.SectorAngle(), arcline.WorkNorm(), 0, g_pncSysPara.crMode.crEdge);
 				m_newAddEntIdList.append(entId.asOldId());
 			}
 		}
 		//绘制螺栓
 		for (BOLT_INFO* pHole = boltList.GetFirst(); pHole; pHole = boltList.GetNext())
 		{
-			entId = CreateAcadCircle(pBlockTableRecord, f3dPoint(pHole->posX, pHole->posY, 0), pHole->bolt_d*0.5);
+			COLORREF clr = g_pncSysPara.crMode.crOtherLS;
+			if (pHole->cFuncType < 2 && pHole->bolt_d == 12)
+				clr = g_pncSysPara.crMode.crLS12;
+			else if (pHole->cFuncType < 2 && pHole->bolt_d == 16)
+				clr = g_pncSysPara.crMode.crLS16;
+			else if (pHole->cFuncType < 2 && pHole->bolt_d == 20)
+				clr = g_pncSysPara.crMode.crLS20;
+			else if (pHole->cFuncType < 2 && pHole->bolt_d == 24)
+				clr = g_pncSysPara.crMode.crLS24;
+			double fHoleR = (pHole->bolt_d + pHole->hole_d_increment)*0.5;
+			entId = CreateAcadCircle(pBlockTableRecord, f3dPoint(pHole->posX, pHole->posY, 0), fHoleR, 0, clr);
 			m_newAddEntIdList.append(entId.asOldId());
 		}
 	}
 	else
 	{
-		entId = DimText(pBlockTableRecord, dim_pos, GetPartNo(), TextStyleTable::hzfs.textStyleId, 2, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+		entId = DimText(pBlockTableRecord, dim_pos, GetPartNo(), TextStyleTable::hzfs.textStyleId, 2, 0, AcDb::kTextCenter, AcDb::kTextVertMid, AcDbObjectId::kNull, g_pncSysPara.crMode.crEdge);
 		m_newAddEntIdList.append(entId.asOldId());
-		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y + 10));
+		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y + 10), 0, 0, g_pncSysPara.crMode.crEdge);
 		m_newAddEntIdList.append(entId.asOldId());
-		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y - 10));
+		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y - 10), 0, 0, g_pncSysPara.crMode.crEdge);
 		m_newAddEntIdList.append(entId.asOldId());
-		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y - 10));
+		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y - 10), 0, 0, g_pncSysPara.crMode.crEdge);
 		m_newAddEntIdList.append(entId.asOldId());
-		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y + 10));
+		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y + 10), 0, 0, g_pncSysPara.crMode.crEdge);
 		m_newAddEntIdList.append(entId.asOldId());
 	}
 	//
@@ -3175,37 +3181,42 @@ void CPNCModel::DrawPlatesToCompare()
 		return;
 	}
 	DRAGSET.ClearEntSet();
-	SEGI prevSegI, curSegI;
 	f3dPoint datum_pos;
-	CMaxDouble maxHeight;
+	double fSegSpace = 0;
 	CSortedModel sortedModel(this);
-	for (CPlateProcessInfo *pPlate = sortedModel.EnumFirstPlate(); pPlate; pPlate = sortedModel.EnumNextPlate())
+	sortedModel.DividPlatesBySeg();		//根据段号对钢板进行分组
+	for (CSortedModel::SAMESEG_PARTGROUP* pGroup = sortedModel.hashPlateGroupBySeg.GetFirst(); pGroup;
+		pGroup = sortedModel.hashPlateGroupBySeg.GetNext())
 	{
-		CXhChar16 sPartNo = pPlate->GetPartNo();
-		ParsePartNo(sPartNo, &curSegI, NULL, "SHPGT");
-		CXhChar16 sSegStr = curSegI.ToString();
-		if (sSegStr.GetLength() > 3)
-		{	//段号字符串长度大于3时，再次从段号中提取一次分段号（处理5401-48类件号） wht 19-03-07
-			SEGI segI;
-			if (ParsePartNo(sSegStr, &segI, NULL, "SHPGT"))
-				curSegI = segI;
-		}
-		SCOPE_STRU scope = pPlate->GetCADEntScope();
-		double wide = scope.wide() + 20;
-		double high = scope.high() + 20;
-		maxHeight.Update(high * 2);
-		pPlate->InitLayoutVertex();
-		pPlate->DrawPlate(&f3dPoint(datum_pos.x, datum_pos.y));
-		pPlate->DrawPlateProfile(&f3dPoint(datum_pos.x, datum_pos.y + high));
-		datum_pos.x += wide;
-		if (prevSegI.iSeg == 0)
-			prevSegI = curSegI;
-		else if (prevSegI.iSeg != curSegI.iSeg)
-		{
-			prevSegI = curSegI;
+		if (g_pncSysPara.m_ciArrangeType == 0)
+		{	//以行为主
 			datum_pos.x = 0;
-			datum_pos.y += maxHeight + 200;
-			maxHeight.number = 0;
+			datum_pos.y += fSegSpace;
+			double fRectH = pGroup->GetMaxHight() + 20;
+			fSegSpace = fRectH * 2 + 100;
+			for (CPlateProcessInfo *pPlate = pGroup->EnumFirstPlate(); pPlate; pPlate = pGroup->EnumNextPlate())
+			{
+				SCOPE_STRU scope = pPlate->GetCADEntScope();
+				pPlate->InitLayoutVertex(scope, 0);
+				pPlate->DrawPlate(&f3dPoint(datum_pos.x, datum_pos.y));
+				pPlate->DrawPlateProfile(&f3dPoint(datum_pos.x, datum_pos.y + fRectH));
+				datum_pos.x += scope.wide() + 50;
+			}
+		}
+		else
+		{	//以列为主
+			datum_pos.x += fSegSpace;
+			datum_pos.y = 0;
+			double fRectW = pGroup->GetMaxWidth() + 20;
+			fSegSpace = fRectW * 2 + 500;
+			for (CPlateProcessInfo *pPlate = pGroup->EnumFirstPlate(); pPlate; pPlate = pGroup->EnumNextPlate())
+			{
+				SCOPE_STRU scope = pPlate->GetCADEntScope();
+				pPlate->InitLayoutVertex(scope, 1);
+				pPlate->DrawPlate(&f3dPoint(datum_pos.x, datum_pos.y));
+				pPlate->DrawPlateProfile(&f3dPoint(datum_pos.x + fRectW, datum_pos.y));
+				datum_pos.y -= (scope.high() + 50);
+			}
 		}
 	}
 #ifdef __DRAG_ENT_
@@ -3397,6 +3408,62 @@ CPlateProcessInfo *CSortedModel::EnumNextPlate()
 {
 	CPlateProcessInfo **ppPlate=platePtrList.GetNext();
 	if(ppPlate)
+		return *ppPlate;
+	else
+		return NULL;
+}
+void CSortedModel::DividPlatesBySeg()
+{
+	hashPlateGroupBySeg.Empty();
+	SEGI segI, temSegI;
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+	{
+		CXhChar16 sPartNo = pPlate->GetPartNo();
+		ParsePartNo(sPartNo, &segI, NULL, "SHPGT");
+		CXhChar16 sSegStr = segI.ToString();
+		if (sSegStr.GetLength() > 3)
+		{
+			if (ParsePartNo(sSegStr, &temSegI, NULL, "SHPGT"))
+				segI = temSegI;
+		}
+		SAMESEG_PARTGROUP* pPlateGroup = hashPlateGroupBySeg.GetValue(segI.iSeg);
+		if (pPlateGroup == NULL)
+			pPlateGroup = hashPlateGroupBySeg.Add(segI.iSeg);
+		pPlateGroup->sameSegPlateList.append(pPlate);
+	}
+}
+double CSortedModel::SAMESEG_PARTGROUP::GetMaxHight()
+{
+	CMaxDouble maxHeight;
+	for (CPlateProcessInfo* pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+	{
+		SCOPE_STRU scope = pPlate->GetCADEntScope();
+		maxHeight.Update(scope.high());
+	}
+	return maxHeight.number;
+}
+double CSortedModel::SAMESEG_PARTGROUP::GetMaxWidth()
+{
+	CMaxDouble maxHeight;
+	for (CPlateProcessInfo* pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+	{
+		SCOPE_STRU scope = pPlate->GetCADEntScope();
+		maxHeight.Update(scope.wide());
+	}
+	return maxHeight.number;
+}
+CPlateProcessInfo* CSortedModel::SAMESEG_PARTGROUP::EnumFirstPlate()
+{
+	CPlateProcessInfo** ppPlate = sameSegPlateList.GetFirst();
+	if (ppPlate)
+		return *ppPlate;
+	else
+		return NULL;
+}
+CPlateProcessInfo* CSortedModel::SAMESEG_PARTGROUP::EnumNextPlate()
+{
+	CPlateProcessInfo** ppPlate = sameSegPlateList.GetNext();
+	if (ppPlate)
 		return *ppPlate;
 	else
 		return NULL;

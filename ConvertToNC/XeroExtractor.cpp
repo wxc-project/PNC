@@ -540,7 +540,7 @@ void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
 	//解析字符串，获取件数值
 	CXhChar100 str,sValue(sText);
 	sValue.Replace("　"," ");
-	if(m_iDimStyle==0)
+	if(m_iDimStyle==0 || strstr(sValue,m_sPnKey))
 		sValue.Replace(m_sPnKey,"| ");
 	for(char* sSubStr=strtok(sValue," \t"); sSubStr; sSubStr =strtok(NULL," \t"))
 	{

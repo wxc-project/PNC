@@ -1660,7 +1660,7 @@ CBomModel::CBomModel(void)
 	m_sProcessDescArr[TYPE_PUSH_FLAT].Copy("Ñ¹±â|´ò±â|");
 	m_sProcessDescArr[TYPE_KAI_JIAO].Copy("¿ª½Ç");
 	m_sProcessDescArr[TYPE_HE_JIAO].Copy("ºÏ½Ç");
-	m_sProcessDescArr[TYPE_FOO_NAIL].Copy("½Å¶¤");
+	m_sProcessDescArr[TYPE_FOO_NAIL].Copy("´ø½Å¶¤");
 }
 CBomModel::~CBomModel(void)
 {

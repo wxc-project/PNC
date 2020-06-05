@@ -113,10 +113,10 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMaxEdgeLen"))
 		g_pncSysPara.m_nMaxEdgeLen = atoi(valueStr);
-	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_iPPiMode"))
-		g_pncSysPara.m_iPPiMode=valueStr[0]-'0';
-	else if(pItem->m_idProp==CPNCSysPara::GetPropID("AxisXCalType"))
-		g_pncSysPara.m_iAxisXCalType=valueStr[0]-'0';
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iPPiMode"))
+		g_pncSysPara.m_iPPiMode = valueStr[0] - '0';
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("AxisXCalType"))
+		g_pncSysPara.m_iAxisXCalType = valueStr[0] - '0';
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciLayoutMode"))
 	{
 		g_pncSysPara.m_ciLayoutMode = valueStr[0] - '0';
@@ -127,6 +127,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			pPartListDlg->RefreshCtrlState();
 #endif
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciArrangeType"))
+		g_pncSysPara.m_ciArrangeType = valueStr[0] - '0';
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapWidth"))
 		g_pncSysPara.m_nMapWidth=atoi(valueStr);
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapLength"))
@@ -220,6 +222,28 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		else //if(pItem->m_idProp==CPNCSysPara::GetPropID("m_iBendLineColorIndex"))
 			g_pncSysPara.m_ciBendLineColorIndex = GetNearestACI(curClr);
 	}
+	else if (pItem->m_idProp >= CPNCSysPara::GetPropID("crMode.crEdge") &&
+			pItem->m_idProp <= CPNCSysPara::GetPropID("crMode.crOtherLS"))
+	{
+		COLORREF curClr = 0;
+		char tem_str[100] = "";
+		sprintf(tem_str, "%s", valueStr);
+		memmove(tem_str, tem_str + 3, 97);//跳过RGB
+		sscanf(tem_str, "%X", &curClr);
+		int clrIndex = GetNearestACI(curClr);
+		if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode.crEdge"))
+			g_pncSysPara.crMode.crEdge = curClr;
+		else if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode.crLS12"))
+			g_pncSysPara.crMode.crLS12 = curClr;
+		else if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode.crLS16"))
+			g_pncSysPara.crMode.crLS16 = curClr;
+		else if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode.crLS20"))
+			g_pncSysPara.crMode.crLS20 = curClr;
+		else if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode.crLS24"))
+			g_pncSysPara.crMode.crLS24 = curClr;
+		else if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode.crOtherLS"))
+			g_pncSysPara.crMode.crOtherLS = curClr;
+	}
 	return TRUE;
 }
 static BOOL ButtonClickSystemSetting(CPropertyList *pPropList, CPropTreeItem* pItem)
@@ -259,6 +283,20 @@ BOOL FirePickColor(CPropertyList* pPropList, CPropTreeItem* pItem, COLORREF &clr
 	CPNCSysSettingDlg *pParaDlg = (CPNCSysSettingDlg*)pPropList->GetParent();
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iBendLineColorIndex") ||
 		pItem->m_idProp == CPNCSysPara::GetPropID("m_iProfileColorIndex"))
+	{
+#ifdef __PNC_
+		pParaDlg->m_idEventProp = pItem->m_idProp;	//记录触发事件的属性ID
+		pParaDlg->m_arrCmdPickPrompt.RemoveAll();
+#ifdef AFX_TARG_ENU_ENGLISH
+		pParaDlg->m_arrCmdPickPrompt.Add("\nplease select an line <Enter confirm>:\n");
+#else
+		pParaDlg->m_arrCmdPickPrompt.Add("\n请选择一根直线拾取颜色<Enter确认>:\n");
+#endif
+		pParaDlg->SelectEntObj();
+#endif
+	}
+	else if (pItem->m_idProp >= CPNCSysPara::GetPropID("crMode.crEdge") &&
+		pItem->m_idProp <= CPNCSysPara::GetPropID("crMode.crOtherLS"))
 	{
 #ifdef __PNC_
 		pParaDlg->m_idEventProp = pItem->m_idProp;	//记录触发事件的属性ID
@@ -601,9 +639,9 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_listCtrlSysSetting.SetKeyDownItemFunc(_LocalKeyDownItemFunc);
 	m_listCtrlSysSetting.SetLButtonDblclkFunc(FireLButtonDblclk);
 	m_listCtrlSysSetting.SetContextMenuFunc(FireContextMenu);//设置右键菜单回调函数
-	CWnd *pBtmWnd = GetDlgItem(IDC_E_PROP_HELP_STR);
-	m_propList.m_hPromptWnd = pBtmWnd->GetSafeHwnd();
-	m_propList.SetDividerScale(0.45);
+	//CWnd *pBtmWnd = GetDlgItem(IDC_E_PROP_HELP_STR);
+	//m_propList.m_hPromptWnd = pBtmWnd->GetSafeHwnd();
+	m_propList.SetDividerScale(0.6);
 	//
 	g_pncSysPara.InitPropHashtable();
 #ifdef __PNC_
@@ -926,6 +964,15 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 		oper.InsertEditPropItem(pParentItem, "m_nMkRectLen", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMkRectWidth", "", "", -1, TRUE);
 	}
+	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
+	{
+		oper.InsertCmbListPropItem(pParentItem, "m_ciArrangeType", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pParentItem, "crMode.crEdge","","","",-1,TRUE);
+		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS12", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS16", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS20", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS24", "", "", "", -1, TRUE);
+	}
 }
 void CPNCSysSettingDlg::OnBnClickedBtnDefault()
 {
@@ -950,10 +997,11 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 		return;
 	//由于选择实体内部重启
 	CAD_SCREEN_ENT *pCADEnt = resultList.GetFirst();
+	if (pCADEnt == NULL)
+		return;
 	CPropTreeItem *pItem = m_propList.FindItemByPropId(m_idEventProp, NULL);
-	if (pCADEnt&&pItem &&
-		(CPNCSysPara::GetPropID("m_iProfileColorIndex") == pItem->m_idProp ||
-			CPNCSysPara::GetPropID("m_iBendLineColorIndex") == pItem->m_idProp))
+	if (CPNCSysPara::GetPropID("m_iProfileColorIndex") == pItem->m_idProp ||
+			CPNCSysPara::GetPropID("m_iBendLineColorIndex") == pItem->m_idProp)
 	{
 		m_propList.SetFocus();
 		m_propList.SetCurSel(pItem->m_iIndex);	//选中指定属性
@@ -970,6 +1018,35 @@ void CPNCSysSettingDlg::FinishSelectObjOper()
 			g_pncSysPara.m_ciBendLineColorIndex = iColorIndex;
 		else
 			return;
+		if (g_pncSysPara.GetPropValueStr(pItem->m_idProp, tem_str) > 0)
+			m_propList.SetItemPropValue(pItem->m_idProp, CString(tem_str));
+	}
+	else if (pItem->m_idProp >= CPNCSysPara::GetPropID("crMode.crEdge") &&
+		pItem->m_idProp <= CPNCSysPara::GetPropID("crMode.crOtherLS"))
+	{
+		m_propList.SetFocus();
+		m_propList.SetCurSel(pItem->m_iIndex);	//选中指定属性
+		CAcDbObjLife acdbObjLife(pCADEnt->m_idEnt);
+		AcDbEntity *pEnt = acdbObjLife.GetEnt();
+		if (pEnt == NULL)
+			return;
+		int iColorIndex = GetEntColorIndex(pEnt);
+		COLORREF clr = GetColorFromIndex(iColorIndex);
+		if (CPNCSysPara::GetPropID("crMode.crLS12") == pItem->m_idProp)
+			g_pncSysPara.crMode.crLS12 = clr;
+		else if (CPNCSysPara::GetPropID("crMode.crLS16") == pItem->m_idProp)
+			g_pncSysPara.crMode.crLS16 = clr;
+		else if (CPNCSysPara::GetPropID("crMode.crLS20") == pItem->m_idProp)
+			g_pncSysPara.crMode.crLS20 = clr;
+		else if (CPNCSysPara::GetPropID("crMode.crLS24") == pItem->m_idProp)
+			g_pncSysPara.crMode.crLS24 = clr;
+		else if (CPNCSysPara::GetPropID("crMode.crOtherLS") == pItem->m_idProp)
+			g_pncSysPara.crMode.crOtherLS = clr;
+		else if (CPNCSysPara::GetPropID("crMode.crEdge") == pItem->m_idProp)
+			g_pncSysPara.crMode.crEdge = clr;
+		else
+			return;
+		char tem_str[100] = "";
 		if (g_pncSysPara.GetPropValueStr(pItem->m_idProp, tem_str) > 0)
 			m_propList.SetItemPropValue(pItem->m_idProp, CString(tem_str));
 	}
