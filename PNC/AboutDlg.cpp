@@ -98,19 +98,22 @@ BOOL CAboutDlg::OnInitDialog()
 	m_xListCtrl.AddColumnHeader("时间",160);
 	m_xListCtrl.InitListCtrl();
 	//
-	CXhChar50 sModuleArr[4] = {"PNC05.arx","PNC07.arx","PNC10.arx","PNC19.zrx"};
 	CStringArray str_arr;
 	str_arr.SetSize(3);
+	int nModelCount = 4;
 #ifdef __UBOM_ONLY_
+	CXhChar50 sModuleArr[4] = { "PNC05.arx","PNC07.arx","PNC10.arx","PNC19.zrx"};
 	str_arr[0] = "UBOM.exe";
 #else
+	nModelCount = 5;
+	CXhChar50 sModuleArr[5] = { "PNC05.arx","PNC07.arx","PNC10.arx","PNC19.zrx","PPE.exe" };
 	str_arr[0] = "PNC.exe";
 #endif
 	str_arr[1] = sVersion;
 	str_arr[2] = sReleaseDateTime;
 	m_xListCtrl.InsertItemRecord(-1, str_arr);
 	CXhChar500 sFilePath;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < nModelCount; i++)
 	{
 		sFilePath.Printf("%s%s", APP_PATH, (char*)sModuleArr[i]);
 		GetProductVersion(sFilePath, sVersion, sReleaseDateTime);

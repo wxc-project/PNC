@@ -755,7 +755,7 @@ BEGIN
             VALUE "FileDescription", "PPE Microsoft 基础类应用程序"
             VALUE "FileVersion", "1, 0, 0, 1"
             VALUE "InternalName", "PPE"
-            VALUE "LegalCopyright", "版权所有 (C) 2006-2015"
+            VALUE "LegalCopyright", "版权所有 (C) 2006-2020"
             VALUE "OriginalFilename", "PPE.EXE"
             VALUE "ProductName", "PPE 应用程序"
             VALUE "ProductVersion", "1, 2, 0, 0"

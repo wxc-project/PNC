@@ -37,7 +37,7 @@ BEGIN
             VALUE "FileDescription", "UBOM Microsoft 基础类应用程序"
             VALUE "FileVersion", RELEASE_FILE_VER
             VALUE "InternalName", "UBOM.exe"
-            VALUE "LegalCopyright", "版权所有 (C) 2015-2019"
+            VALUE "LegalCopyright", "版权所有 (C) 2015-2020"
             VALUE "OriginalFilename", "UBOM.exe"
             VALUE "ProductName", "UBOM 应用程序"
             VALUE "ProductVersion", RELEASE_PRODUCT_VER
@@ -58,7 +58,7 @@ BEGIN
             VALUE "FileDescription", "PNC Microsoft 基础类应用程序"
             VALUE "FileVersion", RELEASE_FILE_VER
             VALUE "InternalName", "PNC.exe"
-            VALUE "LegalCopyright", "版权所有 (C) 2015-2019"
+            VALUE "LegalCopyright", "版权所有 (C) 2015-2020"
             VALUE "OriginalFilename", "PNC.exe"
             VALUE "ProductName", "PNC 应用程序"
             VALUE "ProductVersion", RELEASE_PRODUCT_VER

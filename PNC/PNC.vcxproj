@@ -106,7 +106,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(Configuration)\</OutDir>
+    <OutDir>..\bin\UBOMDebug\</OutDir>
+    <TargetName>UBOM</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>

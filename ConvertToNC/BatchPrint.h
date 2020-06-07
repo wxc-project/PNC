@@ -6,6 +6,7 @@
 #include "XhCharString.h"
 #include "BomModel.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 struct PLOT_CFG
 {
 public:
@@ -90,3 +91,4 @@ public:
 	static PLOT_CFG m_xPngPlotCfg;
 	static PLOT_CFG m_xPaperPlotCfg;
 };
+#endif

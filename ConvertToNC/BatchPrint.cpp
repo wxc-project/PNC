@@ -6,6 +6,7 @@
 #include "dbplotsetval.h"
 #include "CadObjLife.h"
 
+#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 static CXhChar500 GetTempFileFolderPath(bool bEmpty,const char* subFolder)
 {	//获取临时文件路径
 	//CXhChar500 sSysPath;
@@ -614,3 +615,4 @@ void batPlot()
 	pLayout->close();
 }
 */
+#endif

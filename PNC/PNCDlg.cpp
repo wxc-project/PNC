@@ -126,7 +126,16 @@ void CPNCDlg::RefreshCheckShowState()
 	}
 	CString sProductVersion = GetProductVersion(sCadName);
 	if (sProductVersion.Find("16.") == 0)
+	{
 		GetDlgItem(IDC_CHK_ENABLE_DOCK_WND)->ShowWindow(SW_SHOW);
+		char sValue[MAX_PATH]="",sSubKey[MAX_PATH] = "Software\\Xerofox\\UBOM\\Settings";
+		GetRegKey(HKEY_CURRENT_USER, sSubKey, "DOCK_WND", sValue);
+		if (stricmp(sValue, "1") == 0)
+			m_bChkEnableDocWnd = TRUE;
+		else
+			m_bChkEnableDocWnd = FALSE;
+		UpdateData(FALSE);
+	}
 	else
 		GetDlgItem(IDC_CHK_ENABLE_DOCK_WND)->ShowWindow(SW_HIDE);
 #else
@@ -261,6 +270,10 @@ void CPNCDlg::OnOK()
 		char sSubKey[MAX_PATH]="Software\\Xerofox\\PNC\\Settings";
 #ifdef __UBOM_ONLY_
 		strcpy(sSubKey, "Software\\Xerofox\\UBOM\\Settings");
+		if (m_bChkEnableDocWnd)	//记录是否启用停靠窗口 wht 20-06-07
+			SetRegKey(HKEY_CURRENT_USER, sSubKey, "DOCK_WND", "1");
+		else
+			SetRegKey(HKEY_CURRENT_USER, sSubKey, "DOCK_WND", "0");
 #endif
 		SetRegKey(HKEY_CURRENT_USER, sSubKey, "CAD_PATH", cadPath);
 		return OnCancel();
