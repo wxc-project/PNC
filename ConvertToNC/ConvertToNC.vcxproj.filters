@@ -342,6 +342,15 @@
     <ClCompile Include="TestCode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="BatchPrint.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
+    <ClCompile Include="PrintSet.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
+    <ClCompile Include="CadObjLife.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -616,6 +625,12 @@
     </ClInclude>
     <ClInclude Include="TestCode.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchPrint.h">
+      <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="CadObjLife.h">
+      <Filter>UBOM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -428,7 +428,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 {
 	m_sRecordNum = "";
 	m_sCurFile = "";
-	TREEITEM_INFO *pInfo=(TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
+	TREEITEM_INFO *pInfo = hItem != NULL ? (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem) : NULL;
 	if(pInfo==NULL || hItem==NULL)
 		return;
 	CSuperGridCtrl::CTreeItem *pItem = NULL;
@@ -1444,6 +1444,11 @@ void CRevisionDlg::OnBatchPrintPart()
 	COptimalSortDlg dlg;
 	dlg.Init(pDwgInfo);
 	if (dlg.DoModal() == IDOK)
+	{
+		CBatchPrint batchPrint(&dlg.m_xPrintScopyList,TRUE,dlg.m_iPrintType);
+		batchPrint.Print();
+	}
+	/*
 	{	//判断打印机是否合理
 		AcApLayoutManager *pLayMan = NULL;
 		pLayMan = (AcApLayoutManager *)acdbHostApplicationServices()->layoutManager();
@@ -1537,6 +1542,7 @@ void CRevisionDlg::OnBatchPrintPart()
 #endif
 		}
 	}
+	*/
 }
 
 #endif

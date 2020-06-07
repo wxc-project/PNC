@@ -806,7 +806,7 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJ
 #endif
 	}
 	//读取DWG文件信息
-	CWaitCursor wait;
+	//CWaitCursor wait;
 	CDwgFileInfo* pDwgFile = FindDwgBomInfo(sFileName);
 	if (pDwgFile)
 	{

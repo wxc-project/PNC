@@ -64,6 +64,7 @@ public:
 	AcDbObjectId partNumId;		//加工数ID
 	AcDbObjectId singleNumId;	//单基数ID
 	AcDbObjectId sumWeightId;	//总重ID
+	CXhChar200 m_sTowerType;
 public:
 	CAngleProcessInfo();
 	~CAngleProcessInfo();

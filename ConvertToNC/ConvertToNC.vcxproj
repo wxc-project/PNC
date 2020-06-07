@@ -688,7 +688,7 @@
     <OutDir>..\bin\UBOMDebug7\</OutDir>
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
-    <TargetName>PNC07</TargetName>
+    <TargetName>UBOM07</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">
     <IntDir>$(Configuration)\</IntDir>
@@ -1167,7 +1167,7 @@
       <PreprocessorDefinitions>__UBOM_ONLY_;_ARX_2007;__CAD_CONTEXT_;WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__DRAG_ENT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;__XHLICAGENT_2_;_AGILITY_DRAW;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\ARXSDK\ObjectARX 2007\inc;..\..\XhCore\PartLib;..\..\XhLmd;..\..\XhLmd\AES;..\..\XhLmd\DES;..\..\XhLmd\RSA;..\..\XhLmd\DogDrvs;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\XhLmd\XhLmd</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>.\Debug7/PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Debug7/</AssemblerListingLocation>
       <ObjectFileName>.\Debug7/</ObjectFileName>
@@ -1176,12 +1176,12 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <OutputFile>$(OutDir)PNC07.arx</OutputFile>
+      <OutputFile>$(OutDir)UBOM07.arx</OutputFile>
       <LinkDLL>true</LinkDLL>
       <ProgramDatabaseFile>.\Debug7/PNC.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>D:\ObjectARX 2007\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\ARXSDK\ObjectARX 2007\lib;..\..\XhLmd\DogDrvs</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb17.lib;acge17.lib;acISMobj17.lib;adui17.lib;acui17.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
     </Link>
@@ -2963,10 +2963,12 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="AdjustPlateMCS.cpp" />
+    <ClCompile Include="BatchPrint.cpp" />
     <ClCompile Include="BOM.cpp" />
     <ClCompile Include="BomModel.cpp" />
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
+    <ClCompile Include="CadObjLife.cpp" />
     <ClCompile Include="ConvertToNC.cpp" />
     <ClCompile Include="DocManagerReactor.cpp" />
     <ClCompile Include="DrawDamBoard.cpp" />
@@ -2983,6 +2985,7 @@
     <ClCompile Include="PNCSysPara.cpp" />
     <ClCompile Include="PNCSysSettingDlg.cpp" />
     <ClCompile Include="PolygonObject.cpp" />
+    <ClCompile Include="PrintSet.cpp" />
     <ClCompile Include="ProcBarDlg.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="StdAfx.cpp">
@@ -3076,6 +3079,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\XhTreeCtrl.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\DimStyle.h" />
     <ClInclude Include="AdjustPlateMCS.h" />
+    <ClInclude Include="BatchPrint.h" />
     <ClInclude Include="BOM.h" />
     <ClInclude Include="BomModel.h" />
     <ClInclude Include="CADCallBackDlg.h" />
@@ -3212,6 +3216,7 @@
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
+    <ClInclude Include="CadObjLife.h" />
     <ClInclude Include="DockBarManager.h" />
     <ClInclude Include="DocManagerReactor.h" />
     <ClInclude Include="DrawDamBoard.h" />

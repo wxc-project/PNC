@@ -7,7 +7,7 @@
 #include "SortFunc.h"
 #include "ComparePartNoString.h"
 #include "ParseAdaptNo.h"
-//#include "SelectJgCardDlg.h"
+#include "BatchPrint.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 
@@ -224,6 +224,7 @@ COptimalSortDlg::COptimalSortDlg(CWnd* pParent /*=NULL*/)
 	m_nQ235Count = m_nQ345Count = m_nQ355Count = m_nQ390Count = m_nQ420Count = m_nQ460Count = 0;
 	m_nJgCount = m_nPlateCount = m_nYGCount = m_nTubeCount = m_nJiaCount = m_nFlatCount = m_nGgsCount = 0;
 	m_nCutAngle = m_nKaiHe = m_nPushFlat = m_nCutRoot = m_nCutBer = m_nBend = m_nCommonAngle = 0;
+	m_iPrintType = 0;
 }
 
 COptimalSortDlg::~COptimalSortDlg()
@@ -284,6 +285,8 @@ BEGIN_MESSAGE_MAP(COptimalSortDlg, CDialog)
 	ON_EN_CHANGE(IDC_E_WIDTH, OnEnChangeEWidth)
 	ON_EN_CHANGE(IDC_E_THICK, OnEnChangeEThick)
 	ON_BN_CLICKED(IDOK, &COptimalSortDlg::OnBnClickedOk)
+	ON_BN_CLICKED(IDC_BTN_PDF, &COptimalSortDlg::OnBnClickedBtnPdf)
+	ON_BN_CLICKED(IDC_BTN_PNG, &COptimalSortDlg::OnBnClickedBtnPng)
 END_MESSAGE_MAP()
 
 
@@ -525,7 +528,6 @@ void COptimalSortDlg::OnEnChangeEWidth()
 void COptimalSortDlg::OnOK()
 {
 	m_xPrintScopyList.Empty();
-	const int MARGIN = 1;
 	POSITION pos = m_xListCtrl.GetFirstSelectedItemPosition();
 	while(pos!=NULL)
 	{
@@ -535,22 +537,14 @@ void COptimalSortDlg::OnOK()
 		if (sTypeName.CompareNoCase("¸Ö°å") == 0)
 		{
 			CPlateProcessInfo* pSelPlateInfo = (CPlateProcessInfo*)pItem->m_idProp;
-			SCOPE_STRU scope = pSelPlateInfo->GetCADEntScope();
-			scope.fMaxX += MARGIN;
-			scope.fMaxY += MARGIN;
-			scope.fMinX -= MARGIN;
-			scope.fMinY -= MARGIN;
-			m_xPrintScopyList.append(scope);
+			PRINT_SCOPE *pScope = m_xPrintScopyList.append();
+			pScope->Init(pSelPlateInfo);
 		}
 		else
 		{
 			CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pItem->m_idProp;
-			SCOPE_STRU scope = pSelJgInfo->GetCADEntScope();
-			scope.fMaxX += MARGIN;
-			scope.fMaxY += MARGIN;
-			scope.fMinX -= MARGIN;
-			scope.fMinY -= MARGIN;
-			m_xPrintScopyList.append(scope);
+			PRINT_SCOPE *pScope = m_xPrintScopyList.append();
+			pScope->Init(pSelJgInfo);
 		}
 	}
 	if (m_xPrintScopyList.GetNodeNum() == 1)
@@ -561,23 +555,15 @@ void COptimalSortDlg::OnOK()
 		{
 			if (ppAngle == NULL || *ppAngle == NULL)
 				continue;
-			SCOPE_STRU scope = (*ppAngle)->GetCADEntScope();
-			scope.fMaxX += MARGIN;
-			scope.fMaxY += MARGIN;
-			scope.fMinX -= MARGIN;
-			scope.fMinY -= MARGIN;
-			m_xPrintScopyList.append(scope);
+			PRINT_SCOPE *pScope = m_xPrintScopyList.append();
+			pScope->Init(*ppAngle);
 		}
 		for (CPlateProcessInfo** ppPlate = m_xPlateList.GetFirst(); ppPlate; ppPlate = m_xPlateList.GetNext())
 		{
 			if (ppPlate == NULL || *ppPlate == NULL)
 				continue;
-			SCOPE_STRU scope = (*ppPlate)->GetCADEntScope();
-			scope.fMaxX += MARGIN;
-			scope.fMaxY += MARGIN;
-			scope.fMinX -= MARGIN;
-			scope.fMinY -= MARGIN;
-			m_xPrintScopyList.append(scope);
+			PRINT_SCOPE *pScope=m_xPrintScopyList.append();
+			pScope->Init(*ppPlate);
 		}
 	}
 	return CDialog::OnOK();
@@ -586,8 +572,21 @@ void COptimalSortDlg::OnOK()
 
 void COptimalSortDlg::OnBnClickedOk()
 {
+	m_iPrintType = CBatchPrint::PRINT_TYPE_PAPER;
 	OnOK();
 	//CDialog::OnOK();
+}
+
+void COptimalSortDlg::OnBnClickedBtnPdf()
+{
+	m_iPrintType = CBatchPrint::PRINT_TYPE_PDF;
+	OnOK();
+}
+
+void COptimalSortDlg::OnBnClickedBtnPng()
+{
+	m_iPrintType = CBatchPrint::PRINT_TYPE_PNG;
+	OnOK();
 }
 
 void COptimalSortDlg::Init(CDwgFileInfo *pDwgFile)

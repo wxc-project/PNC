@@ -3,6 +3,7 @@
 #include "supergridctrl.h"
 #include "BomModel.h"
 #include "ArrayList.h"
+#include "BatchPrint.h"
 // COptimalSortDlg 对话框
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
@@ -17,6 +18,8 @@ class COptimalSortDlg : public CDialog
 	int m_nQ235Count, m_nQ345Count, m_nQ355Count, m_nQ390Count, m_nQ420Count, m_nQ460Count;
 	int m_nJgCount, m_nPlateCount, m_nYGCount, m_nTubeCount, m_nJiaCount, m_nFlatCount, m_nGgsCount;
 	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle;
+	int m_iPrintType;
+public:
 public:
 	COptimalSortDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COptimalSortDlg();
@@ -51,7 +54,7 @@ public:
 	CString m_sThick;
 	int m_nRecord;
 	//
-	ATOM_LIST<SCOPE_STRU> m_xPrintScopyList;
+	ATOM_LIST<PRINT_SCOPE> m_xPrintScopyList;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -64,5 +67,7 @@ protected:
 public:
 	afx_msg void OnBnClickedOk();
 	
+	afx_msg void OnBnClickedBtnPdf();
+	afx_msg void OnBnClickedBtnPng();
 };
 #endif
