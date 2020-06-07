@@ -106,6 +106,7 @@ public:
 	ATOM_LIST<BOLT_INFO> boltList;
 	//钢板关联实体
 	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;	
+	CHashSet<CAD_ENTITY*> m_xHashInvalidBoltCir;		//记录无效的圆圈，方便后期输出对比
 	CHashList<ACAD_LINEID> m_hashCloneEdgeEntIdByIndex;
 	CHashList<ULONG> m_hashColneEntIdBySrcId;
 	ARRAY_LIST<ULONG> m_cloneEntIdList;
@@ -115,7 +116,7 @@ public:
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
-	void PreprocessorBoltEnt(CHashSet<CAD_ENTITY*> &hashInvalidBoltCirPtrSet, int *piInvalidCirCountForText);
+	void PreprocessorBoltEnt(int *piInvalidCirCountForText);
 	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt);
 	void InternalExtractPlateRelaEnts();
 public:
@@ -142,7 +143,7 @@ public:
 	//绘制钢板
 	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
 	void InitEdgeEntIdMap();
-	void InitLayoutVertex();
+	void InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType);
 	void DrawPlate(f3dPoint *pOrgion=NULL,BOOL bCreateDimPos=FALSE,BOOL bDrawAsBlock=FALSE,GEPOINT *pPlateCenter=NULL);
 	void DrawPlateProfile(f3dPoint *pOrgion = NULL);
 	//钢板钢印位置处理
@@ -248,10 +249,23 @@ class CSortedModel
 {
 	ARRAY_LIST<CPlateProcessInfo*> platePtrList;
 public:
+	struct SAMESEG_PARTGROUP
+	{
+		ATOM_LIST<CPlateProcessInfo*> sameSegPlateList;
+		long iSeg;
+		//
+		double GetMaxHight();
+		double GetMaxWidth();
+		CPlateProcessInfo *EnumFirstPlate();
+		CPlateProcessInfo *EnumNextPlate();
+	};
+	CHashList<SAMESEG_PARTGROUP> hashPlateGroupBySeg;
+public:
 	CSortedModel(CPNCModel *pModel);
-
+	//
 	CPlateProcessInfo *EnumFirstPlate();
 	CPlateProcessInfo *EnumNextPlate();
+	void DividPlatesBySeg();
 };
 //////////////////////////////////////////////////////////////////////////
 //

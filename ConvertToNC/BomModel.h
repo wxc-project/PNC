@@ -277,6 +277,7 @@ public:
 	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新单基数)
 	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈(DWG校审|更新加工数)
 	static const BYTE ID_QingDao_QLGJG		= 7;	//青岛强力刚结构(DWG校审|更新加工数)
+	static const BYTE ID_QingDao_ZAILI		= 8;	//青岛载力(DWG校审|更新加工数|更新基数|批量打印)
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
 	BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24

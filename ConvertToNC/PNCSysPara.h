@@ -25,6 +25,15 @@ public:
 			m_bMark=bFilter;
 		}
 	};
+	//颜色方案
+	struct COLOR_MODE {
+		COLORREF crEdge;
+		COLORREF crLS12;
+		COLORREF crLS16;
+		COLORREF crLS20;
+		COLORREF crLS24;
+		COLORREF crOtherLS;
+	}crMode;
 private:
 	CHashStrList<LAYER_ITEM> m_xHashDefaultFilterLayers;
 	CHashStrList<LAYER_ITEM> m_xHashEdgeKeepLayers;
@@ -44,6 +53,7 @@ public:
 	static const BYTE LAYOUT_PRINT	 = 2;
 	static const BYTE LAYOUT_SEG	 = 3;
 	BYTE m_ciLayoutMode;	//显示模式 0.克隆模式|1.对比模式|2.排版模式|3.预审模式
+	BYTE m_ciArrangeType;	//0.以行为主|1.以列为主
 	int m_nMapLength;		//图纸长度 0表示不设置纸张长度
 	int m_nMapWidth;		//图纸宽度
 	int m_nMinDistance;		//最小间距

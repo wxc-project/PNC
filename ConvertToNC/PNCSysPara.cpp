@@ -59,6 +59,7 @@ void CPNCSysPara::Init()
 	m_sJgCardBlockName.Empty();
 	//自动排版设置
 	m_ciLayoutMode = 0;
+	m_ciArrangeType = 1;
 	m_nMapWidth = 1500;
 	m_nMapLength = 0;
 	m_nMinDistance = 0;
@@ -75,7 +76,13 @@ void CPNCSysPara::Init()
 	m_sProfileLineType.Copy("CONTINUOUS");
 	m_fPixelScale = 0.6;
 	m_fMaxLenErr = 0.5;
-	//默认过滤图层名
+	//默认颜色设置
+	crMode.crEdge = RGB(255, 0, 0);
+	crMode.crLS12 = RGB(0, 255, 255);
+	crMode.crLS16 = RGB(0, 255, 0);
+	crMode.crLS20 = RGB(255, 0, 255);
+	crMode.crLS24 = RGB(255, 255, 0);
+	crMode.crOtherLS = RGB(255, 255, 255);
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
 	RECOG_SCHEMA *pSchema = InsertRecogSchema("单行1", 0, "#", "Q", "-");
@@ -94,7 +101,7 @@ void CPNCSysPara::Init()
 	InsertRecogSchema("多行8", 1, "件号:", "材质:", "板厚:", "件数", "外曲", "内曲");
 	
 #ifdef __PNC_
-	//InitDrawingEnv();
+	//默认过滤图层名
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName, LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName, 1));//不可见轮廓线
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::BoltSymbolLayer.layerName, LAYER_ITEM(LayerTable::BoltSymbolLayer.layerName, 1));		//螺栓图符
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::BendLineLayer.layerName, LAYER_ITEM(LayerTable::BendLineLayer.layerName, 1));		//角钢火曲、钢板火曲
@@ -170,6 +177,13 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("CDrawDamBoard::m_bDrawAllBamBoard", PROPLIST_ITEM(id++, "档板显示模式", "档板显示模式", "0.仅显示选中钢板档板|1.显示所有档板"));
 	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
 	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
+	AddPropItem("m_ciArrangeType", PROPLIST_ITEM(id++, "排布方案", "","0.以行为主|1.以列为主"));
+	AddPropItem("crMode.crEdge", PROPLIST_ITEM(id++, "轮廓边颜色"));
+	AddPropItem("crMode.crLS12", PROPLIST_ITEM(id++, "M12孔径颜色"));
+	AddPropItem("crMode.crLS16", PROPLIST_ITEM(id++, "M16孔径颜色"));
+	AddPropItem("crMode.crLS20", PROPLIST_ITEM(id++, "M20孔径颜色"));
+	AddPropItem("crMode.crLS24", PROPLIST_ITEM(id++, "M24孔径颜色"));
+	AddPropItem("crMode.crOtherLS", PROPLIST_ITEM(id++, "其他孔径颜色"));
 }
 int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100*/,CPropTreeItem *pItem/*=NULL*/)
 {
@@ -243,6 +257,13 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else //if (g_pncSysPara.m_ciLayoutMode == 3)
 			sText.Copy("3.下料预审");
 	}
+	else if (GetPropID("m_ciArrangeType") == id)
+	{
+		if (g_pncSysPara.m_ciArrangeType == 0)
+			sText.Copy("0.以行为主");
+		else
+			sText.Copy("1.以列为主");
+	}
 	else if(GetPropID("m_nMapLength")==id)
 		sText.Printf("%d",g_pncSysPara.m_nMapLength);
 	else if(GetPropID("m_nMapWidth")==id)
@@ -314,6 +335,16 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("RGB%X",GetColorFromIndex(m_ciBendLineColorIndex));
 	else if(GetPropID("m_iProfileLineTypeName")==id)
 		sText.Copy(m_sProfileLineType);
+	else if (GetPropID("crMode.crLS12") == id)
+		sText.Printf("RGB%X", crMode.crLS12);
+	else if (GetPropID("crMode.crLS16") == id)
+		sText.Printf("RGB%X", crMode.crLS16);
+	else if (GetPropID("crMode.crLS20") == id)
+		sText.Printf("RGB%X", crMode.crLS20);
+	else if (GetPropID("crMode.crLS24") == id)
+		sText.Printf("RGB%X", crMode.crLS24);
+	else if (GetPropID("crMode.crEdge") == id)
+		sText.Printf("RGB%X", crMode.crEdge);
 	if(valueStr)
 		StrCopy(valueStr,sText,nMaxStrBufLen);
 	return strlen(sText);
@@ -719,7 +750,10 @@ void PNCSysSetImportDefault()
 		else if (_stricmp(key_word, "PPIMode") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iPPiMode);
 		else if (_stricmp(key_word, "LayoutMode") == 0)
-			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_ciLayoutMode);
+		{
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciLayoutMode = nTemp;
+		}
 		else if (_stricmp(key_word, "MapLength") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMapLength);
 		else if (_stricmp(key_word, "MapWidth") == 0)
