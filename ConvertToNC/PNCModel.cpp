@@ -1788,6 +1788,16 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 				m_newAddEntIdList.append(entId.asOldId());
 			}
 		}
+		//»æÖÆ»ðÇúÏß
+		for (int i = 0; i < xPlate.m_cFaceN-1; i++)
+		{
+			f3dLine line;
+			if (xPlate.GetBendLineAt(i, &line) != 0)
+			{
+				entId = CreateAcadLine(pBlockTableRecord, line.startPt, line.endPt, 0, 0, g_pncSysPara.crMode.crEdge);
+				m_newAddEntIdList.append(entId.asOldId());
+			}
+		}
 		//»æÖÆÂÝË¨
 		for (BOLT_INFO* pHole = boltList.GetFirst(); pHole; pHole = boltList.GetNext())
 		{

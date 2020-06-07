@@ -58,7 +58,7 @@ void CPNCSysPara::Init()
 	m_sPartLabelTitle.Empty();
 	m_sJgCardBlockName.Empty();
 	//自动排版设置
-	m_ciLayoutMode = 0;
+	m_ciLayoutMode = 1;
 	m_ciArrangeType = 1;
 	m_nMapWidth = 1500;
 	m_nMapLength = 0;
@@ -72,7 +72,7 @@ void CPNCSysPara::Init()
 	m_ciRecogMode = 0;
 	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
 	m_ciProfileColorIndex = 1;		//红色
-	m_ciBendLineColorIndex = 190;	//紫色
+	m_ciBendLineColorIndex = 0;		//无颜色
 	m_sProfileLineType.Copy("CONTINUOUS");
 	m_fPixelScale = 0.6;
 	m_fMaxLenErr = 0.5;
@@ -148,16 +148,12 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_iPPiMode",PROPLIST_ITEM(id++,"文件生成模型","PPI文件生成模式","0.一板一号|1.一板多号"));
 	AddPropItem("m_bMKPos",PROPLIST_ITEM(id++,"提取钢印位置","提取钢印位置","是|否"));
 	AddPropItem("AxisXCalType",PROPLIST_ITEM(id++,"X轴计算方式","加工坐标系X轴的计算方式","0.最长边优先|1.螺栓平行边优先|2.焊接边优先"));
-	AddPropItem("m_bUseMaxEdge", PROPLIST_ITEM(id++, "启用特殊边长", "用于处理料片提取", "是|否"));
+	AddPropItem("m_bUseMaxEdge", PROPLIST_ITEM(id++, "处理特殊边长", "用于处理料片提取", "是|否"));
 	AddPropItem("m_nMaxEdgeLen", PROPLIST_ITEM(id++, "最大边长", "进行料片提取的特殊边长"));
 	//识别模式
 	AddPropItem("RecogMode",PROPLIST_ITEM(id++,"识别模式","识别模式"));
 	AddPropItem("m_fMapScale", PROPLIST_ITEM(id++, "识别比例", "绘图缩放比例"));
-#ifdef __PIXEL_RECOG_
-	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别模式", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别|3.按像素识别"));
-#else
-	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别模式", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别"));
-#endif
+	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别模式", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别|3.智能识别"));
 	AddPropItem("m_iProfileLineTypeName", PROPLIST_ITEM(id++, "轮廓边线型", "钢板外轮廓边线型", "CONTINUOUS|HIDDEN|DASHDOT2X|DIVIDE|ZIGZAG"));
 	AddPropItem("m_iProfileColorIndex",PROPLIST_ITEM(id++,"轮廓边颜色","钢板外轮廓边颜色"));
 	AddPropItem("m_iBendLineColorIndex",PROPLIST_ITEM(id++,"火曲线颜色","钢板制弯线颜色"));
@@ -169,7 +165,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "普通螺栓圆圈", "", "按照特殊孔处理|根据标准孔径判断"));
 	//显示模式
 	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
-	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","0.图元克隆|1.钢板对比|2.自动排版|3.下料预审"));
+	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","1.钢板对比|2.自动排版|3.下料预审"));
 	AddPropItem("m_nMapWidth", PROPLIST_ITEM(id++, "图纸宽度", "图纸宽度"));
 	AddPropItem("m_nMapLength", PROPLIST_ITEM(id++, "图纸长度", "图纸长度"));
 	AddPropItem("m_nMinDistance", PROPLIST_ITEM(id++, "最小间距", "图形之间的最小间距"));
@@ -248,14 +244,14 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("%.f",g_pncSysPara.m_fMapScale);
 	else if (GetPropID("m_ciLayoutMode") == id)
 	{
-		if (g_pncSysPara.m_ciLayoutMode == 0)
-			sText.Copy("0.图元克隆");
-		else if (g_pncSysPara.m_ciLayoutMode == 1)
+		if (g_pncSysPara.m_ciLayoutMode == 1)
 			sText.Copy("1.钢板对比");
 		else if (g_pncSysPara.m_ciLayoutMode == 2)
 			sText.Copy("2.自动排版");
-		else //if (g_pncSysPara.m_ciLayoutMode == 3)
+		else if (g_pncSysPara.m_ciLayoutMode == 3)
 			sText.Copy("3.下料预审");
+		else
+			sText.Copy("0.图元克隆");
 	}
 	else if (GetPropID("m_ciArrangeType") == id)
 	{
@@ -301,7 +297,7 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else if (m_ciRecogMode == FILTER_BY_COLOR)
 			sText.Copy("2.按颜色识别");
 		else if (m_ciRecogMode == FILTER_BY_PIXEL)
-			sText.Copy("3.按像素识别");
+			sText.Copy("3.智能识别");
 	}
 	else if (GetPropID("m_fPixelScale") == id)
 	{
@@ -388,11 +384,8 @@ BOOL CPNCSysPara::IsProfileEnt(AcDbEntity* pEnt)
 BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
 	BOOL bRet=CPlateExtractor::IsBendLine(pAcDbLine,pRecognizer);
-	if(!bRet)
-	{	
-		if(m_ciRecogMode==FILTER_BY_COLOR)
-			bRet=(GetEntColorIndex(pAcDbLine)==m_ciBendLineColorIndex);
-	}
+	if (!bRet && m_ciBendLineColorIndex > 0 && m_ciBendLineColorIndex < 255)
+		bRet = (GetEntColorIndex(pAcDbLine) == m_ciBendLineColorIndex);
 	return bRet;
 }
 
