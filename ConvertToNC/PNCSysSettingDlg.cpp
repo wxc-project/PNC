@@ -189,7 +189,6 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
 		{	//按颜色识别
 			oper.InsertCmbColorPropItem(pItem, "m_iProfileColorIndex", "", "", "", -1, TRUE);
-			oper.InsertCmbColorPropItem(pItem, "m_iBendLineColorIndex", "", "", "", -1, TRUE);
 		}
 		else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 		{	//按图层识别
@@ -200,10 +199,12 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		{	//按线型识别
 			oper.InsertCmbListPropItem(pItem, "m_iProfileLineTypeName", "", "", "", -1, TRUE);
 		}
+#ifdef __ALFA_TEST_
 		else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
-		{
+		{	//像素处理比例
 			oper.InsertEditPropItem(pItem, "m_fPixelScale", "", "", -1, TRUE);
 		}
+#endif
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fPixelScale"))
 		g_pncSysPara.m_fPixelScale = atof(valueStr);
@@ -639,9 +640,9 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_listCtrlSysSetting.SetKeyDownItemFunc(_LocalKeyDownItemFunc);
 	m_listCtrlSysSetting.SetLButtonDblclkFunc(FireLButtonDblclk);
 	m_listCtrlSysSetting.SetContextMenuFunc(FireContextMenu);//设置右键菜单回调函数
-	//CWnd *pBtmWnd = GetDlgItem(IDC_E_PROP_HELP_STR);
-	//m_propList.m_hPromptWnd = pBtmWnd->GetSafeHwnd();
-	m_propList.SetDividerScale(0.6);
+	CWnd *pBtmWnd = GetDlgItem(IDC_E_PROP_HELP_STR);
+	m_propList.m_hPromptWnd = pBtmWnd->GetSafeHwnd();
+	m_propList.SetDividerScale(0.45);
 	//
 	g_pncSysPara.InitPropHashtable();
 #ifdef __PNC_
@@ -783,6 +784,7 @@ void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 	int iCurSel = m_ctrlPropGroup.GetCurSel();
 	m_listCtrlSysSetting.ShowWindow(iCurSel == PROPGROUP_RULE ? SW_HIDE : SW_SHOW);
 	m_propList.ShowWindow(iCurSel == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_E_PROP_HELP_STR)->ShowWindow(iCurSel == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
 	if (iCurSel == PROPGROUP_RULE)
 	{
 		m_propList.m_iPropGroup = iCurSel;
@@ -878,7 +880,6 @@ void CPNCSysSettingDlg::UpdateUbomSettingProp()
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
 	{	//按颜色识别
 		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");
-		oper.InsertCmbColorPropItem(pPropItem, "m_iBendLineColorIndex");
 	}
 	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 	{	//按图层识别
@@ -888,10 +889,6 @@ void CPNCSysSettingDlg::UpdateUbomSettingProp()
 	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 	{	//按线型识别
 		oper.InsertCmbListPropItem(pPropItem, "m_iProfileLineTypeName");
-	}
-	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
-	{	//按像素识别
-		oper.InsertEditPropItem(pPropItem, "m_fPixelScale");
 	}
 }
 void CPNCSysSettingDlg::UpdatePncSettingProp()
@@ -901,16 +898,17 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	CPropTreeItem *pPropItem = NULL, *pGroupItem = NULL, *pItem = NULL;
 	//常规设置
 	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
-	oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");
-	if (g_pncSysPara.m_bReplaceSH)
-		oper.InsertCmbListPropItem(pPropItem, "m_nReplaceHD");
+	//下面属性不用，可以考虑去掉
+	//oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");		
+	//pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");
+	//if (g_pncSysPara.m_bReplaceSH)
+		//oper.InsertCmbListPropItem(pPropItem, "m_nReplaceHD");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bUseMaxEdge");
 	if(g_pncSysPara.m_bUseMaxEdge)
 		oper.InsertCmbListPropItem(pPropItem, "m_nMaxEdgeLen");
-	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");
 	oper.InsertCmbListPropItem(pGroupItem, "m_bMKPos");
 	oper.InsertCmbListPropItem(pGroupItem, "AxisXCalType");
+	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");
 	//识别模式设置
 	pGroupItem = oper.InsertPropItem(pRootItem, "RecogMode");
 	//oper.InsertEditPropItem(pGroupItem, "m_fMapScale");	//图纸绘图比例
@@ -918,8 +916,7 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
 	{	//按颜色识别
-		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");
-		oper.InsertCmbColorPropItem(pPropItem, "m_iBendLineColorIndex");
+		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");	
 	}
 	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
 	{	//按图层识别
@@ -930,10 +927,14 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	{	//按线型识别
 		oper.InsertCmbListPropItem(pPropItem, "m_iProfileLineTypeName");
 	}
+#ifdef __ALFA_TEST_
 	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
 	{	//按像素识别
 		oper.InsertEditPropItem(pPropItem, "m_fPixelScale");
 	}
+#endif
+	//火曲线识别颜色
+	oper.InsertCmbColorPropItem(pGroupItem, "m_iBendLineColorIndex");
 	//螺栓识别
 	pPropItem = oper.InsertEditPropItem(pGroupItem, "m_ciBoltRecogMode");
 	pPropItem->SetReadOnly();
