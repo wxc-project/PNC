@@ -55,6 +55,8 @@ void CPNCSysPara::Init()
 	m_bUseMaxEdge = FALSE;
 	m_nMaxEdgeLen = 2200;
 	m_sJgCadName.Empty();
+	m_bCmpQualityLevel = TRUE;
+	m_bEqualH_h = FALSE;
 	m_sPartLabelTitle.Empty();
 	m_sJgCardBlockName.Empty();
 	//◊‘∂Ø≈≈∞Ê…Ë÷√
