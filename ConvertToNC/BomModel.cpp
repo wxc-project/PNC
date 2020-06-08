@@ -842,11 +842,14 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 		stricmp(pSrcPart->sSpec, pDesPart->sSpec) != 0)
 		hashBoolByPropName.SetValue(CBomModel::KEY_SPEC, TRUE);
 	//材质
-	if (pSrcPart->cMaterial != pDesPart->cMaterial)
+	if(toupper(pSrcPart->cMaterial) != toupper(pDesPart->cMaterial))
+		hashBoolByPropName.SetValue(CBomModel::KEY_MAT, TRUE);
+	else if(pSrcPart->cMaterial!=pDesPart->cMaterial && !g_pncSysPara.m_bEqualH_h)
 		hashBoolByPropName.SetValue(CBomModel::KEY_MAT, TRUE);
 	if (pSrcPart->cMaterial == 'A' && !pSrcPart->sMaterial.Equal(pDesPart->sMaterial))
 		hashBoolByPropName.SetValue(CBomModel::KEY_MAT, TRUE);
-	if (pSrcPart->cQualityLevel != pDesPart->cQualityLevel)
+	//质量等级
+	if (g_pncSysPara.m_bCmpQualityLevel && pSrcPart->cQualityLevel != pDesPart->cQualityLevel)
 		hashBoolByPropName.SetValue(CBomModel::KEY_MAT, TRUE);
 	//角钢定制校审项
 	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::ANGLE)

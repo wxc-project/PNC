@@ -48,14 +48,16 @@
 #define IDC_BTN_MOVE_MK_RECT            128
 #define IDC_CHECK1                      129
 #define IDC_CHK_EDIT_MK                 129
-#define IDC_LIST_                       132
+#define IDC_CHK_GRADE                   131
 #define IDC_LIST_SYSTEM_SETTING_DLG     132
+#define IDC_CHK_MAT_H                   132
 #define IDC_E_SEARCH_TEXT               133
 #define IDC_BTN_SEARCH                  134
 #define IDC_TREE_CTRL                   135
 #define IDD_REVISION_DLG                136
 #define IDC_BTN_PDF                     136
 #define IDC_BTN_PNG                     137
+#define IDC_E_LEN_ERR                   138
 #define IDR_ITEM_CMD_POPUP              140
 #define IDC_TREE_CONTRL                 141
 #define IDC_E_FILE_NAME                 142
@@ -126,7 +128,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        128
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         137
+#define _APS_NEXT_CONTROL_VALUE         140
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

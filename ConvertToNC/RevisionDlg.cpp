@@ -11,6 +11,7 @@
 #include "MsgBox.h"
 #include "ComparePartNoString.h"
 #include "OptimalSortDlg.h"
+#include "PNCSysPara.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -140,6 +141,10 @@ CRevisionDlg::CRevisionDlg(CWnd* pParent /*=NULL*/)
 	m_sCurFile = _T("");
 	m_sRecordNum= _T("");
 	m_sSearchText = _T("");
+	m_sLegErr = _T("");
+	m_bQuality = TRUE;
+	m_bMaterialH = FALSE;
+	//
 	m_nRightMargin=0;
 	m_nBtmMargin=0;
 	m_iCompareMode=0;
@@ -158,6 +163,9 @@ void CRevisionDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Text(pDX, IDC_E_FILE_NAME, m_sCurFile);
 	DDX_Text(pDX, IDC_E_NUM, m_sRecordNum);
 	DDX_Text(pDX, IDC_E_SEARCH_TEXT, m_sSearchText);
+	DDX_Text(pDX, IDC_E_LEN_ERR, m_sLegErr);
+	DDX_Check(pDX, IDC_CHK_GRADE, m_bQuality);
+	DDX_Check(pDX, IDC_CHK_MAT_H, m_bMaterialH);
 }
 
 
@@ -188,6 +196,9 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_DELETE_ITEM,OnDeleteItem)
 	ON_BN_CLICKED(IDC_BTN_SEARCH, OnSearchPart)
 	ON_MESSAGE(WM_ACAD_KEEPFOCUS, OnAcadKeepFocus)
+	ON_BN_CLICKED(IDC_CHK_GRADE, OnBnClickedChkGrade)
+	ON_EN_CHANGE(IDC_E_LEN_ERR, OnEnChangeELenErr)
+	ON_BN_CLICKED(IDC_CHK_MAT_H, &CRevisionDlg::OnBnClickedChkMatH)
 END_MESSAGE_MAP()
 
 // CRevisionDlg 消息处理程序
@@ -198,6 +209,9 @@ BOOL CRevisionDlg::OnInitDialog()
 #else
 	CDialog::OnInitDialog();
 #endif
+	m_bQuality = g_pncSysPara.m_bCmpQualityLevel;
+	m_bMaterialH = g_pncSysPara.m_bEqualH_h;
+	m_sLegErr.Format("%.1f", g_pncSysPara.m_fMaxLenErr);
 	//初始化列表框
 	m_xListReport.EnableSortItems(true,true);
 	m_xListReport.SetGridLineColor(RGB(220, 220, 220));
@@ -1101,9 +1115,7 @@ void CRevisionDlg::OnMove(int x, int y)
 void CRevisionDlg::OnSize(UINT nType, int cx, int cy)
 {
 	RECT rect;
-	CWnd* pWnd=CWnd::GetDlgItem(IDC_TREE_CONTRL);
-	//
-	pWnd=CWnd::GetDlgItem(IDC_LIST_REPORT);
+	CWnd* pWnd=CWnd::GetDlgItem(IDC_LIST_REPORT);
 	if(pWnd->GetSafeHwnd()!=NULL)
 	{
 		pWnd->GetWindowRect(&rect);
@@ -1117,7 +1129,7 @@ void CRevisionDlg::OnSize(UINT nType, int cx, int cy)
 #endif
 		pWnd->MoveWindow(&rect);
 	}
-	pWnd = CWnd::GetDlgItem(IDC_TREE_CONTRL);
+	/*pWnd = CWnd::GetDlgItem(IDC_TREE_CONTRL);
 	if (pWnd->GetSafeHwnd() != NULL)
 	{
 		pWnd->GetWindowRect(&rect);
@@ -1128,7 +1140,7 @@ void CRevisionDlg::OnSize(UINT nType, int cx, int cy)
 		rect.bottom = cy - m_nBtmMargin;
 #endif
 		pWnd->MoveWindow(&rect);
-	}
+	}*/
 	CDialog::OnSize(nType, cx, cy);
 }
 //
@@ -1429,6 +1441,26 @@ LRESULT CRevisionDlg::OnAcadKeepFocus(WPARAM, LPARAM)
 	return TRUE;
 }
 
+void CRevisionDlg::OnBnClickedChkGrade()
+{
+	UpdateData();
+	g_pncSysPara.m_bCmpQualityLevel = m_bQuality;
+	UpdateData(FALSE);
+}
+
+void CRevisionDlg::OnBnClickedChkMatH()
+{
+	UpdateData();
+	g_pncSysPara.m_bEqualH_h = m_bMaterialH;
+	UpdateData(FALSE);
+}
+
+void CRevisionDlg::OnEnChangeELenErr()
+{
+	UpdateData();
+	g_pncSysPara.m_fMaxLenErr = atof(m_sLegErr);
+	UpdateData(FALSE);
+}
 void CRevisionDlg::OnBatchPrintPart()
 {
 	CLogErrorLife logErrLife;
@@ -1544,5 +1576,4 @@ void CRevisionDlg::OnBatchPrintPart()
 	}
 	*/
 }
-
 #endif
