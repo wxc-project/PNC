@@ -78,7 +78,9 @@ public:
 	CXhChar100 m_sJgCadName;		//角钢工艺卡
 	CXhChar16 m_sPartLabelTitle;	//件号标题
 	CXhChar50 m_sJgCardBlockName;	//角钢工艺卡块名称 wht 19-09-24
-	double m_fMaxLenErr;		//长度最大误差值
+	double m_fMaxLenErr;			//长度最大误差值
+	BOOL m_bCmpQualityLevel;		//质量等级校审
+	BOOL m_bEqualH_h;				//Q345是否等于Q355
 public:
 	CPNCSysPara();
 	~CPNCSysPara();

@@ -1594,41 +1594,50 @@ SCOPE_STRU CPlateProcessInfo::GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK/*=T
 {
 	SCOPE_STRU scope;
 	scope.ClearScope();
-	if(bVertexOnly)
+	if (xPlate.vertex_list.GetNodeNum() > 3)
 	{
-		PROFILE_VER* pPreVertex=xPlate.vertex_list.GetTail();
-		for(PROFILE_VER *pVertex=xPlate.vertex_list.GetFirst();pVertex;pVertex=xPlate.vertex_list.GetNext())
+		PROFILE_VER* pPreVertex = xPlate.vertex_list.GetTail();
+		for (PROFILE_VER *pVertex = xPlate.vertex_list.GetFirst(); pVertex; pVertex = xPlate.vertex_list.GetNext())
 		{
-			f3dPoint pt=pPreVertex->vertex;
-			coord_trans(pt,ucs,FALSE);
+			f3dPoint pt = pPreVertex->vertex;
+			coord_trans(pt, ucs, FALSE);
 			scope.VerifyVertex(pt);
-			if(pPreVertex->type==2)
+			if (pPreVertex->type == 2)
 			{
 				f3dPoint axis_len(ucs.axis_x);
 				f3dArcLine arcLine;
-				arcLine.CreateMethod2(pPreVertex->vertex,pVertex->vertex,pPreVertex->work_norm,pPreVertex->sector_angle);
-				f3dPoint startPt=f3dPoint(arcLine.Center())+axis_len*arcLine.Radius();
-				f3dPoint endPt=f3dPoint(arcLine.Center())-axis_len*arcLine.Radius();
-				coord_trans(startPt,ucs,FALSE);
-				coord_trans(endPt,ucs,FALSE);
+				arcLine.CreateMethod2(pPreVertex->vertex, pVertex->vertex, pPreVertex->work_norm, pPreVertex->sector_angle);
+				f3dPoint startPt = f3dPoint(arcLine.Center()) + axis_len * arcLine.Radius();
+				f3dPoint endPt = f3dPoint(arcLine.Center()) - axis_len * arcLine.Radius();
+				coord_trans(startPt, ucs, FALSE);
+				coord_trans(endPt, ucs, FALSE);
 				scope.VerifyVertex(startPt);
 				scope.VerifyVertex(endPt);
 			}
-			pPreVertex=pVertex;
+			pPreVertex = pVertex;
+		}
+		if(!bVertexOnly)
+		{	//处理螺栓孔和钢印号
+			for (BOLT_INFO *pHole = xPlate.m_xBoltInfoList.GetFirst(); pHole; pHole = xPlate.m_xBoltInfoList.GetNext())
+			{
+				double radius = 0.5*pHole->bolt_d;
+				scope.VerifyVertex(f3dPoint(pHole->posX - radius, pHole->posY - radius));
+				scope.VerifyVertex(f3dPoint(pHole->posX + radius, pHole->posY + radius));
+			}
+			if (xPlate.IsDisplayMK() && bDisplayMK)
+				scope.VerifyVertex(f3dPoint(xPlate.mkpos.x, xPlate.mkpos.y));
 		}
 	}
-	else
+	else if(vertexList.GetNodeNum()>3)
 	{
-		for(PROFILE_VER* pVertex=xPlate.vertex_list.GetFirst();pVertex;pVertex=xPlate.vertex_list.GetNext())
-			scope.VerifyVertex(f3dPoint(pVertex->vertex.x,pVertex->vertex.y));
-		for(BOLT_INFO *pHole=xPlate.m_xBoltInfoList.GetFirst();pHole;pHole=xPlate.m_xBoltInfoList.GetNext())
-		{
-			double radius=0.5*pHole->bolt_d;
-			scope.VerifyVertex(f3dPoint(pHole->posX-radius,pHole->posY-radius));
-			scope.VerifyVertex(f3dPoint(pHole->posX+radius,pHole->posY+radius));
-		}
-		if(xPlate.IsDisplayMK() && bDisplayMK)
-			scope.VerifyVertex(f3dPoint(xPlate.mkpos.x,xPlate.mkpos.y));
+		for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+			scope.VerifyVertex(pVer->pos);
+	}
+	else
+	{	//件号标注区域
+		f2dRect rect=GetPnDimRect();
+		scope.VerifyVertex(rect.topLeft);
+		scope.VerifyVertex(rect.bottomRight);
 	}
 	return scope;
 }

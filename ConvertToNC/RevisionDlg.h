@@ -46,6 +46,9 @@ public:
 	CString m_sCurFile;		// 当前显示文件
 	CString m_sRecordNum;	// 显示记录数
 	CString m_sSearchText;
+	CString m_sLegErr;		// 长度误差
+	BOOL m_bQuality;		// 校审质量等级
+	BOOL m_bMaterialH;		// 校审材质H
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -79,6 +82,9 @@ protected:
 	afx_msg void OnDeleteItem();
 	afx_msg void OnSearchPart();
 	afx_msg void OnBatchPrintPart();
+	afx_msg void OnBnClickedChkGrade();
+	afx_msg void OnEnChangeELenErr();
+	afx_msg void OnBnClickedChkMatH();
 	afx_msg LRESULT OnAcadKeepFocus(WPARAM, LPARAM);
 public:
 	CXhTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}
