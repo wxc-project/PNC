@@ -43,6 +43,7 @@ protected:
 	afx_msg void OnOK();
 	afx_msg void OnCancel();
 	afx_msg void OnClose();
+	afx_msg void OnMove(int x, int y);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMClickPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult);

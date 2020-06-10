@@ -82,19 +82,19 @@ void RegisterServerComponents ()
 		L"EnvGeneralSet",          // Local function name
 		ACRX_CMD_MODAL,      // Type
 		&EnvGeneralSet);
-#ifndef __UBOM_ONLY_
-	//¸Ö°åÅÅ°æ
-	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
-		L"LP",        // Global function name
-		L"LP",        // Local function name
-		ACRX_CMD_MODAL,   // Type
-		&LayoutPlates);      
+#ifndef __UBOM_ONLY_   
 	//±à¼­¸Ö°åÐÅÏ¢
 	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
 		L"SendPartEdit",        // Global function name
 		L"SendPartEdit",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&SendPartEditor);            // Function pointer
+	//ÏÔÊ¾¸Ö°åÐÅÏ¢
+	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
+		L"PNC",        // Global function name
+		L"PNC",        // Local function name
+		ACRX_CMD_MODAL,   // Type
+		&ShowPartList);
 	//²åÈë¸ÖÓ¡Çø
 	acedRegCmds->addCommand( L"PNC-MENU",         // Group name 
 		L"MK",
@@ -149,19 +149,19 @@ void RegisterServerComponents ()
 		"EnvGeneralSet",          // Local function name
 		ACRX_CMD_MODAL,      // Type
 		&EnvGeneralSet);
-#ifndef __UBOM_ONLY_
-	//¸Ö°åÅÅ°æ
-	acedRegCmds->addCommand( "PNC-MENU",           // Group name
-		"LP",        // Global function name
-		"LP",        // Local function name
-		ACRX_CMD_MODAL,   // Type
-		&LayoutPlates);      
+#ifndef __UBOM_ONLY_  
 	//±à¼­¸Ö°åÐÅÏ¢
 	acedRegCmds->addCommand( "PNC-MENU",           // Group name
 		"SendPartEdit",        // Global function name
 		"SendPartEdit",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&SendPartEditor);            // Function pointer
+	//ÏÔÊ¾¸Ö°åÐÅÏ¢
+	acedRegCmds->addCommand("PNC-MENU",           // Group name
+		"PNC",        // Global function name
+		"PNC",        // Local function name
+		ACRX_CMD_MODAL,   // Type
+		&ShowPartList);
 	//²åÈë¸ÖÓ¡Çø
 	acedRegCmds->addCommand( "PNC-MENU",         // Group name 
 		"MK",

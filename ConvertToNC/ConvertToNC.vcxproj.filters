@@ -309,9 +309,6 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="ProcBarDlg.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MonoImage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -515,9 +512,6 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\DimStyle.h">
       <Filter>TowerCad</Filter>
     </ClInclude>
-    <ClInclude Include="Version.h">
-      <Filter>资源文件</Filter>
-    </ClInclude>
     <ClInclude Include="DockBarManager.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -587,9 +581,6 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
-    <ClInclude Include="ProcBarDlg.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="MonoImage.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -631,6 +622,9 @@
     </ClInclude>
     <ClInclude Include="CadObjLife.h">
       <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="Version.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -683,6 +677,9 @@
     </None>
     <None Include="PNC-ZRX.def">
       <Filter>PNC</Filter>
+    </None>
+    <None Include="res\ConvertToNC.rc2">
+      <Filter>资源文件</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

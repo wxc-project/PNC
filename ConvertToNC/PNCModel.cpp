@@ -1186,7 +1186,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			vec = (ptE - ptS);
 			normalize(vec);
 		}
-		if (fabs(DISTANCE(ptS, ptE)) < EPS2)
+		if (fabs(DISTANCE(ptS, ptE)) < CPNCModel::DIST_ERROR)
 		{
 			bFinish = TRUE;
 			break;
@@ -1197,9 +1197,9 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 		{
 			if (pLine->m_bMatch)
 				continue;
-			if (pLine->m_ptStart.IsEqual(ptE, EPS2))
+			if (pLine->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
 				linkLineList.append(pLine);
-			else if (pLine->m_ptEnd.IsEqual(ptE, EPS2))
+			else if (pLine->m_ptEnd.IsEqual(ptE, CPNCModel::DIST_ERROR))
 				linkLineList.append(pLine);
 		}
 		if (linkLineList.GetNodeNum() <= 0)
@@ -1209,7 +1209,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			pLine = linkLineList[0];
 			pLine->m_bMatch = TRUE;
 			pLine->m_ciSerial = ciSerial++;
-			if (pLine->m_ptStart.IsEqual(ptE, EPS2))
+			if (pLine->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
 			{
 				pLine->vertex = pLine->m_ptStart;
 				ptE = pLine->m_ptEnd;
@@ -1228,7 +1228,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			for (int i = 0; i < linkLineList.GetNodeNum(); i++)
 			{
 				GEPOINT cur_vec;
-				if (linkLineList[i]->m_ptStart.IsEqual(ptE, EPS2))
+				if (linkLineList[i]->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
 					cur_vec = (linkLineList[i]->m_ptEnd - linkLineList[i]->m_ptStart);
 				else
 					cur_vec = (linkLineList[i]->m_ptStart - linkLineList[i]->m_ptEnd);
@@ -1239,7 +1239,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			pLine = (ACAD_LINEID*)maxValue.m_pRelaObj;
 			pLine->m_bMatch = TRUE;
 			pLine->m_ciSerial = ciSerial++;
-			if (pLine->m_ptStart.IsEqual(ptE, EPS2))
+			if (pLine->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
 			{
 				pLine->vertex = pLine->m_ptStart;
 				ptE = pLine->m_ptEnd;
@@ -2459,7 +2459,7 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 		for (unsigned long *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
 			VerifyVertexByCADEntId(scope, MkCadObjId(*pId));
 	}
-	else if (m_xHashRelaEntIdList.GetNodeNum() > 0)
+	else if (m_xHashRelaEntIdList.GetNodeNum() > 1)
 	{
 		for (CPlateObject::CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
 			VerifyVertexByCADEntId(scope, MkCadObjId(pEnt->idCadEnt));
@@ -2472,10 +2472,10 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 //ExtractPlateInfo
 //ExtractPlateProfile
 const float CPNCModel::ASSIST_RADIUS = 1;
+const float CPNCModel::DIST_ERROR = 0.5;
 CPNCModel::CPNCModel()
 {
 	Empty();
-	DisplayProcess = NULL;
 }
 CPNCModel::~CPNCModel()
 {
@@ -2492,8 +2492,11 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 	AcDbObjectId objId;
 	AcDbEntity *pEnt = NULL;
 	//剔除非轮廓边图元，记录火曲线特征信息
-	for (objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
+	int index = 1, nNum = selectedEntIdSet.GetNodeNum() * 2;
+	DisplayProgress(0, "剔除无效轮廓边...:");
+	for (objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(), index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -2510,8 +2513,9 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 	//剔除孤立线条以及焊缝线
 	const int WELD_MAX_HEIGHT = 20;
 	CHashStrList< ATOM_LIST<ACAD_LINEID> > hashLineArrByPosKeyStr;
-	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
+	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(),index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -2541,6 +2545,7 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 			pEndLineList = hashLineArrByPosKeyStr.Add(endKeyStr);
 		pEndLineList->append(ACAD_LINEID(objId, len));
 	}
+	DisplayProgress(100);
 	for (ATOM_LIST<ACAD_LINEID> *pList = hashLineArrByPosKeyStr.GetFirst(); pList; pList = hashLineArrByPosKeyStr.GetNext())
 	{
 		if (pList->GetNodeNum() != 1)
@@ -2550,7 +2555,6 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 			selectedEntIdSet.DeleteNode(pLineId->m_lineId);
 	}
 	selectedEntIdSet.Clean();
-	
 }
 //根据bpoly命令初始化钢板的轮廓边
 void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
@@ -2784,13 +2788,8 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	AcDbEntity *pEnt = NULL;
 	CHashSet<AcDbObjectId> hashScreenProfileId;
 	ATOM_LIST<f3dArcLine> arrArcLine;
-	int index = 0, nNum = selectedEntIdSet.GetNodeNum();
-	if (DisplayProcess)
-		DisplayProcess(0, "识别钢板轮廓......");
-	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(),index++)
+	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
 	{
-		if (DisplayProcess)
-			DisplayProcess(int(100 * index / nNum), "识别钢板轮廓......");
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt())==NULL)
 			continue;
@@ -2878,8 +2877,6 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 
 		}
 	}
-	if (DisplayProcess)
-		DisplayProcess(100, "识别钢板轮廓");
 #ifdef __TIMER_COUNT_
 	dwPreTick = timer.Relay(2, dwPreTick);
 #endif
@@ -2891,19 +2888,10 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	ocs.axis_y.Set(0, -1, 0);
 	ocs.axis_z.Set(0, 0, -1);
 	CVectorMonoImage xImage;
-	xImage.DisplayProcess = DisplayProcess;
+	xImage.DisplayProcess = DisplayProgress;
 	xImage.SetOCS(ocs, fSacle);
-	if (DisplayProcess)
-		DisplayProcess(0, "初始化工作进行中......");
-	nNum = arrArcLine.GetNodeNum();
 	for (int i = 0; i < arrArcLine.GetNodeNum(); i++)
-	{
-		if (DisplayProcess)
-			DisplayProcess(int(100 * i / nNum), "初始化工作进行中......");
 		xImage.DrawArcLine(arrArcLine[i], arrArcLine[i].feature);
-	}
-	if (DisplayProcess)
-		DisplayProcess(100, "初始化工作完成");
 #ifdef __TIMER_COUNT_
 	dwPreTick = timer.Relay(3, dwPreTick);
 #endif
@@ -2952,13 +2940,11 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 			acdbArclineSet.SetValue(objId.asOldId(), objId);
 	}
 	//根据多段线提取钢板轮廓点
-	if (DisplayProcess)
-		DisplayProcess(0, "提取钢板轮廓点");
 	int nStep = 0, nNum = acdbPolylineSet.GetNodeNum() + acdbArclineSet.GetNodeNum();
+	DisplayProgress(0, "提取钢板轮廓点...:");
 	for (objId = acdbPolylineSet.GetFirst(); objId; objId = acdbPolylineSet.GetNext(), nStep++)
 	{
-		if (DisplayProcess)
-			DisplayProcess(int(100 * nStep / nNum), "提取钢板轮廓点");
+		DisplayProgress(int(100 * nStep / nNum));
 		CPlateProcessInfo tem_plate;
 		if (!tem_plate.InitProfileByAcdbPolyLine(objId))
 			continue;
@@ -2996,8 +2982,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		int nSize = (index == 0) ? line_arr.GetSize() : hashUnmatchLine.GetNodeNum();
 		while (nSize > 0)
 		{
-			if (DisplayProcess)
-				DisplayProcess(int(100 * nStep / nNum), "提取钢板轮廓点");
+			DisplayProgress(int(100 * nStep / nNum));
 			ACAD_LINEID* pStartLine = line_arr.GetFirst();
 			if (index != 0)
 				pStartLine = hashUnmatchLine.GetFirst();
@@ -3045,8 +3030,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 			nSize = (index == 0) ? line_arr.GetSize() : hashUnmatchLine.GetNodeNum();
 		}
 	}
-	if (DisplayProcess)
-		DisplayProcess(100, "提取钢板轮廓点");
+	DisplayProgress(100);
 }
 //处理钢板一板多号的情况
 void CPNCModel::MergeManyPartNo()

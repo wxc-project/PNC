@@ -8,7 +8,6 @@
 #include "BomModel.h"
 #include "RevisionDlg.h"
 #include "LicFuncDef.h"
-#include "ProcBarDlg.h"
 #include "folder_dialog.h"
 #include "DimStyle.h"
 
@@ -18,34 +17,6 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-CProcBarDlg *pProcDlg = NULL;
-static int prevPercent = -1;
-void DisplayProcess(int percent, char *sTitle)
-{
-	if (percent >= 100)
-	{
-		if (pProcDlg != NULL)
-		{
-			pProcDlg->DestroyWindow();
-			delete pProcDlg;
-			pProcDlg = NULL;
-		}
-		return;
-	}
-	else if (pProcDlg == NULL)
-		pProcDlg = new CProcBarDlg(NULL);
-	if (pProcDlg->GetSafeHwnd() == NULL)
-		pProcDlg->Create();
-	if (percent == prevPercent)
-		return;	//跟上次进度一致不需要更新
-	else
-		prevPercent = percent;
-	if (sTitle)
-		pProcDlg->SetTitle(CString(sTitle));
-	else
-		pProcDlg->SetTitle("进度");
-	pProcDlg->Refresh(percent);
-}
 //////////////////////////////////////////////////////////////////////////
 //智能提取板的信息,提取成功后支持排版
 //SmartExtractPlate
@@ -113,7 +84,6 @@ void SmartExtractPlate(CPNCModel *pModel)
 #endif
 		}
 	}
-	pModel->DisplayProcess = DisplayProcess;
 	CLogErrorLife logErrLife;
 	CHashSet<AcDbObjectId> selectedEntList;
 	//默认选择所有的图形，方便后期的过滤使用
@@ -131,8 +101,11 @@ void SmartExtractPlate(CPNCModel *pModel)
 	CHashSet<AcDbObjectId> textIdHash;
 	ATOM_LIST<GEPOINT> holePosList;
 	AcDbEntity *pEnt = NULL;
-	for (AcDbObjectId entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext())
+	int index = 1,nNum= selectedEntList.GetNodeNum();
+	DisplayProgress(0, "识别钢板件号信息...:");
+	for (AcDbObjectId entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext(), index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(entId);
 		if((pEnt = objLife.GetEnt())==NULL)
 			continue;
@@ -209,6 +182,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 			pPlateProcess->xPlate.cMaterial = 'S';
 		}
 	}
+	DisplayProgress(100);
 	if(pModel->GetPlateNum()<=0)
 	{
 		logerr.Log("识别机制不能识别该文件的钢板信息!");
@@ -238,15 +212,19 @@ void SmartExtractPlate(CPNCModel *pModel)
 	//处理钢板一板多号的情况
 	pModel->MergeManyPartNo();
 	//根据轮廓闭合区域更新钢板的基本信息+螺栓信息+轮廓边信息
-	int nSum=0,nValid=0;
+	int nSum = 0, nValid = 0;
+	nNum = pModel->GetPlateNum();
+	DisplayProgress(0,"修订钢板信息...:");
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
 	{
+		DisplayProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractPlateRelaEnts();
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
 		else
 			nValid++;
 	}
+	DisplayProgress(100);
 	//将提取的钢板信息导出到中性文件中
 	CString file_path;
 #ifdef __ALFA_TEST_
@@ -523,13 +501,12 @@ void SendPartEditor()
 }
 
 //////////////////////////////////////////////////////////////////////////
-//钢板布局,自动排版
-//LayoutPlates
+//显示钢板信息
+//ShowPartList
 //////////////////////////////////////////////////////////////////////////
-void LayoutPlates()
+void ShowPartList()
 {	
-	CLogErrorLife logeErrLife;
-	model.DrawPlatesToLayout();
+	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 }
 //////////////////////////////////////////////////////////////////////////
 //实时插入钢印区
@@ -823,9 +800,6 @@ void RevisionPartProcess()
 	//显示对话框
 	int nWidth = g_xUbomModel.InitBomTitle();
 	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
-	CRevisionDlg* pRevisionDlg = g_xDockBarManager.GetRevisionDlgPtr();
-	if (pRevisionDlg)
-		pRevisionDlg->DisplayProcess = DisplayProcess;
 }
 #endif
 //////////////////////////////////////////////////////////////////////////

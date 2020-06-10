@@ -189,10 +189,10 @@ public:
 	CXhChar50 m_sTaStampNo;		//钢印号
 	CXhChar500 m_sWorkPath;		//当前模型对应的工作路径 wht 19-04-02
 	static const float ASSIST_RADIUS;
+	static const float DIST_ERROR;
 public:
 	CPNCModel(void);
 	~CPNCModel(void);
-	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
 	//
 	void Empty();
 	void ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet);

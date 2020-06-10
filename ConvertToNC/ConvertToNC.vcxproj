@@ -1205,7 +1205,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;__SUPPORT_DOCK_UI_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
@@ -2986,7 +2986,6 @@
     <ClCompile Include="PNCSysSettingDlg.cpp" />
     <ClCompile Include="PolygonObject.cpp" />
     <ClCompile Include="PrintSet.cpp" />
-    <ClCompile Include="ProcBarDlg.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -3233,7 +3232,6 @@
     <ClInclude Include="PNCSysPara.h" />
     <ClInclude Include="PNCSysSettingDlg.h" />
     <ClInclude Include="PolygonObject.h" />
-    <ClInclude Include="ProcBarDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RevisionDlg.h" />
     <ClInclude Include="StdAfx.h" />
@@ -3251,6 +3249,7 @@
     <None Include="icon1.ico" />
     <None Include="PNC-ZRX.def" />
     <None Include="PNC.def" />
+    <None Include="res\ConvertToNC.rc2" />
     <None Include="res\il_file.bmp" />
     <None Include="res\Left.bmp" />
     <None Include="res\Left.ico" />
