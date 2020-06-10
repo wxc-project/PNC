@@ -48,6 +48,7 @@ void CPartListDlg::DoDataExchange(CDataExchange* pDX)
 BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_WM_SIZE()
+	ON_WM_MOVE()
 	ON_NOTIFY(NM_CLICK, IDC_PART_LIST, &CPartListDlg::OnNMClickPartList)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_PART_LIST, &CPartListDlg::OnKeydownListPart)
 	ON_BN_CLICKED(IDC_BTN_SEND_TO_PPE, &CPartListDlg::OnBnClickedBtnSendToPpe)
@@ -69,6 +70,7 @@ BOOL CPartListDlg::OnInitDialog()
 #else
 	CDialog::OnInitDialog();
 #endif
+	m_partList.m_arrHeader.RemoveAll();
 	m_partList.AddColumnHeader("件号", 70);
 	m_partList.AddColumnHeader("规格", 40);
 	m_partList.AddColumnHeader("材质", 40);
@@ -219,6 +221,11 @@ void CPartListDlg::OnCancel()
 void CPartListDlg::OnClose()
 {
 	DestroyWindow();
+}
+
+void CPartListDlg::OnMove(int x, int y)
+{
+	CDialog::OnMove(x, y);
 }
 
 void CPartListDlg::OnSize(UINT nType, int cx, int cy)

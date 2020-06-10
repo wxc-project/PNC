@@ -2,17 +2,8 @@
 // Microsoft Visual C++ 生成的包含文件。
 // 供 ConvertToNC.rc 使用
 //
-#define FILE_VER_MAIN2                  0
-#define FILE_VER_SUB                    0
-#define PRODUCT_VER_SUB                 0
-#define RELEASE_VER                     1
-#define FILE_VER_MAIN                   1
-#define FILE_VER_SUB2                   1
-#define PRODUCT_VER_MAIN                1
-#define PRODUCT_VER_MAIN2               2
 #define ID_BTN_DEFAULT                  3
 #define IDR_MENU_ADDORDEL               4
-#define PRODUCT_VER_SUB_05              71
 #define IDS_PROJNAME                    100
 #define IDC_LIST_BOX                    100
 #define IDD_SYSTEM_SETTING_DLG          101
@@ -62,11 +53,8 @@
 #define IDC_TREE_CONTRL                 141
 #define IDC_E_FILE_NAME                 142
 #define IDC_E_NUM                       143
-#define IDD_PROC_BAR_DLG                287
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
-#define IDC_PROGRESS_BAR                1185
-#define IDC_NUMERIC_PROC                1186
 #define IDC_JG_LIST                     6000
 #define IDC_CHE_JG                      6001
 #define IDC_CHE_YG                      6002

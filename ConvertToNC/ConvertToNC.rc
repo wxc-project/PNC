@@ -8,7 +8,6 @@
 // Generated from the TEXTINCLUDE 2 resource.
 //
 #include "afxres.h"
-#include "Version.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -39,50 +38,20 @@ END
 
 3 TEXTINCLUDE 
 BEGIN
+	"#define _AFX_NO_SPLITTER_RESOURCES\r\n"
+	"#define _AFX_NO_OLE_RESOURCES\r\n"
+	"#define _AFX_NO_TRACKER_RESOURCES\r\n"
+	"#define _AFX_NO_PROPERTY_RESOURCES\r\n"
+	"\r\n"
+	"#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)\r\n"
+	"LANGUAGE 4, 2\r\n"
+	"#include ""res\\ConvertToNC.rc2""  // 非 Microsoft Visual C++ 编辑的资源\r\n"
+	"#include ""l.CHS\\afxres.rc""      // 标准组件\r\n"
+	"#endif\r\n"
     "\0"
 END
 
 #endif    // APSTUDIO_INVOKED
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
-// Version
-//
-
-VS_VERSION_INFO VERSIONINFO
- FILEVERSION FILE_VER_MAIN, FILE_VER_MAIN2, FILE_VER_SUB, FILE_VER_SUB2
- PRODUCTVERSION PRODUCT_VER_MAIN, PRODUCT_VER_MAIN2, PRODUCT_VER_SUB, PRODUCT_VER_SUB2
- FILEFLAGSMASK 0x3fL
-#ifdef _DEBUG
- FILEFLAGS 0x1L
-#else
- FILEFLAGS 0x0L
-#endif
- FILEOS 0x4L
- FILETYPE 0x2L
- FILESUBTYPE 0x0L
-BEGIN
-    BLOCK "StringFileInfo"
-    BEGIN
-        BLOCK "040904B0"
-        BEGIN
-            VALUE "CompanyName", "北京信狐天诚软件科技有限公司"
-            VALUE "FileDescription", "ConvertToNC ObjectARX application"
-            VALUE "FileVersion", RELEASE_FILE_VER
-            VALUE "InternalName", "PNC"
-            VALUE "LegalCopyright", "版权所有 (C) 2015-2020"
-            VALUE "OriginalFilename", "PNC.arx"
-            VALUE "ProductName", "ConvertToNC ObjectARX Application"
-            VALUE "ProductVersion", RELEASE_PRODUCT_VER
-        END
-    END
-    BLOCK "VarFileInfo"
-    BEGIN
-        VALUE "Translation", 0x409, 1200
-    END
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -129,7 +98,7 @@ BEGIN
 END
 
 IDD_PART_LIST_DLG DIALOGEX 0, 0, 188, 323
-STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_TOPMOST
 CAPTION "钢板列表"
 FONT 10, "宋体", 400, 0, 0x0
@@ -147,32 +116,22 @@ END
 
 IDD_REVISION_DLG DIALOGEX 0, 0, 279, 300
 STYLE DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
-EXSTYLE WS_EX_CLIENTEDGE
 CAPTION "BOM与工艺数据校审"
 FONT 10, "宋体", 400, 0, 0x86
 BEGIN
-    CONTROL         "",IDC_LIST_REPORT,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,109,20,167,276
-    CONTROL         "",IDC_TREE_CONTRL,"SysTreeView32",TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,2,21,107,233
-    LTEXT           "记录数:",IDC_STATIC,109,9,26,8
-    LTEXT           "当前文件:",IDC_STATIC,1,9,34,8
-    EDITTEXT        IDC_E_FILE_NAME,35,6,74,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_E_NUM,137,6,73,14,ES_AUTOHSCROLL
-    EDITTEXT        IDC_E_SEARCH_TEXT,236,6,40,14,ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "查找",IDC_BTN_SEARCH,215,7,20,13
+    CONTROL         "",IDC_LIST_REPORT,"SysListView32",LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP,109,16,169,280
+    CONTROL         "",IDC_TREE_CONTRL,"SysTreeView32",TVS_EDITLABELS | TVS_SHOWSELALWAYS | WS_BORDER | WS_HSCROLL | WS_TABSTOP,0,16,109,240
+    LTEXT           "记录数:",IDC_STATIC,110,4,26,8
+    LTEXT           "当前文件:",IDC_STATIC,2,4,34,8
+    EDITTEXT        IDC_E_FILE_NAME,35,1,74,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_NUM,138,1,71,14,ES_AUTOHSCROLL
+    EDITTEXT        IDC_E_SEARCH_TEXT,239,1,40,14,ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "查找",IDC_BTN_SEARCH,215,2,20,13
     EDITTEXT        IDC_E_LEN_ERR,52,283,32,12,ES_AUTOHSCROLL
     LTEXT           "--------校审设置--------",IDC_STATIC,8,258,95,8
     CONTROL         "质量等级",IDC_CHK_GRADE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,269,40,10
     LTEXT           "长度误差:",IDC_STATIC,17,285,34,8
     CONTROL         "Q345=Q355",IDC_CHK_MAT_H,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,60,269,45,10
-END
-
-IDD_PROC_BAR_DLG DIALOG 0, 0, 224, 21
-STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "到位进度"
-FONT 10, "宋体"
-BEGIN
-    CONTROL         "Progress1",IDC_PROGRESS_BAR,"msctls_progress32",WS_BORDER,7,4,189,10
-    LTEXT           "100%",IDC_NUMERIC_PROC,197,6,18,8
 END
 
 IDD_EXPLODE_TXT_DLG DIALOGEX 0, 0, 138, 268
@@ -265,13 +224,7 @@ BEGIN
 
     IDD_REVISION_DLG, DIALOG
     BEGIN
-        LEFTMARGIN, 3
-        RIGHTMARGIN, 276
         BOTTOMMARGIN, 296
-    END
-
-    IDD_PROC_BAR_DLG, DIALOG
-    BEGIN
     END
 
     IDD_EXPLODE_TXT_DLG, DIALOG

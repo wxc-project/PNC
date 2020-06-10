@@ -148,7 +148,6 @@ CRevisionDlg::CRevisionDlg(CWnd* pParent /*=NULL*/)
 	m_nRightMargin=0;
 	m_nBtmMargin=0;
 	m_iCompareMode=0;
-	DisplayProcess = NULL;
 }
 
 CRevisionDlg::~CRevisionDlg()
@@ -453,11 +452,10 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			pInfo->itemType != ANGLE_DWG_ITEM &&
 			pInfo->itemType != PLATE_DWG_ITEM)
 			return;
-		if (DisplayProcess)
-			DisplayProcess(0, "显示读取结果......");
 		m_xListReport.DeleteAllItems();
 		if(pInfo->itemType==BOM_ITEM)
 		{
+			DisplayProgress(0, "显示料单信息......");
 			CBomFile* pBom=(CBomFile*)pInfo->dwRefData;
 			nNum = pBom->GetPartNum();
 			BOMPART *pPart = NULL;
@@ -470,8 +468,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				pPart = *ppPart;
 				if(pPart==NULL)
 					continue;
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
+				DisplayProgress(int(100 * index / nNum));
 				pItem=InsertPartToList(m_xListReport,NULL,pPart,NULL);
 				pItem->m_idProp=(long)pPart;
 			}
@@ -480,6 +477,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		}
 		else if(pInfo->itemType==ANGLE_DWG_ITEM)
 		{
+			DisplayProgress(0, "显示角钢图纸信息......");
 			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pDwg->GetJgNum();
 			CAngleProcessInfo *pAngleInfo = NULL;
@@ -492,8 +490,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				pAngleInfo = *ppAngle;
 				if (pAngleInfo == NULL)
 					continue;
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
+				DisplayProgress(int(100 * index / nNum));
 				pItem=InsertPartToList(m_xListReport,NULL,&pAngleInfo->m_xAngle,NULL);
 				pItem->m_idProp=(long)pAngleInfo;
 			}
@@ -502,20 +499,20 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		}
 		else if(pInfo->itemType==PLATE_DWG_ITEM)
 		{
+			DisplayProgress(0, "显示钢板图纸信息......");
 			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pDwg->GetPlateNum();
 			CPlateProcessInfo *pPlateInfo = NULL;
 			ARRAY_LIST<CPlateProcessInfo*> platePtrArr;
-			for (pPlateInfo = pDwg->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwg->EnumNextPlate(), index++)
+			for (pPlateInfo = pDwg->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwg->EnumNextPlate())
 				platePtrArr.append(pPlateInfo);
 			CHeapSort<CPlateProcessInfo*>::HeapSort(platePtrArr.m_pData, platePtrArr.GetSize(), ComparePlatePtrByPartNo);
-			for(CPlateProcessInfo **ppPlateInfo=platePtrArr.GetFirst();ppPlateInfo;ppPlateInfo=platePtrArr.GetNext())
+			for(CPlateProcessInfo **ppPlateInfo=platePtrArr.GetFirst();ppPlateInfo;ppPlateInfo=platePtrArr.GetNext(), index++)
 			{
 				pPlateInfo = *ppPlateInfo;
 				if (pPlateInfo == NULL)
 					continue;
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示读取结果......");
+				DisplayProgress(int(100 * index / nNum));
 				pItem=InsertPartToList(m_xListReport,NULL,&pPlateInfo->xBomPlate,NULL);
 				pItem->m_idProp=(long)pPlateInfo;
 			}
@@ -523,13 +520,11 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			m_sRecordNum.Format("%d", pDwg->GetPlateNum());
 		}
 		m_xListReport.Redraw();
-		if (DisplayProcess)
-			DisplayProcess(100, "显示读取结果......");
+		DisplayProgress(100);
 	}
 	else
 	{
-		if (DisplayProcess)
-			DisplayProcess(0, "显示校审结果......");
+		DisplayProgress(0, "显示校审结果......");
 		m_xListReport.DeleteAllItems();
 		CProjectTowerType::COMPARE_PART_RESULT *pResult=NULL;
 		CProjectTowerType* pProject=GetProject(hItem);
@@ -550,8 +545,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			nNum = pProject->GetResultCount();
 			for (index = 0; index < keyStrArr.GetSize();index++)
 			{	
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				DisplayProgress(int(100 * index / nNum));
 				pResult = pProject->GetResult(keyStrArr[index]);
 				//添加新行并设置背景色
 				if (pResult->pOrgPart)
@@ -579,8 +573,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			nNum = pProject->GetResultCount();
 			for (index = 0; index < keyStrArr.GetSize(); index++)
 			{
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				DisplayProgress(int(100 * index / nNum));
 				pResult = pProject->GetResult(keyStrArr[index]);
 				if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
 				{
@@ -610,8 +603,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			nNum = pProject->GetResultCount();
 			for (index = 0; index < keyStrArr.GetSize(); index++)
 			{
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				DisplayProgress(int(100 * index / nNum));
 				pResult = pProject->GetResult(keyStrArr[index]);
 				if (pResult->pOrgPart && pResult->pOrgPart->cPartType==BOMPART::PLATE)
 				{
@@ -645,8 +637,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			nNum = pProject->GetResultCount();
 			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult(), index++)
 			{	//添加新行并设置背景色
-				if (DisplayProcess)
-					DisplayProcess(int(100 * index / nNum), "显示校审结果......");
+				DisplayProgress(int(100 * index / nNum));
 				if(pResult->pOrgPart)
 					continue;
 				CSuperGridCtrl::CTreeItem* pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
@@ -654,8 +645,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			}
 		}
 		m_xListReport.Redraw();
-		if (DisplayProcess)
-			DisplayProcess(100, "显示校审结果......");
+		DisplayProgress(100);
 	}
 	UpdateData(FALSE);
 }
