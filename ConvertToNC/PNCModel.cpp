@@ -366,7 +366,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(int *piInvalidCirCountForText)
 		else if (pEnt->ciEntType == TYPE_CIRCLE)
 		{
 			if ((m_bCirclePlate && cir_center.IsEqual(pEnt->pos)) ||
-				(pEnt->m_fSize<0 || pEnt->m_fSize>CPlateExtractor::MAX_BOLT_HOLE))
+				(pEnt->m_fSize<0 || pEnt->m_fSize>g_pncSysPara.m_nMaxHoleD))
 			{	//环型板的同心圆和直径超过100的圆都不可能时螺栓孔 wxc 20-04-15
 				m_xHashInvalidBoltCir.SetValue((DWORD)pEnt, pEnt);
 				continue;

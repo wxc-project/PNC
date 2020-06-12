@@ -54,6 +54,7 @@ void CPNCSysPara::Init()
 	m_nReplaceHD = 20;
 	m_bUseMaxEdge = FALSE;
 	m_nMaxEdgeLen = 2200;
+	m_nMaxHoleD = 100;
 	m_sJgCadName.Empty();
 	m_bCmpQualityLevel = TRUE;
 	m_bEqualH_h = FALSE;
@@ -149,6 +150,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_nReplaceHD", PROPLIST_ITEM(id++, "代孔直径", "进行代孔的螺栓直径", "12|16|20|24"));
 	AddPropItem("m_iPPiMode",PROPLIST_ITEM(id++,"文件生成模型","PPI文件生成模式","0.一板一号|1.一板多号"));
 	AddPropItem("m_bMKPos",PROPLIST_ITEM(id++,"提取钢印位置","提取钢印位置","是|否"));
+	AddPropItem("m_nMaxHoleD", PROPLIST_ITEM(id++, "最大螺栓孔径", "最大螺栓孔径"));
 	AddPropItem("AxisXCalType",PROPLIST_ITEM(id++,"X轴计算方式","加工坐标系X轴的计算方式","0.最长边优先|1.螺栓平行边优先|2.焊接边优先"));
 	AddPropItem("m_bUseMaxEdge", PROPLIST_ITEM(id++, "处理特殊边长", "用于处理料片提取", "是|否"));
 	AddPropItem("m_nMaxEdgeLen", PROPLIST_ITEM(id++, "最大边长", "进行料片提取的特殊边长"));
@@ -219,29 +221,31 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	}
 	else if (GetPropID("m_nMaxEdgeLen") == id)
 		sText.Printf("%d", g_pncSysPara.m_nMaxEdgeLen);
-	else if(GetPropID("m_iPPiMode")==id)
+	else if (GetPropID("m_iPPiMode") == id)
 	{
-		if(g_pncSysPara.m_iPPiMode==0)
+		if (g_pncSysPara.m_iPPiMode == 0)
 			sText.Copy("0.一板一号");
-		else if(g_pncSysPara.m_iPPiMode==1)
+		else if (g_pncSysPara.m_iPPiMode == 1)
 			sText.Copy("1.一板多号");
 	}
-	else if(GetPropID("AxisXCalType")==id)
+	else if (GetPropID("AxisXCalType") == id)
 	{
-		if(g_pncSysPara.m_iAxisXCalType==0)
+		if (g_pncSysPara.m_iAxisXCalType == 0)
 			sText.Copy("0.最长边优先");
-		else if(g_pncSysPara.m_iAxisXCalType==1)
+		else if (g_pncSysPara.m_iAxisXCalType == 1)
 			sText.Copy("1.螺栓平行边优先");
-		else if(g_pncSysPara.m_iAxisXCalType==2)
+		else if (g_pncSysPara.m_iAxisXCalType == 2)
 			sText.Copy("2.焊接边优先");
 	}
-	else if(GetPropID("m_bMKPos")==id)
+	else if (GetPropID("m_bMKPos") == id)
 	{
-		if(g_pncSysPara.m_bMKPos)
+		if (g_pncSysPara.m_bMKPos)
 			sText.Copy("是");
 		else
 			sText.Copy("否");
 	}
+	else if (GetPropID("m_nMaxHoleD") == id)
+		sText.Printf("%d", g_pncSysPara.m_nMaxHoleD);
 	else if(GetPropID("m_fMapScale")==id)
 		sText.Printf("%.f",g_pncSysPara.m_fMapScale);
 	else if (GetPropID("m_ciLayoutMode") == id)
@@ -761,6 +765,10 @@ void PNCSysSetImportDefault()
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectWidth);
 		else if (_stricmp(key_word, "m_nMkRectLen") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectLen);
+		else if (_stricmp(key_word, "m_nMaxEdgeLen") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMaxEdgeLen);
+		else if (_stricmp(key_word, "m_nMaxHoleD") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMaxHoleD);
 		else if (_stricmp(key_word, "JG_CARD") == 0)
 			sscanf(line_txt, "%s%s", key_word, (char*)g_pncSysPara.m_sJgCadName);
 		else if (_stricmp(key_word, "PartLabelTitle") == 0)
@@ -831,6 +839,8 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "MinDistance=%d ;最小间距\n", g_pncSysPara.m_nMinDistance);
 	fprintf(fp, "m_nMkRectWidth=%d ;字盒宽度\n", g_pncSysPara.m_nMkRectWidth);
 	fprintf(fp, "m_nMkRectLen=%d ;字盒长度\n", g_pncSysPara.m_nMkRectLen);
+	fprintf(fp, "m_nMaxEdgeLen=%d ;最长边长\n", g_pncSysPara.m_nMaxEdgeLen);
+	fprintf(fp, "m_nMaxHoleD=%d ;最大螺栓孔\n", g_pncSysPara.m_nMaxHoleD);
 #ifndef __UBOM_ONLY_
 	fprintf(fp, "CDrawDamBoard::BOARD_HEIGHT=%d ;档板高度\n", CDrawDamBoard::BOARD_HEIGHT);
 	fprintf(fp, "CDrawDamBoard::m_bDrawAllBamBoard=%d ;绘制所有档板\n", CDrawDamBoard::m_bDrawAllBamBoard);

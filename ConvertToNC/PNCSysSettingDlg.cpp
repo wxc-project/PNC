@@ -87,6 +87,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		else
 			g_pncSysPara.m_bMKPos = false;
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMaxHoleD"))
+		g_pncSysPara.m_nMaxHoleD = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bReplaceSH"))
 	{
 		if (valueStr.Compare("ÊÇ") == 0)
@@ -906,6 +908,7 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bUseMaxEdge");
 	if(g_pncSysPara.m_bUseMaxEdge)
 		oper.InsertCmbListPropItem(pPropItem, "m_nMaxEdgeLen");
+	oper.InsertEditPropItem(pGroupItem, "m_nMaxHoleD");
 	oper.InsertCmbListPropItem(pGroupItem, "m_bMKPos");
 	oper.InsertCmbListPropItem(pGroupItem, "AxisXCalType");
 	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");

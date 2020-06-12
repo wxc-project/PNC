@@ -769,7 +769,7 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		//if (fabs(radiusRatio - 1) > EPS2)
 		//	return FALSE;
 		hole.ciSymbolType = 2;	//Ä¬ÈÏ¹ÒÏß¿×
-		if (hole.d > MAX_BOLT_HOLE)
+		if (hole.d > g_pncSysPara.m_nMaxHoleD)
 			return FALSE;
 		else
 			return TRUE;

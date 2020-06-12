@@ -47,6 +47,7 @@ public:
 	int m_nReplaceHD;		//´ú¿×¿×¾¶
 	int m_nMkRectLen;		//¸ÖÓ¡×ÖºÐ³¤¶È
 	int m_nMkRectWidth;		//¸ÖÓ¡×ÖºÐ¿í¶È
+	int m_nMaxHoleD;		//×î´óÂÝË¨Ö±¾¶
 
 	static const BYTE LAYOUT_NONE	 = 0;	//
 	static const BYTE LAYOUT_COMPARE = 1;
