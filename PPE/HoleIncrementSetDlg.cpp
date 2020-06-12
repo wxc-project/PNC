@@ -226,6 +226,7 @@ void CHoleIncrementSetDlg::OnChkProSH()
 }
 void CHoleIncrementSetDlg::OnOK()
 {
+	UpdateData();
 	if (pNcPare)
 	{
 		pNcPare->m_xHoleIncrement.m_fM12 = m_fM12Increment;
@@ -263,4 +264,5 @@ void CHoleIncrementSetDlg::OnOK()
 		else
 			g_sysPara.holeIncrement.m_fProSH = fDatum;
 	}
+	return CDialog::OnOK();
 }

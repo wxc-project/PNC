@@ -247,6 +247,11 @@ CSysPara::CSysPara(void)
 	holeIncrement.m_fM24=1.5;
 	holeIncrement.m_fCutSH=0;
 	holeIncrement.m_fProSH = 0;
+	nc.m_xFlamePara.m_xHoleIncrement = holeIncrement;
+	nc.m_xPlasmaPara.m_xHoleIncrement = holeIncrement;
+	nc.m_xPunchPara.m_xHoleIncrement = holeIncrement;
+	nc.m_xDrillPara.m_xHoleIncrement = holeIncrement;
+	nc.m_xLaserPara.m_xHoleIncrement = holeIncrement;
 	//颜色方案
 	crMode.crLS12 = RGB(128,0,64);
 	crMode.crLS16 = RGB(255,0,255);
@@ -408,6 +413,27 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar << CString(nc.m_xDrillPara.m_sThick);
 	ar << (DWORD)nc.m_xDrillPara.m_dwFileFlag;
 	ar << CString(nc.m_xLaserPara.m_sThick);
+	for (int i = 0; i < 5; i++)
+	{
+		NC_INFO_PARA* pNcPare = NULL;
+		if (i == 0)
+			pNcPare = &nc.m_xFlamePara;
+		else if (i == 1)
+			pNcPare = &nc.m_xPlasmaPara;
+		else if (i == 2)
+			pNcPare = &nc.m_xPunchPara;
+		else if (i == 3)
+			pNcPare = &nc.m_xDrillPara;
+		else //if (i == 4)
+			pNcPare = &nc.m_xLaserPara;
+		ar << pNcPare->m_xHoleIncrement.m_fDatum;
+		ar << pNcPare->m_xHoleIncrement.m_fM12;
+		ar << pNcPare->m_xHoleIncrement.m_fM16;
+		ar << pNcPare->m_xHoleIncrement.m_fM20;
+		ar << pNcPare->m_xHoleIncrement.m_fM24;
+		ar << pNcPare->m_xHoleIncrement.m_fCutSH;
+		ar << pNcPare->m_xHoleIncrement.m_fProSH;
+	}
 	//工程信息
 	ar << CString(model.m_sCompanyName);
 	ar << CString(model.m_sPrjCode);
@@ -640,6 +666,30 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar >> sValue; nc.m_xDrillPara.m_sThick.Copy(sValue);
 		ar >> dw; nc.m_xDrillPara.m_dwFileFlag = dw;
 		ar >> sValue; nc.m_xLaserPara.m_sThick.Copy(sValue);
+	}
+	if (compareVersion(version, "2.8") >= 0)
+	{
+		for (int i = 0; i < 5; i++)
+		{
+			NC_INFO_PARA* pNcPare = NULL;
+			if (i == 0)
+				pNcPare = &nc.m_xFlamePara;
+			else if (i == 1)
+				pNcPare = &nc.m_xPlasmaPara;
+			else if (i == 2)
+				pNcPare = &nc.m_xPunchPara;
+			else if (i == 3)
+				pNcPare = &nc.m_xDrillPara;
+			else //if (i == 4)
+				pNcPare = &nc.m_xLaserPara;
+			ar >> pNcPare->m_xHoleIncrement.m_fDatum;
+			ar >> pNcPare->m_xHoleIncrement.m_fM12;
+			ar >> pNcPare->m_xHoleIncrement.m_fM16;
+			ar >> pNcPare->m_xHoleIncrement.m_fM20;
+			ar >> pNcPare->m_xHoleIncrement.m_fM24;
+			ar >> pNcPare->m_xHoleIncrement.m_fCutSH;
+			ar >> pNcPare->m_xHoleIncrement.m_fProSH;
+		}
 	}
 	//
 	if (compareVersion(version, "2.2") >= 0)
