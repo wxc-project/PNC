@@ -237,7 +237,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 #endif
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE))
 	{	//生成PPI文件,保存到到当前工作路径下
-		if(pPlateProcess->vertexList.GetNodeNum()>3)
+		if(pPlateProcess->IsValid())
 			pPlateProcess->CreatePPiFile(file_path);
 		//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
 		pPlateProcess->m_bNeedExtract = FALSE;
@@ -368,7 +368,7 @@ void ManualExtractPlate(CPNCModel *pModel)
 	//生成PPI文件,保存到到当前工作路径下
 	CString file_path;
 	GetCurWorkPath(file_path);
-	if(pExistPlate->vertexList.GetNodeNum()>3)
+	if(pExistPlate->IsValid())
 		pExistPlate->CreatePPiFile(file_path);
 	//绘制提取的钢板外形--支持排版
 	pModel->DrawPlates();

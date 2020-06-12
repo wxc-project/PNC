@@ -239,7 +239,7 @@ void CPlateProcessInfo::InternalExtractPlateRelaEnts()
 {
 	m_xHashRelaEntIdList.Empty();
 	m_xHashRelaEntIdList.SetValue(partNoId.asOldId(),CAD_ENTITY(partNoId.asOldId()));
-	if(vertexList.GetNodeNum()<3)
+	if (!IsValid())
 		return;
 	//根据标注位置进行缩放
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
@@ -447,7 +447,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(int *piInvalidCirCountForText)
 //根据钢板相关的图元集合更新基本信息、螺栓信息及顶点(火曲)信息
 BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 {
-	if(vertexList.GetNodeNum()<3)
+	if(!IsValid())
 		return FALSE;
 	//根据Spline提取火曲线标记信息(分段线段集合)
 	AcDbEntity *pEnt = NULL;
@@ -1594,7 +1594,7 @@ SCOPE_STRU CPlateProcessInfo::GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK/*=T
 {
 	SCOPE_STRU scope;
 	scope.ClearScope();
-	if (xPlate.vertex_list.GetNodeNum() > 3)
+	if (xPlate.vertex_list.GetNodeNum() >= 3)
 	{
 		PROFILE_VER* pPreVertex = xPlate.vertex_list.GetTail();
 		for (PROFILE_VER *pVertex = xPlate.vertex_list.GetFirst(); pVertex; pVertex = xPlate.vertex_list.GetNext())
@@ -1628,7 +1628,7 @@ SCOPE_STRU CPlateProcessInfo::GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK/*=T
 				scope.VerifyVertex(f3dPoint(xPlate.mkpos.x, xPlate.mkpos.y));
 		}
 	}
-	else if(vertexList.GetNodeNum()>3)
+	else if(IsValid())
 	{
 		for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
 			scope.VerifyVertex(pVer->pos);
@@ -1706,7 +1706,7 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 		AcDbEntity *pClone = (AcDbEntity *)pEnt->clone();
 		if(pClone)
 		{
-			if(vertexList.GetNodeNum()<3)
+			if(!IsValid())
 				pClone->setColorIndex(1);	//
 			if(pOrgion)
 			{
@@ -1742,7 +1742,7 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 		pPoint->close();
 	}
 	//对于提取失败的钢板做特殊处理(如果hashEntIdList中只有文本标注默认提取失败)
-	if(xPlate.vertex_list.GetNodeNum()<=3)
+	if(!IsValid())
 	{
 		AcGeVector3d norm(0, 0, 1);
 		AcGePoint3d acad_centre;
@@ -1773,7 +1773,7 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 		return;
 	}
 	AcDbObjectId entId;
-	if (vertexList.GetNodeNum() > 3)
+	if(IsValid())
 	{
 		int n = vertexList.GetNodeNum();
 		for (int i = 0; i < n; i++)
@@ -2058,9 +2058,9 @@ bool CPlateProcessInfo::InitLayoutVertexByBottomEdgeIndex(f2dRect &rect)
 	if (xPlate.mcsFlg.ciBottomEdge == 0xFF)
 		InitBtmEdgeIndex();
 	rect.SetRect(f2dPoint(0, 0), f2dPoint(0, 0));
-	int n = vertexList.GetNodeNum();
-	if (n < 3)
+	if (!IsValid())
 		return false;
+	int n = vertexList.GetNodeNum();
 	int iCurIndex = xPlate.mcsFlg.ciBottomEdge;
 	if (iCurIndex == 0xFF)
 	{	//轮廓边未初始化,无法继续 wht 19-11-11
@@ -3037,7 +3037,7 @@ void CPNCModel::MergeManyPartNo()
 {
 	for(CPlateProcessInfo* pPlateProcess=EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=EnumNextPlate(TRUE))
 	{
-		if(pPlateProcess->vertexList.GetNodeNum()<=3)
+		if(!pPlateProcess->IsValid())
 			continue;
 		pPlateProcess->pnTxtIdList.SetValue(pPlateProcess->partNoId.asOldId(),pPlateProcess->partNoId);
 		m_hashPlateInfo.push_stack();

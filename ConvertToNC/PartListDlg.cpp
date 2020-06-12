@@ -119,7 +119,7 @@ BOOL CPartListDlg::UpdatePartList()
 		int iItem=m_partList.InsertItemRecord(-1,str_arr);
 		m_partList.SetItemData(iItem,(DWORD)pPlate);
 		//设置颜色
-		if(pPlate->xPlate.vertex_list.GetNodeNum()<=3)
+		if(!pPlate->IsValid())
 			m_partList.SetItemTextColor(iItem, 0, RGB(255, 0, 0));
 		if (pPlate->xPlate.m_fThick <= 0)
 			m_partList.SetItemTextColor(iItem, 1, RGB(255, 0, 0));
@@ -138,7 +138,7 @@ void CPartListDlg::SelectPart(int iCurSel)
 	if(pPlate==NULL)
 		return;
 	//选中钢板关联实体
-	if (pPlate->vertexList.GetNodeNum()>3)
+	if(pPlate->IsValid())
 	{	//钢板提取成功，显示
 		if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
 		{	//下料预审时处理挡板

@@ -88,6 +88,7 @@ public:
 	virtual bool IsInPlate(const double* start,const double* end);
 	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
 	virtual BOOL RecogWeldLine(f3dLine slop_line);
+	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 3; }
 };
 //////////////////////////////////////////////////////////////////////////
 struct BOLT_BLOCK

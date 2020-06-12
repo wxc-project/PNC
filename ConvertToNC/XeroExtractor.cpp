@@ -129,10 +129,9 @@ bool CPlateObject::IsInPlate(const double* start,const double* end)
 //判断提取成功的轮廓点是否按逆时针排序
 BOOL CPlateObject::IsValidVertexs()
 {
-	int n=vertexList.GetNodeNum();
-	if(n<3)
+	if(!IsValid())
 		return FALSE;
-	int i=0;
+	int i = 0, n = vertexList.GetNodeNum();
 	double wrap_area=0;
 	DYN_ARRAY<GEPOINT> pnt_arr(n);
 	for(VERTEX* pVertex=vertexList.GetFirst();pVertex;pVertex=vertexList.GetNext(),i++)
