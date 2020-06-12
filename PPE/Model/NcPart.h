@@ -34,9 +34,11 @@ class CNCPart
 {
 public:
 	//钢板NC模式
-	static const BYTE CUT_MODE		= 0x01;	 //切割下料
-	static const BYTE PROCESS_MODE	= 0x02;	 //板床加工
-	static const BYTE LASER_MODE	= 0x04;	 //激光复合机
+	static const BYTE FLAME_MODE	= 0x01;	 //火焰切割
+	static const BYTE PLASMA_MODE	= 0x02;	 //等离子切割
+	static const BYTE PUNCH_MODE	= 0x04;	 //冲床加工
+	static const BYTE DRILL_MODE	= 0x08;	 //钻床加工
+	static const BYTE LASER_MODE	= 0x10;	 //激光复合机
 	//钢板NC输出文件
 	static const int PLATE_DXF_FILE = 0x01;  //钢板DXF类型文件
 	static const int PLATE_NC_FILE	= 0x02;	 //钢板NC类型文件
@@ -57,47 +59,30 @@ public:
 	static CString m_sExportPartInfoKeyStr;	//钢板输出明细
 	static double m_fHoleIncrement;		//孔径增大值 wht 19-07-25
 public:
-	//static BOOL GetSysParaFromReg(const char* sEntry, char* sValue);
-	static void InitStoreMode(CHashList<CDrillBolt>& hashDrillBoltByD,ARRAY_LIST<double> &holeDList,BOOL bIncSH=TRUE);
-	static void RefreshPlateHoles(CProcessPlate *pPlate,BOOL bSortByHoleD=TRUE,BYTE ciAlgType = 0);
-	static BOOL IsNeedCreateHoleFile(CProcessPlate *pPlate,BYTE ciHoleProcessType);
 	static void DeformedPlateProfile(CProcessPlate *pPlate);
 	//钢板操作
 	static bool CreatePlateTtpFile(CProcessPlate *pPlate,const char* file_path);
-	static void CreatePlateTtpFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
 	static bool CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int dxf_mode);
-	static void CreatePlateDxfFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
-	//添加济南法特钢板程序(*.wkf)导出 wht 19-06-11
 	static bool CreatePlateWkfFile(CProcessPlate *pPlate, const char* file_path);
-	static void CreatePlateWkfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate> &plateSet, const char* work_dir);
 #ifdef __PNC_
+	static void ImprotPlateCncOrTextFile(CProcessPlate *pPlate, const char* file_path);
+	static void InitStoreMode(CHashList<CDrillBolt>& hashDrillBoltByD, ARRAY_LIST<double> &holeDList, BOOL bIncSH = TRUE);
+	static void RefreshPlateHoles(CProcessPlate *pPlate, BOOL bSortByHoleD = TRUE, BYTE ciAlgType = 0);
 	static void InitDrillBoltHashTbl(CProcessPlate *pPlate, CHashList<CDrillBolt>& hashDrillBoltByD,
 									 BOOL bMergeHole = FALSE, BOOL bIncSpecialHole=TRUE, BOOL bDrillGroupSort=FALSE);
 	static void OptimizeBolt(CProcessPlate *pPlate,CHashList<CDrillBolt>& hashDrillBoltByD,
 							 BOOL bSortByHoleD=TRUE,BYTE ciAlgType=0,BOOL bMergeHole=FALSE,BOOL bIncSpecialHole=TRUE);
-	static void CreatePlatePncDxfFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
 	static bool CreatePlatePbjFile(CProcessPlate *pPlate,const char* file_path);
-	static void CreatePlatePbjFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
 	static bool CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path);
 	static bool CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_path);
-	static void CreatePlatePmzFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
 	static bool CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path);
-	static void CreatePlateTxtFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
 	static bool CreatePlateNcFile(CProcessPlate *pPlate,const char* file_path);
-	static void CreatePlateNcFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
 	static bool CreatePlateCncFile(CProcessPlate *pPlate,const char* file_path);
-	static void CreatePlateCncFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir);
-	static void CreatePlateFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir,int nFileType);
-	static void ImprotPlateCncOrTextFile(CProcessPlate *pPlate,const char* file_path);
 #endif
-	static void CreateAllPlateFiles(int nFileType);
 	//角钢操作
 	static void CreateAngleNcFiles(CPPEModel *pModel,CXhPtrSet<CProcessAngle> &angleSet,const char* drv_path,const char* sPartNoPrefix,const char* work_dir);
-	static void CreateAllAngleNcFile(CPPEModel *pModel,const char* drv_path,const char* sPartNoPrefix,const char* work_dir);
 	//生成PPI文件
-	static bool CreatePPIFile(CProcessPart *pPart,const char* file_path);
-	static void CreatePPIFiles(CPPEModel *pModel,CXhPtrSet<CProcessPart> &partSet,const char* work_dir);
-	static void CreateAllPPIFiles(CPPEModel *pModel,const char* work_dir);
+	static bool CreatePPIFile(CProcessPart *pPart, const char* file_path);
 };
 extern BOOL GetSysParaFromReg(const char* sEntry, char* sValue);
 

@@ -559,12 +559,6 @@ void CMainFrame::OnRotateAntiClockwise()
 	else
 		g_pPartEditor->ExecuteCommand(IPEC::CMD_ROTATEANTICLOCKWISE_PLATE);
 	pView->SyncPartInfo(false);
-	if(g_sysPara.nc.m_bAutoSortHole)
-	{	//¶ÔÂÝË¨¿××Ô¶¯ÅÅÐò
-		CNCPart::RefreshPlateHoles((CProcessPlate*)pView->GetCurProcessPart(),g_sysPara.nc.m_bSortByHoleD);	
-		pView->SyncPartInfo(true,false);
-		pView->Refresh();	
-	}
 }
 //¸Ö°å²Ù×÷£ºË³Ê±ÕëÐý×ª
 void CMainFrame::OnRotateClockwise() 
@@ -578,12 +572,6 @@ void CMainFrame::OnRotateClockwise()
 	else
 		g_pPartEditor->ExecuteCommand(IPEC::CMD_ROTATECLOCKWISE_PLATE);
 	pView->SyncPartInfo(false);
-	if(g_sysPara.nc.m_bAutoSortHole)
-	{	//¶ÔÂÝË¨¿××Ô¶¯ÅÅÐò
-		CNCPart::RefreshPlateHoles((CProcessPlate*)pView->GetCurProcessPart(),g_sysPara.nc.m_bSortByHoleD);	
-		pView->SyncPartInfo(true,false);
-		pView->Refresh();
-	}
 }
 //·­×ª¸Ö°å
 void CMainFrame::OnOverturnPlate() 
@@ -593,12 +581,6 @@ void CMainFrame::OnOverturnPlate()
 	g_pPartEditor->ExecuteCommand(IPEC::CMD_OVERTURN_PART);
 	CPPEView *pView=theApp.GetView();
 	pView->SyncPartInfo(false);
-	if(g_sysPara.nc.m_bAutoSortHole && GetCurPartType()==CProcessPart::TYPE_PLATE)
-	{	//¶ÔÂÝË¨¿××Ô¶¯ÅÅÐò
-		CNCPart::RefreshPlateHoles((CProcessPlate*)pView->GetCurProcessPart(),g_sysPara.nc.m_bSortByHoleD);
-		pView->SyncPartInfo(true,false);
-		pView->Refresh();
-	}
 }
 void CMainFrame::OnDrawModeNc()
 {

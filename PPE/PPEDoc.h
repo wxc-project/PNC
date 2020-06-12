@@ -41,10 +41,13 @@ public:
 	CView* GetView(const CRuntimeClass *pClass);
 	BOOL WriteToParentProcess();
 	//
+	void AmendHoleIncrement(CProcessPlate* pPlate,int iNcMode);
 	void InitPlateGroupByThickMat(CHashStrList<PLATE_GROUP> &hashPlateByThickMat);
-	void CreatePlateNcData(int iNcMode, int iNcFileType);
 	bool CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, char* thickSetStr,
 		const char* mainFolder, int iNcMode, int iNcFileType, BOOL bIsPmzCheck = FALSE);
+	void CreatePlateDxfFiles();
+	void CreatePlateNcFiles(int iFileType);
+	void CreatePlateFiles(int iFileType);
 protected:
 
 // Generated message map functions
@@ -68,8 +71,10 @@ protected:
 	afx_msg void OnUpdateFileSaveCnc(CCmdUI *pCmdUI);
 	afx_msg void OnGenAngleNcFile();
 	afx_msg void OnUpdateGenAngleNcFile(CCmdUI *pCmdUI);
-	afx_msg void OnCreateCutNcData();
-	afx_msg void OnCreateProcessNcData();
+	afx_msg void OnCreateFlameNcData();
+	afx_msg void OnCreatePlasmaNcData();
+	afx_msg void OnCreatePunchNcData();
+	afx_msg void OnCreateDrillNcData();
 	afx_msg void OnCreateLaserNcData();
 	afx_msg void OnCreatePlateNcData();
 	//}}AFX_MSG

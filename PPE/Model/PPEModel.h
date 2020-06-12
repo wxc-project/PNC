@@ -7,14 +7,12 @@
 using std::vector;
 struct ISysPara
 {
-	const static BYTE TYPE_FLAME_CUT	= 0;	//»ðÑæÇÐ¸î
-	const static BYTE TYPE_PLASMA_CUT	= 1;	//µÈÀë×ÓÇÐ¸î
+	virtual bool IsValidNcFlag(BYTE ciNcFlag) = 0;
+	//
 	virtual double GetCutInLineLen(double fThick,BYTE cType=-1)=0;
 	virtual double GetCutOutLineLen(double fThick,BYTE cType=-1)=0;
-	virtual int GetCutEnlargedSpaceLen(BYTE cType=-1)=0;
 	virtual int GetCutInitPosFarOrg(BYTE cType=-1)=0;
 	virtual int GetCutPosInInitPos(BYTE cType=-1)=0;
-	virtual BOOL IsCutSpecialHole(BYTE cType=-1)=0;
 };
 
 class CPPEModel

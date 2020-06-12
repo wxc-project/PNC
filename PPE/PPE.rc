@@ -369,20 +369,22 @@ BEGIN
         BEGIN
             MENUITEM SEPARATOR
             MENUITEM "生成钢板DXF(&D)\tCtrl+D",         ID_FILE_SAVE_DXF
-			MENUITEM SEPARATOR
+            MENUITEM SEPARATOR
             MENUITEM "生成钢板TTP",                     ID_FILE_SAVE_TTP
             MENUITEM "生成钢板WKF",                     ID_FILE_SAVE_WKF
             MENUITEM "生成钢板PBJ",                     ID_FILE_SAVE_PBJ
             MENUITEM "生成钢板PMZ",                     ID_FILE_SAVE_PMZ
-			MENUITEM SEPARATOR
+            MENUITEM SEPARATOR
             MENUITEM "生成钢板NC",                      ID_FILE_SAVE_NC
             MENUITEM "生成钢板TXT",                     ID_FILE_SAVE_TXT
             MENUITEM "生成钢板CNC",                     ID_FILE_SAVE_CNC
         END
-        MENUITEM "生成切割NC数据",                    ID_CUT_MODE_NC_DATA
-        MENUITEM "生成板床NC数据",                    ID_PROCESS_MODE_NC_DATA
-        MENUITEM "生成激光NC数据",                    ID_LASER_MODE_NC_DATA
-        MENUITEM "一键生成NC数据",                    ID_CREATE_PLATE_NC_DATA
+        MENUITEM "生成火焰NC数据",						ID_FLAME_NC_DATA
+        MENUITEM "生成等离子NC数据",					ID_PLASMA_NC_DATA
+		MENUITEM "生成冲床NC数据",						ID_PUNCH_NC_DATA
+		MENUITEM "生成钻床NC数据",						ID_DRILL_NC_DATA
+        MENUITEM "生成激光NC数据",						ID_LASER_NC_DATA
+        MENUITEM "一键生成NC数据",						ID_CREATE_PLATE_NC_DATA
     END
     POPUP "工具(&W)"
     BEGIN
@@ -728,6 +730,20 @@ BEGIN
     PUSHBUTTON      "重置",IDC_BTN_RESET,23,60,38,14
 END
 
+IDD_SEL_PLATE_NC_DLG DIALOGEX 0, 0, 71, 98
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "选择钢板NC模式"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,8,77,25,14
+    PUSHBUTTON      "取消",IDCANCEL,39,77,25,14
+    CONTROL         "火焰切割",IDC_CHK_FLAME,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,9,46,10
+    CONTROL         "等离子切割",IDC_CHK_PLASMA,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,23,47,10
+    CONTROL         "冲床加工",IDC_CHK_PUNCH,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,35,46,10
+    CONTROL         "钻床加工",IDC_CHK_DRILL,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,48,46,10
+    CONTROL         "激光复合机",IDC_CHK_LASER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,62,47,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -889,6 +905,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 74
     END
+
+    IDD_SEL_PLATE_NC_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 64
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 91
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -931,6 +955,11 @@ BEGIN
 END
 
 IDD_HOLE_INCREMENT_DLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_SEL_PLATE_NC_DLG AFX_DIALOG_LAYOUT
 BEGIN
     0
 END

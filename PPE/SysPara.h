@@ -3,27 +3,37 @@
 #include "PropListItem.h"
 #include "PPEModel.h"
 
-struct FILE_INFO_PARA
+//孔径增大值
+struct HOLE_INCREMENT {
+	double m_fDatum;	//常规
+	double m_fM12;		//M12
+	double m_fM16;		//M16
+	double m_fM20;		//M20
+	double m_fM24;		//M24
+	double m_fCutSH;	//切割式特殊孔径增大值
+	double m_fProSH;	//板床式特殊孔径增大值
+};
+struct NC_INFO_PARA
 {
 	CXhChar100 m_sThick;
 	DWORD m_dwFileFlag;
+	HOLE_INCREMENT m_xHoleIncrement;
 	//以下参数目前只用于控制激光复合机DXF文件输出 wht 19-10-22
 	BOOL m_bOutputBendLine;
 	BOOL m_bOutputBendType;
+	//切割加工参数
+	BOOL m_bCutSpecialHole;
+	WORD m_wEnlargedSpace;
+	//板床加工参数
+	BOOL m_bNeedSH;
 public:
-	FILE_INFO_PARA();
+	NC_INFO_PARA();
+	//
 	DWORD AddFileFlag(DWORD dwFlag);
 	bool IsValidFile(DWORD dwFlag);
-	BOOL SetOutputBendLine(BOOL bValue) { return (m_bOutputBendLine = bValue); }
-	BOOL IsOutputBendLine() { return m_bOutputBendLine; }
-	BOOL SetOutputBendType(BOOL bValue) { return (m_bOutputBendType = bValue); }
-	BOOL IsOutputBendType() { return m_bOutputBendType; }
 };
 class CSysPara : public ISysPara
 {
-public:
-	CSysPara(void);
-	~CSysPara(void);
 public:
 	//DockPage停靠参数
 	struct DOCKPAGEPOS
@@ -36,35 +46,24 @@ public:
 		short m_nLeftPageWidth,m_nRightPageWidth;
 	}dock;
 	//
-	double m_fHoleIncrement;	//孔径增量
+	HOLE_INCREMENT holeIncrement;
 	//NC数据参数
 	struct NC_PARA{
 		//钢板NC设置
-		BOOL m_bAutoSortHole;	//是否自动优化螺栓孔顺序
 		BOOL m_bSortByHoleD;	//是否按孔径进行分组优化
 		BYTE m_ciGroupSortType;	//分组排序方案 0.按孔径从大到小|1.按距离从远到进
 		double m_fBaffleHigh;	//挡板高度
 		BOOL m_bDispMkRect;		//显示字盒
 		double m_fMKHoleD,m_fMKRectW,m_fMKRectL;
-		BYTE m_iNcMode;			//切割下料(无孔)|板床加工(有孔) |激光加工
+		BYTE m_iNcMode;			//火焰|等离子|冲床|钻床|激光加工
 		double m_fLimitSH;		//特殊孔径界限值
-		BOOL m_bNeedSH;			//是否需要特殊孔
-		BOOL m_bNeedMKRect;		//是否保留字盒
 		BOOL m_iDxfMode;		//DXF文件分类 0.不分类 1.按厚度
-		CXhChar50 m_sThickToPBJ;		//冲孔工艺板厚设定
-		CXhChar50 m_sThickToPMZ;		//钻孔工艺板厚设定
-		double m_fShapeAddDist;	//轮廓变增大值
 		//钢板输出设置
-		BOOL m_bFlameCut;		//火焰切割
-		FILE_INFO_PARA m_xFlamePara;
-		BOOL m_bPlasmaCut;		//等离子切割
-		FILE_INFO_PARA m_xPlasmaPara;
-		BOOL m_bPunchPress;		//冲床加工
-		FILE_INFO_PARA m_xPunchPara;
-		BOOL m_bDrillPress;		//钻床加工
-		FILE_INFO_PARA m_xDrillPara;
-		//
-		FILE_INFO_PARA m_xLaserPara;
+		NC_INFO_PARA m_xFlamePara;
+		NC_INFO_PARA m_xPlasmaPara;
+		NC_INFO_PARA m_xPunchPara;
+		NC_INFO_PARA m_xDrillPara;
+		NC_INFO_PARA m_xLaserPara;
 		//角钢NC设置
 		CString m_sNcDriverPath;
 		//钢板配置文件路径
@@ -72,9 +71,7 @@ public:
 	}nc;
 	struct PBJ_PARA{
 		BOOL m_bIncVertex;	//输出轮廓点
-		BOOL m_iPbjMode;	//输出模式
 		BOOL m_bAutoSplitFile;	//螺栓孔种类超过三种后，自动拆分生成多个文件
-		BOOL m_bIncSH;		//输出特殊孔
 		BOOL m_bMergeHole;	//将数量较少的标准孔合并使用同一冲头加工，将非标孔按标准孔加工 wht 19-07-25
 	}pbj;
 	struct PMZ_PARA {
@@ -83,25 +80,14 @@ public:
 		BOOL m_bPmzCheck;	//输出预审PMZ格式
 	}pmz;
 	//火焰切割
-	BYTE m_cDisplayCutType;		//当前显示类型
+	BYTE m_cDisplayCutType;		//当前显示类型0.火焰切割；1.等离子切割
 	struct FLAME_CUT_PARA{
 		CXhChar16 m_sOutLineLen;
 		CXhChar16 m_sIntoLineLen;
 		BOOL m_bInitPosFarOrg;
 		BOOL m_bCutPosInInitPos;
-		WORD m_wEnlargedSpace;
-		BOOL m_bCutSpecialHole;
 	}flameCut,plasmaCut;
-	//孔径增大值
-	struct HOLE_INCREMENT{
-		double m_fDatum;	//常规
-		double m_fM12;		//M12
-		double m_fM16;		//M16
-		double m_fM20;		//M20
-		double m_fM24;		//M24
-		double m_fCutSH;	//切割式特殊孔径增大值
-		double m_fProSH;	//板床式特殊孔径增大值
-	}holeIncrement;
+	
 	//颜色方案
 	struct COLOR_MODE{
 		COLORREF crLS12;
@@ -164,31 +150,40 @@ public:
 		double	fPartNoTextSize;	//构件编号文字高
 		double  fDxfTextSize;		//DXF文件中文字字体高度
 	}font;
+public:
+	CSysPara(void);
+	~CSysPara(void);
+	//
+	virtual double GetCutInLineLen(double fThick, BYTE cType = -1);
+	virtual double GetCutOutLineLen(double fThick, BYTE cType = -1);
+	virtual BOOL GetCutInitPosFarOrg(BYTE cType = -1);
+	virtual BOOL GetCutPosInInitPos(BYTE cType = -1);
+	virtual bool IsValidNcFlag(BYTE ciNcFlag) {
+		if ((ciNcFlag&nc.m_iNcMode) > 0)
+			return true;
+		else
+			return false;
+	}
+	//
 	BOOL Read(CString file_path);	//读配置文件
 	BOOL Write(CString file_path);	//写配置文件
 	void WriteSysParaToReg(LPCTSTR lpszEntry);	//保存共用参数至注册表
 	void ReadSysParaFromReg(LPCTSTR lpszEntry);	//提取共用参数从注册表
 	void UpdateHoleIncrement(double fHoleInc);
-	DECLARE_PROP_FUNC(CSysPara);
-	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100);//通过属性Id获取属性值
 	//
-	virtual double GetCutInLineLen(double fThick,BYTE cType=-1);
-	virtual double GetCutOutLineLen(double fThick,BYTE cType=-1);
-	virtual int GetCutEnlargedSpaceLen(BYTE cType=-1);
-	virtual BOOL GetCutInitPosFarOrg(BYTE cType=-1);
-	virtual BOOL GetCutPosInInitPos(BYTE cType=-1);
-	virtual BOOL IsCutSpecialHole(BYTE cType=-1);
 	void AngleDrawingParaToBuffer(CBuffer &buffer);
 	//钢板NC模式设置
 	DWORD AddNcFlag(BYTE ciNcFlag) {
 		nc.m_iNcMode |= ciNcFlag;
 		return nc.m_iNcMode;
 	}
-	bool IsValidNcFlag(BYTE ciNcFlag) {
-		if ((ciNcFlag&nc.m_iNcMode) > 0)
-			return true;
-		else
-			return false;
+	DWORD DelNcFlag(BYTE ciNcFlag) {
+		BYTE ciCode = 0xff - ciNcFlag;
+		nc.m_iNcMode &= ciCode;
+		return nc.m_iNcMode;
 	}
+	//属性栏操作
+	DECLARE_PROP_FUNC(CSysPara);
+	int GetPropValueStr(long id, char *valueStr, UINT nMaxStrBufLen = 100);
 };
 extern CSysPara g_sysPara;

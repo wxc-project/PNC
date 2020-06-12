@@ -12,6 +12,7 @@
 #include "PlankConfigDlg.h"
 #include "FileFormatSetDlg.h"
 #include "folder_dialog.h"
+#include "SelPlateNcModeDlg.h"
 
 void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 {
@@ -78,13 +79,6 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.font.fTextHeight = atof(valueStr);
 		g_sysPara.WriteSysParaToReg("TextHeight");
 	}
-	else if (CSysPara::GetPropID("nc.m_bAutoSortHole") == pItem->m_idProp)
-	{
-		if (strcmp(valueStr, "是") == 0)
-			g_sysPara.nc.m_bAutoSortHole = TRUE;
-		else
-			g_sysPara.nc.m_bAutoSortHole = FALSE;
-	}
 	else if (CSysPara::GetPropID("nc.m_bSortByHoleD") == pItem->m_idProp)
 	{
 		if (strcmp(valueStr, "是") == 0)
@@ -136,111 +130,35 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		oper.UpdatePropItemValue("CutLimitSH");
 		oper.UpdatePropItemValue("ProLimitSH");
 	}
-	else if(CSysPara::GetPropID("nc.m_bNeedSH")==pItem->m_idProp)
+	else if(CSysPara::GetPropID("nc.DrillPara.m_bNeedSH")==pItem->m_idProp)
 	{
-		if(valueStr.Compare("是")==0)
-			g_sysPara.nc.m_bNeedSH=TRUE;
+		if (valueStr.Compare("是") == 0)
+			g_sysPara.nc.m_xDrillPara.m_bNeedSH = TRUE;
 		else
-			g_sysPara.nc.m_bNeedSH=FALSE;
-		g_sysPara.WriteSysParaToReg("NeedSH");
-	}
-	else if (CSysPara::GetPropID("nc.m_iNcMode") == pItem->m_idProp)
-	{
-		g_sysPara.nc.m_iNcMode = 0;
-		if (strstr(valueStr, "切割"))
-			g_sysPara.AddNcFlag(CNCPart::CUT_MODE);
-		if (strstr(valueStr, "板床"))
-			g_sysPara.AddNcFlag(CNCPart::PROCESS_MODE);
-		if (strstr(valueStr, "激光"))
-			g_sysPara.AddNcFlag(CNCPart::LASER_MODE);
-		g_sysPara.WriteSysParaToReg("NCMode");
-#ifdef __PNC_
-		CPropTreeItem *pCutItem = pPropList->FindItemByPropId(CSysPara::GetPropID("CutInfo"), NULL);
-		CPropTreeItem *pProItem = pPropList->FindItemByPropId(CSysPara::GetPropID("ProcessInfo"), NULL);
-		CPropTreeItem *pLasItem = pPropList->FindItemByPropId(CSysPara::GetPropID("LaserCutInfo"), NULL);
-		if (pCutItem&&pProItem&&pLasItem)
-		{
-			if (g_sysPara.IsValidNcFlag(CNCPart::CUT_MODE))
-			{
-				if(pCutItem->m_bHideChildren)
-					pPropList->Expand(pCutItem, pCutItem->m_iIndex);
-			}
-			else
-				pPropList->Collapse(pCutItem);
-			if (g_sysPara.IsValidNcFlag(CNCPart::PROCESS_MODE))
-			{
-				if(pProItem->m_bHideChildren)
-					pPropList->Expand(pProItem, pProItem->m_iIndex);
-			}
-			else
-				pPropList->Collapse(pProItem);
-			if(g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE))
-			{
-				if(pLasItem->m_bHideChildren)
-					pPropList->Expand(pLasItem, pLasItem->m_iIndex);
-			}
-			else
-				pPropList->Collapse(pLasItem);
-		}
-#else
-		pPropList->DeleteAllSonItems(pItem);
-		if(g_sysPara.IsValidNcFlag(CNCPart::CUT_MODE))
-			oper.InsertEditPropItem(pItem, "nc.m_fShapeAddDist", "", "", -1, TRUE);
-		if(g_sysPara.IsValidNcFlag(CNCPart::PROCESS_MODE))
-		{
-			oper.InsertEditPropItem(pItem, "nc.m_sThickToPBJ", "", "", -1, TRUE);
-			oper.InsertEditPropItem(pItem, "nc.m_sThickToPMZ", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "nc.m_bNeedSH", "", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "nc.m_bNeedMKRect", "", "", "", -1, TRUE);
-		}
-#endif
+			g_sysPara.nc.m_xDrillPara.m_bNeedSH = FALSE;
+		g_sysPara.WriteSysParaToReg("DrillNeedSH");
 	}
 #ifdef __PNC_
-	else if(CSysPara::GetPropID("nc.m_bNeedMKRect")==pItem->m_idProp)
-	{
-		if(valueStr.Compare("是")==0)
-			g_sysPara.nc.m_bNeedMKRect=TRUE;
-		else
-			g_sysPara.nc.m_bNeedMKRect=FALSE;
-		g_sysPara.WriteSysParaToReg("NeedMKRect");
-	}
-	else if(CSysPara::GetPropID("nc.m_sThickToPBJ")==pItem->m_idProp)
-	{
-		g_sysPara.nc.m_sThickToPBJ.Copy(valueStr);
-		g_sysPara.WriteSysParaToReg("ThickToPBJ");
-	}
-	else if(CSysPara::GetPropID("nc.m_sThickToPMZ")==pItem->m_idProp)
-	{
-		g_sysPara.nc.m_sThickToPMZ.Copy(valueStr);
-		g_sysPara.WriteSysParaToReg("ThickToPMZ");
-	}
-	else if(CSysPara::GetPropID("nc.m_fShapeAddDist")==pItem->m_idProp)
-	{
-		g_sysPara.nc.m_fShapeAddDist=atof(valueStr);
-		g_sysPara.WriteSysParaToReg("ShapeAddDist");
-	}
 	else if(CSysPara::GetPropID("nc.m_iDxfMode")==pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("是") == 0)
 			g_sysPara.nc.m_iDxfMode = 1;
 		else
 			g_sysPara.nc.m_iDxfMode = 0;
-		g_sysPara.WriteSysParaToReg("DxfMode");
 	}
 
 	else if (CSysPara::GetPropID("nc.bFlameCut") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("启用") == 0)
-			g_sysPara.nc.m_bFlameCut = TRUE;
+			g_sysPara.AddNcFlag(CNCPart::FLAME_MODE);
 		else
-			g_sysPara.nc.m_bFlameCut = FALSE;
-		//
-		pPropList->DeleteAllSonItems(pItem);
-		if (g_sysPara.nc.m_bFlameCut)
-		{
-			oper.InsertEditPropItem(pItem, "nc.FlamePara.m_sThick", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "nc.FlamePara.m_dwFileFlag", "", "", "", -1, TRUE);
-		}
+			g_sysPara.DelNcFlag(CNCPart::FLAME_MODE);
+		//刷新属性栏
+		if (g_sysPara.IsValidNcFlag(CNCPart::FLAME_MODE))
+			pPropList->Expand(pItem, pItem->m_iIndex);
+		else
+			pPropList->Collapse(pItem);
+		oper.UpdatePropItemValue("nc.m_iNcMode");
 	}
 	else if (CSysPara::GetPropID("nc.FlamePara.m_sThick") == pItem->m_idProp)
 		g_sysPara.nc.m_xFlamePara.m_sThick.Copy(valueStr);
@@ -258,16 +176,15 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	else if (CSysPara::GetPropID("nc.bPlasmaCut") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("启用") == 0)
-			g_sysPara.nc.m_bPlasmaCut = TRUE;
+			g_sysPara.AddNcFlag(CNCPart::PLASMA_MODE);
 		else
-			g_sysPara.nc.m_bPlasmaCut = FALSE;
-		//
-		pPropList->DeleteAllSonItems(pItem);
-		if (g_sysPara.nc.m_bPlasmaCut)
-		{
-			oper.InsertEditPropItem(pItem, "nc.PlasmaPara.m_sThick", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "nc.PlasmaPara.m_dwFileFlag", "", "", "", -1, TRUE);
-		}
+			g_sysPara.DelNcFlag(CNCPart::PLASMA_MODE);
+		//刷新属性栏
+		if (g_sysPara.IsValidNcFlag(CNCPart::PLASMA_MODE))
+			pPropList->Expand(pItem, pItem->m_iIndex);
+		else
+			pPropList->Collapse(pItem);
+		oper.UpdatePropItemValue("nc.m_iNcMode");
 	}
 	else if (CSysPara::GetPropID("nc.PlasmaPara.m_sThick") == pItem->m_idProp)
 		g_sysPara.nc.m_xPlasmaPara.m_sThick.Copy(valueStr);
@@ -283,19 +200,29 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	else if (CSysPara::GetPropID("nc.bPunchPress") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("启用") == 0)
-			g_sysPara.nc.m_bPunchPress = TRUE;
+			g_sysPara.AddNcFlag(CNCPart::PUNCH_MODE);
 		else
-			g_sysPara.nc.m_bPunchPress = FALSE;
-		//
-		pPropList->DeleteAllSonItems(pItem);
-		if (g_sysPara.nc.m_bPunchPress)
+			g_sysPara.DelNcFlag(CNCPart::PUNCH_MODE);
+		//刷新属性栏
+		if (g_sysPara.IsValidNcFlag(CNCPart::PUNCH_MODE))
 		{
-			oper.InsertEditPropItem(pItem, "nc.PunchPara.m_sThick", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "nc.PunchPara.m_dwFileFlag", "", "", "", -1, TRUE);
+			if (pItem->m_bHideChildren)
+				pPropList->Expand(pItem, pItem->m_iIndex);
 		}
+		else
+			pPropList->Collapse(pItem);
+		oper.UpdatePropItemValue("nc.m_iNcMode");
 	}
 	else if (CSysPara::GetPropID("nc.PunchPara.m_sThick") == pItem->m_idProp)
 		g_sysPara.nc.m_xPunchPara.m_sThick.Copy(valueStr);
+	else if (CSysPara::GetPropID("nc.PunchPara.m_bNeedSH") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xPunchPara.m_bNeedSH = TRUE;
+		else
+			g_sysPara.nc.m_xPunchPara.m_bNeedSH = FALSE;
+		g_sysPara.WriteSysParaToReg("PunchNeedSH");
+	}
 	else if (CSysPara::GetPropID("nc.PunchPara.m_dwFileFlag") == pItem->m_idProp)
 	{
 		CXhChar100 sValue(valueStr);
@@ -304,22 +231,26 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 			g_sysPara.nc.m_xPunchPara.AddFileFlag(CNCPart::PLATE_DXF_FILE);
 		if (strstr(sValue, "PBJ"))
 			g_sysPara.nc.m_xPunchPara.AddFileFlag(CNCPart::PLATE_PBJ_FILE);
-		if(strstr(sValue, "WKF"))
+		if (strstr(sValue, "WKF"))
 			g_sysPara.nc.m_xPunchPara.AddFileFlag(CNCPart::PLATE_WKF_FILE);
+		if (strstr(sValue, "TTP"))
+			g_sysPara.nc.m_xPunchPara.AddFileFlag(CNCPart::PLATE_TTP_FILE);
 	}
 	else if (CSysPara::GetPropID("nc.bDrillPress") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("启用") == 0)
-			g_sysPara.nc.m_bDrillPress = TRUE;
+			g_sysPara.AddNcFlag(CNCPart::DRILL_MODE);
 		else
-			g_sysPara.nc.m_bDrillPress = FALSE;
-		//
-		pPropList->DeleteAllSonItems(pItem);
-		if (g_sysPara.nc.m_bDrillPress)
+			g_sysPara.DelNcFlag(CNCPart::DRILL_MODE);
+		//刷新属性栏
+		if (g_sysPara.IsValidNcFlag(CNCPart::DRILL_MODE))
 		{
-			oper.InsertEditPropItem(pItem, "nc.DrillPara.m_sThick", "", "", -1, TRUE);
-			oper.InsertCmbListPropItem(pItem, "nc.DrillPara.m_dwFileFlag", "", "", "", -1, TRUE);
+			if (pItem->m_bHideChildren)
+				pPropList->Expand(pItem, pItem->m_iIndex);
 		}
+		else
+			pPropList->Collapse(pItem);
+		oper.UpdatePropItemValue("nc.m_iNcMode");
 	}
 	else if (CSysPara::GetPropID("nc.DrillPara.m_sThick") == pItem->m_idProp)
 		g_sysPara.nc.m_xDrillPara.m_sThick.Copy(valueStr);
@@ -331,6 +262,22 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 			g_sysPara.nc.m_xDrillPara.AddFileFlag(CNCPart::PLATE_DXF_FILE);
 		if (strstr(sValue, "PMZ"))
 			g_sysPara.nc.m_xDrillPara.AddFileFlag(CNCPart::PLATE_PMZ_FILE);
+	}
+	else if (CSysPara::GetPropID("nc.bLaser") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("启用") == 0)
+			g_sysPara.AddNcFlag(CNCPart::LASER_MODE);
+		else
+			g_sysPara.DelNcFlag(CNCPart::LASER_MODE);
+		//刷新属性栏
+		if (g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE))
+		{
+			if (pItem->m_bHideChildren)
+				pPropList->Expand(pItem, pItem->m_iIndex);
+		}
+		else
+			pPropList->Collapse(pItem);
+		oper.UpdatePropItemValue("nc.m_iNcMode");
 	}
 	else if (CSysPara::GetPropID("nc.LaserPara.m_sThick") == pItem->m_idProp)
 		g_sysPara.nc.m_xLaserPara.m_sThick.Copy(valueStr);
@@ -357,11 +304,6 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	}
 	else if(CSysPara::GetPropID("nc.m_sNcDriverPath")==pItem->m_idProp)
 		g_sysPara.nc.m_sNcDriverPath=valueStr;
-	else if(CSysPara::GetPropID("pbj.m_iPbjMode")==pItem->m_idProp)
-	{
-		g_sysPara.pbj.m_iPbjMode=valueStr[0]-'0';
-		g_sysPara.WriteSysParaToReg("PbjMode");
-	}
 	else if(CSysPara::GetPropID("pbj.m_bIncVertex")==pItem->m_idProp)
 	{
 		if(valueStr.CompareNoCase("是")==0)
@@ -369,14 +311,6 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		else
 			g_sysPara.pbj.m_bIncVertex=FALSE;
 		g_sysPara.WriteSysParaToReg("PbjIncVertex");
-	}
-	else if (CSysPara::GetPropID("pbj.m_bIncSH") == pItem->m_idProp)
-	{
-		if (valueStr.CompareNoCase("是") == 0)
-			g_sysPara.pbj.m_bIncSH = TRUE;
-		else
-			g_sysPara.pbj.m_bIncSH = FALSE;
-		g_sysPara.WriteSysParaToReg("PbjIncSH");
 	}
 	else if(CSysPara::GetPropID("pbj.m_bAutoSplitFile")==pItem->m_idProp)
 	{
@@ -458,16 +392,6 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.plasmaCut.m_bCutPosInInitPos=valueStr[0]-'0';
 		g_sysPara.WriteSysParaToReg("plasmaCut.m_bCutPosInInitPos");
 	}
-	else if (CSysPara::GetPropID("plasmaCut.m_wEnlargedSpace")==pItem->m_idProp)
-	{
-		g_sysPara.plasmaCut.m_wEnlargedSpace=atoi(valueStr);
-		g_sysPara.WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
-	}
-	else if (CSysPara::GetPropID("plasmaCut.m_bCutSpecialHole") == pItem->m_idProp)
-	{
-		g_sysPara.plasmaCut.m_bCutSpecialHole = atoi(valueStr);
-		g_sysPara.WriteSysParaToReg("plasmaCut.m_bCutSpecialHole");
-	}
 	else if (CSysPara::GetPropID("flameCut.m_sOutLineLen")==pItem->m_idProp)
 	{
 		g_sysPara.flameCut.m_sOutLineLen.Copy(valueStr);
@@ -488,18 +412,31 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.flameCut.m_bCutPosInInitPos=valueStr[0]-'0';
 		g_sysPara.WriteSysParaToReg("flameCut.m_bCutPosInInitPos");
 	}
-	else if (CSysPara::GetPropID("flameCut.m_wEnlargedSpace")==pItem->m_idProp)
+	else if (CSysPara::GetPropID("nc.FlamePara.m_wEnlargedSpace")==pItem->m_idProp)
 	{
-		g_sysPara.flameCut.m_wEnlargedSpace=atoi(valueStr);
+		g_sysPara.nc.m_xFlamePara.m_wEnlargedSpace = atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("flameCut.m_wEnlargedSpace");
 	}
-	else if (CSysPara::GetPropID("flameCut.m_bCutSpecialHole") == pItem->m_idProp)
+	else if (CSysPara::GetPropID("nc.FlamePara.m_bCutSpecialHole") == pItem->m_idProp)
 	{
-		if(valueStr.CompareNoCase("是")==0)
-			g_sysPara.flameCut.m_bCutSpecialHole = TRUE;
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xFlamePara.m_bCutSpecialHole = TRUE;
 		else
-			g_sysPara.flameCut.m_bCutSpecialHole = FALSE;
+			g_sysPara.nc.m_xFlamePara.m_bCutSpecialHole = FALSE;
 		g_sysPara.WriteSysParaToReg("flameCut.m_bCutSpecialHole");
+	}
+	else if (CSysPara::GetPropID("nc.PlasmaPara.m_wEnlargedSpace") == pItem->m_idProp)
+	{
+		g_sysPara.nc.m_xPlasmaPara.m_wEnlargedSpace = atoi(valueStr);
+		g_sysPara.WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
+	}
+	else if (CSysPara::GetPropID("nc.PlasmaPara.m_bCutSpecialHole") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xPlasmaPara.m_bCutSpecialHole = TRUE;
+		else
+			g_sysPara.nc.m_xPlasmaPara.m_bCutSpecialHole = FALSE;
+		g_sysPara.WriteSysParaToReg("plasmaCut.m_bCutSpecialHole");
 	}
 #endif
 	else if(CSysPara::GetPropID("holeIncrement.m_fDatum")==pItem->m_idProp)
@@ -721,6 +658,9 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 
 BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 {
+	if (pPropList == NULL || pItem == NULL)
+		return FALSE;
+	CPropertyListOper<CSysPara> oper(pPropList, &g_sysPara);
 	if(CSysPara::GetPropID("nc.m_sNcDriverPath")==pItem->m_idProp)
 	{
 		CFileDialog FileDlg(TRUE,"drv",NULL,NULL,"角钢NC驱动(*.drv)|*.drv||");
@@ -754,37 +694,43 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 	else if(CSysPara::GetPropID("holeIncrement.m_fDatum")==pItem->m_idProp)
 	{
 		CHoleIncrementSetDlg dlg;
-		if(dlg.DoModal()!=IDOK)
-			return FALSE;
-		double fDatum=g_sysPara.holeIncrement.m_fDatum;
-		if(dlg.m_arrIsCanUse[0])
-			g_sysPara.holeIncrement.m_fM12=dlg.m_fM12Increment;
-		else
-			g_sysPara.holeIncrement.m_fM12=fDatum;
-		if(dlg.m_arrIsCanUse[1])
-			g_sysPara.holeIncrement.m_fM16=dlg.m_fM16Increment;
-		else
-			g_sysPara.holeIncrement.m_fM16=fDatum;
-		if(dlg.m_arrIsCanUse[2])
-			g_sysPara.holeIncrement.m_fM20=dlg.m_fM20Increment;
-		else
-			g_sysPara.holeIncrement.m_fM20=fDatum;
-		if(dlg.m_arrIsCanUse[3])
-			g_sysPara.holeIncrement.m_fM24=dlg.m_fM24Increment;
-		else
-			g_sysPara.holeIncrement.m_fM24=fDatum;
-		if(dlg.m_arrIsCanUse[4])
-			g_sysPara.holeIncrement.m_fCutSH=dlg.m_fCutIncrement;
-		else
-			g_sysPara.holeIncrement.m_fCutSH=fDatum;
-		if (dlg.m_arrIsCanUse[5])
-			g_sysPara.holeIncrement.m_fProSH = dlg.m_fCutIncrement;
-		else
-			g_sysPara.holeIncrement.m_fProSH = fDatum;
-		UpdateHoleIncrementProperty(pPropList,pItem);
-		//
-		CPPEView *pView=(CPPEView*)theApp.GetView();
-		pView->AmendHoleIncrement();
+		if (dlg.DoModal() == IDOK)
+		{
+			UpdateHoleIncrementProperty(pPropList, pItem);
+			//
+			CPPEView *pView = (CPPEView*)theApp.GetView();
+			pView->AmendHoleIncrement();
+		}
+	}
+	else if (CSysPara::GetPropID("nc.FlamePara.m_xHoleIncrement") == pItem->m_idProp)
+	{
+		CHoleIncrementSetDlg dlg;
+		dlg.m_ciCurNcMode = CNCPart::FLAME_MODE;
+		dlg.DoModal();
+	}
+	else if (CSysPara::GetPropID("nc.PlasmaPara.m_xHoleIncrement") == pItem->m_idProp)
+	{
+		CHoleIncrementSetDlg dlg;
+		dlg.m_ciCurNcMode = CNCPart::PLASMA_MODE;
+		dlg.DoModal();
+	}
+	else if (CSysPara::GetPropID("nc.PunchPara.m_xHoleIncrement") == pItem->m_idProp)
+	{
+		CHoleIncrementSetDlg dlg;
+		dlg.m_ciCurNcMode = CNCPart::PUNCH_MODE;
+		dlg.DoModal();
+	}
+	else if (CSysPara::GetPropID("nc.DrillPara.m_xHoleIncrement") == pItem->m_idProp)
+	{
+		CHoleIncrementSetDlg dlg;
+		dlg.m_ciCurNcMode = CNCPart::DRILL_MODE;
+		dlg.DoModal();
+	}
+	else if (CSysPara::GetPropID("nc.LaserPara.m_xHoleIncrement") == pItem->m_idProp)
+	{
+		CHoleIncrementSetDlg dlg;
+		dlg.m_ciCurNcMode = CNCPart::LASER_MODE;
+		dlg.DoModal();
 	}
 	else if (CSysPara::GetPropID("nc.LaserPara.Config") == pItem->m_idProp)
 	{
@@ -806,6 +752,65 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 			pPropList->SetItemPropValue(pItem->m_idProp, sFolder);
 		}
 	}
+	else if (CSysPara::GetPropID("nc.m_iNcMode") == pItem->m_idProp)
+	{
+		CSelPlateNcModeDlg dlg;
+		if (dlg.DoModal())
+		{
+			CString sValue;
+			CPropTreeItem *pFlameCutItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.bFlameCut"), NULL);
+			if (g_sysPara.IsValidNcFlag(CNCPart::FLAME_MODE))
+			{
+				if (pFlameCutItem->m_bHideChildren)
+					pPropList->Expand(pFlameCutItem, pFlameCutItem->m_iIndex);
+			}	
+			else
+				pPropList->Collapse(pFlameCutItem);
+			oper.UpdatePropItemValue("nc.bFlameCut");
+			//
+			CPropTreeItem *pPlasmaCutItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.bPlasmaCut"), NULL);
+			if (g_sysPara.IsValidNcFlag(CNCPart::PLASMA_MODE))
+			{
+				if (pPlasmaCutItem->m_bHideChildren)
+					pPropList->Expand(pPlasmaCutItem, pPlasmaCutItem->m_iIndex);
+			}
+			else
+				pPropList->Collapse(pPlasmaCutItem);
+			oper.UpdatePropItemValue("nc.bPlasmaCut");
+			//
+			CPropTreeItem *pPunchItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.bPunchPress"), NULL);
+			if (g_sysPara.IsValidNcFlag(CNCPart::PUNCH_MODE))
+			{
+				if (pPunchItem->m_bHideChildren)
+					pPropList->Expand(pPunchItem, pPunchItem->m_iIndex);
+			}
+			else
+				pPropList->Collapse(pPunchItem);
+			oper.UpdatePropItemValue("nc.bPunchPress");
+			//
+			CPropTreeItem *pDrillItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.bDrillPress"), NULL);
+			if (g_sysPara.IsValidNcFlag(CNCPart::DRILL_MODE))
+			{
+				if (pDrillItem->m_bHideChildren)
+					pPropList->Expand(pDrillItem, pDrillItem->m_iIndex);
+			}
+			else
+				pPropList->Collapse(pDrillItem);
+			oper.UpdatePropItemValue("nc.bDrillPress");
+			//
+			CPropTreeItem *pLaserItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.bLaser"), NULL);
+			if (g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE))
+			{
+				if (pLaserItem->m_bHideChildren)
+					pPropList->Expand(pLaserItem, pLaserItem->m_iIndex);
+			}
+			else
+				pPropList->Collapse(pLaserItem);
+			oper.UpdatePropItemValue("nc.bLaser");
+			//
+			oper.UpdatePropItemValue("nc.m_iNcMode");
+		}
+	}
 	else 
 		return FALSE;
 	return TRUE;
@@ -817,7 +822,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 		return FALSE;
 	const int GROUP_NCINFO = 1, GROUP_PROCESSCARD_INFO = 2, GROUP_DISPLAY = 3;
 	pPropDlg->m_arrPropGroupLabel.RemoveAll();
-#if defined(__PNC_)||defined(__PROCESS_PLATE_)
+#if defined(__PNC_)
 	pPropDlg->m_arrPropGroupLabel.SetSize(3);
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_NCINFO-1,"常规");
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_PROCESSCARD_INFO - 1, "输出");
@@ -872,17 +877,17 @@ BOOL CPPEView::DisplaySysSettingProperty()
 		pPropItem = oper.InsertEditPropItem(pGroupItem, "ProLimitSH");
 		pPropItem->SetReadOnly();
 	}
+#ifdef __PROCESS_PLATE_
 	pGroupItem =oper.InsertBtnEditPropItem(pParentItem,"holeIncrement.m_fDatum");
 	UpdateHoleIncrementProperty(pPropList, pGroupItem);
+#endif
 #endif
 #ifdef __PNC_
 	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 	{	//支持螺栓优化功能
 		pPropItem=oper.InsertCmbListPropItem(pParentItem, "nc.m_bSortByHoleD");
 		if (g_sysPara.nc.m_bSortByHoleD)
-			oper.InsertCmbListPropItem(pPropItem, "nc.m_iGroupSortType");
-		//不开放自动优化螺栓孔，优化耗时长，影响操作流畅度
-		//oper.InsertCmbListPropItem(pParentItem, "nc.m_bAutoSortHole");		
+			oper.InsertCmbListPropItem(pPropItem, "nc.m_iGroupSortType");		
 	}
 	//钢板切割模式
 	oper.InsertCmbListPropItem(pParentItem, "m_cDisplayCutType");
@@ -892,8 +897,6 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pPropItem,"flameCut.m_bCutPosInInitPos");
 	oper.InsertCmbEditPropItem(pPropItem,"flameCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem,"flameCut.m_sOutLineLen");
-	oper.InsertEditPropItem(pPropItem,"flameCut.m_wEnlargedSpace");
-	oper.InsertCmbListPropItem(pPropItem, "flameCut.m_bCutSpecialHole");
 	pPropItem->m_bHideChildren=(g_sysPara.m_cDisplayCutType!=0);
 	//等离子切割
 	pPropItem=oper.InsertButtonPropItem(pParentItem,"plasmaCut");
@@ -901,88 +904,70 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pPropItem,"plasmaCut.m_bCutPosInInitPos");
 	oper.InsertCmbEditPropItem(pPropItem,"plasmaCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem,"plasmaCut.m_sOutLineLen");
-	//oper.InsertCmbListPropItem(pPropItem,"plasmaCut.m_bCutSpecialHole");
 	pPropItem->m_bHideChildren=(g_sysPara.m_cDisplayCutType==0);
-#endif
-#ifndef __PNC_
+#else
 	oper.InsertFilePathPropItem(pParentItem,"nc.m_sNcDriverPath");
 #endif
-#if defined(__PNC_)||defined(__PROCESS_PLATE_)
+#ifdef __PNC_
 	//钢板输出设置
 	pParentItem = oper.InsertPropItem(pRootItem, "OutPutSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_PROCESSCARD_INFO);
 	oper.InsertButtonPropItem(pParentItem, "OutputPath");
 	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
-#ifdef __PROCESS_PLATE_
-	pPropItem = oper.InsertCmbListPropItem(pParentItem, "nc.m_iNcMode");
-	if(g_sysPara.IsValidNcFlag(CNCPart::CUT_MODE))
-		oper.InsertEditPropItem(pPropItem, "nc.m_fShapeAddDist");
-	if(g_sysPara.IsValidNcFlag(CNCPart::PROCESS_MODE))
-	{
-		oper.InsertEditPropItem(pPropItem, "nc.m_sThickToPBJ");
-		oper.InsertEditPropItem(pPropItem, "nc.m_sThickToPMZ");
-		oper.InsertCmbListPropItem(pPropItem, "nc.m_bNeedSH");
-		oper.InsertCmbListPropItem(pPropItem, "nc.m_bNeedMKRect");
-	}
-#else
-	oper.InsertCmbListPropItem(pParentItem, "nc.m_iNcMode");
-	//切割下料
-	pGroupItem = oper.InsertEditPropItem(pParentItem, "CutInfo");
-	oper.InsertEditPropItem(pGroupItem, "nc.m_fShapeAddDist");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.bFlameCut");
-	if (g_sysPara.nc.m_bFlameCut)
-	{
-		oper.InsertEditPropItem(pPropItem, "nc.FlamePara.m_sThick");
-		oper.InsertCmbListPropItem(pPropItem, "nc.FlamePara.m_dwFileFlag");
-	}
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.bPlasmaCut");
-	if (g_sysPara.nc.m_bPlasmaCut)
-	{
-		oper.InsertEditPropItem(pPropItem, "nc.PlasmaPara.m_sThick");
-		oper.InsertCmbListPropItem(pPropItem, "nc.PlasmaPara.m_dwFileFlag");
-	}
-	pGroupItem->m_bHideChildren = (!g_sysPara.IsValidNcFlag(CNCPart::CUT_MODE));
-	//板床加工
-	pGroupItem = oper.InsertEditPropItem(pParentItem, "ProcessInfo");
-	oper.InsertCmbListPropItem(pGroupItem, "nc.m_bNeedSH");
-	oper.InsertCmbListPropItem(pGroupItem, "nc.m_bNeedMKRect");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.bPunchPress");
-	if (g_sysPara.nc.m_bPunchPress)
-	{
-		oper.InsertEditPropItem(pPropItem, "nc.PunchPara.m_sThick");
-		oper.InsertCmbListPropItem(pPropItem, "nc.PunchPara.m_dwFileFlag");
-	}
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.bDrillPress");
-	if (g_sysPara.nc.m_bDrillPress)
-	{
-		oper.InsertEditPropItem(pPropItem, "nc.DrillPara.m_sThick");
-		oper.InsertCmbListPropItem(pPropItem, "nc.DrillPara.m_dwFileFlag");
-	}
-	pGroupItem->m_bHideChildren = (!g_sysPara.IsValidNcFlag(CNCPart::PROCESS_MODE));
+	oper.InsertButtonPropItem(pParentItem, "nc.m_iNcMode");
+	//火焰切割
+	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bFlameCut");
+	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::FLAME_MODE);
+	oper.InsertEditPropItem(pGroupItem, "nc.FlamePara.m_wEnlargedSpace");
+	oper.InsertCmbListPropItem(pGroupItem,"nc.FlamePara.m_bCutSpecialHole");
+	oper.InsertButtonPropItem(pGroupItem, "nc.FlamePara.m_xHoleIncrement");
+	oper.InsertEditPropItem(pGroupItem, "nc.FlamePara.m_sThick");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.FlamePara.m_dwFileFlag");
+	//等离子切割
+	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bPlasmaCut");
+	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::PLASMA_MODE);
+	oper.InsertEditPropItem(pGroupItem, "nc.PlasmaPara.m_wEnlargedSpace");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.PlasmaPara.m_bCutSpecialHole");
+	oper.InsertButtonPropItem(pGroupItem, "nc.PlasmaPara.m_xHoleIncrement");
+	oper.InsertEditPropItem(pGroupItem, "nc.PlasmaPara.m_sThick");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.PlasmaPara.m_dwFileFlag");
+	//冲床加工
+	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bPunchPress");
+	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::PUNCH_MODE);
+	oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_bNeedSH");
+	oper.InsertButtonPropItem(pGroupItem, "nc.PunchPara.m_xHoleIncrement");
+	oper.InsertEditPropItem(pGroupItem, "nc.PunchPara.m_sThick");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_dwFileFlag");
+	//钻床加工
+	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bDrillPress");
+	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::DRILL_MODE);
+	oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_bNeedSH");
+	oper.InsertButtonPropItem(pGroupItem, "nc.DrillPara.m_xHoleIncrement");
+	oper.InsertEditPropItem(pGroupItem, "nc.DrillPara.m_sThick");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_dwFileFlag");
 	//激光复合机
-	pGroupItem = oper.InsertEditPropItem(pParentItem, "LaserCutInfo");
+	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bLaser");
+	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE);
 	oper.InsertEditPropItem(pGroupItem, "nc.LaserPara.m_sThick");
+	oper.InsertButtonPropItem(pGroupItem, "nc.LaserPara.m_xHoleIncrement");
 	oper.InsertButtonPropItem(pGroupItem, "nc.LaserPara.Config");
-	pPropItem=oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_dwFileFlag");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_dwFileFlag");
 	pPropItem->SetReadOnly(TRUE);
 	oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendLine");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bOutputBendType");
-	pGroupItem->m_bHideChildren = (!g_sysPara.IsValidNcFlag(CNCPart::LASER_MODE));
 	//文件设置
 	pParentItem = oper.InsertPropItem(pRootItem, "FileSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_PROCESSCARD_INFO);
 	//PBJ文件设置
 	pPropItem = oper.InsertEditPropItem(pParentItem, "PbjPara");
 	oper.InsertCmbListPropItem(pPropItem, "pbj.m_bIncVertex");
-	oper.InsertCmbListPropItem(pPropItem, "pbj.m_bIncSH");
 	oper.InsertCmbListPropItem(pPropItem, "pbj.m_bAutoSplitFile");
 	oper.InsertCmbListPropItem(pPropItem, "pbj.m_bMergeHole");
 	pPropItem = oper.InsertEditPropItem(pParentItem, "PmzPara");
 	oper.InsertCmbListPropItem(pPropItem, "pmz.m_iPmzMode");
 	oper.InsertCmbListPropItem(pPropItem, "pmz.m_bIncVertex");
 	oper.InsertCmbListPropItem(pPropItem, "pmz.m_bPmzCheck");
-#endif
 #endif
 #ifndef __PNC_
 	//角钢工艺卡

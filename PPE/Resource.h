@@ -37,6 +37,7 @@
 #define IDD_SYNC_PROPERTY_DLG           158
 #define IDD_PLANK_CONFIG_DLG            159
 #define IDD_FILE_FORMAT_DLG             162
+#define IDD_SEL_PLATE_NC_DLG            165
 #define IDD_INPUT_AN_INTEGER_VAL_DLG    186
 #define IDD_ADJUST_ORDER_DLG            226
 #define IDD_BEND_PLANK_STYLE_DLG        236
@@ -86,14 +87,19 @@
 #define IDC_CHK_OPERATOR                1025
 #define IDC_BTN_RESET                   1025
 #define IDC_CHK_TA_TYPE                 1026
+#define IDC_CHK_FLAME                   1026
 #define IDC_CHK_STAMP_NO                1027
 #define IDC_CHK_PART_NO                 1027
+#define IDC_CHK_PLASMA                  1027
 #define IDC_CHK_AUDITOR                 1028
 #define IDC_CHK_SINGLE_NUM              1028
+#define IDC_CHK_PUNCH                   1028
 #define IDC_CHK_PARTNO                  1029
 #define IDC_CHK_PART_MAT                1029
+#define IDC_CHK_DRILL                   1029
 #define IDC_CHK_MAT                     1030
 #define IDC_CHK_PART_THICK              1030
+#define IDC_CHK_LASER                   1030
 #define IDC_CHK_THICK                   1031
 #define IDC_CHK_PROCESS_NUM             1031
 #define IDC_CHK_MAT2                    1032
@@ -227,18 +233,20 @@
 #define ID_GROUP_BY_THICK_MATERIAL      33012
 #define ID_SMART_SORT_BOLT_2            33013
 #define ID_SMART_SORT_BOLT_3            33014
-#define ID_CUT_MODE_NC_DATA             33015
-#define ID_PROCESS_MODE_NC_DATA         33016
-#define ID_LASER_MODE_NC_DATA           33017
+#define ID_FLAME_NC_DATA                33015
+#define ID_PLASMA_NC_DATA				33016
+#define ID_PUNCH_NC_DATA				33017
+#define ID_DRILL_NC_DATA				33018
+#define ID_LASER_NC_DATA				33019
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        165
-#define _APS_NEXT_COMMAND_VALUE         33018
-#define _APS_NEXT_CONTROL_VALUE         1026
+#define _APS_NEXT_RESOURCE_VALUE        167
+#define _APS_NEXT_COMMAND_VALUE         33020
+#define _APS_NEXT_CONTROL_VALUE         1027
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

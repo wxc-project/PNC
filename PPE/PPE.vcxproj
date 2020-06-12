@@ -103,7 +103,7 @@
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">false</LinkIncremental>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">false</LinkIncremental>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">..\bin\DebugForTMA\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">DebugForTMA\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Debug\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">DebugForTMA\</IntDir>
     <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
@@ -377,7 +377,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhCore-dll\LmaDlg\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\bin\DebugForTMA\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhCore-dll\LmaDlg\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\PEC\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>
@@ -593,6 +593,7 @@
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">true</BrowseInformation>
     </ClCompile>
     <ClCompile Include="PromptDlg.cpp" />
+    <ClCompile Include="SelPlateNcModeDlg.cpp" />
     <ClCompile Include="SideBaffleHighDlg.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">Disabled</Optimization>
@@ -716,6 +717,7 @@
     <ClInclude Include="PPEView.h" />
     <ClInclude Include="PromptDlg.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SelPlateNcModeDlg.h" />
     <ClInclude Include="SideBaffleHighDlg.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="SyncPropertyDlg.h" />

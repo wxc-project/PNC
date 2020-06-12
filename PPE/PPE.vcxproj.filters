@@ -193,6 +193,9 @@
     <ClCompile Include="FileFormatSetDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="SelPlateNcModeDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
@@ -379,6 +382,9 @@
       <Filter>TowerCad</Filter>
     </ClInclude>
     <ClInclude Include="FileFormatSetDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SelPlateNcModeDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

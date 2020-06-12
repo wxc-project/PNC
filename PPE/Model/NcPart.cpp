@@ -3,161 +3,35 @@
 #include "ArrayList.h"
 #include "DxfFile.h"
 #include "NcJg.h"
-#include "folder_dialog.h"
-#include "direct.h"
 #include "SortFunc.h"
 #include "LicFuncDef.h"
 #include "ParseAdaptNo.h"
 #include "XhMath.h"
 #include "CadColorTbl.h"
-
-BOOL CNCPart::m_bDisplayLsOrder=FALSE;
-BOOL CNCPart::m_bSortHole=FALSE;
-BOOL CNCPart::m_bDeformedProfile=FALSE;
-double CNCPart::m_fHoleIncrement = 1.5;
-CString CNCPart::m_sExportPartInfoKeyStr;
-void GetSysPath(char* startPath);
-void MakeDirectory(char *path)
+#include "Expression.h"
+//////////////////////////////////////////////////////////////////////////
+//
+//按照同径螺栓数量及孔径大小进行比较
+int compare_boltInfo(const DRILL_BOLT_INFO& pBoltInfo1, const DRILL_BOLT_INFO& pBoltInfo2)
 {
-	char bak_path[MAX_PATH],drive[MAX_PATH];
-	strcpy(bak_path,path);
-	char *dir = strtok(bak_path,"/\\");
-	if(strlen(dir)==2&&dir[1]==':')
+	return compare_double(pBoltInfo1.fHoleD, pBoltInfo2.fHoleD);
+}
+//按照同孔径件螺栓间到原点的最短距离进行比较
+int compare_boltInfo2(const DRILL_BOLT_INFO& pBoltInfo1, const DRILL_BOLT_INFO& pBoltInfo2)
+{
+	return compare_double(pBoltInfo1.fMinDist, pBoltInfo2.fMinDist);
+}
+static void GetPlateScope(CProcessPlate& tempPlate, SCOPE_STRU& scope)
+{
+	for (PROFILE_VER* pVertex = tempPlate.vertex_list.GetFirst(); pVertex; pVertex = tempPlate.vertex_list.GetNext())
+		scope.VerifyVertex(f3dPoint(pVertex->vertex.x, pVertex->vertex.y));
+	for (BOLT_INFO *pHole = tempPlate.m_xBoltInfoList.GetFirst(); pHole; pHole = tempPlate.m_xBoltInfoList.GetNext())
 	{
-		strcpy(drive,dir);
-		strcat(drive,"\\");
-		_chdir(drive);
-		dir = strtok(NULL,"/\\");
-	}
-	while(dir)
-	{
-		_mkdir(dir);
-		_chdir(dir);
-		dir = strtok(NULL,"/\\");
+		double radius = 0.5*pHole->bolt_d;
+		scope.VerifyVertex(f3dPoint(pHole->posX - radius, pHole->posY - radius));
+		scope.VerifyVertex(f3dPoint(pHole->posX + radius, pHole->posY + radius));
 	}
 }
-CXhChar500 GetValidWorkDir(const char* work_dir, CPPEModel *pModel = NULL, const char* sub_folder = NULL)
-{
-	CFileFind fileFind;
-	CXhChar500 sWorkDir;
-	if(work_dir==NULL||strlen(work_dir)<=0||!fileFind.FindFile(work_dir))
-	{	//指定工作路径
-		char ss[MAX_PATH];
-		GetSysPath(ss);
-		CString sFolder(ss);
-		if(!InvokeFolderPickerDlg(sFolder))
-			return sWorkDir;
-		sWorkDir.Copy(sFolder);
-	}
-	else
-		sWorkDir.Copy(work_dir);
-	sWorkDir.Append("\\");
-	if(pModel&&pModel->m_sTaType.Length()>0)
-	{
-		sWorkDir.Append(pModel->m_sTaType);
-		sWorkDir.Append("\\");
-		if(!fileFind.FindFile(sWorkDir))
-			MakeDirectory(sWorkDir);
-	}
-	if (sub_folder != NULL && strlen(sub_folder) > 0)
-	{
-		sWorkDir.Append(sub_folder);
-		sWorkDir.Append("\\");
-		if (!fileFind.FindFile(sWorkDir))
-			MakeDirectory(sWorkDir);
-	}
-	return sWorkDir;
-}
-CXhChar200 GetValidFileName(CPPEModel *pModel,CProcessPart *pPart,const char* sPartNoPrefix=NULL)
-{
-	CXhChar200 sFileName;
-	CXhChar500 sFilePath=pModel->GetPartFilePath(pPart->GetPartNo());
-	if (pModel->file_format.IsValidFormat() && pPart->IsPlate())
-	{	//根据用户定制，提取文件名
-		CProcessPlate* pPlate = (CProcessPlate*)pPart;
-		size_t nSplit = pModel->file_format.m_sSplitters.size();
-		size_t nKeySize = pModel->file_format.m_sKeyMarkArr.size();
-		for (size_t i = 0; i < nKeySize; i++)
-		{
-			CXhChar50 sValue;
-			if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PART_NO))
-				sValue.Copy(pPart->GetPartNo());
-			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PART_MAT))
-				CProcessPart::QuerySteelMatMark(pPart->cMaterial, sValue);
-			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PART_THICK) &&
-				pPlate->GetThick() > 0)
-				sValue.Printf("%.0f", pPlate->GetThick());
-			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_SINGLE_NUM) &&
-				pPlate->m_nSingleNum > 0)
-				sValue.Printf("%d", pPlate->m_nSingleNum);
-			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_PROCESS_NUM) &&
-				pPlate->m_nProcessNum > 0)
-				sValue.Printf("%d", pPlate->m_nProcessNum);
-			else if (pModel->file_format.m_sKeyMarkArr[i].Equal(CPPEModel::KEY_TA_TYPE) &&
-				pModel->m_sTaType.GetLength() > 0)
-				sValue.Copy(pModel->m_sTaType);
-			//
-			if (sValue.GetLength() > 0)
-			{
-				if (sFileName.GetLength() > 0 && nSplit >= i && 
-					pModel->file_format.m_sSplitters[i - 1].GetLength() > 0)
-					sFileName.Append(pModel->file_format.m_sSplitters[i - 1]);
-				sFileName.Append(sValue);
-			}
-		}
-		//文件格式末尾带特殊分隔符
-		if (nKeySize > 0 && nSplit == nKeySize && pModel->file_format.m_sSplitters[nSplit - 1].GetLength() > 0)
-			sFileName.Append(pModel->file_format.m_sSplitters[nSplit - 1]);
-	}
-	else if(sFilePath.Length()>0)
-	{	//根据ppi文件提取路径，提取文件名
-		char drive[8],dir[MAX_PATH],fname[MAX_PATH],ext[10];
-		_splitpath(sFilePath,drive,dir,fname,ext);
-		sFileName.Copy(fname);
-	}
-	else
-	{	//根据构件属性生成文件名
-		CString sSpec=pPart->GetSpec();
-		if(sPartNoPrefix)
-			sFileName.Printf("%s%s#%s",sPartNoPrefix,(char*)pPart->GetPartNo(),sSpec.Trim());
-		else
-			sFileName.Printf("%s#%s",(char*)pPart->GetPartNo(),sSpec.Trim());
-	}
-	return sFileName;
-}
-static SCOPE_STRU GetPlateVertexScope(CProcessPlate *pPlate,GECS *pCS=NULL)
-{
-	SCOPE_STRU scope;
-	scope.ClearScope();
-	f3dPoint axis_len(1,0,0);
-	if(pCS)
-		axis_len=pCS->axis_x;
-	PROFILE_VER* pPreVertex=pPlate->vertex_list.GetTail();
-	for(PROFILE_VER *pVertex=pPlate->vertex_list.GetFirst();pVertex;pVertex=pPlate->vertex_list.GetNext())
-	{
-		f3dPoint pt=pPreVertex->vertex;
-		if(pCS)
-			coord_trans(pt,*pCS,FALSE);
-		scope.VerifyVertex(pt);
-		if(pPreVertex->type==2)
-		{
-			f3dArcLine arcLine;
-			arcLine.CreateMethod2(pPreVertex->vertex,pVertex->vertex,pPreVertex->work_norm,pPreVertex->sector_angle);
-			f3dPoint startPt=f3dPoint(arcLine.Center())+axis_len*arcLine.Radius();
-			f3dPoint endPt=f3dPoint(arcLine.Center())-axis_len*arcLine.Radius();
-			if(pCS)
-			{
-				coord_trans(startPt,*pCS,FALSE);
-				coord_trans(endPt,*pCS,FALSE);
-			}
-			scope.VerifyVertex(startPt);
-			scope.VerifyVertex(endPt);
-		}
-		pPreVertex=pVertex;
-	}
-	return scope;
-}
-
 BOOL GetSysParaFromReg(const char* sEntry,char* sValue)
 {
 	char sStr[MAX_PATH];
@@ -197,8 +71,48 @@ int GetNearestACI(COLORREF color)
 	}
 	return min_index;
 }
+//清除钢板上的共线点
+static void RemoveCollinearPoint(CProcessPlate *pPlate)
+{
+	ATOM_LIST<PROFILE_VER> xProfileVerArr;
+	for (PROFILE_VER *pVertex = pPlate->vertex_list.GetFirst(); pVertex; pVertex = pPlate->vertex_list.GetNext())
+	{
+		PROFILE_VER *pVertexPre = pPlate->vertex_list.GetPrev();
+		if (pVertexPre == NULL)
+		{
+			pVertexPre = pPlate->vertex_list.GetTail();
+			pPlate->vertex_list.GetFirst();
+		}
+		else
+			pPlate->vertex_list.GetNext();
+		PROFILE_VER *pVertexNext = pPlate->vertex_list.GetNext();
+		if (pVertexNext == NULL)
+		{
+			pVertexNext = pPlate->vertex_list.GetFirst();
+			pPlate->vertex_list.GetTail();
+		}
+		else
+			pPlate->vertex_list.GetPrev();
+		//
+		f3dPoint pre_vec = (pVertex->vertex - pVertexPre->vertex).normalized();
+		f3dPoint cur_vec = (pVertex->vertex - pVertexNext->vertex).normalized();
+		if (pVertexPre->type == 1 && pVertex->type == 1 && fabs(pre_vec*cur_vec) > 0.9999)
+			continue;	//三点共线
+		xProfileVerArr.append(*pVertex);
+	}
+	//
+	pPlate->vertex_list.Empty();
+	for (PROFILE_VER *pVertex = xProfileVerArr.GetFirst(); pVertex; pVertex = xProfileVerArr.GetNext())
+		pPlate->vertex_list.SetValue(pVertex->keyId, *pVertex);
+}
 //////////////////////////////////////////////////////////////////////////
-//
+//CNCPart
+//////////////////////////////////////////////////////////////////////////
+BOOL CNCPart::m_bDisplayLsOrder = FALSE;
+BOOL CNCPart::m_bSortHole = FALSE;
+BOOL CNCPart::m_bDeformedProfile = FALSE;
+double CNCPart::m_fHoleIncrement = 1.5;
+CString CNCPart::m_sExportPartInfoKeyStr;
 //ttp格式
 //13字节文件名称
 //1字节标识为（0x80）标识钢板
@@ -277,27 +191,22 @@ bool CNCPart::CreatePlateTtpFile(CProcessPlate *pPlate,const char* file_path)
 	fclose(fp);
 	return true;
 }
-void CNCPart::CreatePlateTtpFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
-{
-	CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel,"TTP");
-	if(sWorkDir.Length()<=0)
-		return;
-	CXhChar200 sFileName;
-	for(CProcessPlate *pPlate=plateSet.GetFirst();pPlate;pPlate=plateSet.GetNext())
-	{
-		sFileName=GetValidFileName(pModel,pPlate);
-		if(sFileName.Length()<=0)
-			continue;
-		sFilePath.Printf("%s\\%s.ttp",(char*)sWorkDir,(char*)sFileName);
-		CreatePlateTtpFile(pPlate,sFilePath);
-	}
-	ShellExecute(NULL,"open",NULL,NULL,sWorkDir,SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
-}
+
 bool CNCPart::CreatePlateWkfFile(CProcessPlate *pPlate, const char* file_path)
 {
 	if (pPlate == NULL)
 		return false;
+	BOOL bHasArcEdge = FALSE;
+	for (PROFILE_VER *pVertex = pPlate->vertex_list.GetFirst(); pVertex; pVertex = pPlate->vertex_list.GetNext())
+	{
+		if (pVertex->type != 1)
+		{
+			bHasArcEdge = TRUE;
+			break;
+		}
+	}
+	if (bHasArcEdge)
+		return FALSE;	//WKF格式暂不支持输出带有圆弧边的钢板 wht 19-06-11
 	CProcessPlate tempPlate;
 	pPlate->ClonePart(&tempPlate);
 	GECS mcs;
@@ -342,44 +251,6 @@ bool CNCPart::CreatePlateWkfFile(CProcessPlate *pPlate, const char* file_path)
 	fclose(fp);
 	return true;
 }
-void CNCPart::CreatePlateWkfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate> &plateSet, const char* work_dir)
-{
-	CXhChar500 sFilePath, sWorkDir = GetValidWorkDir(work_dir, pModel, "WKF");
-	if (sWorkDir.Length() <= 0)
-		return;
-	CXhChar200 sFileName;
-	for (CProcessPlate *pPlate = plateSet.GetFirst(); pPlate; pPlate = plateSet.GetNext())
-	{
-		BOOL bHasArcEdge = FALSE;
-		for (PROFILE_VER *pVertex = pPlate->vertex_list.GetFirst(); pVertex; pVertex = pPlate->vertex_list.GetNext())
-		{
-			if (pVertex->type != 1)
-			{
-				bHasArcEdge = TRUE;
-				break;
-			}
-		}
-		if (bHasArcEdge)
-			continue;	//WKF格式暂不支持输出带有圆弧边的钢板 wht 19-06-11
-		sFileName = GetValidFileName(pModel, pPlate);
-		if (sFileName.Length() <= 0)
-			continue;
-		sFilePath.Printf("%s\\%s.wkf", (char*)sWorkDir, (char*)sFileName);
-		CreatePlateWkfFile(pPlate, sFilePath);
-	}
-	ShellExecute(NULL, "open", NULL, NULL, sWorkDir, SW_SHOW);
-}
-static void GetPlateScope(CProcessPlate& tempPlate,SCOPE_STRU& scope)
-{
-	for(PROFILE_VER* pVertex=tempPlate.vertex_list.GetFirst();pVertex;pVertex=tempPlate.vertex_list.GetNext())
-		scope.VerifyVertex(f3dPoint(pVertex->vertex.x,pVertex->vertex.y));
-	for(BOLT_INFO *pHole=tempPlate.m_xBoltInfoList.GetFirst();pHole;pHole=tempPlate.m_xBoltInfoList.GetNext())
-	{
-		double radius=0.5*pHole->bolt_d;
-		scope.VerifyVertex(f3dPoint(pHole->posX-radius,pHole->posY-radius));
-		scope.VerifyVertex(f3dPoint(pHole->posX+radius,pHole->posY+radius));
-	}
-}
 void CNCPart::DeformedPlateProfile(CProcessPlate *pPlate)
 {
 	CProcessPlate xUnDeformedPlate;
@@ -395,40 +266,7 @@ void CNCPart::DeformedPlateProfile(CProcessPlate *pPlate)
 	for(PROFILE_VER* pVertex=pPlate->vertex_list.GetFirst();pVertex;pVertex=pPlate->vertex_list.GetNext())
 		pVertex->vertex=xUnDeformedPlate.GetDeformedVertex(pVertex->vertex);
 }
-//清除钢板上的共线点
-static void RemoveCollinearPoint(CProcessPlate *pPlate)
-{
-	ATOM_LIST<PROFILE_VER> xProfileVerArr;
-	for(PROFILE_VER *pVertex=pPlate->vertex_list.GetFirst();pVertex;pVertex=pPlate->vertex_list.GetNext())
-	{
-		PROFILE_VER *pVertexPre=pPlate->vertex_list.GetPrev();
-		if(pVertexPre==NULL)
-		{
-			pVertexPre=pPlate->vertex_list.GetTail();
-			pPlate->vertex_list.GetFirst();
-		}
-		else
-			pPlate->vertex_list.GetNext();
-		PROFILE_VER *pVertexNext=pPlate->vertex_list.GetNext();
-		if(pVertexNext==NULL)
-		{
-			pVertexNext=pPlate->vertex_list.GetFirst();
-			pPlate->vertex_list.GetTail();
-		}
-		else
-			pPlate->vertex_list.GetPrev();
-		//
-		f3dPoint pre_vec=(pVertex->vertex-pVertexPre->vertex).normalized();
-		f3dPoint cur_vec=(pVertex->vertex-pVertexNext->vertex).normalized();
-		if(pVertexPre->type==1&&pVertex->type==1&&fabs(pre_vec*cur_vec)>0.9999)
-			continue;	//三点共线
-		xProfileVerArr.append(*pVertex);
-	}
-	//
-	pPlate->vertex_list.Empty();
-	for(PROFILE_VER *pVertex=xProfileVerArr.GetFirst();pVertex;pVertex=xProfileVerArr.GetNext())
-		pPlate->vertex_list.SetValue(pVertex->keyId,*pVertex);
-}
+
 bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int dxf_mode)
 {
 	if(pPlate==NULL)
@@ -453,17 +291,10 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 	SCOPE_STRU scope;
 	GetPlateScope(tempPlate,scope);
 	//
-	double fSpecialD = 0, fShapeAddDist = 0, fFontH = 10;
-	int bNeedSH,iNcMode=0;
+	double fSpecialD = 0, fShapeAddDist = 0;
 	CXhChar100 sValue;
 	if(GetSysParaFromReg("LimitSH",sValue))
 		fSpecialD=atof(sValue);
-	if(GetSysParaFromReg("NeedSH",sValue))
-		bNeedSH=atoi(sValue);
-	if (dxf_mode == CNCPart::CUT_MODE && GetSysParaFromReg("ShapeAddDist", sValue))
-		fShapeAddDist=atof(sValue);
-	if (GetSysParaFromReg("DxfTextSize", sValue))
-		fFontH = atof(sValue);
 	int nEdgeClrIndex = -1, nTextClrIndex = -1;
 	if (GetSysParaFromReg("EdgeColor", sValue))
 	{
@@ -540,15 +371,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 					if (pPrevVertex->type == 2)
 						file.NewArc(centre.x, centre.y, arcLine.Radius(), fAngleS*DEGTORAD_COEF, fAngleE*DEGTORAD_COEF);
 					else
-					{	//椭圆弧按多个直线段模拟现实,NewEllipse需要测试完善 wht 18-12-01
-						/*f3dPoint long_axis_pt=arcLine.PositionInAngle(0);
-						f3dPoint short_axis_pt=arcLine.PositionInAngle(Pi);
-						double long_axis_len=DISTANCE(long_axis_pt,centre);
-						double short_axis_len=DISTANCE(short_axis_pt,centre);
-						long_axis_pt-=centre;
-						double scale=short_axis_len/long_axis_len;
-						file.NewEllipse(centre,long_axis_pt,scale,fAngleS*DEGTORAD_COEF,fAngleE*DEGTORAD_COEF);*/
-						//
+					{	
 						int nSlices = CalArcResolution(arcLine.Radius(), arcLine.SectorAngle(), 1.0, 3.0, 10);
 						double slice_angle = arcLine.SectorAngle() / nSlices;
 						f3dPoint pre_pt = pPrevVertex->vertex;
@@ -621,24 +444,24 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			if(startPt.IsZero())
 				startPt.Set(pHole->posX,pHole->posY);
 			centre.Set(pHole->posX,pHole->posY);
-			if (dxf_mode == CNCPart::CUT_MODE)
+			if (dxf_mode == CNCPart::FLAME_MODE || dxf_mode==CNCPart::PLASMA_MODE)
 			{	//切割下料模式下，对于特殊孔进行加工
 				if (pHole->bolt_d >= fSpecialD)
 					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
 			}
-			else if (dxf_mode == CNCPart::PROCESS_MODE)
+			else if (dxf_mode == CNCPart::PUNCH_MODE || dxf_mode==CNCPart::DRILL_MODE)
 			{	//板床打孔模式下
+				BOOL bNeedSH = FALSE;
+				if (GetSysParaFromReg("DrillNeedSH", sValue) && dxf_mode == CNCPart::DRILL_MODE)
+					bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
+				if (GetSysParaFromReg("PunchNeedSH", sValue) && dxf_mode == CNCPart::DRILL_MODE)
+					bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
 				if (pHole->cFuncType == 0)
-				{	//标准螺栓
 					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
-				}
-				else
-				{	//特殊孔
-					if (pHole->bolt_d < fSpecialD)	//对小号特殊孔进行加工
-						file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
-					if (bNeedSH && pHole->bolt_d >= fSpecialD)		//对于需保留特殊孔要求的，对大号特殊孔进行加工
-						file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
-				}
+				else if (pHole->bolt_d < fSpecialD)	//对小号特殊孔进行加工
+					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				else if(pHole->bolt_d >= fSpecialD && bNeedSH)
+					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
 			}
 			else if (dxf_mode == CNCPart::LASER_MODE)
 			{	//激光加工模式下，生成所有孔
@@ -646,7 +469,8 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 			startPt=centre;
 		}
-		if ((tempPlate.IsDisplayMK() && dxf_mode == CNCPart::PROCESS_MODE))
+		if (tempPlate.IsDisplayMK() && 
+			(dxf_mode == CNCPart::DRILL_MODE|| dxf_mode == CNCPart::PUNCH_MODE))
 		{	//绘制号料孔(板床打孔时需要绘制钢印号)
 			double fMkHoldD=5,fMkRectL=60,fMkRectW=30;
 			//号料孔
@@ -660,7 +484,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 			//字盒
 			BOOL bDrawRect=0;
-			if(GetSysParaFromReg("NeedMKRect",sValue))
+			if(GetSysParaFromReg("DispMkRect",sValue))
 				bDrawRect=atoi(sValue);
 			if(bDrawRect)
 			{
@@ -687,11 +511,14 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		}
 		if (dxf_mode == CNCPart::LASER_MODE)
 		{	//输出火曲线并用+、-标识正反曲 wht 19-09-26
+			double fFontH = 10;
 			BOOL bOutputBendLine = FALSE, bOutputBendType = FALSE;
 			if (GetSysParaFromReg("nc.LaserPara.m_bOutputBendLine", sValue))
 				bOutputBendLine = atoi(sValue);
 			if (GetSysParaFromReg("nc.LaserPara.m_bOutputBendType", sValue))
 				bOutputBendType = atoi(sValue);
+			if (GetSysParaFromReg("DxfTextSize", sValue))
+				fFontH = atof(sValue);
 			for (int i = 0; i < tempPlate.m_cFaceN-1; i++)
 			{
 				if(huoquLine[i].startPt!=huoquLine[i].endPt)
@@ -858,162 +685,6 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		return false;
 }
 #ifdef __PNC_
-void CNCPart::CreatePlatePncDxfFiles(CPPEModel *pModel, CXhPtrSet<CProcessPlate> &plateSet, const char* work_dir)
-{
-	//PNC用户支持多种模式下的DXF文件
-	CHashList<PLATE_GROUP> hashPlateByThick;
-	for (CProcessPart *pPart = plateSet.GetFirst(); pPart; pPart = plateSet.GetNext())
-	{
-		int thick = (int)(pPart->GetThick());
-		PLATE_GROUP* pPlateGroup = hashPlateByThick.GetValue(thick);
-		if (pPlateGroup == NULL)
-		{
-			pPlateGroup = hashPlateByThick.Add(thick);
-			pPlateGroup->thick = thick;
-		}
-		pPlateGroup->plateSet.append((CProcessPlate*)pPart);
-	}
-	CXhChar500 sFilePath, sWorkDir = GetValidWorkDir(work_dir, pModel);
-	if (sWorkDir.Length() <= 0)
-		return;
-	CFileFind fileFind;
-	int iNcMode = 1, iDxfMode = 0;
-	CXhChar100 sValue, sFileName;
-	if (GetSysParaFromReg("NCMode", sValue))
-		iNcMode = atoi(sValue);
-	if (GetSysParaFromReg("DxfMode", sValue))
-		iDxfMode = atoi(sValue);
-	CXhChar500 sDxfWorkDir;
-	int index = 0, num = pModel->PartCount();
-	if ((iNcMode & CNCPart::CUT_MODE) > 0)
-	{	//切割下料DXF
-		index = 0;
-		sDxfWorkDir.Printf("%s\\切割下料", (char*)sWorkDir);
-		pModel->DisplayProcess(0, "生成用于切割下料的DXF文件进度");
-		for (PLATE_GROUP *pPlateGroup = hashPlateByThick.GetFirst(); pPlateGroup; pPlateGroup = hashPlateByThick.GetNext())
-		{
-			for (CProcessPlate *pPlate = pPlateGroup->plateSet.GetFirst(); pPlate; pPlate = pPlateGroup->plateSet.GetNext())
-			{
-				index++;
-				pModel->DisplayProcess(ftoi(100 * index / num), "生成用于切割下料的DXF文件进度");
-				sFileName = GetValidFileName(pModel, pPlate);
-				if (sFileName.Length() <= 0)
-					continue;
-				if (iDxfMode == 1)
-				{	//按厚度创建文件目录
-					CXhChar16 sMat;
-					CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
-					sFilePath.Printf("%s\\厚度-%d-%s", (char*)sDxfWorkDir, pPlateGroup->thick,(char*)sMat);
-				}
-				else
-					sFilePath.Printf("%s", (char*)sDxfWorkDir);
-				if (!fileFind.FindFile(sFilePath))
-					MakeDirectory(sFilePath);
-				sFilePath.Printf("%s\\%s.dxf", (char*)sFilePath, (char*)sFileName);
-				CreatePlateDxfFile(pPlate, sFilePath, CNCPart::CUT_MODE);
-			}
-		}
-		pModel->DisplayProcess(100, "生成用于切割下料的DXF文件完成");
-	}
-	if ((iNcMode & CNCPart::PROCESS_MODE) > 0)
-	{	//板床加工DXF
-		index = 0;
-		sDxfWorkDir.Printf("%s\\板床加工", (char*)sWorkDir);
-		pModel->DisplayProcess(0, "生成用于板床加工的DXF文件进度");
-		int index = 0, num = pModel->PartCount();
-		for (PLATE_GROUP *pPlateGroup = hashPlateByThick.GetFirst(); pPlateGroup; pPlateGroup = hashPlateByThick.GetNext())
-		{
-			for (CProcessPlate *pPlate = pPlateGroup->plateSet.GetFirst(); pPlate; pPlate = pPlateGroup->plateSet.GetNext())
-			{
-				index++;
-				pModel->DisplayProcess(ftoi(100 * index / num), "生成用于板床加工的DXF文件进度");
-				sFileName = GetValidFileName(pModel, pPlate);
-				if (sFileName.Length() <= 0)
-					continue;
-				if (iDxfMode == 1)
-				{	//按厚度创建文件目录
-					CXhChar16 sMat;
-					CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
-					sFilePath.Printf("%s\\厚度-%d-%s", (char*)sDxfWorkDir, pPlateGroup->thick, (char*)sMat);
-				}
-				else
-					sFilePath.Printf("%s", (char*)sDxfWorkDir);
-				if (!fileFind.FindFile(sFilePath))
-					MakeDirectory(sFilePath);
-				sFilePath.Printf("%s\\%s.dxf", (char*)sFilePath, (char*)sFileName);
-				CreatePlateDxfFile(pPlate, sFilePath, CNCPart::PROCESS_MODE);
-			}
-		}
-		pModel->DisplayProcess(100, "生成用于板床加工的DXF文件完成");
-	}
-	if ((iNcMode & CNCPart::LASER_MODE) > 0)
-	{
-		index = 0;
-		sDxfWorkDir.Printf("%s\\激光复合机", (char*)sWorkDir);
-		pModel->DisplayProcess(0, "生成用于激光复合机的DXF文件进度");
-		for (PLATE_GROUP *pPlateGroup = hashPlateByThick.GetFirst(); pPlateGroup; pPlateGroup = hashPlateByThick.GetNext())
-		{
-			for (CProcessPlate *pPlate = pPlateGroup->plateSet.GetFirst(); pPlate; pPlate = pPlateGroup->plateSet.GetNext())
-			{
-				index++;
-				pModel->DisplayProcess(ftoi(100 * index / num), "生成用于激光复合机的DXF文件进度");
-				sFileName = GetValidFileName(pModel, pPlate);
-				if (sFileName.Length() <= 0)
-					continue;
-				if (iDxfMode == 1)
-				{	//按厚度创建文件目录
-					CXhChar16 sMat;
-					CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
-					sFilePath.Printf("%s\\厚度-%d-%s", (char*)sDxfWorkDir, pPlateGroup->thick,(char*)sMat);
-				}
-				else
-					sFilePath.Printf("%s", (char*)sDxfWorkDir);
-				if (!fileFind.FindFile(sFilePath))
-					MakeDirectory(sFilePath);
-				sFilePath.Printf("%s\\%s.dxf", (char*)sFilePath, (char*)sFileName);
-				CreatePlateDxfFile(pPlate, sFilePath, CNCPart::LASER_MODE);
-			}
-		}
-		pModel->DisplayProcess(100, "生成用于激光复合机的DXF文件进度");
-	}
-	ShellExecute(NULL, "open", NULL, NULL, sWorkDir, SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
-}
-#endif
-void CNCPart::CreatePlateDxfFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
-{
-	//普通用户只支持板床加工模式下的DXF文件
-	CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel);
-	if(sWorkDir.Length()<=0)
-		return;
-	CXhChar200 sFileName;
-	pModel->DisplayProcess(0,"生成DXF文件进度");
-	int i=0,num=plateSet.GetNodeNum();
-	for(CProcessPlate *pPlate=plateSet.GetFirst();pPlate;pPlate=plateSet.GetNext())
-	{
-		sFileName=GetValidFileName(pModel,pPlate);
-		if(sFileName.Length()<=0)
-			continue;
-		pModel->DisplayProcess(ftoi(100*i/num),"生成DXF文件进度");
-		sFilePath.Printf("%s\\%s.dxf",(char*)sWorkDir,(char*)sFileName);
-		CreatePlateDxfFile(pPlate,sFilePath,CNCPart::PROCESS_MODE);
-	}
-	pModel->DisplayProcess(100,"生成DXF文件完成");
-	ShellExecute(NULL,"open",NULL,NULL,sWorkDir,SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
-}
-#ifdef __PNC_
-//按照同径螺栓数量及孔径大小进行比较
-int compare_boltInfo(const DRILL_BOLT_INFO& pBoltInfo1,const DRILL_BOLT_INFO& pBoltInfo2)
-{
-	return compare_double(pBoltInfo1.fHoleD, pBoltInfo2.fHoleD);
-}
-//按照同孔径件螺栓间到原点的最短距离进行比较
-int compare_boltInfo2(const DRILL_BOLT_INFO& pBoltInfo1,const DRILL_BOLT_INFO& pBoltInfo2)
-{
-	return compare_double(pBoltInfo1.fMinDist, pBoltInfo2.fMinDist);
-}
-
 void CNCPart::InitDrillBoltHashTbl(CProcessPlate *pPlate, CHashList<CDrillBolt>& hashDrillBoltByD,
 								   BOOL bMergeHole /*= FALSE*/, BOOL bIncSpecialHole /*= TRUE*/, BOOL bDrillGroupSort/*=FALSE*/)
 {	
@@ -1190,7 +861,6 @@ void CNCPart::OptimizeBolt( CProcessPlate *pPlate,CHashList<CDrillBolt>& hashDri
 	for(CDrillBolt* pDrillBolt=hashDrillBoltByD.GetFirst();pDrillBolt;pDrillBolt=hashDrillBoltByD.GetNext())
 		pDrillBolt->OptimizeBoltOrder(startPos, ciAlgType);
 }
-#endif
 void CNCPart::InitStoreMode(CHashList<CDrillBolt>& hashDrillBoltByD, ARRAY_LIST<double> &holeDList, BOOL bIncSH /*= TRUE*/)
 {
 	if (hashDrillBoltByD.GetNodeNum() <= 0)
@@ -1240,7 +910,6 @@ void CNCPart::InitStoreMode(CHashList<CDrillBolt>& hashDrillBoltByD, ARRAY_LIST<
 //重新更新钢板的螺栓孔信息
 void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate,BOOL bSortByHoleD/*=TRUE*/, BYTE ciAlgType/*=0*/)
 {
-#ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
 	if(pPlate==NULL)
@@ -1253,7 +922,7 @@ void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate,BOOL bSortByHoleD/*=TRUE*/
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
 	CXhChar100 sValue;
 	BOOL bIncSH = FALSE, bMergeHole = FALSE;
-	if (GetSysParaFromReg("PbjIncSH", sValue))
+	if (GetSysParaFromReg("PunchNeedSH", sValue))
 		bIncSH = atoi(sValue);
 	if (GetSysParaFromReg("PbjMergeHole", sValue))
 		bMergeHole = atoi(sValue);
@@ -1272,42 +941,7 @@ void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate,BOOL bSortByHoleD/*=TRUE*/
 			pNewBolt->posY=(float)ls_pos.y;
 		}
 	}
-#endif
 }
-BOOL CNCPart::IsNeedCreateHoleFile(CProcessPlate *pPlate,BYTE ciHoleProcessType)
-{
-	if(pPlate==NULL)
-		return FALSE;
-	if(pPlate->m_xBoltInfoList.GetNodeNum()<=0)
-		return FALSE;
-	double fSpecialD=0;
-	int bNeedSH=0,nThick=0;
-	CXhChar100 sValue,sThick;
-	if(GetSysParaFromReg("LimitSH",sValue))
-		fSpecialD=atof(sValue);
-	if(GetSysParaFromReg("NeedSH",sValue))
-		bNeedSH=atoi(sValue);
-	CHashList<SEGI> hashThick;
-	if(ciHoleProcessType==0&&GetSysParaFromReg("ThickToPBJ",sThick))
-		GetSegNoHashTblBySegStr(sThick,hashThick);
-	if(ciHoleProcessType==1&&GetSysParaFromReg("ThickToPMZ",sThick))
-		GetSegNoHashTblBySegStr(sThick,hashThick);
-	//根据板厚进行选择孔加工方式
-	BOOL bValid=TRUE;
-	if(hashThick.GetNodeNum()>0&&hashThick.GetValue(ftoi(pPlate->m_fThick))==NULL)
-		bValid=FALSE;
-	if(bValid)
-	{	//根据孔径判断是否需要进行加工孔
-		BOLT_INFO* pBolt=NULL;
-		for(pBolt=pPlate->m_xBoltInfoList.GetFirst();pBolt;pBolt=pPlate->m_xBoltInfoList.GetNext())
-		{
-			if((fSpecialD>0 && pBolt->bolt_d<fSpecialD)||(bNeedSH && pBolt->bolt_d>=fSpecialD))
-				return TRUE;
-		}
-	}
-	return FALSE;
-}
-#ifdef __PNC_
 bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 {
 	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_PBJ_FILE))
@@ -1316,12 +950,12 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 		return false;
 	CXhChar16 sValue;
 	BOOL bIncVertex = FALSE, bAutoSplitFile = FALSE, bIncSH = FALSE, bMergeHole = FALSE;
+	if (GetSysParaFromReg("PunchNeedSH", sValue))
+		bIncSH = atoi(sValue); 
 	if (GetSysParaFromReg("PbjIncVertex", sValue))
 		bIncVertex = atoi(sValue);
 	if (GetSysParaFromReg("PbjAutoSplitFile", sValue))
 		bAutoSplitFile = atoi(sValue);
-	if (GetSysParaFromReg("PbjIncSH", sValue))
-		bIncSH = atoi(sValue);
 	if (GetSysParaFromReg("PbjMergeHole", sValue))
 		bMergeHole = atoi(sValue);
 	CLogErrorLife logErrLife;
@@ -1514,35 +1148,6 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 		return (hits > 0);
 	}
 }
-void CNCPart::CreatePlatePbjFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
-{
-	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_PBJ_FILE))
-		return;
-	CreatePlateFiles(pModel,plateSet,work_dir,PLATE_PBJ_FILE);
-	/*CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel);
-	if(sWorkDir.Length()<=0)
-		return;
-	CFileFind fileFind;
-	pModel->DisplayProcess(0,"导出PBJ文件进度");
-	int i=0,num=plateSet.GetNodeNum();
-	for(CProcessPlate *pPlate=plateSet.GetFirst();pPlate;pPlate=plateSet.GetNext(),i++)
-	{
-		pModel->DisplayProcess(ftoi(100*i/num),"导出PBJ文件进度");
-		if(!IsNeedCreateHoleFile(pPlate,0))
-			continue;
-		CXhChar200 sFileName=GetValidFileName(pModel,pPlate);
-		if(sFileName.Length()<=0)
-			continue;
-		CXhChar500 sPbjWorkDir("%s\\板床加工-冲孔",(char*)sWorkDir);
-		if(!fileFind.FindFile(sPbjWorkDir))
-			MakeDirectory(sPbjWorkDir);
-		sFilePath.Printf("%s\\%s.pbj",(char*)sPbjWorkDir,(char*)sFileName);
-		CreatePlatePbjFile(pPlate,sFilePath);
-	}
-	pModel->DisplayProcess(100,"导出PBJ文件完成");
-	ShellExecute(NULL,"open",NULL,NULL,sWorkDir,SW_SHOW);*/
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
-}
 extern char* SearchChar(char* srcStr,char ch,bool reverseOrder/*=false*/);
 bool CNCPart::CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path)
 {
@@ -1582,7 +1187,7 @@ bool CNCPart::CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path)
 	}
 	CXhChar500 sFile(file_path);
 	double fSpecialD=(GetSysParaFromReg("LimitSH",sValue))?atof(sValue):0;
-	int bNeedSH=(GetSysParaFromReg("NeedSH",sValue))?atoi(sValue):0;
+	int bNeedSH=(GetSysParaFromReg("DrillNeedSH",sValue))?atoi(sValue):0;
 	char* szExt=SearchChar(sFile,'.',true);
 	if(szExt)	//件号中含有句柄
 		*szExt=0;
@@ -1661,7 +1266,7 @@ bool CNCPart::CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_pa
 	CHashList<CDrillBolt> hashDrillBoltByD;
 	CXhChar500 sFile(file_path);
 	double fSpecialD = (GetSysParaFromReg("LimitSH", sValue)) ? atof(sValue) : 0;
-	int bNeedSH = (GetSysParaFromReg("NeedSH", sValue)) ? atoi(sValue) : 0;
+	int bNeedSH = (GetSysParaFromReg("DrillNeedSH", sValue)) ? atoi(sValue) : 0;
 	char* szExt = SearchChar(sFile, '.', true);
 	if (szExt)	//件号中含有句柄
 		*szExt = 0;
@@ -1805,45 +1410,16 @@ bool CNCPart::CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_pa
 	fclose(fp);
 	return true;
 }
-void CNCPart::CreatePlatePmzFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
+int GetLineLenFromExpression(double fThick, const char* sValue)
 {
-	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_PBJ_FILE))
-		return;
-	CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel);
-	if(sWorkDir.Length()<=0)
-		return;
-	CXhChar100 sValue;
-	BOOL bPmzCheck = FALSE;
-	if (GetSysParaFromReg("PmzCheck", sValue))
-		bPmzCheck = atoi(sValue);
-	CFileFind fileFind;
-	pModel->DisplayProcess(0,"导出PMZ文件进度");
-	int i=0,num=plateSet.GetNodeNum();
-	for(CProcessPlate *pPlate=plateSet.GetFirst();pPlate;pPlate=plateSet.GetNext(),i++)
-	{
-		pModel->DisplayProcess(ftoi(100*i/num),"导出PMZ文件进度");
-		if(!IsNeedCreateHoleFile(pPlate,1))
-			continue;
-		CXhChar200 sFileName=GetValidFileName(pModel,pPlate);
-		if(sFileName.Length()<=0)
-			continue;
-		CXhChar500 sPmzWorkDir("%s\\板床加工-PMZ",(char*)sWorkDir);
-		if(!fileFind.FindFile(sPmzWorkDir))
-			MakeDirectory(sPmzWorkDir);
-		sFilePath.Printf("%s\\%s.pmz",(char*)sPmzWorkDir,(char*)sFileName);
-		CreatePlatePmzFile(pPlate,sFilePath);
-		if (bPmzCheck)
-		{	//生成PMZ预审文件 wht 19-07-02
-			sPmzWorkDir.Printf("%s\\板床加工-PMZ预审", (char*)sWorkDir);
-			if (!fileFind.FindFile(sPmzWorkDir))
-				MakeDirectory(sPmzWorkDir);
-			sFilePath.Printf("%s\\%s.pmz", (char*)sPmzWorkDir, (char*)sFileName);
-			CreatePlatePmzCheckFile(pPlate, sFilePath);
-		}
-	}
-	pModel->DisplayProcess(100,"导出PMZ文件完成");
-	ShellExecute(NULL,"open",NULL,NULL,sWorkDir,SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
+	CExpression expression;
+	EXPRESSION_VAR* pVar = expression.varList.Append();
+	pVar->fValue = fThick;
+	strcpy(pVar->variableStr, "T");
+	if (sValue == NULL || strlen(sValue) <= 0)
+		return -1;
+	else
+		return (int)expression.SolveExpression(sValue);
 }
 bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 {
@@ -1852,19 +1428,18 @@ bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 	ncPlate.m_nOutLineLen = -1;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		ncPlate.m_bCutSpecialHole = CPPEModel::sysPara->IsCutSpecialHole(ISysPara::TYPE_FLAME_CUT);
+		CXhChar100 sValue;
+		if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
+			ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+		if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
+			ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+		if (GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+			ncPlate.m_nEnlargedSpace = atoi(sValue);
+		if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
+			ncPlate.m_bCutSpecialHole = atoi(sValue);
 	}
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
-}
-
-void CNCPart::CreatePlateTxtFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
-{
-	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
-		return;
-	CreatePlateFiles(pModel,plateSet,work_dir,PLATE_TXT_FILE);
 }
 
 bool CNCPart::CreatePlateNcFile(CProcessPlate *pPlate,const char* file_path)
@@ -1878,20 +1453,19 @@ bool CNCPart::CreatePlateNcFile(CProcessPlate *pPlate,const char* file_path)
 	ncPlate.m_nExtraOutLen = 2;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
+		CXhChar100 sValue;
+		if (GetSysParaFromReg("plasmaCut.m_sOutLineLen", sValue))
+			ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+		if (GetSysParaFromReg("plasmaCut.m_sIntoLineLen", sValue))
+			ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+		if (GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
+			ncPlate.m_nEnlargedSpace = atoi(sValue);
+		if (GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
+			ncPlate.m_bCutSpecialHole = atoi(sValue);
 	}
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateNcFile(file_path);
 }
-
-void CNCPart::CreatePlateNcFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
-{
-	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
-		return;
-	CreatePlateFiles(pModel,plateSet,work_dir,PLATE_NC_FILE);
-}
-
 bool CNCPart::CreatePlateCncFile(CProcessPlate *pPlate,const char* file_path)
 {	
 	CNCPlate ncPlate(pPlate);
@@ -1899,112 +1473,18 @@ bool CNCPart::CreatePlateCncFile(CProcessPlate *pPlate,const char* file_path)
 	ncPlate.m_nOutLineLen = -1;
 	if(CPPEModel::sysPara!=NULL)
 	{
-		ncPlate.m_nInLineLen=(int)CPPEModel::sysPara->GetCutInLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		ncPlate.m_nOutLineLen=(int)CPPEModel::sysPara->GetCutOutLineLen(pPlate->m_fThick,ISysPara::TYPE_FLAME_CUT);
-		ncPlate.m_nEnlargedSpace=CPPEModel::sysPara->GetCutEnlargedSpaceLen(ISysPara::TYPE_FLAME_CUT);
+		CXhChar100 sValue;
+		if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
+			ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+		if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
+			ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+		if (GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+			ncPlate.m_nEnlargedSpace = atoi(sValue);
+		if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
+			ncPlate.m_bCutSpecialHole = atoi(sValue);
 	}
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
-}
-
-void CNCPart::CreatePlateCncFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir)
-{
-	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
-		return;
-	CreatePlateFiles(pModel,plateSet,work_dir,PLATE_CNC_FILE);
-}
-void CNCPart::CreatePlateFiles(CPPEModel *pModel,CXhPtrSet<CProcessPlate> &plateSet,const char* work_dir,int nFileType)
-{	//PNC用户支持多种模式下的DXF文件
-	int iDxfMode=0;
-	CXhChar16 sExtName,sFolderName;
-	CXhChar100 sTitle("进度"),sValue;
-	if(GetSysParaFromReg("DxfMode",sValue))
-		iDxfMode=atoi(sValue);
-	if(nFileType==PLATE_NC_FILE)
-	{
-		sTitle.Copy("导出钢板NC文件进度");	
-		sExtName.Copy("nc");
-		sFolderName.Copy("等离子切割");
-	}
-	else if(nFileType==PLATE_CNC_FILE)
-	{
-		sTitle.Copy("导出钢板CNC文件进度");	
-		sExtName.Copy("cnc");
-		sFolderName.Copy("火焰切割CNC");
-	}
-	else if(nFileType==PLATE_TXT_FILE)
-	{
-		sTitle.Copy("导出钢板TXT文件进度");	
-		sExtName.Copy("txt");
-		sFolderName.Copy("火焰切割TXT");
-	}
-	else if(nFileType==PLATE_PBJ_FILE)
-	{
-		sTitle.Copy("导出钢板PBJ文件进度");	
-		sExtName.Copy("pbj");
-		sFolderName.Copy("板床加工-冲孔");
-		if(GetSysParaFromReg("PbjMode",sValue))
-			iDxfMode=atoi(sValue);
-		else
-			iDxfMode=0;
-	}
-	else
-		return;
-	CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel);
-	if(sWorkDir.Length()<=0)
-		return;
-	CLogErrorLife logErrLife;
-	CHashList<PLATE_GROUP> hashPlateByThick;
-	for(CProcessPart *pPart=plateSet.GetFirst();pPart;pPart=plateSet.GetNext())
-	{
-		int thick=(int)(pPart->GetThick());
-		PLATE_GROUP* pPlateGroup=hashPlateByThick.GetValue(thick);
-		if(pPlateGroup==NULL)
-		{
-			pPlateGroup=hashPlateByThick.Add(thick);
-			pPlateGroup->thick=thick;
-		}
-		pPlateGroup->plateSet.append((CProcessPlate*)pPart);
-	}
-	CFileFind fileFind;
-	CXhChar100 sFileName;
-	pModel->DisplayProcess(0,sTitle);
-	CXhChar500 sFileWorkDir("%s\\%s",(char*)sWorkDir,(char*)sFolderName);
-	int index=0,num=pModel->PartCount();
-	for(PLATE_GROUP *pPlateGroup=hashPlateByThick.GetFirst();pPlateGroup;pPlateGroup=hashPlateByThick.GetNext())
-	{
-		int thick=pPlateGroup->thick;
-		for(CProcessPlate *pPlate=pPlateGroup->plateSet.GetFirst();pPlate;pPlate=pPlateGroup->plateSet.GetNext())
-		{
-			index++;
-			sFileName=GetValidFileName(pModel,pPlate);
-			if(sFileName.Length()<=0)
-				continue;
-			if(iDxfMode==1)
-			{	//按厚度创建文件目录
-				CXhChar16 sMat;
-				CProcessPart::QuerySteelMatMark(pPlate->cMaterial, sMat);
-				sFilePath.Printf("%s\\厚度-%d-%s",(char*)sFileWorkDir,thick,(char*)sMat);
-			}
-			else
-				sFilePath.Printf("%s",(char*)sFileWorkDir);
-			if(!fileFind.FindFile(sFilePath))
-				MakeDirectory(sFilePath);
-			sFilePath.Printf("%s\\%s.%s",(char*)sFilePath,(char*)sFileName,(char*)sExtName);
-			if(nFileType==PLATE_NC_FILE)
-				CreatePlateNcFile(pPlate,sFilePath);
-			else if(nFileType==PLATE_CNC_FILE)
-				CreatePlateCncFile(pPlate,sFilePath);
-			else if(nFileType==PLATE_TXT_FILE)
-				CreatePlateTxtFile(pPlate,sFilePath);
-			else if(nFileType==PLATE_PBJ_FILE)
-				CreatePlatePbjFile(pPlate,sFilePath);
-		}
-		pModel->DisplayProcess(ftoi(100*index/num),sTitle);
-	}
-	pModel->DisplayProcess(100,sTitle);
-	ShellExecute(NULL,"open",NULL,NULL,sFileWorkDir,SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
 }
 void CNCPart::ImprotPlateCncOrTextFile(CProcessPlate *pPlate,const char* file_path)
 {
@@ -2017,50 +1497,14 @@ void CNCPart::ImprotPlateCncOrTextFile(CProcessPlate *pPlate,const char* file_pa
 	CNCPlate::InitVertextListByNcFile(pPlate,file_path);
 }
 #endif
-
-void CNCPart::CreateAllPlateFiles(int nFileType)
-{
-	CLogErrorLife logErrLife;
-	CXhPtrSet<CProcessPlate> plateSet;
-	for(CProcessPart *pPart=model.EnumPartFirst();pPart;pPart=model.EnumPartNext())
-	{
-		if(!pPart->IsPlate())
-			continue;
-		plateSet.append((CProcessPlate*)pPart);
-	}
-#ifdef __PNC_
-	if(nFileType==CNCPart::PLATE_TXT_FILE)
-		CreatePlateTxtFiles(&model,plateSet,model.GetFolderPath());
-	else if(nFileType==CNCPart::PLATE_PBJ_FILE)
-		CreatePlatePbjFiles(&model,plateSet,model.GetFolderPath());
-	else if(nFileType==CNCPart::PLATE_NC_FILE)
-		CreatePlateNcFiles(&model,plateSet,model.GetFolderPath());
-	else if(nFileType==CNCPart::PLATE_CNC_FILE)
-		CreatePlateCncFiles(&model,plateSet,model.GetFolderPath());
-	else if(nFileType==CNCPart::PLATE_DXF_FILE)
-		CreatePlatePncDxfFiles(&model,plateSet,model.GetFolderPath());
-	else if(nFileType==CNCPart::PLATE_PMZ_FILE)
-		CreatePlatePmzFiles(&model,plateSet,model.GetFolderPath());
-#else
-	if(nFileType==CNCPart::PLATE_DXF_FILE)
-		CreatePlateDxfFiles(&model,plateSet,model.GetFolderPath());
-#endif
-	if(nFileType==CNCPart::PLATE_TTP_FILE)
-		CreatePlateTtpFiles(&model,plateSet,model.GetFolderPath());
-	else if (nFileType == CNCPart::PLATE_WKF_FILE)
-		CreatePlateWkfFiles(&model, plateSet, model.GetFolderPath());
-}
 //角钢操作
 void CNCPart::CreateAngleNcFiles(CPPEModel *pModel,CXhPtrSet<CProcessAngle> &angleSet,
-								 const char* drv_path,const char* sPartNoPrefix,const char* work_dir)
+								 const char* drv_path,const char* sPartNoPrefix,const char* sWorkDir)
 {
-	CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel);
-	if(sWorkDir.Length()<=0)
-		return;
+	CXhChar500 sFilePath;
 	CNcJg NcJg;
 	if(!NcJg.NcManager.InitJgNcDriver(drv_path))
 		return;	//初始化失败
-
 	CProcessAngle *pAngle=NULL;
 	char fpath[MAX_PATH],bak_fpath[MAX_PATH];
 	strcpy(fpath,sWorkDir);
@@ -2105,67 +1549,34 @@ void CNCPart::CreateAngleNcFiles(CPPEModel *pModel,CXhPtrSet<CProcessAngle> &ang
 		NcJg.GenNCFile(fpath,sPartNoPrefix);
 	}
 	ShellExecute(NULL,"open",NULL,NULL,sWorkDir,SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
-}
-void CNCPart::CreateAllAngleNcFile(CPPEModel *pModel,const char* drv_path,const char* sPartNoPrefix,const char* work_dir)
-{
-	CXhPtrSet<CProcessAngle> angleSet;
-	for(CProcessPart *pPart=pModel->EnumPartFirst();pPart;pPart=pModel->EnumPartNext())
-	{
-		if(pPart->IsAngle())
-			angleSet.append((CProcessAngle*)pPart);
-	}
-	CreateAngleNcFiles(pModel,angleSet,drv_path,sPartNoPrefix,work_dir);
 }
 //生成PPI文件
-bool CNCPart::CreatePPIFile(CProcessPart *pPart,const char* file_path)
+bool CNCPart::CreatePPIFile(CProcessPart *pPart, const char* file_path)
 {
-	FILE *fp=fopen(file_path,"wb");
-	if(fp==NULL)
+	FILE *fp = fopen(file_path, "wb");
+	if (fp == NULL)
 		return false;
 	CBuffer buffer;
 	pPart->ToPPIBuffer(buffer);
-	long file_len=buffer.GetLength();
-	fwrite(&file_len,sizeof(long),1,fp);
-	fwrite(buffer.GetBufferPtr(),buffer.GetLength(),1,fp);
+	long file_len = buffer.GetLength();
+	fwrite(&file_len, sizeof(long), 1, fp);
+	fwrite(buffer.GetBufferPtr(), buffer.GetLength(), 1, fp);
 	fclose(fp);
 	return true;
-}
-void CNCPart::CreatePPIFiles(CPPEModel *pModel,CXhPtrSet<CProcessPart> &partSet,const char* work_dir)
-{
-	CXhChar500 sFilePath,sWorkDir=GetValidWorkDir(work_dir,pModel);
-	if(sWorkDir.Length()<=0)
-		return;
-	CXhChar200 sFileName;
-	for(CProcessPart *pPart=partSet.GetFirst();pPart;pPart=partSet.GetNext())
-	{
-		sFileName=GetValidFileName(pModel,pPart);
-		if(sFileName.Length()<=0)
-			continue;
-		sFilePath.Printf("%s\\%s.ppi",(char*)sWorkDir,(char*)sFileName);
-		CreatePlateTtpFile((CProcessPlate*)pPart,sFilePath);
-	}
-	ShellExecute(NULL,"open",NULL,NULL,sWorkDir,SW_SHOW);
-	//WinExec(CXhChar500("explorer.exe %s",(char*)sWorkDir),SW_SHOW);
-}
-void CNCPart::CreateAllPPIFiles(CPPEModel *pModel,const char* work_dir)
-{
-	CXhPtrSet<CProcessPart> partSet;
-	for(CProcessPart *pPart=pModel->EnumPartFirst();pPart;pPart=pModel->EnumPartNext())
-		partSet.append(pPart);
-	CreatePPIFiles(pModel,partSet,work_dir);
 }
 //////////////////////////////////////////////////////////////////////////
 //CDrillBolt
 #include "TSPAlgorithm.h"
-struct BOLT_SORT_ITEM {
+struct BOLT_SORT_ITEM : public ICompareClass {
 	double m_fDist;
 	BOLT_INFO* m_pBolt;
+public:
+	BOLT_SORT_ITEM() { m_fDist = 0; m_pBolt = NULL; }
+	virtual int Compare(const ICompareClass *pCompareObj) const {
+		BOLT_SORT_ITEM* pCmpItem = (BOLT_SORT_ITEM*)pCompareObj;
+		return compare_double(this->m_fDist, pCmpItem->m_fDist);
+	}
 };
-int compare_func(const BOLT_SORT_ITEM& item1, const BOLT_SORT_ITEM& item2)
-{
-	return compare_double(item1.m_fDist, item2.m_fDist);
-}
 void CDrillBolt::OptimizeBoltOrder(f3dPoint& startPos, BYTE ciAlgType /*= 0*/)
 {
 	if (boltList.GetNodeNum() <= 1)
@@ -2180,7 +1591,7 @@ void CDrillBolt::OptimizeBoltOrder(f3dPoint& startPos, BYTE ciAlgType /*= 0*/)
 		pItem->m_fDist = DISTANCE(startPos, f3dPoint(pBolt->posX, pBolt->posY, 0));
 		pItem->m_pBolt = pBolt;
 	}
-	CQuickSort<BOLT_SORT_ITEM>::QuickSort(boltItemArr.m_pData, boltItemArr.GetSize(), compare_func);
+	CQuickSort<BOLT_SORT_ITEM>::QuickSortClassic(boltItemArr.m_pData, boltItemArr.GetSize());
 	//初始化螺栓坐标列表和螺栓序号列表，使其一一对应
 	ARRAY_LIST<f3dPoint> ptArr;
 	ptArr.SetSize(boltItemArr.GetSize()+1);

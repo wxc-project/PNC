@@ -10,18 +10,21 @@
 
 //////////////////////////////////////////////////////////////////////////
 //FILE_INFO_PARA
-FILE_INFO_PARA::FILE_INFO_PARA() 
+NC_INFO_PARA::NC_INFO_PARA()
 {
 	m_sThick.Copy("*"); 
-	m_dwFileFlag = CNCPart::PLATE_DXF_FILE; 
+	m_dwFileFlag = CNCPart::PLATE_DXF_FILE;
+	m_bCutSpecialHole = TRUE;
+	m_wEnlargedSpace = 0;
+	m_bNeedSH = FALSE;
 	m_bOutputBendLine = m_bOutputBendType = FALSE;
 }
-DWORD FILE_INFO_PARA::AddFileFlag(DWORD dwFlag)
+DWORD NC_INFO_PARA::AddFileFlag(DWORD dwFlag)
 {
 	m_dwFileFlag |= dwFlag;
 	return m_dwFileFlag;
 }
-bool FILE_INFO_PARA::IsValidFile(DWORD dwFlag) {
+bool NC_INFO_PARA::IsValidFile(DWORD dwFlag) {
 	if ((dwFlag&m_dwFileFlag) > 0)
 		return true;
 	else
@@ -51,7 +54,6 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("model.m_sCritic",PROPLIST_ITEM(id++,"评审人"));
 	//
 	AddPropItem("NC",PROPLIST_ITEM(id++,"NC数据"));
-	AddPropItem("nc.m_bAutoSortHole",PROPLIST_ITEM(id++,"自动优化螺栓孔","对钢板上螺栓孔进行自动排序","是|否"));
 	AddPropItem("nc.m_bSortByHoleD",PROPLIST_ITEM(id++,"分组优化螺栓孔","","是|否"));
 	AddPropItem("nc.m_iGroupSortType", PROPLIST_ITEM(id++, "分组排序方案", "", "0.按距离|1.按孔径"));
 	AddPropItem("nc.m_fMKHoleD",PROPLIST_ITEM(id++,"号位孔直径"));
@@ -63,65 +65,62 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.m_fLimitSH",PROPLIST_ITEM(id++,"特殊孔界限值","特殊孔一般通过切割进行加工"));
 	AddPropItem("CutLimitSH", PROPLIST_ITEM(id++, "切割式特殊孔(大孔)", "通过切割工艺进行加工的特殊孔"));
 	AddPropItem("ProLimitSH", PROPLIST_ITEM(id++, "板床式特殊孔(小孔)", "通过板床工艺进行加工的特殊孔"));
-	AddPropItem("nc.m_sThickToPBJ",PROPLIST_ITEM(id++,"冲孔板厚范围"));
-	AddPropItem("nc.m_sThickToPMZ",PROPLIST_ITEM(id++,"钻孔板厚范围"));
 	AddPropItem("nc.m_sNcDriverPath",PROPLIST_ITEM(id++,"角钢NC驱动"));
+	AddPropItem("m_cDisplayCutType", PROPLIST_ITEM(id++, "当前显示的切割模式", "当前显示的切割模式", "0.火焰切割|1.等离子切割"));
 	//文件设置
 	AddPropItem("FileSet", PROPLIST_ITEM(id++, "文件设置"));
 	AddPropItem("FileFormat", PROPLIST_ITEM(id++, "输出文件格式"));
 	AddPropItem("OutputPath", PROPLIST_ITEM(id++, "输出文件路径"));
 	AddPropItem("PbjPara",PROPLIST_ITEM(id++,"PBJ设置"));
-	AddPropItem("pbj.m_iPbjMode",PROPLIST_ITEM(id++,"分类输出","生成PBJ文件时是否分类输出","0.无|1.按厚度"));
 	AddPropItem("pbj.m_bIncVertex",PROPLIST_ITEM(id++,"输出顶点","导出PBJ时，是否包括顶点","是|否"));
-	AddPropItem("pbj.m_bIncSH", PROPLIST_ITEM(id++, "输出特殊孔", "导出PBJ时，处理特殊孔", "是|否"));
 	AddPropItem("pbj.m_bAutoSplitFile",PROPLIST_ITEM(id++,"自动拆分","螺栓直径种类大于3时，自动拆分为多个pbj文件","是|否"));
 	AddPropItem("pbj.m_bMergeHole", PROPLIST_ITEM(id++, "合并加工", "非标孔按标准孔加工(如：19.5按17.5教工)；3种孔径时将数量少的一种合并至相邻孔径加工，后续环节再扩孔", "是|否"));
 	AddPropItem("PmzPara", PROPLIST_ITEM(id++, "PMZ设置"));
 	AddPropItem("pmz.m_iPmzMode", PROPLIST_ITEM(id++, "文件模式", "0.单文件,所有孔在一个文件中；1.多文件，一类孔输出一个文件", "0.单文件|1.多文件"));
 	AddPropItem("pmz.m_bIncVertex", PROPLIST_ITEM(id++, "输出顶点", "导出PBJ时，是否包括顶点", "是|否"));
 	AddPropItem("pmz.m_bPmzCheck", PROPLIST_ITEM(id++, "输出预审Pmz", "输出用于预审的Pmz文件，一个钢板上取3~4个孔做为定位孔,用于加工前预审", "是|否"));
-	//
-	AddPropItem("m_cDisplayCutType",PROPLIST_ITEM(id++,"当前显示的切割模式","当前显示的切割模式","0.火焰切割|1.等离子切割"));
 	//等离子切割显示
 	AddPropItem("plasmaCut",PROPLIST_ITEM(id++,"等离子切割"));
 	AddPropItem("plasmaCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("plasmaCut.m_sIntoLineLen",PROPLIST_ITEM(id++,"引入线长","引入线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("plasmaCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点","初始点","0.靠近原点|1.远离原点"));
 	AddPropItem("plasmaCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点位置","切入点位置","0.在指定轮廓点|1.始终在初始点"));
-	AddPropItem("plasmaCut.m_wEnlargedSpace",PROPLIST_ITEM(id++,"轮廓边增大值","轮廓边增大值"));
-	AddPropItem("plasmaCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "输出特殊孔", "输出切割数据时输出特殊孔切割路径"));
 	//火焰切割显示
 	AddPropItem("flameCut",PROPLIST_ITEM(id++,"火焰切割"));
 	AddPropItem("flameCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("flameCut.m_sIntoLineLen",PROPLIST_ITEM(id++,"引入线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("flameCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点","初始点","0.靠近原点|1.远离原点"));
 	AddPropItem("flameCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点位置","切入点位置","0.在指定轮廓点|1.始终在初始点"));
-	AddPropItem("flameCut.m_wEnlargedSpace",PROPLIST_ITEM(id++,"轮廓边增大值","轮廓边增大值"));
-	AddPropItem("flameCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "输出特殊孔", "输出切割数据时输出特殊孔切割路径", "是|否"));
 	//输出设置
 	AddPropItem("OutPutSet", PROPLIST_ITEM(id++, "输出设置"));
 	AddPropItem("nc.m_iDxfMode", PROPLIST_ITEM(id++, "按厚度分类", "生成DXF是否进行分类", "是|否"));
 	//切割下料
-	AddPropItem("CutInfo", PROPLIST_ITEM(id++, "切割下料"));
-	AddPropItem("nc.m_fShapeAddDist", PROPLIST_ITEM(id++, "轮廓边增大值", "下料生成DXF文件，对轮廓边进行等距扩大"));
 	AddPropItem("nc.bFlameCut", PROPLIST_ITEM(id++, "火焰切割", "", "启用|禁用"));
+	AddPropItem("nc.FlamePara.m_wEnlargedSpace", PROPLIST_ITEM(id++, "轮廓边增大值", "轮廓边增大值"));
+	AddPropItem("nc.FlamePara.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割特殊孔", "输出切割数据时输出特殊孔切割路径", "是|否"));
+	AddPropItem("nc.FlamePara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.FlamePara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.FlamePara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|TXT|CNC|DXF+TXT|DXF+CNC|DXF+TXT+CNC"));
 	AddPropItem("nc.bPlasmaCut", PROPLIST_ITEM(id++, "等离子切割", "", "启用|禁用"));
+	AddPropItem("nc.PlasmaPara.m_wEnlargedSpace", PROPLIST_ITEM(id++, "轮廓边增大值", "轮廓边增大值"));
+	AddPropItem("nc.PlasmaPara.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割特殊孔", "", "是|否"));
+	AddPropItem("nc.PlasmaPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.PlasmaPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.PlasmaPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|NC|DXF+NC"));
 	//板床加工
-	AddPropItem("ProcessInfo", PROPLIST_ITEM(id++, "板床加工"));
-	AddPropItem("nc.m_bNeedSH", PROPLIST_ITEM(id++, "保留特殊孔", "生成DXF是否保留特殊孔", "是|否"));
-	AddPropItem("nc.m_bNeedMKRect", PROPLIST_ITEM(id++, "保留字盒", "生成DXF是否绘制字盒", "是|否"));
 	AddPropItem("nc.bPunchPress", PROPLIST_ITEM(id++, "冲床加工", "", "启用|禁用"));
+	AddPropItem("nc.PunchPara.m_bNeedSH", PROPLIST_ITEM(id++, "输出特殊孔", "是否保留特殊孔", "是|否"));
+	AddPropItem("nc.PunchPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.PunchPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围","*所有厚度,a单个厚度,b-c厚度区间"));
-	AddPropItem("nc.PunchPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|PBJ|WKF|DXF+PBJ|DXF+WKF|DXF+PBJ+WKF"));
+	AddPropItem("nc.PunchPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|PBJ|WKF|TTP|DXF+PBJ|DXF+WKF|DXF+TTP|DXF+PBJ+WKF"));
 	AddPropItem("nc.bDrillPress", PROPLIST_ITEM(id++, "钻床加工", "", "启用|禁用"));
+	AddPropItem("nc.DrillPara.m_bNeedSH", PROPLIST_ITEM(id++, "输出特殊孔", "是否保留特殊孔", "是|否"));
+	AddPropItem("nc.DrillPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.DrillPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.DrillPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|PMZ|DXF+PMZ"));
 	//激光加工
-	AddPropItem("LaserCutInfo", PROPLIST_ITEM(id++, "激光复合机", "激光复合机同时处理切割边和打孔"));
+	AddPropItem("nc.bLaser", PROPLIST_ITEM(id++, "激光复合机", "", "启用|禁用"));
+	AddPropItem("nc.LaserPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.LaserPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.LaserPara.Config", PROPLIST_ITEM(id++, "样板明细"));
 	AddPropItem("nc.LaserPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件"));
@@ -210,8 +209,6 @@ CSysPara::CSysPara(void)
 	dock.m_nLeftPageWidth=270;
 	dock.m_nRightPageWidth=250;
 
-	m_fHoleIncrement = 1.5;
-	nc.m_bAutoSortHole=FALSE;
 	nc.m_bSortByHoleD=FALSE;
 	nc.m_bDispMkRect=FALSE;
 	nc.m_ciGroupSortType = 0;
@@ -219,24 +216,14 @@ CSysPara::CSysPara(void)
 	nc.m_fMKRectW = 30;
 	nc.m_fMKRectL = 60;
 	nc.m_fBaffleHigh = 260;
-	nc.m_iNcMode =1;
+	nc.m_iNcMode = CNCPart::FLAME_MODE;
 	nc.m_fLimitSH=25;
-	nc.m_bNeedSH=FALSE;
 	nc.m_iDxfMode=0;
-	nc.m_sThickToPBJ="*";
-	nc.m_sThickToPMZ="*";
-	nc.m_fShapeAddDist=0;
-	nc.m_bFlameCut = TRUE;
-	nc.m_bPlasmaCut = FALSE;
-	nc.m_bPunchPress = TRUE; 
-	nc.m_bDrillPress = FALSE;
 	nc.m_sNcDriverPath.Empty();
-	m_cDisplayCutType=ISysPara::TYPE_FLAME_CUT;
+	m_cDisplayCutType=0;
 	//
-	pbj.m_iPbjMode=0;
 	pbj.m_bAutoSplitFile=FALSE;
 	pbj.m_bIncVertex=TRUE;
-	pbj.m_bIncSH = FALSE;
 	pbj.m_bMergeHole = FALSE;
 	//
 	pmz.m_iPmzMode = 1;
@@ -247,15 +234,11 @@ CSysPara::CSysPara(void)
 	plasmaCut.m_sIntoLineLen.Copy("4");
 	plasmaCut.m_bCutPosInInitPos=TRUE;
 	plasmaCut.m_bInitPosFarOrg=TRUE;
-	plasmaCut.m_wEnlargedSpace=0;
-	plasmaCut.m_bCutSpecialHole = FALSE;
 	//火焰切割
 	flameCut.m_sOutLineLen.Copy("4");
 	flameCut.m_sIntoLineLen.Copy("4");
 	flameCut.m_bCutPosInInitPos=TRUE;
 	flameCut.m_bInitPosFarOrg=TRUE;
-	flameCut.m_wEnlargedSpace=0;
-	flameCut.m_bCutSpecialHole = FALSE;
 	//
 	holeIncrement.m_fDatum=1.5;
 	holeIncrement.m_fM12=1.5;
@@ -324,7 +307,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.7");
+	CString version("2.8");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -340,9 +323,8 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar<<(WORD)dock.pageProp.bDisplay;
 	ar<<dock.pageProp.uDockBarID;
 
-	ar<<m_fHoleIncrement;
+	
 	ar<<font.fTextHeight;
-	ar<<nc.m_bAutoSortHole;
 	ar<<nc.m_fBaffleHigh;
 	ar<<byte;//nc.m_iMKMode;
 	ar<<nc.m_fMKRectW;
@@ -364,15 +346,11 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar<<CString(plasmaCut.m_sIntoLineLen);
 	ar<<(WORD)plasmaCut.m_bInitPosFarOrg;
 	ar<<(WORD)plasmaCut.m_bCutPosInInitPos;
-	ar<<plasmaCut.m_wEnlargedSpace;
-	ar<<(WORD)plasmaCut.m_bCutSpecialHole;
 	//火焰切割
 	ar<<CString(flameCut.m_sOutLineLen);
 	ar<<CString(flameCut.m_sIntoLineLen);
 	ar<<(WORD)flameCut.m_bInitPosFarOrg;
 	ar<<(WORD)flameCut.m_bCutPosInInitPos;
-	ar<<flameCut.m_wEnlargedSpace;
-	ar<<(WORD)flameCut.m_bCutSpecialHole;
 	ar<<font.fDimTextSize;
 	ar<<jgDrawing.iDimPrecision;
 	ar<<jgDrawing.fRealToDraw;
@@ -413,7 +391,6 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	//角钢工艺卡
 	ar<<jgDrawing.sAngleCardPath;
 	//PBJ参数
-	ar<<(WORD)pbj.m_iPbjMode;
 	ar<<(WORD)pbj.m_bIncVertex;
 	ar<<(WORD)pbj.m_bAutoSplitFile;
 	ar << (WORD)pbj.m_bMergeHole;
@@ -422,16 +399,12 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar << (WORD)pmz.m_bIncVertex;
 	ar << (WORD)pmz.m_bPmzCheck;
 	//钢板NC输出设置
-	ar << (WORD)nc.m_bFlameCut;
 	ar << CString(nc.m_xFlamePara.m_sThick);
 	ar << (DWORD)nc.m_xFlamePara.m_dwFileFlag;
-	ar << (WORD)nc.m_bPlasmaCut;
 	ar << CString(nc.m_xPlasmaPara.m_sThick);
 	ar << (DWORD)nc.m_xPlasmaPara.m_dwFileFlag;
-	ar << (WORD)nc.m_bPunchPress;
 	ar << CString(nc.m_xPunchPara.m_sThick);
 	ar << (DWORD)nc.m_xPunchPara.m_dwFileFlag;
-	ar << (WORD)nc.m_bDrillPress;
 	ar << CString(nc.m_xDrillPara.m_sThick);
 	ar << (DWORD)nc.m_xDrillPara.m_dwFileFlag;
 	ar << CString(nc.m_xLaserPara.m_sThick);
@@ -453,7 +426,6 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	for (size_t i = 0; i < model.file_format.m_sKeyMarkArr.size(); i++)
 		ar << CString(model.file_format.m_sKeyMarkArr[i]);
 	//更新注册表内容 wxc 16-11-21
-	WriteSysParaToReg("NCMode");
 	WriteSysParaToReg("MKRectL");
 	WriteSysParaToReg("MKRectW");
 	WriteSysParaToReg("MKHoleD");
@@ -469,12 +441,9 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("TextHeight");
 	WriteSysParaToReg("DxfTextSize");
 	WriteSysParaToReg("LimitSH");
-	WriteSysParaToReg("NeedSH");
-	WriteSysParaToReg("NeedMKRect");
-	WriteSysParaToReg("DxfMode");
-	WriteSysParaToReg("ThickToPBJ");
-	WriteSysParaToReg("ThickToPMZ");
-	WriteSysParaToReg("ShapeAddDist");
+	WriteSysParaToReg("DxfMode");	
+	WriteSysParaToReg("DrillNeedSH");
+	WriteSysParaToReg("PunchNeedSH");
 	WriteSysParaToReg("DispMkRect");
 	WriteSysParaToReg("SortByHoleD");
 	WriteSysParaToReg("GroupSortType");
@@ -493,10 +462,8 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("plasmaCut.m_bCutSpecialHole");
 	WriteSysParaToReg("nc.LaserPara.m_bOutputBendLine");
 	WriteSysParaToReg("nc.LaserPara.m_bOutputBendType");
-	WriteSysParaToReg("PbjMode");
 	WriteSysParaToReg("PbjIncVertex");
 	WriteSysParaToReg("PbjAutoSplitFile");
-	WriteSysParaToReg("PbjIncSH");
 	WriteSysParaToReg("PbjMergeHole");
 	WriteSysParaToReg("PmzMode");
 	WriteSysParaToReg("PmzIncVertex");
@@ -513,6 +480,7 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	CFile file;
 	if(!file.Open(file_path, CFile::modeRead))
 		return FALSE;
+	int nValue = 0;
 	double fValue;
 	double fVersion;
 	CArchive ar(&file,CArchive::load);
@@ -525,12 +493,14 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ar>>dock.pagePartList.uDockBarID;
 	ar>>w;	dock.pageProp.bDisplay=w;
 	ar>>dock.pageProp.uDockBarID;
-	
-	ar>>m_fHoleIncrement;
+
+	if (fVersion < 2.8)
+		ar >> fValue;
 	if(fVersion>=1.5)
 		ar>>font.fTextHeight;
-	if(fVersion>=1.4)
-		ar>>nc.m_bAutoSortHole;
+	if (fVersion >= 1.4 && fVersion <2.8)
+		ar >> nValue;
+		
 	ar>>nc.m_fBaffleHigh;
 	if(fVersion>=1.3)
 	{
@@ -563,17 +533,19 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar>>sValue;plasmaCut.m_sIntoLineLen.Copy(sValue);
 		ar>>w;plasmaCut.m_bInitPosFarOrg=w;
 		ar>>w;plasmaCut.m_bCutPosInInitPos=w;
-		ar>>w;plasmaCut.m_wEnlargedSpace=w;
-		if (fVersion >= 2.4)
-			ar >> w; plasmaCut.m_bCutSpecialHole = w;
+		if (fVersion < 2.8)
+			ar >> w;
+		if (fVersion >= 2.4 && fVersion<2.8)
+			ar >> w;
 		//火焰切割
 		ar>>sValue;flameCut.m_sOutLineLen.Copy(sValue);
 		ar>>sValue;flameCut.m_sIntoLineLen.Copy(sValue);
 		ar>>w;flameCut.m_bInitPosFarOrg=w;
 		ar>>w; flameCut.m_bCutPosInInitPos=w;
-		ar>>w;flameCut.m_wEnlargedSpace=w;
-		if (fVersion >= 2.4)
-			ar >> w; flameCut.m_bCutSpecialHole = w;
+		if (fVersion < 2.8)
+			ar >> w;
+		if (fVersion >= 2.4 && fVersion < 2.8)
+			ar >> w;
 	}
 	else if(fVersion>=1.7)
 	{	//等离子切割
@@ -630,7 +602,8 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	//PBJ参数
 	if(compareVersion(version,"1.9")>=0)
 	{
-		ar>>w;	pbj.m_iPbjMode=w;
+		if (fVersion < 2.8)
+			ar >> w;
 		ar>>w;	pbj.m_bIncVertex=w;
 		ar>>w;	pbj.m_bAutoSplitFile=w;
 	}
@@ -650,16 +623,20 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	{
 		DWORD dw;
 		CString sValue;
-		ar >> w; nc.m_bFlameCut=w;
+		if (fVersion < 2.8)
+			ar >> w;
 		ar >> sValue; nc.m_xFlamePara.m_sThick.Copy(sValue);
 		ar >> dw; nc.m_xFlamePara.m_dwFileFlag = dw;
-		ar >> w; nc.m_bPlasmaCut = w;
+		if (fVersion < 2.8)
+			ar >> w;
 		ar >> sValue; nc.m_xPlasmaPara.m_sThick.Copy(sValue);
 		ar >> dw; nc.m_xPlasmaPara.m_dwFileFlag = dw;
-		ar >> w; nc.m_bPunchPress = w;
+		if (fVersion < 2.8)
+			ar >> w;
 		ar >> sValue; nc.m_xPunchPara.m_sThick.Copy(sValue);
 		ar >> dw; nc.m_xPunchPara.m_dwFileFlag = dw;
-		ar >> w; nc.m_bDrillPress = w;
+		if (fVersion < 2.8)
+			ar >> w;
 		ar >> sValue; nc.m_xDrillPara.m_sThick.Copy(sValue);
 		ar >> dw; nc.m_xDrillPara.m_dwFileFlag = dw;
 		ar >> sValue; nc.m_xLaserPara.m_sThick.Copy(sValue);
@@ -702,7 +679,6 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		}
 	}
 	//获取注册表内容
-	ReadSysParaFromReg("NCMode");
 	ReadSysParaFromReg("MKRectL");
 	ReadSysParaFromReg("MKRectW");
 	ReadSysParaFromReg("MKHoleD");
@@ -718,12 +694,9 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("TextHeight");
 	ReadSysParaFromReg("DxfTextSize");
 	ReadSysParaFromReg("LimitSH");
-	ReadSysParaFromReg("NeedSH");
-	ReadSysParaFromReg("NeedMKRect");
 	ReadSysParaFromReg("DxfMode");
-	ReadSysParaFromReg("ThickToPBJ");
-	ReadSysParaFromReg("ThickToPMZ");
-	ReadSysParaFromReg("ShapeAddDist");
+	ReadSysParaFromReg("DrillNeedSH");
+	ReadSysParaFromReg("PunchNeedSH");
 	ReadSysParaFromReg("DispMkRect");
 	ReadSysParaFromReg("SortByHoleD");
 	ReadSysParaFromReg("GroupSortType");
@@ -742,10 +715,8 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("plasmaCut.m_bCutSpecialHole");
 	ReadSysParaFromReg("nc.LaserPara.m_bOutputBendLine");
 	ReadSysParaFromReg("nc.LaserPara.m_bOutputBendType");
-	ReadSysParaFromReg("PbjMode");
 	ReadSysParaFromReg("PbjIncVertex");
 	ReadSysParaFromReg("PbjAutoSplitFile");
-	ReadSysParaFromReg("PbjIncSH");
 	ReadSysParaFromReg("PbjMergeHole");
 	ReadSysParaFromReg("PmzMode");
 	ReadSysParaFromReg("PmzIncVertex");
@@ -761,9 +732,7 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 	HKEY hKey;
 	if(RegOpenKeyEx(HKEY_CURRENT_USER,sSubKey,0,KEY_WRITE,&hKey)==ERROR_SUCCESS&&hKey)
 	{
-		if (stricmp(lpszEntry, "NCMode") == 0)
-			sprintf(sValue, "%d", nc.m_iNcMode);
-		else if (stricmp(lpszEntry, "MKRectL") == 0)
+		if (stricmp(lpszEntry, "MKRectL") == 0)
 			sprintf(sValue, "%f", nc.m_fMKRectL);
 		else if (stricmp(lpszEntry, "MKRectW") == 0)
 			sprintf(sValue, "%f", nc.m_fMKRectW);
@@ -793,18 +762,12 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "%f", font.fDxfTextSize);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
 			sprintf(sValue, "%f", nc.m_fLimitSH);
-		else if (stricmp(lpszEntry, "NeedSH") == 0)
-			sprintf(sValue, "%d", nc.m_bNeedSH);
-		else if (stricmp(lpszEntry, "NeedMKRect") == 0)
-			sprintf(sValue, "%d", nc.m_bNeedMKRect);
 		else if (stricmp(lpszEntry, "DxfMode") == 0)
 			sprintf(sValue, "%d", nc.m_iDxfMode);
-		else if (stricmp(lpszEntry, "ThickToPBJ") == 0)
-			strcpy(sValue, nc.m_sThickToPBJ);
-		else if (stricmp(lpszEntry, "ThickToPMZ") == 0)
-			strcpy(sValue, nc.m_sThickToPMZ);
-		else if (stricmp(lpszEntry, "ShapeAddDist") == 0)
-			sprintf(sValue, "%f", nc.m_fShapeAddDist);
+		else if (stricmp(lpszEntry, "DrillNeedSH") == 0)
+			sprintf(sValue, "%d", nc.m_xDrillPara.m_bNeedSH);
+		else if (stricmp(lpszEntry, "PunchNeedSH") == 0)
+			sprintf(sValue, "%d", nc.m_xPunchPara.m_bNeedSH);
 		else if (stricmp(lpszEntry, "DispMkRect") == 0)
 			sprintf(sValue, "%d", nc.m_bDispMkRect);
 		else if (stricmp(lpszEntry, "SortByHoleD") == 0)
@@ -812,14 +775,10 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 		else if (stricmp(lpszEntry, "GroupSortType") == 0)
 			sprintf(sValue, "%d", nc.m_ciGroupSortType);
 		//
-		else if (stricmp(lpszEntry, "PbjMode") == 0)
-			sprintf(sValue, "%d", pbj.m_iPbjMode);
 		else if (stricmp(lpszEntry, "PbjIncVertex") == 0)
 			sprintf(sValue, "%d", pbj.m_bIncVertex);
 		else if (stricmp(lpszEntry, "PbjAutoSplitFile") == 0)
 			sprintf(sValue, "%d", pbj.m_bAutoSplitFile);
-		else if (stricmp(lpszEntry, "PbjIncSH") == 0)
-			sprintf(sValue, "%d", pbj.m_bIncSH);
 		else if (stricmp(lpszEntry, "PbjMergeHole") == 0)
 			sprintf(sValue, "%d", pbj.m_bMergeHole);
 		//PMZ参数
@@ -830,33 +789,33 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 		else if (stricmp(lpszEntry, "PmzCheck") == 0)
 			sprintf(sValue, "%d", pmz.m_bPmzCheck);
 		//
-		else if(stricmp(lpszEntry,"m_cDisplayCutType")==0)
-			sprintf(sValue,"%d",m_cDisplayCutType);
-		else if(stricmp(lpszEntry,"flameCut.m_bCutPosInInitPos")==0)
-			sprintf(sValue,"%d",flameCut.m_bCutPosInInitPos);
-		else if(stricmp(lpszEntry,"flameCut.m_bInitPosFarOrg")==0)
-			sprintf(sValue,"%d",flameCut.m_bInitPosFarOrg);
-		else if(stricmp(lpszEntry,"flameCut.m_sIntoLineLen")==0)
-			strcpy(sValue,flameCut.m_sIntoLineLen);
-		else if(stricmp(lpszEntry,"flameCut.m_sOutLineLen")==0)
-			sprintf(sValue,flameCut.m_sOutLineLen);
-		else if(stricmp(lpszEntry,"flameCut.m_wEnlargedSpace")==0)
-			sprintf(sValue,"%d",flameCut.m_wEnlargedSpace);
+		else if (stricmp(lpszEntry, "m_cDisplayCutType") == 0)
+			sprintf(sValue, "%d", m_cDisplayCutType);
+		else if (stricmp(lpszEntry, "flameCut.m_bCutPosInInitPos") == 0)
+			sprintf(sValue, "%d", flameCut.m_bCutPosInInitPos);
+		else if (stricmp(lpszEntry, "flameCut.m_bInitPosFarOrg") == 0)
+			sprintf(sValue, "%d", flameCut.m_bInitPosFarOrg);
+		else if (stricmp(lpszEntry, "flameCut.m_sIntoLineLen") == 0)
+			strcpy(sValue, flameCut.m_sIntoLineLen);
+		else if (stricmp(lpszEntry, "flameCut.m_sOutLineLen") == 0)
+			sprintf(sValue, flameCut.m_sOutLineLen);
+		else if (stricmp(lpszEntry, "flameCut.m_wEnlargedSpace") == 0)
+			sprintf(sValue, "%d", nc.m_xFlamePara.m_wEnlargedSpace);
 		else if (stricmp(lpszEntry, "flameCut.m_bCutSpecialHole") == 0)
-			sprintf(sValue, "%d", flameCut.m_bCutSpecialHole);
+			sprintf(sValue, "%d", nc.m_xFlamePara.m_bCutSpecialHole);
 		//
-		else if(stricmp(lpszEntry,"plasmaCut.m_bCutPosInInitPos")==0)
-			sprintf(sValue,"%d",plasmaCut.m_bCutPosInInitPos);
-		else if(stricmp(lpszEntry,"plasmaCut.m_bInitPosFarOrg")==0)
-			sprintf(sValue,"%d",plasmaCut.m_bInitPosFarOrg);
-		else if(stricmp(lpszEntry,"plasmaCut.m_sIntoLineLen")==0)
-			strcpy(sValue,plasmaCut.m_sIntoLineLen);
-		else if(stricmp(lpszEntry,"plasmaCut.m_sOutLineLen")==0)
-			strcpy(sValue,plasmaCut.m_sOutLineLen);
-		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
-			sprintf(sValue,"%d",plasmaCut.m_wEnlargedSpace);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bCutPosInInitPos") == 0)
+			sprintf(sValue, "%d", plasmaCut.m_bCutPosInInitPos);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bInitPosFarOrg") == 0)
+			sprintf(sValue, "%d", plasmaCut.m_bInitPosFarOrg);
+		else if (stricmp(lpszEntry, "plasmaCut.m_sIntoLineLen") == 0)
+			strcpy(sValue, plasmaCut.m_sIntoLineLen);
+		else if (stricmp(lpszEntry, "plasmaCut.m_sOutLineLen") == 0)
+			strcpy(sValue, plasmaCut.m_sOutLineLen);
+		else if (stricmp(lpszEntry, "plasmaCut.m_wEnlargedSpace") == 0)
+			sprintf(sValue, "%d", nc.m_xPlasmaPara.m_wEnlargedSpace);
 		else if (stricmp(lpszEntry, "plasmaCut.m_bCutSpecialHole") == 0)
-			sprintf(sValue, "%d", plasmaCut.m_bCutSpecialHole);
+			sprintf(sValue, "%d", nc.m_xPlasmaPara.m_bCutSpecialHole);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendLine") == 0)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendLine);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendType") == 0)
@@ -876,9 +835,7 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 	if(RegOpenKeyEx(HKEY_CURRENT_USER,sSubKey,0,KEY_READ,&hKey)==ERROR_SUCCESS&&hKey &&
 		RegQueryValueEx(hKey,lpszEntry,NULL,&dwDataType,(BYTE*)&sValue[0],&dwLength)==ERROR_SUCCESS)
 	{
-		if (stricmp(lpszEntry, "NCMode") == 0)
-			nc.m_iNcMode = atoi(sValue);
-		else if (stricmp(lpszEntry, "MKRectL") == 0)
+		if (stricmp(lpszEntry, "MKRectL") == 0)
 			nc.m_fMKRectL = atof(sValue);
 		else if (stricmp(lpszEntry, "MKRectW") == 0)
 			nc.m_fMKRectW = atof(sValue);
@@ -892,18 +849,12 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			font.fDxfTextSize = atof(sValue);
 		else if (stricmp(lpszEntry, "LimitSH") == 0)
 			nc.m_fLimitSH = atof(sValue);
-		else if (stricmp(lpszEntry, "NeedSH") == 0)
-			nc.m_bNeedSH = atoi(sValue);
-		else if (stricmp(lpszEntry, "NeedMKRect") == 0)
-			nc.m_bNeedMKRect = atoi(sValue);
 		else if (stricmp(lpszEntry, "DxfMode") == 0)
 			nc.m_iDxfMode = atoi(sValue);
-		else if (stricmp(lpszEntry, "ThickToPBJ") == 0)
-			strcpy(nc.m_sThickToPBJ, sValue);
-		else if (stricmp(lpszEntry, "ThickToPMZ") == 0)
-			strcpy(nc.m_sThickToPMZ, sValue);
-		else if (stricmp(lpszEntry, "ShapeAddDist") == 0)
-			nc.m_fShapeAddDist = atof(sValue);
+		else if (stricmp(lpszEntry, "DrillNeedSH") == 0)
+			nc.m_xDrillPara.m_bNeedSH = atoi(sValue);
+		else if (stricmp(lpszEntry, "PunchNeedSH") == 0)
+			nc.m_xPunchPara.m_bNeedSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "DispMkRect") == 0)
 			nc.m_bDispMkRect = atoi(sValue);
 		else if (stricmp(lpszEntry, "SortByHoleD") == 0)
@@ -911,14 +862,10 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 		else if (stricmp(lpszEntry, "GroupSortType") == 0)
 			nc.m_ciGroupSortType = atoi(sValue);
 		//
-		else if (stricmp(lpszEntry, "PbjMode") == 0)
-			pbj.m_iPbjMode = atoi(sValue);
 		else if (stricmp(lpszEntry, "PbjIncVertex") == 0)
 			pbj.m_bIncVertex = atoi(sValue);
 		else if (stricmp(lpszEntry, "PbjAutoSplitFile") == 0)
 			pbj.m_bAutoSplitFile = atoi(sValue);
-		else if (stricmp(lpszEntry, "PbjIncSH") == 0)
-			pbj.m_bIncSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "PbjMergeHole") == 0)
 			pbj.m_bMergeHole = atoi(sValue);
 		//
@@ -989,9 +936,9 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 		else if(stricmp(lpszEntry,"flameCut.m_sOutLineLen")==0)
 			flameCut.m_sOutLineLen.Copy(sValue);
 		else if(stricmp(lpszEntry,"flameCut.m_wEnlargedSpace")==0)
-			flameCut.m_wEnlargedSpace=atoi(sValue);
+			nc.m_xFlamePara.m_wEnlargedSpace=atoi(sValue);
 		else if (stricmp(lpszEntry, "flameCut.m_bCutSpecialHole") == 0)
-			flameCut.m_bCutSpecialHole = atoi(sValue);
+			nc.m_xFlamePara.m_bCutSpecialHole = atoi(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_bInitPosFarOrg")==0)
 			plasmaCut.m_bInitPosFarOrg=atoi(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_bCutPosInInitPos")==0)
@@ -1001,9 +948,9 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 		else if(stricmp(lpszEntry,"plasmaCut.m_sOutLineLen")==0)
 			plasmaCut.m_sOutLineLen.Copy(sValue);
 		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
-			plasmaCut.m_wEnlargedSpace=atoi(sValue);
+			nc.m_xPlasmaPara.m_wEnlargedSpace=atoi(sValue);
 		else if (stricmp(lpszEntry, "plasmaCut.m_bCutSpecialHole") == 0)
-			plasmaCut.m_bCutSpecialHole = atoi(sValue);
+			nc.m_xPlasmaPara.m_bCutSpecialHole = atoi(sValue);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendLine") == 0)
 			nc.m_xLaserPara.m_bOutputBendLine = atoi(sValue);
 		else if (stricmp(lpszEntry, "nc.LaserPara.m_bOutputBendType") == 0)
@@ -1040,13 +987,6 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	{
 		sText.Printf("%f", font.fDxfTextSize);
 		SimplifiedNumString(sText);
-	}
-	else if(GetPropID("nc.m_bAutoSortHole")==id)
-	{
-		if(nc.m_bAutoSortHole)
-			sText.Copy("是");
-		else
-			sText.Copy("否");
 	}
 	else if(GetPropID("nc.m_bSortByHoleD")==id)
 	{
@@ -1086,12 +1026,16 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("nc.m_iNcMode")==id)
 	{
-		if(IsValidNcFlag(CNCPart::CUT_MODE))
-			sText.Append("切割", '+');
-		if(IsValidNcFlag(CNCPart::PROCESS_MODE))
-			sText.Append("板床",'+');
-		if(IsValidNcFlag(CNCPart::LASER_MODE))
-			sText.Append("激光",'+');
+		if(IsValidNcFlag(CNCPart::FLAME_MODE))
+			sText.Append("火焰", '+');
+		if(IsValidNcFlag(CNCPart::PLASMA_MODE))
+			sText.Append("等离子",'+');
+		if(IsValidNcFlag(CNCPart::PUNCH_MODE))
+			sText.Append("冲床",'+');
+		if (IsValidNcFlag(CNCPart::DRILL_MODE))
+			sText.Append("钻床", '+');
+		if (IsValidNcFlag(CNCPart::LASER_MODE))
+			sText.Append("激光", '+');
 	}
 	else if(GetPropID("nc.m_fLimitSH")==id)
 	{
@@ -1102,16 +1046,9 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf(">= %g", nc.m_fLimitSH);
 	else if (GetPropID("ProLimitSH") == id)
 		sText.Printf("< %g", nc.m_fLimitSH);
-	else if(GetPropID("nc.m_bNeedSH")==id)
+	else if(GetPropID("nc.DrillPara.m_bNeedSH")==id)
 	{
-		if(nc.m_bNeedSH)
-			sText.Copy("是");
-		else
-			sText.Copy("否");
-	}
-	else if(GetPropID("nc.m_bNeedMKRect")==id)
-	{
-		if(nc.m_bNeedMKRect)
+		if(nc.m_xDrillPara.m_bNeedSH)
 			sText.Copy("是");
 		else
 			sText.Copy("否");
@@ -1119,15 +1056,6 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	else if(GetPropID("nc.m_fBaffleHigh")==id)
 	{
 		sText.Printf("%f",nc.m_fBaffleHigh);
-		SimplifiedNumString(sText);
-	}
-	else if(GetPropID("nc.m_sThickToPBJ")==id)
-		sText.Copy(nc.m_sThickToPBJ);
-	else if(GetPropID("nc.m_sThickToPMZ")==id)
-		sText.Copy(nc.m_sThickToPMZ);
-	else if(GetPropID("nc.m_fShapeAddDist")==id)
-	{
-		sText.Printf("%f",nc.m_fShapeAddDist);
 		SimplifiedNumString(sText);
 	}
 	else if(GetPropID("nc.m_iDxfMode")==id)
@@ -1142,7 +1070,7 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 
 	else if (GetPropID("nc.bFlameCut") == id)
 	{
-		if (nc.m_bFlameCut)
+		if (IsValidNcFlag(CNCPart::FLAME_MODE))
 			strcpy(sText, "启用");
 		else
 			strcpy(sText, "禁用");
@@ -1162,7 +1090,7 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if (GetPropID("nc.bPlasmaCut") == id)
 	{
-		if (nc.m_bPlasmaCut)
+		if (IsValidNcFlag(CNCPart::PLASMA_MODE))
 			strcpy(sText, "启用");
 		else
 			strcpy(sText, "禁用");
@@ -1180,13 +1108,20 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if (GetPropID("nc.bPunchPress") == id)
 	{
-		if (nc.m_bPunchPress)
+		if (IsValidNcFlag(CNCPart::PUNCH_MODE))
 			strcpy(sText, "启用");
 		else
 			strcpy(sText, "禁用");
 	}
 	else if (GetPropID("nc.PunchPara.m_sThick") == id)
 		strcpy(sText, nc.m_xPunchPara.m_sThick);
+	else if (GetPropID("nc.PunchPara.m_bNeedSH") == id)
+	{
+		if (nc.m_xPunchPara.m_bNeedSH)
+			strcpy(sText, "是");
+		else
+			strcpy(sText, "否");
+	}
 	else if (GetPropID("nc.PunchPara.m_dwFileFlag") == id)
 	{
 		CXhChar100 sValue;
@@ -1196,11 +1131,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 			sValue.Append("PBJ", '+');
 		if (nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_WKF_FILE))
 			sValue.Append("WKF", '+');
+		if (nc.m_xPunchPara.IsValidFile(CNCPart::PLATE_TTP_FILE))
+			sValue.Append("TTP", '+');
 		strcpy(sText, sValue);
 	}
 	else if (GetPropID("nc.bDrillPress") == id)
 	{
-		if (nc.m_bDrillPress)
+		if (IsValidNcFlag(CNCPart::DRILL_MODE))
 			strcpy(sText, "启用");
 		else
 			strcpy(sText, "禁用");
@@ -1215,6 +1152,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		if (nc.m_xDrillPara.IsValidFile(CNCPart::PLATE_PMZ_FILE))
 			sValue.Append("PMZ", '+');
 		strcpy(sText, sValue);
+	}
+	else if (GetPropID("nc.bLaser") == id)
+	{
+		if (IsValidNcFlag(CNCPart::LASER_MODE))
+			strcpy(sText, "启用");
+		else
+			strcpy(sText, "禁用");
 	}
 	else if (GetPropID("nc.LaserPara.m_sThick") == id)
 		strcpy(sText, nc.m_xLaserPara.m_sThick);
@@ -1238,23 +1182,9 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Copy(model.file_format.GetFileFormatStr());
 	else if(GetPropID("OutputPath")==id)
 		sText.Copy(model.m_sOutputPath);
-	else if(GetPropID("pbj.m_iPbjMode")==id)
-	{
-		if(pbj.m_iPbjMode==0)
-			sText.Copy("0.无");
-		else if(pbj.m_iPbjMode==1)
-			sText.Copy("1.按厚度");
-	}
 	else if(GetPropID("pbj.m_bIncVertex")==id)
 	{
 		if(pbj.m_bIncVertex)
-			sText.Copy("是");
-		else
-			sText.Copy("否");
-	}
-	else if(GetPropID("pbj.m_bIncSH")==id)
-	{
-		if (pbj.m_bIncSH)
 			sText.Copy("是");
 		else
 			sText.Copy("否");
@@ -1297,7 +1227,7 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 #ifdef __PNC_
 	else if(GetPropID("m_cDisplayCutType")==id)
 	{
-		if(g_sysPara.m_cDisplayCutType==TYPE_FLAME_CUT)
+		if(g_sysPara.m_cDisplayCutType==0)
 			sText.Copy("0.火焰切割");
 		else
 			sText.Copy("1.等离子切割");
@@ -1321,11 +1251,11 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		else
 			sText.Copy("0.在指定轮廓点");
 	}
-	else if(GetPropID("plasmaCut.m_wEnlargedSpace")==id)
-		sText.Printf("%d",plasmaCut.m_wEnlargedSpace);
-	else if (GetPropID("plasmaCut.m_bCutSpecialHole") == id)
+	else if(GetPropID("nc.PlasmaPara.m_wEnlargedSpace")==id)
+		sText.Printf("%d",nc.m_xPlasmaPara.m_wEnlargedSpace);
+	else if (GetPropID("nc.PlasmaPara.m_bCutSpecialHole") == id)
 	{
-		if (plasmaCut.m_bCutSpecialHole)
+		if (nc.m_xPlasmaPara.m_bCutSpecialHole)
 			sText.Copy("是");
 		else
 			sText.Copy("否");
@@ -1349,11 +1279,11 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		else
 			sText.Copy("0.在指定轮廓点");
 	}
-	else if(GetPropID("flameCut.m_wEnlargedSpace")==id)
-		sText.Printf("%d",flameCut.m_wEnlargedSpace);
-	else if (GetPropID("flameCut.m_bCutSpecialHole") == id)
+	else if(GetPropID("nc.FlamePara.m_wEnlargedSpace")==id)
+		sText.Printf("%d", nc.m_xFlamePara.m_wEnlargedSpace);
+	else if (GetPropID("nc.FlamePara.m_bCutSpecialHole") == id)
 	{
-		if(flameCut.m_bCutSpecialHole)
+		if(nc.m_xFlamePara.m_bCutSpecialHole)
 			sText.Copy("是");
 		else
 			sText.Copy("否");
@@ -1685,14 +1615,14 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 double CSysPara::GetCutInLineLen(double fThick,BYTE cType/*=-1*/)
 {
 	CExpression expression;
-	EXPRESSION_VAR* pVar=expression.varList.Append();
-	pVar->fValue=fThick;
-	strcpy(pVar->variableStr,"T");
-	if(cType==0xFF)
-		cType=g_sysPara.m_cDisplayCutType;
-	if(TYPE_FLAME_CUT==cType)
+	EXPRESSION_VAR* pVar = expression.varList.Append();
+	pVar->fValue = fThick;
+	strcpy(pVar->variableStr, "T");
+	if (cType == 0xFF)
+		cType = g_sysPara.m_cDisplayCutType;
+	if (0 == cType)
 		return expression.SolveExpression(g_sysPara.flameCut.m_sIntoLineLen);
-	else //if(TYPE_PLASMA_CUT==cType)
+	else
 		return expression.SolveExpression(g_sysPara.plasmaCut.m_sIntoLineLen);
 }
 double CSysPara::GetCutOutLineLen(double fThick,BYTE cType/*=-1*/)
@@ -1703,46 +1633,28 @@ double CSysPara::GetCutOutLineLen(double fThick,BYTE cType/*=-1*/)
 	strcpy(pVar->variableStr,"T");
 	if(cType==0xFF)
 		cType=g_sysPara.m_cDisplayCutType;
-	if(TYPE_FLAME_CUT==cType)
+	if(0==cType)
 		return expression.SolveExpression(g_sysPara.flameCut.m_sOutLineLen);
-	else //if(TYPE_PLASMA_CUT==cType)
+	else
 		return expression.SolveExpression(g_sysPara.plasmaCut.m_sOutLineLen);
-}
-int CSysPara::GetCutEnlargedSpaceLen(BYTE cType/*=-1*/)
-{
-	if(cType==0xFF)
-		cType=g_sysPara.m_cDisplayCutType;
-	if(TYPE_FLAME_CUT==cType)
-		return g_sysPara.flameCut.m_wEnlargedSpace;
-	else //if(TYPE_PLASMA_CUT==cType)
-		return g_sysPara.plasmaCut.m_wEnlargedSpace;
 }
 BOOL CSysPara::GetCutInitPosFarOrg(BYTE cType/*=-1*/)
 {
 	if(cType==0xFF)
 		cType=g_sysPara.m_cDisplayCutType;
-	if(TYPE_FLAME_CUT==cType)
+	if (0 == cType)
 		return g_sysPara.flameCut.m_bInitPosFarOrg;
-	else //if(TYPE_PLASMA_CUT==cType)
+	else 
 		return g_sysPara.plasmaCut.m_bInitPosFarOrg;
 }
 BOOL CSysPara::GetCutPosInInitPos(BYTE cType/*=-1*/)
 {
 	if(cType==0xFF)
 		cType=g_sysPara.m_cDisplayCutType;
-	if(TYPE_FLAME_CUT==cType)
+	if(0==cType)
 		return g_sysPara.flameCut.m_bCutPosInInitPos;
-	else //if(TYPE_PLASMA_CUT==cType)
+	else 
 		return g_sysPara.plasmaCut.m_bCutPosInInitPos;
-}
-BOOL CSysPara::IsCutSpecialHole(BYTE cType/*=-1*/)
-{
-	if (TYPE_FLAME_CUT == cType)
-		return g_sysPara.flameCut.m_bCutSpecialHole;
-	else if(TYPE_PLASMA_CUT==cType)
-		return g_sysPara.plasmaCut.m_bCutSpecialHole;
-	else
-		return FALSE;
 }
 void CSysPara::AngleDrawingParaToBuffer(CBuffer &buffer)
 {

@@ -295,6 +295,7 @@ __pycache__/
 /ConvertToNC/UBOMDebugObj7/PNC07_manifest.rc
 *.txt
 /PEC/DebugForTMA/PEC_manifest.rc
+/PPE/DebugForTMA/
 /ConvertToNC/Version.h
 /PNC/Version.h
 /ConvertToNC/UBOMDebugObj7/UBOM07_manifest.rc

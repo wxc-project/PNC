@@ -1414,7 +1414,7 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 {
 	if(!theApp.starter.IsMultiPartsMode())
 		return;
-	if(part_no && strlen(part_no)>1)
+	if(part_no && strlen(part_no)>0)
 		m_pProcessPart=model.FromPartNo(part_no);
 	else
 		m_pProcessPart=NULL;
