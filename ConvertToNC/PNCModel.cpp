@@ -1772,6 +1772,7 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 		AfxMessageBox("获取块表记录失败!");
 		return;
 	}
+	m_newAddEntIdList.Empty();
 	AcDbObjectId entId;
 	if(IsValid())
 	{

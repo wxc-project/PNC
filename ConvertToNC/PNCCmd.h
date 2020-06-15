@@ -11,6 +11,7 @@ void EnvGeneralSet();		//系统设置
 #ifndef __UBOM_ONLY_
 void SendPartEditor();		//编辑钢板信息
 void ShowPartList();		//显示钢板信息
+void DrawPlates();			//绘制钢板
 void InsertMKRect();		//插入钢印区
 void DrawProfileByTxtFile();//通过读取Txt文件绘制外形
 void ExplodeText();			//打碎文本(文本类型转换为多段线)

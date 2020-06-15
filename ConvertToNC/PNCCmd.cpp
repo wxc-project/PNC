@@ -509,6 +509,60 @@ void ShowPartList()
 	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 }
 //////////////////////////////////////////////////////////////////////////
+//绘制钢板
+//DrawPlates
+//////////////////////////////////////////////////////////////////////////
+void DrawPlates()
+{
+	int draw_type = 0, idRet = 0;
+	BOOL bDrawByVert = TRUE;
+#ifdef _ARX_2007
+	ACHAR result[20] = { 0 };
+	idRet = acedGetString(NULL, L"\n输入绘制模式[对比(1)/排版(2)/下料(3)]<1>:", result);
+	if (idRet == RTNORM)
+		draw_type = (wcslen(result) > 0) ? atoi(_bstr_t(result)) : 1;
+	if(draw_type == 1)
+	{
+		if (acedGetString(NULL, L"\n布局以列为主？[是(Y)/否(N)]<Y>:", result) == RTNORM)
+		{
+			if (wcslen(result) <= 0 || wcsicmp(result, L"Y") == 0 || wcsicmp(result, L"y") == 0)
+				bDrawByVert = TRUE;
+			else
+				bDrawByVert = FALSE;
+		}
+	}
+#else
+	char result[20] = "";
+	idRet = acedGetString(NULL, _T("\n输入绘制模式[对比(1)/排版(2)/下料(3)]<1>:"), result);
+	if (idRet == RTNORM)
+		draw_type = (strlen(result) > 0) ? atoi(result) : 1;
+	if (draw_type == 1)
+	{
+		if (acedGetString(NULL, _T("\n布局以列为主？[是(Y)/否(N)]<Y>:"), result) == RTNORM)
+		{
+			if (strlen(result) <= 0 || stricmp(result, "Y") == 0 || stricmp(result, "y") == 0)
+				bDrawByVert = TRUE;
+			else
+				bDrawByVert = FALSE;
+		}
+	}
+#endif
+	if(draw_type==0)
+	{
+		acutPrintf(_T("\n无效的输入!"));
+		return;
+	}
+	//绘制
+	g_pncSysPara.m_ciLayoutMode = draw_type;
+	if (draw_type == 1)
+		g_pncSysPara.m_ciArrangeType = bDrawByVert;
+	model.DrawPlates();
+	//更新构件列表
+	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+	if (pPartListDlg != NULL)
+		pPartListDlg->UpdatePartList();
+}
+//////////////////////////////////////////////////////////////////////////
 //实时插入钢印区
 //InsertMKRect		
 //////////////////////////////////////////////////////////////////////////

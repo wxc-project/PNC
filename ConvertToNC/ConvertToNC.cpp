@@ -95,6 +95,12 @@ void RegisterServerComponents ()
 		L"PNC",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&ShowPartList);
+	//»æÖÆ¸Ö°å
+	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
+		L"draw",        // Global function name
+		L"draw",        // Local function name
+		ACRX_CMD_MODAL,   // Type
+		&DrawPlates);
 	//²åÈë¸ÖÓ¡Çø
 	acedRegCmds->addCommand( L"PNC-MENU",         // Group name 
 		L"MK",
@@ -162,6 +168,12 @@ void RegisterServerComponents ()
 		"PNC",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&ShowPartList);
+	//»æÖÆ¸Ö°å
+	acedRegCmds->addCommand("PNC-MENU",           // Group name
+		"draw",        // Global function name
+		"draw",        // Local function name
+		ACRX_CMD_MODAL,   // Type
+		&DrawPlates);
 	//²åÈë¸ÖÓ¡Çø
 	acedRegCmds->addCommand( "PNC-MENU",         // Group name 
 		"MK",
