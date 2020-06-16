@@ -245,7 +245,7 @@ void CPlateProcessInfo::InternalExtractPlateRelaEnts()
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
 	{
 		SCOPE_STRU scope = GetPlateScope(TRUE);
-		ZoomAcadView(scope,0.5);
+		ZoomAcadView(scope,10);
 	}
 	else if (!dim_pos.IsZero())
 	{	
@@ -258,7 +258,7 @@ void CPlateProcessInfo::InternalExtractPlateRelaEnts()
 	{
 		//获取钢板等距扩大的轮廓点集合
 		if (i == 0)
-			minDistance = 0.5;
+			minDistance = CPNCModel::DIST_ERROR * 2;
 		else if (m_bHasInnerDimPos)
 			minDistance = 50;
 		else
@@ -1804,7 +1804,10 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 			f3dLine line;
 			if (xPlate.GetBendLineAt(i, &line) != 0)
 			{
-				entId = CreateAcadLine(pBlockTableRecord, line.startPt, line.endPt, 0, 0, g_pncSysPara.crMode.crEdge);
+				COLORREF clrHQ = g_pncSysPara.crMode.crEdge;
+				if (g_pncSysPara.m_ciBendLineColorIndex > 0 && g_pncSysPara.m_ciBendLineColorIndex < 255)
+					clrHQ = GetColorFromIndex(g_pncSysPara.m_ciBendLineColorIndex);
+				entId = CreateAcadLine(pBlockTableRecord, line.startPt, line.endPt, 0, 0, clrHQ);
 				m_newAddEntIdList.append(entId.asOldId());
 			}
 		}
@@ -3003,7 +3006,6 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 						pCurPlateInfo->vertexList.append(*pVer);
 						pCurPlateInfo->m_bHasInnerDimPos = FALSE;	//已找到
 					}
-						
 					break;
 				}
 			}

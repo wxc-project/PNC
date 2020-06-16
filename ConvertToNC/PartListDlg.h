@@ -29,7 +29,7 @@ public:
 	BOOL CreateDlg();
 	BOOL UpdatePartList();
 	void RefreshCtrlState();
-	void SelectPart(int iCurSel);
+	void SelectPart(int iCurSel, BOOL bClone = TRUE);
 	void ProcessKeyDown(WORD wVKey);
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
@@ -46,6 +46,7 @@ protected:
 	afx_msg void OnMove(int x, int y);
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMClickPartList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMDblclkPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedBtnSendToPpe();
 	afx_msg void OnBnClickedBtnExportDxf();

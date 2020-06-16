@@ -49,7 +49,8 @@ public:
 	void CreatePlateNcFiles(int iFileType);
 	void CreatePlateFiles(int iFileType);
 protected:
-
+	CXhChar16 GetSubFolder(int iNcMode);
+	CXhChar16 GetFileSuffix(int iFileType);
 // Generated message map functions
 protected:
 	//{{AFX_MSG(CPPEDoc)

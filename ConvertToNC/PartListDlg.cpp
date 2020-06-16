@@ -59,6 +59,7 @@ BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_MOVE, &CPartListDlg::OnBnClickedBtnMove)
 	ON_BN_CLICKED(IDC_BTN_MOVE_MK_RECT, &CPartListDlg::OnBnClickedBtnMoveMkRect)
 	ON_BN_CLICKED(IDC_CHK_EDIT_MK, &CPartListDlg::OnBnClickedChkEditMk)
+	ON_NOTIFY(NM_DBLCLK, IDC_PART_LIST, &CPartListDlg::OnNMDblclkPartList)
 END_MESSAGE_MAP()
 
 
@@ -132,63 +133,70 @@ BOOL CPartListDlg::UpdatePartList()
 	return TRUE;
 }
 
-void CPartListDlg::SelectPart(int iCurSel) 
+void CPartListDlg::SelectPart(int iCurSel, BOOL bClone /*= TRUE*/)
 {
 	CPlateProcessInfo *pPlate=(CPlateProcessInfo*)m_partList.GetItemData(iCurSel);
 	if(pPlate==NULL)
 		return;
-	//选中钢板关联实体
-	if(pPlate->IsValid())
-	{	//钢板提取成功，显示
-		if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
-		{	//下料预审时处理挡板
-			SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
-			f2dPoint leftBtm(scope.fMinX, scope.fMinY);
-			f2dRect rect;
-			rect.topLeft.Set(leftBtm.x, leftBtm.y + CDrawDamBoard::BOARD_HEIGHT);
-			rect.bottomRight.Set(leftBtm.x + CDrawDamBoard::BOARD_HEIGHT, leftBtm.y);
-			ZoomAcadView(rect, 100);
-			//
-			CLockDocumentLife lock;
-			if (!CDrawDamBoard::m_bDrawAllBamBoard)
-				m_xDamBoardManager.EraseAllDamBoard();
-			m_xDamBoardManager.DrawDamBoard(pPlate);
-		}
-		else if(g_pncSysPara.m_ciLayoutMode==CPNCSysPara::LAYOUT_PRINT)
-		{	//自动排版时处理块引用
-			SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
-			CAcDbObjLife objLife(pPlate->m_layoutBlockId);
-			AcDbEntity *pEnt = objLife.GetEnt();
-			if (pEnt && pEnt->isKindOf(AcDbBlockReference::desc()))
-			{
-				AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
-				AcGePoint3d pos = pBlockRef->position();
+	if (bClone)
+	{	//定位到新绘制的图形范围
+		if (pPlate->IsValid())
+		{	//钢板提取成功，显示
+			if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+			{	//下料预审时处理挡板
+				SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
+				f2dPoint leftBtm(scope.fMinX, scope.fMinY);
 				f2dRect rect;
-				rect.topLeft.Set(scope.fMinX + pos.x, scope.fMaxY + pos.y);
-				rect.bottomRight.Set(scope.fMaxX + pos.x, scope.fMinY + pos.y);
-				ZoomAcadView(rect, 50);
+				rect.topLeft.Set(leftBtm.x, leftBtm.y + CDrawDamBoard::BOARD_HEIGHT);
+				rect.bottomRight.Set(leftBtm.x + CDrawDamBoard::BOARD_HEIGHT, leftBtm.y);
+				ZoomAcadView(rect, 100);
+				//
+				CLockDocumentLife lock;
+				if (!CDrawDamBoard::m_bDrawAllBamBoard)
+					m_xDamBoardManager.EraseAllDamBoard();
+				m_xDamBoardManager.DrawDamBoard(pPlate);
+			}
+			else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PRINT)
+			{	//自动排版时处理块引用
+				SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
+				CAcDbObjLife objLife(pPlate->m_layoutBlockId);
+				AcDbEntity *pEnt = objLife.GetEnt();
+				if (pEnt && pEnt->isKindOf(AcDbBlockReference::desc()))
+				{
+					AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
+					AcGePoint3d pos = pBlockRef->position();
+					f2dRect rect;
+					rect.topLeft.Set(scope.fMinX + pos.x, scope.fMaxY + pos.y);
+					rect.bottomRight.Set(scope.fMaxX + pos.x, scope.fMinY + pos.y);
+					ZoomAcadView(rect, 50);
+				}
+				else
+					ZoomAcadView(scope, 50);
+			}
+			else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
+			{	//钢板对比时处理提取生成的钢板轮廓点
+				SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
+				f2dRect rect = GetCadEntRect(pPlate->m_newAddEntIdList);
+				scope.VerifyVertex(rect.topLeft);
+				scope.VerifyVertex(rect.bottomRight);
+				ZoomAcadView(scope, 50);
 			}
 			else
+			{
+				SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
 				ZoomAcadView(scope, 50);
-		}
-		else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
-		{	//钢板对比时处理提取生成的钢板轮廓点
-			SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
-			f2dRect rect = GetCadEntRect(pPlate->m_newAddEntIdList);
-			scope.VerifyVertex(rect.topLeft);
-			scope.VerifyVertex(rect.bottomRight);
-			ZoomAcadView(scope, 50);
+			}
 		}
 		else
-		{
-			SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
-			ZoomAcadView(scope, 50);
+		{	//钢板提取失败，显示
+			f2dRect rect = pPlate->GetPnDimRect(15, 30);
+			ZoomAcadView(rect, 30);
 		}
 	}
 	else
-	{	//钢板提取失败，显示
-		f2dRect rect = pPlate->GetPnDimRect(15, 30);
-		ZoomAcadView(rect, 30);
+	{	//定位到原始图形
+		SCOPE_STRU scope = pPlate->GetCADEntScope(FALSE);
+		ZoomAcadView(scope, 50);
 	}
 	//修改视图位置后需要及时更新界面,否则acedSSGet()可能不能获取正确的实体集 wht 11-06-25
 	actrTransactionManager->flushGraphics();
@@ -254,6 +262,19 @@ void CPartListDlg::OnNMClickPartList(NMHDR *pNMHDR, LRESULT *pResult)
 		int iCurSel = m_partList.GetNextSelectedItem(pos);
 		if(iCurSel>=0)
 			SelectPart(iCurSel);
+	}
+	*pResult = 0;
+}
+
+void CPartListDlg::OnNMDblclkPartList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	POSITION pos = m_partList.GetFirstSelectedItemPosition();
+	if (pos != NULL)
+	{
+		int iCurSel = m_partList.GetNextSelectedItem(pos);
+		if (iCurSel >= 0)
+			SelectPart(iCurSel, FALSE);
 	}
 	*pResult = 0;
 }
