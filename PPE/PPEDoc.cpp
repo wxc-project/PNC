@@ -460,8 +460,7 @@ void CPPEDoc::AmendHoleIncrement(CProcessPlate* pPlate, int iNcMode)
 		}
 	}
 }
-bool CPPEDoc::CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, char* thickSetStr,
-	const char* mainFolder, int iNcMode, int iNcFileType, BOOL bIsPmzCheck/*=FALSE*/)
+CXhChar16 CPPEDoc::GetSubFolder(int iNcMode)
 {
 	CXhChar16 sSubFolder;
 	if (CNCPart::FLAME_MODE == iNcMode)
@@ -474,8 +473,10 @@ bool CPPEDoc::CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat,
 		sSubFolder.Copy("钻床加工");
 	else if (CNCPart::LASER_MODE == iNcMode)
 		sSubFolder.Copy("激光复合机");
-	else
-		return false;
+	return sSubFolder;
+}
+CXhChar16 CPPEDoc::GetFileSuffix(int iNcFileType)
+{
 	CXhChar16 sNcExt;
 	if (CNCPart::PLATE_DXF_FILE == iNcFileType)		//钢板DXF类型文件
 		sNcExt.Copy("dxf");
@@ -493,7 +494,14 @@ bool CPPEDoc::CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat,
 		sNcExt.Copy("ttp");
 	else if (CNCPart::PLATE_WKF_FILE == iNcFileType)	//济南法特WKF文件
 		sNcExt.Copy("wkf");
-	else
+	return sNcExt;
+}
+bool CPPEDoc::CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, char* thickSetStr,
+	const char* mainFolder, int iNcMode, int iNcFileType, BOOL bIsPmzCheck/*=FALSE*/)
+{
+	CXhChar16 sSubFolder = GetSubFolder(iNcMode);
+	CXhChar16 sNcExt = GetFileSuffix(iNcFileType);
+	if (sSubFolder.GetLength() <= 0 || sNcExt.GetLength() <= 0)
 		return false;
 	CXhChar16 sNcFileFolder = sNcExt;
 	sNcFileFolder.ToUpper();
@@ -598,7 +606,11 @@ void CPPEDoc::CreatePlateNcFiles(int iFileType)
 	if (CNCPart::PLATE_PMZ_FILE == iFileType && g_sysPara.pmz.m_bPmzCheck)	//输出钻床加工PMZ预审格式文件 wht 19-07-02
 		CreatePlateNcFiles(hashPlateByThickMat, g_sysPara.nc.m_xDrillPara.m_sThick, sFolder, iNcMode, CNCPart::PLATE_PMZ_FILE, TRUE);
 	//
-	ShellExecute(NULL, "open", NULL, NULL, sFolder, SW_SHOW);
+	CXhChar16 sSubFolder = GetSubFolder(iNcMode);
+	CXhChar16 sNcExt = GetFileSuffix(iFileType);
+	sNcExt.ToUpper();
+	CXhChar500 sNcFileDir("%s\\%s\\%s", (char*)sFolder, (char*)sSubFolder, (char*)sNcExt);
+	ShellExecute(NULL, "open", NULL, NULL, sNcFileDir, SW_SHOW);
 #endif
 }
 void CPPEDoc::CreatePlateDxfFiles()

@@ -130,6 +130,10 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		oper.UpdatePropItemValue("CutLimitSH");
 		oper.UpdatePropItemValue("ProLimitSH");
 	}
+	else if (CSysPara::GetPropID("OutputPath") == pItem->m_idProp)
+	{
+		model.m_sOutputPath.Copy(valueStr);
+	}
 	else if(CSysPara::GetPropID("nc.DrillPara.m_bNeedSH")==pItem->m_idProp)
 	{
 		if (valueStr.Compare("ÊÇ") == 0)
@@ -912,7 +916,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	//¸Ö°åÊä³öÉèÖÃ
 	pParentItem = oper.InsertPropItem(pRootItem, "OutPutSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_PROCESSCARD_INFO);
-	oper.InsertButtonPropItem(pParentItem, "OutputPath");
+	oper.InsertBtnEditPropItem(pParentItem, "OutputPath");
 	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
 	oper.InsertButtonPropItem(pParentItem, "nc.m_iNcMode");

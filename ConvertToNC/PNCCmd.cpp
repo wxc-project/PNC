@@ -507,6 +507,10 @@ void SendPartEditor()
 void ShowPartList()
 {	
 	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
+	//更新构件列表
+	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+	if (pPartListDlg != NULL)
+		pPartListDlg->UpdatePartList();
 }
 //////////////////////////////////////////////////////////////////////////
 //绘制钢板
