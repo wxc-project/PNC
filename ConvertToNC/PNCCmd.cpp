@@ -549,7 +549,11 @@ void DrawPlates()
 #endif
 	if(draw_type==0)
 	{
+#ifdef _ARX_2007
+		acutPrintf(L"\n无效的输入!");
+#else
 		acutPrintf(_T("\n无效的输入!"));
+#endif
 		return;
 	}
 	//绘制
