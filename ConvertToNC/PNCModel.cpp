@@ -107,13 +107,10 @@ CPlateProcessInfo::CPlateProcessInfo()
 	m_bEnableReactor = TRUE;
 	m_bNeedExtract = FALSE;
 }
-double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord, double scale); //From XeroExtractor.cpp
-CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
+CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 {
 	if(pEnt==NULL)
 		return NULL;
-	long entId = pEnt->id().asOldId();
-	long objectId = pEnt->objectId().asOldId();
 	CAD_ENTITY* pRelaEnt=m_xHashRelaEntIdList.GetValue(pEnt->id().asOldId());
 	if(pRelaEnt==NULL)
 	{
@@ -176,36 +173,12 @@ CPlateObject::CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
 		{
 			pRelaEnt->ciEntType = TYPE_BLOCKREF;
-			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
-			AcDbObjectId blockId = pReference->blockTableRecord();
-			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
-			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
-			if (pTempBlockTableRecord)
-			{
-				pTempBlockTableRecord->close();
-				CXhChar50 sName;
-#ifdef _ARX_2007
-				ACHAR* sValue = new ACHAR[50];
-				pTempBlockTableRecord->getName(sValue);
-				sName.Copy((char*)_bstr_t(sValue));
-				delete[] sValue;
-#else
-				char *sValue = new char[50];
-				pTempBlockTableRecord->getName(sValue);
-				sName.Copy(sValue);
-				delete[] sValue;
-#endif
-				//记录图块的位置和大小，方便后期处理同一位置有多个图块的情况
-				BOLT_BLOCK* pBoltD = g_pncSysPara.hashBoltDList.GetValue(sName);
-				if (pBoltD)
-				{
-					strcpy(pRelaEnt->sText, sName);
-					pRelaEnt->pos.x = (float)pReference->position().x;
-					pRelaEnt->pos.y = (float)pReference->position().y;
-					double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-					if (fHoleD > 0)
-						pRelaEnt->m_fSize = fHoleD;
-				}
+			CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+			if (pLsBlockEnt)
+			{	//记录图块的位置和大小，方便后期处理同一位置有多个图块的情况
+				pRelaEnt->pos.x = pLsBlockEnt->pos.x;
+				pRelaEnt->pos.y = pLsBlockEnt->pos.y;
+				pRelaEnt->m_fSize = pLsBlockEnt->m_fSize;
 			}
 		}
 		else if (pEnt->isKindOf(AcDbDiametricDimension::desc()))
@@ -324,7 +297,7 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 	InternalExtractPlateRelaEnts();
 	//判断钢板实体集合中是否有椭圆弧
 	//存在椭圆弧时需要根据椭圆弧更新钢板轮廓点重新提取钢板关联实体，否则可能导致漏孔 wht 19-08-14
-	CPlateObject::CAD_ENTITY *pCadEnt = NULL;
+	CAD_ENTITY *pCadEnt = NULL;
 	for (pCadEnt = m_xHashRelaEntIdList.GetFirst(); pCadEnt; pCadEnt = m_xHashRelaEntIdList.GetNext())
 	{
 		if (pCadEnt->ciEntType == TYPE_ELLIPSE)
@@ -525,20 +498,17 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			//对于圆圈表示的螺栓，根据圆圈直径和标准螺栓直径判断是否归属于标准螺栓, wxc-2020-04-01
 			if (g_pncSysPara.IsRecogCirByBoltD() && pEnt->isKindOf(AcDbCircle::desc()))
 			{
-				bool bStandardBolt = true;
 				double fHoleD = boltInfo.d;
-				short wBoltD = ftoi(fHoleD - 2.1);
-				if (wBoltD <= 12 && fHoleD > 12)
+				short wBoltD = 0;
+				if (fabs(fHoleD - g_pncSysPara.standard_hole.m_fLS12) < EPS2)
 					wBoltD = 12;
-				else if (wBoltD <= 16 && fHoleD > 16)
+				else if (fabs(fHoleD - g_pncSysPara.standard_hole.m_fLS16) < EPS2)
 					wBoltD = 16;
-				else if (wBoltD <= 20 && fHoleD > 20)
+				else if (fabs(fHoleD - g_pncSysPara.standard_hole.m_fLS20) < EPS2)
 					wBoltD = 20;
-				else if (wBoltD <= 24 && fHoleD > 24)
+				else if (fabs(fHoleD - g_pncSysPara.standard_hole.m_fLS24) < EPS2)
 					wBoltD = 24;
-				else
-					bStandardBolt = false;
-				if (bStandardBolt)
+				if (wBoltD > 0)
 				{
 					pBoltInfo->bolt_d = wBoltD;
 					pBoltInfo->hole_d_increment = (float)(fHoleD - wBoltD);
@@ -656,15 +626,9 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			CAcDbObjLife objLife(MkCadObjId(pCurBolt->feature));
 			if ((pEnt = objLife.GetEnt()) && pEnt->isKindOf(AcDbBlockReference::desc()))
 			{
-				AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
-				AcDbObjectId blockId = pReference->blockTableRecord();
-				AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
-				acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
-				if (pTempBlockTableRecord)
-				{
-					pTempBlockTableRecord->close();
-					org_hole_d2 = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-				}
+				CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+				if (pLsBlockEnt)
+					org_hole_d2 = pLsBlockEnt->m_fSize;
 			}
 			const double TEXT_SEARCH_R = org_hole_d * 0.5 + 25;
 			if (xMinDis.number < TEXT_SEARCH_R)
@@ -1095,6 +1059,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 			Cpy_Pnt(ptE, acgeLine.endPoint());
 			VERTEX* pVer = tem_vertes.append();
 			pVer->pos.Set(location.x, location.y, location.z);
+			pVer->tag.lParam = idAcdbPline.asOldId();
 		}
 		else if (pPline->segType(iVertIndex) == AcDbPolyline::kArc)
 		{
@@ -1107,6 +1072,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 			Cpy_Pnt(norm, acgeArc.normal());
 			VERTEX* pVer = tem_vertes.append();
 			pVer->pos.Set(location.x, location.y, location.z);
+			pVer->tag.lParam = idAcdbPline.asOldId();
 			pVer->ciEdgeType = 2;
 			pVer->arc.center = center;
 			pVer->arc.work_norm = norm;
@@ -1264,6 +1230,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_
 			continue;
 		VERTEX* pVer = tem_vertes.append();
 		pVer->pos = objItem.vertex;
+		pVer->tag.lParam = objItem.m_lineId;
 		//记录圆弧信息
 		AcDbEntity *pEnt = NULL;
 		acdbOpenAcDbEntity(pEnt, MkCadObjId(objItem.m_lineId), AcDb::kForRead);
@@ -1804,7 +1771,7 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 			f3dLine line;
 			if (xPlate.GetBendLineAt(i, &line) != 0)
 			{
-				COLORREF clrHQ = g_pncSysPara.crMode.crEdge;
+				COLORREF clrHQ = -1;
 				if (g_pncSysPara.m_ciBendLineColorIndex > 0 && g_pncSysPara.m_ciBendLineColorIndex < 255)
 					clrHQ = GetColorFromIndex(g_pncSysPara.m_ciBendLineColorIndex);
 				entId = CreateAcadLine(pBlockTableRecord, line.startPt, line.endPt, 0, 0, clrHQ);
@@ -2465,7 +2432,7 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 	}
 	else if (m_xHashRelaEntIdList.GetNodeNum() > 1)
 	{
-		for (CPlateObject::CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
+		for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
 			VerifyVertexByCADEntId(scope, MkCadObjId(pEnt->idCadEnt));
 	}
 	else
@@ -2489,6 +2456,7 @@ void CPNCModel::Empty()
 {
 	m_hashPlateInfo.Empty();
 	m_xAllEntIdSet.Empty();
+	m_xBoltBlockHash.Empty();
 }
 //从选中的图元中剔除无效的非轮廓边图元（孤立线条、短焊缝线等）
 void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols)

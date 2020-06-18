@@ -24,11 +24,13 @@ public:
 	CSuperGridCtrl m_listCtrlSysSetting;
 	CHashStrList<CSuperGridCtrl::CTreeItem*> hashGroupByItemName;
 	long m_idEventProp;		//记录触发中断的属性ID,恢复窗口时使用
+	int m_iSelTabGroup;		//记录选中的分组序号
 public:
 	void DisplaySystemSetting();
 	void UpdatePncSettingProp();
 	void UpdateUbomSettingProp();
 	void UpdateLayoutProperty(CPropTreeItem* pParentItem);
+	void RefreshCtrlState();
 #ifdef __PNC_
 	void SelectEntObj(int nResultEnt=1);	//选择对象节点或线
 	void FinishSelectObjOper();				//完成选择对象的后续操作

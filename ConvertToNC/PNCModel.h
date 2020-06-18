@@ -181,6 +181,7 @@ class CPNCModel
 public:
 	CHashSet<AcDbObjectId> m_xAllEntIdSet;
 	CHashSet<AcDbObjectId> m_xAllLineHash;
+	CHashList<CAD_ENTITY> m_xBoltBlockHash;
 	CXhChar100 m_sCompanyName;	//设计单位
 	CXhChar100 m_sPrjCode;		//工程编号
 	CXhChar100 m_sPrjName;		//工程名称

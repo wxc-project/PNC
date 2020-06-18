@@ -172,17 +172,26 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogHoleDimText"))
 	{
-		if (valueStr.CompareNoCase("处理") == 0)
+		if (valueStr.CompareNoCase("按标注处理") == 0)
 			g_pncSysPara.m_ciBoltRecogMode |= 0X02;
 		else
 			g_pncSysPara.m_ciBoltRecogMode &= 0X01;
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogLsCircle"))
 	{
-		if (valueStr.CompareNoCase("根据标准孔径判断") == 0)
+		if (valueStr.CompareNoCase("根据标准孔进行筛选") == 0)
 			g_pncSysPara.m_ciBoltRecogMode |= 0X04;
 		else
 			g_pncSysPara.m_ciBoltRecogMode &= 0X03;
+		//
+		pPropList->DeleteAllSonItems(pItem);
+		if (g_pncSysPara.IsRecogCirByBoltD())
+		{
+			oper.InsertEditPropItem(pItem, "standardM12", "", "", -1, TRUE);
+			oper.InsertEditPropItem(pItem, "standardM16", "", "", -1, TRUE);
+			oper.InsertEditPropItem(pItem, "standardM20", "", "", -1, TRUE);
+			oper.InsertEditPropItem(pItem, "standardM24", "", "", -1, TRUE);
+		}
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iRecogMode"))
 	{
@@ -251,6 +260,9 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 }
 static BOOL ButtonClickSystemSetting(CPropertyList *pPropList, CPropTreeItem* pItem)
 {
+	CPNCSysSettingDlg* pDlg = (CPNCSysSettingDlg*)pPropList->GetParent();
+	if (pDlg == NULL)
+		return FALSE;
 	CPropertyListOper<CPNCSysPara> oper(pPropList, &g_pncSysPara);
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("layer_mode"))
 	{
@@ -262,10 +274,19 @@ static BOOL ButtonClickSystemSetting(CPropertyList *pPropList, CPropTreeItem* pI
 		}
 		UpdateFilterLayerProperty(pPropList, pItem);
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogLsBlock"))
+	{
+		pDlg->m_iSelTabGroup = 2;
+		pDlg->m_ctrlPropGroup.SetCurSel(2);
+		pDlg->RefreshCtrlState();
+	}
 	return TRUE;
 }
 BOOL FireSystemSettingPopMenuClick(CPropertyList* pPropList, CPropTreeItem* pItem, CString sMenuName, int iMenu)
 {
+	CPNCSysSettingDlg* pDlg = (CPNCSysSettingDlg*)pPropList->GetParent();
+	if (pDlg == NULL)
+		return FALSE;
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("layer_mode"))
 	{
 		g_pncSysPara.m_iLayerMode = sMenuName[0] - '0';
@@ -277,6 +298,13 @@ BOOL FireSystemSettingPopMenuClick(CPropertyList* pPropList, CPropTreeItem* pIte
 		}
 		pPropList->SetItemPropValue(pItem->m_idProp, sMenuName);
 		UpdateFilterLayerProperty(pPropList, pItem);
+		return TRUE;
+	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogLsBlock"))
+	{
+		pDlg->m_iSelTabGroup = 2;
+		pDlg->m_ctrlPropGroup.SetCurSel(2);
+		pDlg->RefreshCtrlState();
 		return TRUE;
 	}
 	return FALSE;
@@ -420,8 +448,6 @@ static void InsertBoltBolckItem(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTree
 	CXhChar16 hole_d;
 	sprintf(hole_d, "%d", pSchema->diameter);
 	lpInfoItem->SetSubItemText(2, _T(hole_d));
-	sprintf(hole_d, "%.3lf", pSchema->hole_d);
-	lpInfoItem->SetSubItemText(3, _T(hole_d));
 	lpInfoItem->SetCheck(TRUE);
 	CSuperGridCtrl::CTreeItem* pItem = pListCtrl->InsertItem(pGroupItem, lpInfoItem);
 	if (pSchema != &schema)
@@ -531,9 +557,6 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 				case 2:
 					pBoltD->diameter = atoi(m_ModifyText);
 					break;
-				case 3:
-					pBoltD->hole_d = atof(m_ModifyText);
-					break;
 				}
 			}
 			else
@@ -545,7 +568,6 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 					pBoltD1.sGroupName = m_lpNodeInfo->GetSubItemText(0);
 					pBoltD1.sBlockName = pListCtrl->GetItemText(iRows, 1);
 					pBoltD1.diameter = atoi(pListCtrl->GetItemText(iRows, 2));
-					pBoltD1.hole_d = atof(pListCtrl->GetItemText(iRows, 3));
 					g_pncSysPara.hashBoltDList.SetValue(pListCtrl->GetItemText(iRows, 1), pBoltD1);
 				}
 			}
@@ -598,6 +620,7 @@ CPNCSysSettingDlg::CPNCSysSettingDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CPNCSysSettingDlg::IDD, pParent)
 #endif
 {
+	m_iSelTabGroup = 0;
 	if (m_listCtrlSysSetting.GetSafeHwnd())
 		m_listCtrlSysSetting.ShowWindow(SW_HIDE);
 }
@@ -632,7 +655,7 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_ctrlPropGroup.InsertItem(0, "常规设置");
 	m_ctrlPropGroup.InsertItem(1, "文字识别");
 #ifndef __UBOM_ONLY_
-	m_ctrlPropGroup.InsertItem(2, "螺栓识别");
+	m_ctrlPropGroup.InsertItem(2, "螺栓图块");
 #endif
 	//
 	long col_wide_arr[7] = { 80,80,80,80,80,80,80 };
@@ -653,8 +676,79 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	else       //非内部启动时导入配置参数，否则选择的颜色将被冲掉 wht 19-10-30
 		PNCSysSetImportDefault();
 #endif
+	m_ctrlPropGroup.SetCurSel(m_iSelTabGroup);
+	RefreshCtrlState();
 	DisplaySystemSetting();
 	return TRUE;
+}
+void CPNCSysSettingDlg::RefreshCtrlState()
+{
+	m_listCtrlSysSetting.ShowWindow(m_iSelTabGroup == PROPGROUP_RULE ? SW_HIDE : SW_SHOW);
+	m_propList.ShowWindow(m_iSelTabGroup == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
+	GetDlgItem(IDC_E_PROP_HELP_STR)->ShowWindow(m_iSelTabGroup == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
+	if (m_iSelTabGroup == PROPGROUP_RULE)
+	{
+		m_propList.m_iPropGroup = m_iSelTabGroup;
+		m_propList.Redraw();
+	}
+	else
+	{
+		while (m_listCtrlSysSetting.GetHeaderCtrl()->GetItemCount() > 0)
+			m_listCtrlSysSetting.DeleteColumn(0);
+		m_listCtrlSysSetting.DeleteAllItems();
+		if (m_iSelTabGroup == PROPGROUP_TEXT)
+		{
+			m_listCtrlSysSetting.InsertColumn(0, _T("启用"), LVCFMT_LEFT, 40);
+			m_listCtrlSysSetting.InsertColumn(1, _T("名称"), LVCFMT_LEFT, 55);
+			m_listCtrlSysSetting.InsertColumn(2, _T("单行/多行"), LVCFMT_LEFT, 65);
+			m_listCtrlSysSetting.InsertColumn(3, _T("件号"), LVCFMT_LEFT, 55);
+			m_listCtrlSysSetting.InsertColumn(4, _T("规格"), LVCFMT_LEFT, 55);
+			m_listCtrlSysSetting.InsertColumn(5, _T("材质"), LVCFMT_LEFT, 55);
+			m_listCtrlSysSetting.InsertColumn(6, _T("加工数"), LVCFMT_LEFT, 55);
+			m_listCtrlSysSetting.InsertColumn(7, _T("正曲"), LVCFMT_LEFT, 55);
+			m_listCtrlSysSetting.InsertColumn(8, _T("反曲"), LVCFMT_LEFT, 55);
+			if (g_pncSysPara.m_recogSchemaList.GetNodeNum() == 0)
+			{
+				RECOG_SCHEMA *pNewSchema = g_pncSysPara.InsertRecogSchema("",
+					g_pncSysPara.m_iDimStyle, g_pncSysPara.m_sPnKey,
+					g_pncSysPara.m_sMatKey, g_pncSysPara.m_sThickKey, g_pncSysPara.m_sPnNumKey,
+					g_pncSysPara.m_sFrontBendKey, g_pncSysPara.m_sReverseBendKey, TRUE);
+				InsertRecogSchemaItem(&m_listCtrlSysSetting, pNewSchema);
+			}
+			else
+			{
+				for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
+					InsertRecogSchemaItem(&m_listCtrlSysSetting, pSchema);
+				InsertRecogSchemaItem(&m_listCtrlSysSetting, NULL);
+			}
+		}
+		else if (m_iSelTabGroup == PROPGROUP_BOLT)
+		{
+			hashGroupByItemName.Empty();
+			m_listCtrlSysSetting.InsertColumn(0, _T("分组"), LVCFMT_LEFT, 130);
+			m_listCtrlSysSetting.InsertColumn(1, _T("螺栓图符"), LVCFMT_LEFT, 140);
+			m_listCtrlSysSetting.InsertColumn(2, _T("螺栓直径"), LVCFMT_LEFT, 140);
+			for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
+			{
+				if (!hashGroupByItemName.GetValue(pBoltD->sGroupName))
+				{
+					CListCtrlItemInfo* lpInfo = new CListCtrlItemInfo();
+					lpInfo->SetSubItemText(0, _T(pBoltD->sGroupName));
+					CSuperGridCtrl::CTreeItem* pGroupItem = m_listCtrlSysSetting.InsertRootItem(lpInfo, TRUE);
+					hashGroupByItemName.SetValue(pBoltD->sGroupName, pGroupItem);
+					pGroupItem->m_bHideChildren = FALSE;
+					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
+				}
+				else
+				{
+					CSuperGridCtrl::CTreeItem** ppGroupItem = hashGroupByItemName.GetValue(pBoltD->sGroupName);
+					CSuperGridCtrl::CTreeItem* pGroupItem = ppGroupItem ? *ppGroupItem : NULL;
+					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
+				}
+			}
+			m_listCtrlSysSetting.Redraw();
+		}
+	}
 }
 
 void CPNCSysSettingDlg::OnPNCSysDel()
@@ -783,74 +877,8 @@ void CPNCSysSettingDlg::OnCancel()
 }
 void CPNCSysSettingDlg::OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult)
 {
-	int iCurSel = m_ctrlPropGroup.GetCurSel();
-	m_listCtrlSysSetting.ShowWindow(iCurSel == PROPGROUP_RULE ? SW_HIDE : SW_SHOW);
-	m_propList.ShowWindow(iCurSel == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
-	GetDlgItem(IDC_E_PROP_HELP_STR)->ShowWindow(iCurSel == PROPGROUP_RULE ? SW_SHOW : SW_HIDE);
-	if (iCurSel == PROPGROUP_RULE)
-	{
-		m_propList.m_iPropGroup = iCurSel;
-		m_propList.Redraw();
-	}
-	else
-	{
-		while (m_listCtrlSysSetting.GetHeaderCtrl()->GetItemCount() > 0)
-			m_listCtrlSysSetting.DeleteColumn(0);
-		m_listCtrlSysSetting.DeleteAllItems();
-		if (iCurSel == PROPGROUP_TEXT)
-		{
-			m_listCtrlSysSetting.InsertColumn(0, _T("启用"), LVCFMT_LEFT, 40);
-			m_listCtrlSysSetting.InsertColumn(1, _T("名称"), LVCFMT_LEFT, 55);
-			m_listCtrlSysSetting.InsertColumn(2, _T("单行/多行"), LVCFMT_LEFT, 65);
-			m_listCtrlSysSetting.InsertColumn(3, _T("件号"), LVCFMT_LEFT, 55);
-			m_listCtrlSysSetting.InsertColumn(4, _T("规格"), LVCFMT_LEFT, 55);
-			m_listCtrlSysSetting.InsertColumn(5, _T("材质"), LVCFMT_LEFT, 55);
-			m_listCtrlSysSetting.InsertColumn(6, _T("加工数"), LVCFMT_LEFT, 55);
-			m_listCtrlSysSetting.InsertColumn(7, _T("正曲"), LVCFMT_LEFT, 55);
-			m_listCtrlSysSetting.InsertColumn(8, _T("反曲"), LVCFMT_LEFT, 55);
-			if (g_pncSysPara.m_recogSchemaList.GetNodeNum() == 0)
-			{
-				RECOG_SCHEMA *pNewSchema = g_pncSysPara.InsertRecogSchema("", 
-					g_pncSysPara.m_iDimStyle, g_pncSysPara.m_sPnKey,
-					g_pncSysPara.m_sMatKey,g_pncSysPara.m_sThickKey,g_pncSysPara.m_sPnNumKey,
-					g_pncSysPara.m_sFrontBendKey, g_pncSysPara.m_sReverseBendKey, TRUE);
-				InsertRecogSchemaItem(&m_listCtrlSysSetting, pNewSchema);
-			}
-			else
-			{
-				for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
-					InsertRecogSchemaItem(&m_listCtrlSysSetting, pSchema);
-				InsertRecogSchemaItem(&m_listCtrlSysSetting, NULL);
-			}
-		}
-		else if (iCurSel == PROPGROUP_BOLT)
-		{
-			hashGroupByItemName.Empty();
-			m_listCtrlSysSetting.InsertColumn(0, _T("分组"), LVCFMT_LEFT, 130);
-			m_listCtrlSysSetting.InsertColumn(1, _T("螺栓图符"), LVCFMT_LEFT, 80);
-			m_listCtrlSysSetting.InsertColumn(2, _T("螺栓直径"), LVCFMT_LEFT, 80);
-			m_listCtrlSysSetting.InsertColumn(3, _T("孔径"), LVCFMT_LEFT, 80);
-			for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
-			{
-				if (!hashGroupByItemName.GetValue(pBoltD->sGroupName))
-				{
-					CListCtrlItemInfo* lpInfo = new CListCtrlItemInfo();
-					lpInfo->SetSubItemText(0, _T(pBoltD->sGroupName));
-					CSuperGridCtrl::CTreeItem* pGroupItem = m_listCtrlSysSetting.InsertRootItem(lpInfo, TRUE);
-					hashGroupByItemName.SetValue(pBoltD->sGroupName, pGroupItem);
-					pGroupItem->m_bHideChildren = FALSE;
-					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
-				}
-				else
-				{
-					CSuperGridCtrl::CTreeItem** ppGroupItem = hashGroupByItemName.GetValue(pBoltD->sGroupName);
-					CSuperGridCtrl::CTreeItem* pGroupItem = ppGroupItem ? *ppGroupItem : NULL;
-					InsertBoltBolckItem(&m_listCtrlSysSetting, pGroupItem, pBoltD);
-				}
-			}
-			m_listCtrlSysSetting.Redraw();
-		}
-	}
+	m_iSelTabGroup = m_ctrlPropGroup.GetCurSel();
+	RefreshCtrlState();
 }
 void CPNCSysSettingDlg::DisplaySystemSetting()
 {
@@ -914,7 +942,6 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");
 	//识别模式设置
 	pGroupItem = oper.InsertPropItem(pRootItem, "RecogMode");
-	//oper.InsertEditPropItem(pGroupItem, "m_fMapScale");	//图纸绘图比例
 	//轮廓边识别
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
@@ -939,11 +966,17 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	//火曲线识别颜色
 	oper.InsertCmbColorPropItem(pGroupItem, "m_iBendLineColorIndex");
 	//螺栓识别
-	pPropItem = oper.InsertEditPropItem(pGroupItem, "m_ciBoltRecogMode");
-	pPropItem->SetReadOnly();
-	oper.InsertCmbListPropItem(pPropItem, "RecogLsCircle");
-	oper.InsertCmbListPropItem(pPropItem, "FilterPartNoCir");
-	oper.InsertCmbListPropItem(pPropItem, "RecogHoleDimText");
+	oper.InsertPopMenuItem(pGroupItem, "RecogLsBlock");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "RecogLsCircle");
+	if (g_pncSysPara.IsRecogCirByBoltD())
+	{
+		oper.InsertEditPropItem(pPropItem, "standardM12");
+		oper.InsertEditPropItem(pPropItem, "standardM16");
+		oper.InsertEditPropItem(pPropItem, "standardM20");
+		oper.InsertEditPropItem(pPropItem, "standardM24");
+	}
+	oper.InsertCmbListPropItem(pGroupItem, "RecogHoleDimText");
+	oper.InsertCmbListPropItem(pGroupItem, "FilterPartNoCir");
 	//提取结果显示模式
 	pGroupItem = oper.InsertPropItem(pRootItem, "DisplayMode");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_ciLayoutMode");

@@ -86,6 +86,11 @@ void CPNCSysPara::Init()
 	crMode.crLS20 = RGB(255, 0, 255);
 	crMode.crLS24 = RGB(255, 255, 0);
 	crMode.crOtherLS = RGB(255, 255, 255);
+	//
+	standard_hole.m_fLS12 = 13.5;
+	standard_hole.m_fLS16 = 17.5;
+	standard_hole.m_fLS20 = 21.5;
+	standard_hole.m_fLS24 = 25.5;
 	//默认加载文字识别设置
 	g_pncSysPara.m_recogSchemaList.Empty();
 	RECOG_SCHEMA *pSchema = InsertRecogSchema("单行1", 0, "#", "Q", "-");
@@ -157,16 +162,20 @@ void CPNCSysPara::InitPropHashtable()
 	//识别模式
 	AddPropItem("RecogMode",PROPLIST_ITEM(id++,"识别模式","识别模式"));
 	AddPropItem("m_fMapScale", PROPLIST_ITEM(id++, "识别比例", "绘图缩放比例"));
-	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别模式", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别|3.智能识别"));
+	AddPropItem("m_iRecogMode", PROPLIST_ITEM(id++, "轮廓边识别", "钢板识别模式", "0.按线型识别|1.按图层识别|2.按颜色识别|3.智能识别"));
 	AddPropItem("m_iProfileLineTypeName", PROPLIST_ITEM(id++, "轮廓边线型", "钢板外轮廓边线型", "CONTINUOUS|HIDDEN|DASHDOT2X|DIVIDE|ZIGZAG"));
 	AddPropItem("m_iProfileColorIndex",PROPLIST_ITEM(id++,"轮廓边颜色","钢板外轮廓边颜色"));
 	AddPropItem("m_iBendLineColorIndex",PROPLIST_ITEM(id++,"火曲线颜色","钢板制弯线颜色"));
 	AddPropItem("layer_mode",PROPLIST_ITEM(id++,"图层处理方式","轮廓边图层处理方式","0.指定轮廓边图层|1.过滤默认图层"));
 	AddPropItem("m_fPixelScale", PROPLIST_ITEM(id++, "处理像素比例"));
-	AddPropItem("m_ciBoltRecogMode", PROPLIST_ITEM(id++, "螺栓识别模式", "螺栓识别模式"));
 	AddPropItem("FilterPartNoCir", PROPLIST_ITEM(id++, "件号专属圆圈", "", "过滤|不过滤"));
-	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "特殊孔径标注", "特殊孔径标注(文字说明或直径标注)", "处理|不处理"));
-	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "普通螺栓圆圈", "", "按照特殊孔处理|根据标准孔径判断"));
+	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "孔径文字标注", "特殊孔径标注(文字说明或直径标注)", "按标注处理|不进行处理"));
+	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "圆孔式螺栓", "非图符块的圆圈表示的螺栓", "统一按实际孔径处理|根据标准孔进行筛选"));
+	AddPropItem("RecogLsBlock", PROPLIST_ITEM(id++, "图块式螺栓", "用螺栓图符块表示的螺栓","螺栓图块设置"));
+	AddPropItem("standardM12", PROPLIST_ITEM(id++, "M12标准孔径"));
+	AddPropItem("standardM16", PROPLIST_ITEM(id++, "M16标准孔径"));
+	AddPropItem("standardM20", PROPLIST_ITEM(id++, "M20标准孔径"));
+	AddPropItem("standardM24", PROPLIST_ITEM(id++, "M24标准孔径"));
 	//显示模式
 	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
 	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","1.钢板对比|2.自动排版|3.下料预审"));
@@ -317,19 +326,29 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else
 			sText.Copy("不过滤");
 	}
+	else if (GetPropID("standardM12") == id)
+		sText.Printf("%g", standard_hole.m_fLS12);
+	else if (GetPropID("standardM16") == id)
+		sText.Printf("%g", standard_hole.m_fLS16);
+	else if (GetPropID("standardM20") == id)
+		sText.Printf("%g", standard_hole.m_fLS20);
+	else if (GetPropID("standardM24") == id)
+		sText.Printf("%g", standard_hole.m_fLS24);
+	else if(GetPropID("RecogLsBlock")==id)
+		sText.Copy("根据图符设置处理");
 	else if (GetPropID("RecogHoleDimText") == id)
 	{
 		if (IsRecogHoleDimText())
-			sText.Copy("处理");
+			sText.Copy("按标注处理");
 		else
-			sText.Copy("不处理");
+			sText.Copy("不进行处理");
 	}
 	else if(GetPropID("RecogLsCircle")==id)
 	{
 		if (IsRecogCirByBoltD())
-			sText.Copy("根据标准孔径判断");
+			sText.Copy("根据标准孔进行筛选");
 		else
-			sText.Copy("按照特殊孔处理");
+			sText.Copy("统一按特殊孔处理");
 	}
 	else if(GetPropID("m_iProfileColorIndex")==id)
 		sText.Printf("RGB%X",GetColorFromIndex(m_ciProfileColorIndex));

@@ -24,6 +24,7 @@ public:
 // 对话框数据
 	enum { IDD = IDD_PART_LIST_DLG };
 	BOOL m_bEditMK;
+	CString m_sNote;
 	CXhListCtrl m_partList;
 public:
 	BOOL CreateDlg();
@@ -31,6 +32,7 @@ public:
 	void RefreshCtrlState();
 	void SelectPart(int iCurSel, BOOL bClone = TRUE);
 	void ProcessKeyDown(WORD wVKey);
+	void RelayoutWnd();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();

@@ -99,7 +99,6 @@ void SmartExtractPlate(CPNCModel *pModel)
 #endif
 	//从框选信息中提取中钢板的标识，统计钢板集合
 	CHashSet<AcDbObjectId> textIdHash;
-	ATOM_LIST<GEPOINT> holePosList;
 	AcDbEntity *pEnt = NULL;
 	int index = 1,nNum= selectedEntList.GetNodeNum();
 	DisplayProgress(0, "识别钢板件号信息...:");
@@ -115,14 +114,19 @@ void SmartExtractPlate(CPNCModel *pModel)
 		//
 		BASIC_INFO baseInfo;
 		GEPOINT dim_pos, dim_vec;
-		CXhChar500 sText;
 		CXhChar16 sPartNo;
 		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
 		{
-			sText = GetCadTextContent(pEnt);
 			if(!g_pncSysPara.ParsePartNoText(pEnt,sPartNo))
 				continue;
-			dim_pos = GetCadTextDimPos(pEnt, &dim_vec);
+			if (strlen(sPartNo) <= 0)
+			{
+				CXhChar500 sText = GetCadTextContent(pEnt);
+				logerr.Log("钢板信息{%s}满足设置的文字识别规则，但识别失败请联系信狐客户!", (char*)sText);
+				continue;
+			}
+			else
+				dim_pos = GetCadTextDimPos(pEnt, &dim_vec);
 		}
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
 		{	//从块中解析钢板信息
@@ -136,24 +140,30 @@ void SmartExtractPlate(CPNCModel *pModel)
 			else
 			{
 				BOLT_HOLE hole;
-				if (g_pncSysPara.RecogBoltHole(pEnt, hole))
-					holePosList.append(GEPOINT(hole.posX, hole.posY));
+				if (g_pncSysPara.RecogBoltHole(pEnt, hole))	
+				{
+					CAD_ENTITY* pLsBlockEnt = pModel->m_xBoltBlockHash.Add(entId.asOldId());
+					pLsBlockEnt->pos.x = hole.posX;
+					pLsBlockEnt->pos.y = hole.posY;
+					pLsBlockEnt->m_fSize = hole.d + hole.increment;
+				}
 				continue;
 			}
 			if (baseInfo.m_sPartNo.GetLength() > 0)
 				sPartNo.Copy(baseInfo.m_sPartNo);
-		}
-		if(strlen(sPartNo) <= 0)
-		{
-			logerr.Log("钢板信息%s,识别机制不能识别!", (char*)sText);
-			continue;
+			else
+			{
+				logerr.Log("通过图块识别钢板基本信息,识别失败请联系信狐客户!");
+				continue;
+			}
 		}
 		CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(sPartNo);
 		if (pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId))
 		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
-			logerr.Log("钢板%s,件号重复请确认!", (char*)sText);
+			logerr.Log("件号{%s}有重复请确认!", (char*)sPartNo);
 			continue;
 		}
+		//
 		CPlateProcessInfo* pPlateProcess = pModel->AppendPlate(sPartNo);
 		pPlateProcess->m_bNeedExtract = TRUE;	//选择CAD实体包括当前件号时设置位需要提取
 		pPlateProcess->dim_pos = dim_pos;
@@ -185,23 +195,14 @@ void SmartExtractPlate(CPNCModel *pModel)
 	DisplayProgress(100);
 	if(pModel->GetPlateNum()<=0)
 	{
-		logerr.Log("识别机制不能识别该文件的钢板信息!");
-		return;
-	}
-	//设置备用提取位置（用于处理因钢板过小，文字标注放到钢板外的情况）wht 19-02-01
-	const int HOLE_SEARCH_SCOPE = 60;
-	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE))
-	{
-		for(GEPOINT *pPt=holePosList.GetFirst();pPt;pPt=holePosList.GetNext())
+		if (AfxMessageBox("该文件不满足文字识别配置！是否调整文字识别配置？", MB_YESNO) == IDYES)
 		{
-			if(DISTANCE(pPlateProcess->dim_pos,*pPt)<HOLE_SEARCH_SCOPE)
-			{
-				pPlateProcess->inner_dim_pos=*pPt;
-				//目前赋值为FALSE,不通过备用点提取轮廓边,对于文字标注到钢板外的情况通过Log进行提示 wxc 20-05-28
-				pPlateProcess->m_bHasInnerDimPos=FALSE;	
-				break;
-			}
+			CAcModuleResourceOverride resOverride;
+			CPNCSysSettingDlg dlg;
+			dlg.m_iSelTabGroup = 1;
+			dlg.DoModal();
 		}
+		return;
 	}
 	//提取钢板的轮廓边
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
@@ -212,7 +213,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	//处理钢板一板多号的情况
 	pModel->MergeManyPartNo();
 	//根据轮廓闭合区域更新钢板的基本信息+螺栓信息+轮廓边信息
-	int nSum = 0, nValid = 0;
+	int nSum = 0;
 	nNum = pModel->GetPlateNum();
 	DisplayProgress(0,"修订钢板信息...:");
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
@@ -221,8 +222,6 @@ void SmartExtractPlate(CPNCModel *pModel)
 		pPlateProcess->ExtractPlateRelaEnts();
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
-		else
-			nValid++;
 	}
 	DisplayProgress(100);
 	//将提取的钢板信息导出到中性文件中

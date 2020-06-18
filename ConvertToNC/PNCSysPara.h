@@ -34,6 +34,13 @@ public:
 		COLORREF crLS24;
 		COLORREF crOtherLS;
 	}crMode;
+	//±ê×¼ÂÝË¨¿×¾¶
+	struct STANDARD_HOLE {
+		double m_fLS12;
+		double m_fLS16;
+		double m_fLS20;
+		double m_fLS24;
+	}standard_hole;
 private:
 	CHashStrList<LAYER_ITEM> m_xHashDefaultFilterLayers;
 	CHashStrList<LAYER_ITEM> m_xHashEdgeKeepLayers;

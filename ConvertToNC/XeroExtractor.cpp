@@ -687,46 +687,30 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		{	//只对设置未螺栓图符的块进行处理，否则可能错误识别其它块为螺栓孔 wht 20-04-28
 			return FALSE;
 		}
-		hole.posX=(float)pReference->position().x;
-		hole.posY=(float)pReference->position().y;
-		if(pBoltD->diameter > 0 || pBoltD->hole_d > 0)
-		{	//指定螺栓块的直径或孔径，按照标准螺栓处理
+		double fHoleD = 0;
+		CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+		if (pLsBlockEnt)
+			fHoleD = pLsBlockEnt->m_fSize;
+		else
+			fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+		if (fHoleD <= 0)
+		{
+			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算孔径失败！", (char*)sName);
+			return FALSE;
+		}
+		hole.posX = (float)pReference->position().x;
+		hole.posY = (float)pReference->position().y;
+		if (pBoltD->diameter > 0)
+		{	//指定螺栓块的直径，按照标准螺栓处理
 			hole.ciSymbolType = 0;
-			if (pBoltD->diameter > 0 && pBoltD->hole_d > pBoltD->diameter)
-			{	//同时指定螺栓块的直径和孔径
-				hole.d = pBoltD->diameter;
-				hole.increment = (float)(pBoltD->hole_d - pBoltD->diameter);
-			}
-			else if (pBoltD->diameter > 0)
-			{	//指定螺栓块的直径
-				hole.d = pBoltD->diameter;
-				hole.increment = 1.5;
-			}
-			else if(pBoltD->hole_d > 0)
-			{	//指定螺栓块的孔径
-				hole.d = pBoltD->hole_d;
-				hole.increment = 0;
-			}
-			else
-			{
-				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径！", (char*)sName);
-				return FALSE;
-			}
+			hole.d = pBoltD->diameter;
+			hole.increment = (float)(fHoleD - pBoltD->diameter);
 		}
 		else
-		{	//未指定螺栓块的直径和孔径,按特殊孔处理，孔径根据块内图元自动计算
-			double fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-			if (fHoleD > 0)
-			{
-				hole.d = fHoleD;
-				hole.increment = 0;
-				hole.ciSymbolType = 1;	//特殊图块
-			}
-			else
-			{
-				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "螺栓图符（%s）未设置对应的孔径，根据块识别尺寸失败！", (char*)sName);
-				return FALSE;
-			}
+		{	//未指定螺栓块的直径，按特殊孔处理
+			hole.ciSymbolType = 1;	//特殊图块
+			hole.d = fHoleD;
+			hole.increment = 0;
 		}
 		return TRUE;
 	}

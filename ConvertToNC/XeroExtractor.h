@@ -36,6 +36,14 @@ enum ENTITY_TYPE {
 	TYPE_BLOCKREF,
 	TYPE_DIM_D
 };
+struct CAD_ENTITY {
+	ENTITY_TYPE ciEntType;
+	unsigned long idCadEnt;
+	char sText[100];	//ciEntType==TYPE_TEXT时记录文本内容 wht 18-12-30
+	GEPOINT pos;
+	double m_fSize;
+	CAD_ENTITY(long idEnt = 0) { idCadEnt = idEnt; ciEntType = TYPE_OTHER; strcpy(sText, ""); m_fSize = 0; }
+};
 class CPlateObject
 {
 	POLYGON region;
@@ -63,14 +71,6 @@ public:
 			arc.radius = arc.fSectAngle = 0;
 			tag.dwParam = 0;
 		}
-	};
-	struct CAD_ENTITY{
-		ENTITY_TYPE ciEntType;
-		unsigned long idCadEnt;
-		char sText[100];	//ciEntType==TYPE_TEXT时记录文本内容 wht 18-12-30
-		GEPOINT pos;
-		double m_fSize;
-		CAD_ENTITY(long idEnt=0){idCadEnt=idEnt;ciEntType= TYPE_OTHER;strcpy(sText,"");m_fSize=0;}
 	};
 	ATOM_LIST<VERTEX> vertexList;
 	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02

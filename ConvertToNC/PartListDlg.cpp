@@ -28,6 +28,7 @@ IMPLEMENT_DYNCREATE(CPartListDlg, CDialog)
 CPartListDlg::CPartListDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CPartListDlg::IDD, pParent)
 	, m_bEditMK(FALSE)
+	, m_sNote(_T(""))
 {
 #endif
 
@@ -42,6 +43,7 @@ void CPartListDlg::DoDataExchange(CDataExchange* pDX)
 	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_PART_LIST, m_partList);
 	DDX_Check(pDX, IDC_CHK_EDIT_MK, m_bEditMK);
+	DDX_Text(pDX, IDC_E_NOTE, m_sNote);
 }
 
 
@@ -111,6 +113,7 @@ BOOL CPartListDlg::UpdatePartList()
 	CStringArray str_arr;
 	str_arr.SetSize(4);
 	CSortedModel sortedModel(&model);
+	int nSum = 0, nValid = 0;
 	for(CPlateProcessInfo *pPlate=sortedModel.EnumFirstPlate();pPlate;pPlate=sortedModel.EnumNextPlate())
 	{
 		str_arr[0]=pPlate->xPlate.GetPartNo();
@@ -120,16 +123,22 @@ BOOL CPartListDlg::UpdatePartList()
 		int iItem=m_partList.InsertItemRecord(-1,str_arr);
 		m_partList.SetItemData(iItem,(DWORD)pPlate);
 		//设置颜色
-		if(!pPlate->IsValid())
+		if (!pPlate->IsValid())
 			m_partList.SetItemTextColor(iItem, 0, RGB(255, 0, 0));
+		else
+			nValid++;
 		if (pPlate->xPlate.m_fThick <= 0)
 			m_partList.SetItemTextColor(iItem, 1, RGB(255, 0, 0));
+		nSum++;
 	}
 	if(CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
 	{
 		m_xDamBoardManager.DrawAllDamBoard(&model);
 		m_xDamBoardManager.DrawAllSteelSealRect(&model);
 	}
+	//
+	m_sNote.Format("总数{%d},成功{%d},失败{%d}", nSum, nValid, nSum - nValid);
+	UpdateData(FALSE);
 	return TRUE;
 }
 
@@ -226,6 +235,28 @@ void CPartListDlg::OnCancel()
 #endif
 }
 
+void CPartListDlg::RelayoutWnd()
+{
+	if (m_partList.GetSafeHwnd() == NULL)
+		return;
+	CRect rectWnd, rectList, rectBtm;
+	GetClientRect(&rectWnd);
+	GetDlgItem(IDC_E_NOTE)->GetWindowRect(&rectBtm);
+	ScreenToClient(&rectBtm);
+	rectBtm.left = rectWnd.left;
+	rectBtm.right = rectWnd.right;
+	rectBtm.top = rectWnd.bottom - rectBtm.Height();
+	rectBtm.bottom = rectWnd.bottom;
+	GetDlgItem(IDC_E_NOTE)->MoveWindow(&rectBtm);
+	//
+	m_partList.GetWindowRect(&rectList);
+	ScreenToClient(&rectList);
+	rectList.left = rectWnd.left;
+	rectList.right = rectWnd.right;
+	rectList.bottom = rectBtm.top - 1;
+	m_partList.MoveWindow(rectList);
+}
+
 void CPartListDlg::OnClose()
 {
 	DestroyWindow();
@@ -234,19 +265,15 @@ void CPartListDlg::OnClose()
 void CPartListDlg::OnMove(int x, int y)
 {
 	CDialog::OnMove(x, y);
+	//
+	RelayoutWnd();
 }
 
 void CPartListDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialog::OnSize(nType, cx, cy);
 	//
-	if (m_partList.GetSafeHwnd())
-	{
-		RECT rectList;
-		m_partList.GetWindowRect(&rectList);
-		ScreenToClient(&rectList);
-		m_partList.MoveWindow(0, rectList.top, cx, cy - rectList.top);
-	}
+	RelayoutWnd();
 }
 
 BOOL CPartListDlg::CreateDlg()

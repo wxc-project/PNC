@@ -50,6 +50,7 @@
 #define IDC_BTN_PNG                     137
 #define IDC_E_LEN_ERR                   138
 #define IDR_ITEM_CMD_POPUP              140
+#define IDC_E_NOTE                      140
 #define IDC_TREE_CONTRL                 141
 #define IDC_E_FILE_NAME                 142
 #define IDC_E_NUM                       143
@@ -116,7 +117,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        128
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         140
+#define _APS_NEXT_CONTROL_VALUE         141
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
