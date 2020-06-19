@@ -89,19 +89,6 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMaxHoleD"))
 		g_pncSysPara.m_nMaxHoleD = atoi(valueStr);
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bReplaceSH"))
-	{
-		if (valueStr.Compare("是") == 0)
-			g_pncSysPara.m_bReplaceSH = true;
-		else
-			g_pncSysPara.m_bReplaceSH = false;
-		//
-		pPropList->DeleteAllSonItems(pItem);
-		if (g_pncSysPara.m_bReplaceSH)
-			oper.InsertCmbListPropItem(pItem, "m_nReplaceHD", "", "", "", -1, TRUE);
-	}
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nReplaceHD"))
-		g_pncSysPara.m_nReplaceHD = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bUseMaxEdge"))
 	{
 		if (valueStr.CompareNoCase("是") == 0)
@@ -930,9 +917,6 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
 	//下面属性不用，可以考虑去掉
 	//oper.InsertCmbListPropItem(pGroupItem, "m_bIncDeformed");		
-	//pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bReplaceSH");
-	//if (g_pncSysPara.m_bReplaceSH)
-		//oper.InsertCmbListPropItem(pPropItem, "m_nReplaceHD");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_bUseMaxEdge");
 	if(g_pncSysPara.m_bUseMaxEdge)
 		oper.InsertCmbListPropItem(pPropItem, "m_nMaxEdgeLen");

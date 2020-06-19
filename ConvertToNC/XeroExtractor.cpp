@@ -186,12 +186,12 @@ void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine,int type)
 	//根据圆弧更新顶点信息
 	for(pVer=vertexList.GetFirst();pVer;pVer=vertexList.GetNext())
 	{
-		if(pVer->pos.IsEqual(arcLine.Start(),0.5))
+		if(pVer->pos.IsEqual(arcLine.Start(),CPNCModel::DIST_ERROR))
 		{
 			iStart=i;
 			pVer->pos=arcLine.Start();
 		}
-		if(pVer->pos.IsEqual(arcLine.End(),0.5))
+		if(pVer->pos.IsEqual(arcLine.End(), CPNCModel::DIST_ERROR))
 		{
 			iEnd=i;
 			pVer->pos=arcLine.End();
@@ -261,6 +261,37 @@ BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
 		return TRUE;
 	}
 	return FALSE;
+}
+BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
+{
+	if (!IsValid())
+		return FALSE;
+	GEPOINT tagPT=vertexList.GetFirst()->pos;
+	for(int index=0;index<vertexList.GetNodeNum();index++)
+	{
+		if (vertexList[index].tag.lParam <= 0)
+			return FALSE;
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, MkCadObjId(vertexList[index].tag.lParam), AcDb::kForRead);
+		if (pEnt == NULL)
+			return FALSE;
+		AcDbCurve* pCurve = (AcDbCurve*)pEnt;
+		AcGePoint3d acad_ptS, acad_ptE;
+		pCurve->getStartPoint(acad_ptS);
+		pCurve->getEndPoint(acad_ptE);
+		GEPOINT linePtS(acad_ptS.x, acad_ptS.y, 0), linePtE(acad_ptE.x, acad_ptE.y, 0);
+		if (linePtS.IsEqual(tagPT, EPS2))
+			tagPT = linePtE;
+		else if (linePtE.IsEqual(tagPT, EPS2))
+			tagPT = linePtS;
+		else
+		{
+			if (pIndex)
+				*pIndex = index;
+			return FALSE;
+		}
+	}
+	return TRUE;
 }
 //////////////////////////////////////////////////////////////////////////
 //CPlateExtractor

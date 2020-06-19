@@ -48,10 +48,8 @@ public:
 	int m_iPPiMode;			//PPI文件生成模式 0.一板一号 1.一板多号
 	bool m_bIncDeformed;	//是否考虑了火曲变形
 	BOOL m_bMKPos;			//是否获取钢印区位置
-	BOOL m_bReplaceSH;		//是否启用特殊孔代孔
 	BOOL m_bUseMaxEdge;		//是否启用最大边长
 	int m_nMaxEdgeLen;		//最大边长
-	int m_nReplaceHD;		//代孔孔径
 	int m_nMkRectLen;		//钢印字盒长度
 	int m_nMkRectWidth;		//钢印字盒宽度
 	int m_nMaxHoleD;		//最大螺栓直径

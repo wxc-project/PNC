@@ -89,6 +89,7 @@ public:
 	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
 	virtual BOOL RecogWeldLine(f3dLine slop_line);
 	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 3; }
+	virtual BOOL IsClose(int* pIndex = NULL);
 };
 //////////////////////////////////////////////////////////////////////////
 struct BOLT_BLOCK

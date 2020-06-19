@@ -293,34 +293,49 @@ bool CVectorMonoImage::LayoutImage()
 {
 	if (m_nHeight <= 0 || m_nWidth <= 0)
 		return false;	//
+	CString sProcess = "初始化钢板的外轮廓区域.....";
+	if (DisplayProcess)
+		DisplayProcess(0, sProcess.GetBuffer());
 	//初始化像素带列
 	int nStripScroll = m_nWidth / 16;
 	xarrVertStrips.SetSize(nStripScroll + 1);
 	VERTSTRIP16* pStrip = NULL;
+	int index = 1, nNum = xarrVertStrips.GetSize() * 2 + hashStrokePixels.GetNodeNum();
 	for (int i = 0; i < xarrVertStrips.GetSize(); i++)
 	{
+		if (DisplayProcess)
+			DisplayProcess(int(100 * index / nNum), sProcess.GetBuffer());
 		xarrVertStrips[i].xarrEntries.SetSize(0, 512);
 		pStrip = (VERTSTRIP16*)xarrVertStrips[i].xarrEntries.Append(VERTSTRIP_HEADER(1));
 		pStrip->wixLeft = i * 16;
 		pStrip->wiyTop = 0;
 		pStrip->wiyBtm = WORD(m_nHeight + 1);
+		index++;
 	}
 	//处理轮廓边像素
 	for (PROFILE_PIXEL* pPixel = hashStrokePixels.GetFirst(); pPixel; pPixel = hashStrokePixels.GetNext())
 	{
+		if (DisplayProcess)
+			DisplayProcess(int(100 * index / nNum), sProcess.GetBuffer());
 		int iStripScroll = pPixel->wiX / 16;
 		STRIP_SCROLL* pCurrScroll = xarrVertStrips.GetAt(iStripScroll);
 		if (pCurrScroll == NULL)
 			return false;
 		pCurrScroll->CheckProfilePixel(pPixel->wiX, pPixel->wiY);
+		index++;
 	}
 	//进行排序
 	for(STRIP_SCROLL* pScroll=xarrVertStrips.GetFirst();pScroll;pScroll=xarrVertStrips.GetNext())
 	{
+		if (DisplayProcess)
+			DisplayProcess(int(100 * index / nNum), sProcess.GetBuffer());
 		int nCount = pScroll->xarrEntries.GetSize();
 		VERTSTRIP_HEADER* pHead=pScroll->xarrEntries.m_pData;
 		CQuickSort<VERTSTRIP_HEADER>::QuickSort(pHead, nCount, compare_func);
+		index++;
 	}
+	if (DisplayProcess)
+		DisplayProcess(100, sProcess.GetBuffer());
 	return true;
 }
 //
@@ -399,8 +414,9 @@ void CVectorMonoImage::SetConnStateAt(int xI, int yJ)
 //访问空白连通区域
 void CVectorMonoImage::VisitBlankConnPixels()
 {
+	CString sProcess = "智能识别钢板的外轮廓边.....";
 	if (DisplayProcess)
-		DisplayProcess(0, "识别钢板外轮廓区");
+		DisplayProcess(0, sProcess.GetBuffer());
 	UINT nNum = m_nWidth * m_nHeight, index = 1;
 	std::stack< std::pair<int, int> > xNearPixels;
 	xNearPixels.push(std::pair<int, int>(0, 0));
@@ -408,7 +424,7 @@ void CVectorMonoImage::VisitBlankConnPixels()
 	while (!xNearPixels.empty())
 	{
 		if (DisplayProcess)
-			DisplayProcess(int(100 * index / nNum), "识别钢板外轮廓区");
+			DisplayProcess(int(100 * index / nNum), sProcess.GetBuffer());
 		//处理栈顶像素，并出栈
 		std::pair<int, int> curPixel = xNearPixels.top();
 		int wiCurX = curPixel.first;
@@ -478,7 +494,7 @@ void CVectorMonoImage::VisitBlankConnPixels()
 		}
 	}
 	if (DisplayProcess)
-		DisplayProcess(100, "识别钢板外轮廓区");
+		DisplayProcess(100, sProcess.GetBuffer());
 }
 //检测轮廓边像素
 void CVectorMonoImage::DetectProfilePixelsByVisit()
@@ -619,8 +635,9 @@ BOOL CVectorMonoImage::TrackProfilePixels(PROFILE_PIXEL* pStartPixel,ARRAY_LIST<
 //查找所有闭合外轮廓像素点
 void CVectorMonoImage::DetectProfilePixelsByTrack()
 {
+	CString sProcess = "智能识别钢板的外轮廓边.....";
 	if(DisplayProcess)
-		DisplayProcess(0, "识别钢板外轮廓");
+		DisplayProcess(0, sProcess.GetBuffer());
 	UINT nNum = m_nWidth * m_nHeight, index = 0;
 	PROFILE_PIXEL* pPixel = NULL;
 	for (int xI = 1; xI < m_nWidth; xI++)
@@ -629,7 +646,7 @@ void CVectorMonoImage::DetectProfilePixelsByTrack()
 		{
 			index = xI * m_nHeight + yJ;
 			if(DisplayProcess)
-				DisplayProcess(int(100 * index / nNum), "识别钢板外轮廓");
+				DisplayProcess(int(100 * index / nNum), sProcess.GetBuffer());
 			pPixel = hashStrokePixels.GetValue(MkDW(xI, yJ));
 			if (!IsStartPixel(pPixel))
 				continue;	//非起始轮廓点
@@ -663,7 +680,7 @@ void CVectorMonoImage::DetectProfilePixelsByTrack()
 		}
 	}
 	if (DisplayProcess)
-		DisplayProcess(100, "识别钢板外轮廓");
+		DisplayProcess(100, sProcess.GetBuffer());
 }
 #ifdef __MONO_IMAGE_
 #include "MonoImage.h"

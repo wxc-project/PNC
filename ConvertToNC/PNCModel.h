@@ -85,7 +85,6 @@ class CPlateProcessInfo : public CPlateObject
 	};
 private:
 	GECS ucs;
-	double m_fZoomScale;		//缩放比例
 	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
 public:
 	BOOL m_bCirclePlate;	//是否为圆型板
@@ -118,7 +117,6 @@ private:
 	void BuildPlateUcs();
 	void PreprocessorBoltEnt(int *piInvalidCirCountForText);
 	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt);
-	void InternalExtractPlateRelaEnts();
 public:
 	CPlateProcessInfo();
 	//
@@ -138,6 +136,7 @@ public:
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	void ExtractPlateRelaEnts();
 	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
+	void CheckProfileEdge();
 	//生成中性文件
 	void CreatePPiFile(const char* file_path);
 	//绘制钢板
@@ -176,7 +175,6 @@ public:
 class CPNCModel
 {
 	CHashStrList<CPlateProcessInfo> m_hashPlateInfo;
-	AcDbObjectId m_idSolidLine,m_idNewLayer;
 	CHashSet<AcDbObjectId> m_hashSolidLineTypeId;	//记录有效的实体线型id wht 19-01-03
 public:
 	CHashSet<AcDbObjectId> m_xAllEntIdSet;

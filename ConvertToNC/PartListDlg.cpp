@@ -125,10 +125,13 @@ BOOL CPartListDlg::UpdatePartList()
 		//设置颜色
 		if (!pPlate->IsValid())
 			m_partList.SetItemTextColor(iItem, 0, RGB(255, 0, 0));
+		else if(!pPlate->IsClose())
+			m_partList.SetItemTextColor(iItem, 0, RGB(255, 191, 0));
 		else
+			m_partList.SetItemTextColor(iItem, 0, RGB(0, 0, 0));
+		//统计数量
+		if(pPlate->IsValid())
 			nValid++;
-		if (pPlate->xPlate.m_fThick <= 0)
-			m_partList.SetItemTextColor(iItem, 1, RGB(255, 0, 0));
 		nSum++;
 	}
 	if(CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)

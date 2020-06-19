@@ -101,7 +101,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	CHashSet<AcDbObjectId> textIdHash;
 	AcDbEntity *pEnt = NULL;
 	int index = 1,nNum= selectedEntList.GetNodeNum();
-	DisplayProgress(0, "识别钢板件号信息...:");
+	DisplayProgress(0, "查找图纸文字标注,识别钢板件号信息.....");
 	for (AcDbObjectId entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext(), index++)
 	{
 		DisplayProgress(int(100 * index / nNum));
@@ -215,13 +215,15 @@ void SmartExtractPlate(CPNCModel *pModel)
 	//根据轮廓闭合区域更新钢板的基本信息+螺栓信息+轮廓边信息
 	int nSum = 0;
 	nNum = pModel->GetPlateNum();
-	DisplayProgress(0,"修订钢板信息...:");
+	DisplayProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
 	{
 		DisplayProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractPlateRelaEnts();
+		pPlateProcess->CheckProfileEdge();
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
+		
 	}
 	DisplayProgress(100);
 	//将提取的钢板信息导出到中性文件中

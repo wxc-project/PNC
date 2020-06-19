@@ -50,8 +50,6 @@ void CPNCSysPara::Init()
 	m_iPPiMode = 1;
 	m_bIncDeformed = true;
 	m_iAxisXCalType = 0;
-	m_bReplaceSH = FALSE;
-	m_nReplaceHD = 20;
 	m_bUseMaxEdge = FALSE;
 	m_nMaxEdgeLen = 2200;
 	m_nMaxHoleD = 100;
@@ -151,8 +149,6 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_sJgCadName", PROPLIST_ITEM(id++,"角钢工艺卡","当前使用的角钢工艺卡"));
 	AddPropItem("m_fMaxLenErr", PROPLIST_ITEM(id++, "长度最大误差值", "数据校审时，长度比较的最大误差值"));
 	AddPropItem("m_bIncDeformed",PROPLIST_ITEM(id++,"已考虑火曲变形","待提取的钢板图形已考虑火曲变形量","是|否"));
-	AddPropItem("m_bReplaceSH", PROPLIST_ITEM(id++, "启用特殊孔代孔", "将特殊功用类型的孔进行代孔处理", "是|否"));
-	AddPropItem("m_nReplaceHD", PROPLIST_ITEM(id++, "代孔直径", "进行代孔的螺栓直径", "12|16|20|24"));
 	AddPropItem("m_iPPiMode",PROPLIST_ITEM(id++,"文件生成模型","PPI文件生成模式","0.一板一号|1.一板多号"));
 	AddPropItem("m_bMKPos",PROPLIST_ITEM(id++,"提取钢印位置","提取钢印位置","是|否"));
 	AddPropItem("m_nMaxHoleD", PROPLIST_ITEM(id++, "最大螺栓孔径", "最大螺栓孔径"));
@@ -212,15 +208,6 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		g_pncSysPara.m_sJgCardBlockName = valueStr;
 	else if (GetPropID("m_fMaxLenErr") == id)
 		sText.Printf("%.1f", g_pncSysPara.m_fMaxLenErr);
-	else if (GetPropID("m_bReplaceSH") == id)
-	{
-		if (g_pncSysPara.m_bReplaceSH)
-			sText.Copy("是");
-		else
-			sText.Copy("否");
-	}
-	else if (GetPropID("m_nReplaceHD") == id)
-		sText.Printf("%d", g_pncSysPara.m_nReplaceHD);
 	else if (GetPropID("m_bUseMaxEdge") == id)
 	{
 		if (g_pncSysPara.m_bUseMaxEdge)
