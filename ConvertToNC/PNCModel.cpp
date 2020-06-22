@@ -291,7 +291,7 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 		scope.VerifyVertex(pVer->pos);
 		//通过像素识别的轮廓边已记录了关联图元
 		AcDbEntity *pEnt = NULL;
-		if(pVer->tag.lParam>0)
+		if (pVer->tag.lParam > 0)
 			acdbOpenAcDbEntity(pEnt, MkCadObjId(pVer->tag.lParam), AcDb::kForRead);
 		if (pEnt)
 		{
@@ -303,6 +303,17 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 	//根据闭合区域拾取归属于钢板的图元集合
 	ATOM_LIST<VERTEX> list;
 	CalEquidistantShape(CPNCModel::DIST_ERROR * 2, &list);
+#ifdef __ALFA_TEST_
+	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+	int nNum = list.GetNodeNum();
+	for (int i = 0; i < nNum; i++)
+	{
+		VERTEX* pCurVer = list.GetByIndex(i);
+		VERTEX* pNextVer = list.GetByIndex((i + 1) % nNum);
+		CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, RGB(125, 255, 0));
+	}
+	pBlockTableRecord->close();
+#endif
 	struct resbuf* pList = NULL, *pPoly = NULL;
 	for (VERTEX* pVer = list.GetFirst(); pVer; pVer = list.GetNext())
 	{
@@ -1684,11 +1695,10 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 		pCurBlockTblRec = DRAGSET.RecordingBlockTableRecord();
 	for(CAD_ENTITY *pRelaObj=m_xHashRelaEntIdList.GetFirst();pRelaObj;pRelaObj=m_xHashRelaEntIdList.GetNext())
 	{
-		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt,MkCadObjId(pRelaObj->idCadEnt),AcDb::kForRead);
+		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
+		AcDbEntity *pEnt = objLife.GetEnt();
 		if(pEnt==NULL)
 			continue;
-		pEnt->close();
 		AcDbEntity *pClone = (AcDbEntity *)pEnt->clone();
 		if(pClone)
 		{
@@ -1731,24 +1741,24 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 	int index = -1;
 	if(!IsValid() || !IsClose(&index))
 	{
-		AcGeVector3d norm(0, 0, 1);
-		AcGePoint3d acad_centre;
-		if (index == -1)
-			Cpy_Pnt(acad_centre, dim_pos);
-		else
-			Cpy_Pnt(acad_centre, vertexList[index].pos);
-		AcDbObjectId circleId;
-		AcDbCircle *pCircle = new AcDbCircle(acad_centre, norm, 20);
-		pCircle->setColorIndex(40);
-		if (pOrgion)
+		GEPOINT center = (index == -1) ? dim_pos : vertexList[index].pos;
+		AcDbObjectId circleId = CreateAcadCircle(pCurBlockTblRec, center, 20, 0, RGB(255, 191, 0));
+		if (pOrgion || (pPlateCenter && bDrawAsBlock))
 		{
-			pCircle->transformBy(moveMat);		//平移
-			pCircle->transformBy(rotationMat);	//旋转
+			AcDbEntity* pEnt = NULL;
+			acdbOpenAcDbEntity(pEnt, circleId, AcDb::kForWrite);
+			if (pEnt)
+			{
+				if (pOrgion)
+				{
+					pEnt->transformBy(moveMat);
+					pEnt->transformBy(rotationMat);
+				}
+				if(pPlateCenter && bDrawAsBlock)
+					pEnt->transformBy(blockMoveMat);
+				pEnt->close();
+			}
 		}
-		if (pPlateCenter&&bDrawAsBlock)
-			pCircle->transformBy(blockMoveMat);
-		DRAGSET.AppendAcDbEntity(pCurBlockTblRec, circleId, pCircle);
-		pCircle->close();
 	}
 	if (bDrawAsBlock&&pPlateCenter&&pCurBlockTblRec != pBlockTableRecord)
 		DRAGSET.EndBlockRecord(pBlockTableRecord, *pPlateCenter, 1.0, &m_layoutBlockId);
@@ -1816,6 +1826,18 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 			double fHoleR = (pHole->bolt_d + pHole->hole_d_increment)*0.5;
 			entId = CreateAcadCircle(pBlockTableRecord, f3dPoint(pHole->posX, pHole->posY, 0), fHoleR, 0, clr);
 			m_newAddEntIdList.append(entId.asOldId());
+		}
+		if (!xPlate.mkpos.IsZero())
+		{
+			ATOM_LIST<f3dPoint> ptArr;
+			xPlate.GetMkRect(20, 10, ptArr);
+			for (int i = 0; i < 4; i++)
+			{
+				f3dPoint ptS(ptArr[i]);
+				f3dPoint ptE(ptArr[(i + 1) % 4]);
+				entId = CreateAcadLine(pBlockTableRecord, ptS, ptE, 0, 0, g_pncSysPara.crMode.crEdge);
+				m_newAddEntIdList.append(entId.asOldId());
+			}
 		}
 	}
 	else
@@ -1903,8 +1925,6 @@ void CPlateProcessInfo::CalEquidistantShape(double minDistance,ATOM_LIST<VERTEX>
 		normalize(preLineVec);
 		f3dPoint nextLineVec = curPt - nextPt;
 		normalize(nextLineVec);
-		if(fabs(preLineVec*nextLineVec)>EPS_COS2)
-			continue;	//平行的直线不做处理
 		double angle = cal_angle_of_2vec(preLineVec,nextLineVec);
 		double offset = minDistance/sin(angle/2);
 		f3dPoint vec = preLineVec + nextLineVec;

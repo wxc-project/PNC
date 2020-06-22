@@ -488,6 +488,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 			return FALSE;
 		double rot_angle=pReference->rotation();
 		f3dPoint orig(pReference->position().x,pReference->position().y,0);
+		AcGeScale3d scaleXYZ = pReference->scaleFactors();
 		AcDbBlockTableRecordIterator *pIterator=NULL;
 		pTempBlockTableRecord->newIterator( pIterator);
 		for(;!pIterator->done();pIterator->step())
@@ -502,6 +503,9 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 				{
 					pPolyLine->getPointAt(iVertIndex,location);
 					ptArr[iVertIndex].Set(location.x,location.y,location.z);
+					ptArr[iVertIndex].x *= scaleXYZ.sx;
+					ptArr[iVertIndex].y *= scaleXYZ.sy;
+					ptArr[iVertIndex].z *= scaleXYZ.sz;
 				}
 				break;
 			}

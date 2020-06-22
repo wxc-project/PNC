@@ -271,8 +271,8 @@ BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
 	{
 		if (vertexList[index].tag.lParam <= 0)
 			return FALSE;
-		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, MkCadObjId(vertexList[index].tag.lParam), AcDb::kForRead);
+		CAcDbObjLife objLife(MkCadObjId(vertexList[index].tag.lParam));
+		AcDbEntity *pEnt = objLife.GetEnt();
 		if (pEnt == NULL)
 			return FALSE;
 		AcDbCurve* pCurve = (AcDbCurve*)pEnt;
