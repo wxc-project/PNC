@@ -62,6 +62,8 @@ BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_MOVE_MK_RECT, &CPartListDlg::OnBnClickedBtnMoveMkRect)
 	ON_BN_CLICKED(IDC_CHK_EDIT_MK, &CPartListDlg::OnBnClickedChkEditMk)
 	ON_NOTIFY(NM_DBLCLK, IDC_PART_LIST, &CPartListDlg::OnNMDblclkPartList)
+	ON_NOTIFY(NM_RCLICK, IDC_PART_LIST, &CPartListDlg::OnNMRClickPartList)
+	ON_COMMAND(ID_REVISE_TEH_PLATE, &CPartListDlg::OnRetrievedPlate)
 END_MESSAGE_MAP()
 
 
@@ -307,6 +309,60 @@ void CPartListDlg::OnNMDblclkPartList(NMHDR *pNMHDR, LRESULT *pResult)
 			SelectPart(iCurSel, FALSE);
 	}
 	*pResult = 0;
+}
+
+void CPartListDlg::OnNMRClickPartList(NMHDR *pNMHDR, LRESULT *pResult)
+{
+	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	CPlateProcessInfo *pSelPlate = NULL;
+	POSITION pos = m_partList.GetFirstSelectedItemPosition();
+	if (pos != NULL)
+	{
+		int iCurSel = m_partList.GetNextSelectedItem(pos);
+		if (iCurSel >= 0)
+			pSelPlate = (CPlateProcessInfo*)m_partList.GetItemData(iCurSel);
+	}
+	if (pSelPlate)
+	{
+		DWORD dwPos = GetMessagePos();
+		CPoint point(LOWORD(dwPos), HIWORD(dwPos));
+		CMenu popMenu;
+		popMenu.LoadMenu(IDR_ITEM_CMD_POPUP);
+		CMenu *pMenu = popMenu.GetSubMenu(0);
+		pMenu->DeleteMenu(0, MF_BYPOSITION);
+		pMenu->AppendMenu(MF_STRING, ID_REVISE_TEH_PLATE, "重新提取");
+		popMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+	}
+	*pResult = 0;
+}
+
+void CPartListDlg::OnRetrievedPlate()
+{
+	CPlateProcessInfo *pSelPlate = NULL;
+	POSITION pos = m_partList.GetFirstSelectedItemPosition();
+	if (pos != NULL)
+	{
+		int iCurSel = m_partList.GetNextSelectedItem(pos);
+		if (iCurSel >= 0)
+			pSelPlate = (CPlateProcessInfo*)m_partList.GetItemData(iCurSel);
+	}
+	if (pSelPlate == NULL)
+		return;
+	CXhChar16 sPartNo = pSelPlate->GetPartNo();
+	//
+	CPNCModel tempMode;
+	CPNCModel::m_bSendCommand = TRUE;
+	SmartExtractPlate(&tempMode);
+	CPlateProcessInfo* pFirstPlate = tempMode.EnumFirstPlate(FALSE);
+	if (tempMode.GetPlateNum() != 1 || 
+		!sPartNo.Equal(pFirstPlate->GetPartNo())||
+		!pFirstPlate->IsValid())
+	{
+		AfxMessageBox(CXhChar50("钢板{%s}重新提取失败!",(char*)sPartNo));
+		return;
+	}
+	pSelPlate->CloneAttributes(pFirstPlate);
+	UpdatePartList();
 }
 
 void CPartListDlg::OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult) 

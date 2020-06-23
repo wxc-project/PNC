@@ -651,7 +651,7 @@ BOOL CPlateExtractor::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogn
 	}
 	return bRet;
 }
-
+//螺栓图符主要有：圆形、三角形、方形
 double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord,double scale)
 {
 	if (pTempBlockTableRecord == NULL)
@@ -668,10 +668,34 @@ double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord,double s
 			pIterator->getEntity(pEnt, AcDb::kForRead);
 			if (pEnt == NULL)
 				continue;
-			VerifyVertexByCADEnt(scope, pEnt);
 			pEnt->close();
+			AcDbCircle acad_cir;
+			if (pEnt->isKindOf(AcDbCircle::desc()))
+			{
+				AcDbCircle *pCir = (AcDbCircle*)pEnt;
+				acad_cir.setCenter(pCir->center());
+				acad_cir.setNormal(pCir->normal());
+				acad_cir.setRadius(pCir->radius());
+				VerifyVertexByCADEnt(scope, &acad_cir);
+			}
+			else if (pEnt->isKindOf(AcDbPolyline::desc()))
+			{	//按照外切圆处理，多段线区域的中心为块的坐标
+				AcDbPolyline *pPolyLine = (AcDbPolyline*)pEnt;
+				if(pPolyLine->numVerts()<=0)
+					continue;
+				AcGePoint3d point;
+				pPolyLine->getPointAt(0, point);
+				double fRadius = GEPOINT(point.x, point.y).mod();
+				acad_cir.setCenter(AcGePoint3d(0, 0, 0));
+				acad_cir.setNormal(AcGeVector3d(0, 0, 1));
+				acad_cir.setRadius(fRadius);
+				VerifyVertexByCADEnt(scope, &acad_cir);
+			}
+			else
+				continue;
 		}
-		fHoleD = fabs(max(scope.wide(), scope.high())*scale);
+		fHoleD = max(scope.wide(), scope.high());
+		fHoleD = fabs(fHoleD*scale);
 		//对计算得到的孔径进行圆整，精确到小数点一位
 		int nValue=(int)floor(fHoleD);		//整数部分
 		double fValue = fHoleD - nValue;	//小数部分
@@ -723,19 +747,36 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		if (pLsBlockEnt)
 			fHoleD = pLsBlockEnt->m_fSize;
 		else
+		{
 			fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+			CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.Add(pEnt->id().asOldId());
+			pLsBlockEnt->pos.x = hole.posX;
+			pLsBlockEnt->pos.y = hole.posY;
+			pLsBlockEnt->m_fSize = fHoleD;
+		}
 		if (fHoleD <= 0)
 		{
 			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算孔径失败！", (char*)sName);
 			return FALSE;
 		}
+		BOOL bValidLsBlock = TRUE;
+		double fIncrement = (pBoltD->diameter > 0) ? fHoleD - pBoltD->diameter : 0;
+		if (fIncrement > 2 || fIncrement < 0)
+		{
+			bValidLsBlock = FALSE;
+			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算的孔径不合理，请优先设置螺栓图块对应的孔径！", (char*)sName);
+		}
+		//
 		hole.posX = (float)pReference->position().x;
 		hole.posY = (float)pReference->position().y;
 		if (pBoltD->diameter > 0)
 		{	//指定螺栓块的直径，按照标准螺栓处理
 			hole.ciSymbolType = 0;
 			hole.d = pBoltD->diameter;
-			hole.increment = (float)(fHoleD - pBoltD->diameter);
+			if (!bValidLsBlock && pBoltD->hole_d > pBoltD->diameter)
+				hole.increment = (float)(pBoltD->hole_d - pBoltD->diameter);
+			else
+				hole.increment = (float)(fHoleD - pBoltD->diameter);
 		}
 		else
 		{	//未指定螺栓块的直径，按特殊孔处理

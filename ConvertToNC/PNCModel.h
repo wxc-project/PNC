@@ -139,6 +139,7 @@ public:
 	void CheckProfileEdge();
 	//生成中性文件
 	void CreatePPiFile(const char* file_path);
+	void CloneAttributes(CPlateProcessInfo* pSrcPlate);
 	//绘制钢板
 	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
 	void InitEdgeEntIdMap();
@@ -189,6 +190,7 @@ public:
 	CXhChar500 m_sWorkPath;		//当前模型对应的工作路径 wht 19-04-02
 	static const float ASSIST_RADIUS;
 	static const float DIST_ERROR;
+	static BOOL m_bSendCommand;
 public:
 	CPNCModel(void);
 	~CPNCModel(void);

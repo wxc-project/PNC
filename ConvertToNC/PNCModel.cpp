@@ -1442,6 +1442,33 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 		}
 	}
 }
+//属性成员拷贝
+void CPlateProcessInfo::CloneAttributes(CPlateProcessInfo* pSrcPlate)
+{
+	xPlate.ClonePart(&(pSrcPlate->xPlate));
+	//
+	vertexList.Empty();
+	CPlateObject::VERTEX* pSrcVertex = NULL;
+	for (CPlateObject::VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
+		pSrcVertex = pSrcPlate->vertexList.GetNext())
+		vertexList.append(*pSrcVertex);
+	boltList.Empty();
+	for (BOLT_INFO* pSrcBolt = pSrcPlate->boltList.GetFirst(); pSrcBolt; pSrcBolt = pSrcPlate->boltList.GetNext())
+		boltList.append(*pSrcBolt);
+	//
+	m_xHashRelaEntIdList.Empty();
+	for (CAD_ENTITY* pSrcCadEnt = pSrcPlate->m_xHashRelaEntIdList.GetFirst(); pSrcCadEnt;
+		pSrcCadEnt = pSrcPlate->m_xHashRelaEntIdList.GetNext())
+		m_xHashRelaEntIdList.SetValue(pSrcCadEnt->idCadEnt, *pSrcCadEnt);
+	m_cloneEntIdList.Empty();
+	for (ULONG *pSrcId = pSrcPlate->m_cloneEntIdList.GetFirst(); pSrcId;
+		pSrcId = pSrcPlate->m_cloneEntIdList.GetNext())
+		m_cloneEntIdList.append(*pSrcId);
+	m_newAddEntIdList.Empty();
+	for (ULONG *pSrcId = pSrcPlate->m_newAddEntIdList.GetFirst(); pSrcId;
+		pSrcId = pSrcPlate->m_newAddEntIdList.GetNext())
+		m_newAddEntIdList.append(*pSrcId);
+}
 //初始化钢板加工坐标系X轴所在的轮廓边
 void CPlateProcessInfo::InitBtmEdgeIndex()
 {
@@ -1652,6 +1679,7 @@ void CPlateProcessInfo::InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType)
 }
 void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/*=FALSE*/,BOOL bDrawAsBlock/*=FALSE*/, GEPOINT *pPlateCenter /*= NULL*/)
 {	
+	CLockDocumentLife lockCurDocumentLife;
 	AcDbBlockTableRecord *pBlockTableRecord=GetBlockTableRecord();
 	if(pBlockTableRecord==NULL)
 	{
@@ -1766,6 +1794,7 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 }
 void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 {
+	CLockDocumentLife lockCurDocumentLife;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
 	if (pBlockTableRecord == NULL)
 	{
@@ -2488,6 +2517,7 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 //ExtractPlateProfile
 const float CPNCModel::ASSIST_RADIUS = 1;
 const float CPNCModel::DIST_ERROR = 0.5;
+BOOL CPNCModel::m_bSendCommand = FALSE;
 CPNCModel::CPNCModel()
 {
 	Empty();
@@ -2732,11 +2762,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	dwPreTick = timer.Relay(3, dwPreTick);
 #endif
 	//检测识别钢板轮廓边信息
-	BOOL bSendCommand = FALSE;
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	bSendCommand = TRUE;
-#endif
-	CShieldCadLayer shieldLayer(sNewLayer, TRUE, bSendCommand);	//屏蔽不需要的图层
+	CShieldCadLayer shieldLayer(sNewLayer, TRUE, CPNCModel::m_bSendCommand);	//屏蔽不需要的图层
 	for (CPlateProcessInfo* pInfo = m_hashPlateInfo.GetFirst(); pInfo; pInfo = m_hashPlateInfo.GetNext())
 	{
 		//初始化孤岛检测状态
@@ -2749,7 +2775,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			}
 		}
 		//识别钢板轮廓边
-		pInfo->InitProfileByBPolyCmd(fMinEdge, fMaxEdge, bSendCommand);
+		pInfo->InitProfileByBPolyCmd(fMinEdge, fMaxEdge, CPNCModel::m_bSendCommand);
 	}
 #ifdef __TIMER_COUNT_
 	dwPreTick = timer.Relay(4, dwPreTick);
@@ -2790,6 +2816,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 //通过像素模拟进行提取钢板轮廓
 void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 {
+	CLockDocumentLife lockCurDocumentLife;
 	CLogErrorLife logErrLife;
 #ifdef __TIMER_COUNT_
 	DWORD dwPreTick = timer.Start();
@@ -3117,6 +3144,7 @@ void CPNCModel::SplitManyPartNo()
 //自动排版
 void CPNCModel::DrawPlatesToLayout()
 {
+	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
 	{
 		logerr.Log("缺少钢板信息，请先正确提取钢板信息！");
@@ -3197,6 +3225,7 @@ void CPNCModel::DrawPlatesToLayout()
 //钢板对比
 void CPNCModel::DrawPlatesToCompare()
 {
+	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
 	{
 		logerr.Log("缺少钢板信息，请先正确提取钢板信息！");
@@ -3254,6 +3283,7 @@ void CPNCModel::DrawPlatesToCompare()
 //下料预审
 void CPNCModel::DrawPlatesToProcess()
 {
+	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
 	{
 		logerr.Log("缺少钢板信息，请先正确提取钢板信息！");
@@ -3325,6 +3355,7 @@ void CPNCModel::DrawPlatesToProcess()
 //钢板相关图元克隆
 void CPNCModel::DrawPlatesToClone()
 {
+	CLockDocumentLife lockCurDocumentLife;
 	DRAGSET.ClearEntSet();
 	for (CPlateProcessInfo *pPlate = m_hashPlateInfo.GetFirst(); pPlate; pPlate = m_hashPlateInfo.GetNext())
 		pPlate->DrawPlate();

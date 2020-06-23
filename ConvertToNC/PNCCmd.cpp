@@ -23,19 +23,7 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////////
 void SmartExtractPlate()
 {
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	CDwgFileInfo *pDwgFile = NULL;
-	AcApDocument* pDoc = acDocManager->curDocument();
-	if (pDoc != NULL)
-	{
-		CString file_path = pDoc->fileName();
-		pDwgFile = g_xUbomModel.FindDwgFile(file_path);
-	}
-	if (pDwgFile)
-		SmartExtractPlate(pDwgFile->GetPncModel());
-	else
-		SmartExtractPlate(&model);
-#else
+	CPNCModel::m_bSendCommand = FALSE;
 	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
 	{	//下料预审模式，保留上次提取的钢板信息，避免重复提取
 		CString file_path;
@@ -49,17 +37,12 @@ void SmartExtractPlate()
 	else
 		model.Empty();
 	SmartExtractPlate(&model);
-#endif
 }
 
 void SmartExtractPlate(CPNCModel *pModel)
 {
 	if (pModel == NULL)
 		return;
-	BOOL bSendCommand = FALSE;
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	bSendCommand = TRUE;
-#endif
 	struct resbuf var;
 #ifdef _ARX_2007
 	acedGetVar(L"WORLDUCS", &var);
@@ -69,7 +52,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	int iRet = var.resval.rint;
 	if (iRet == 0)
 	{	//用户坐标系与世界坐标系不一致，执行ucs命令，修订坐标系 wht 20-04-24
-		if(bSendCommand)
+		if(CPNCModel::m_bSendCommand)
 #ifdef _ARX_2007
 			SendCommandToCad(L"ucs w ");
 #else
@@ -138,17 +121,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 				dim_vec.Set(cos(pBlockRef->rotation()), sin(pBlockRef->rotation()));
 			}
 			else
-			{
-				BOLT_HOLE hole;
-				if (g_pncSysPara.RecogBoltHole(pEnt, hole))	
-				{
-					CAD_ENTITY* pLsBlockEnt = pModel->m_xBoltBlockHash.Add(entId.asOldId());
-					pLsBlockEnt->pos.x = hole.posX;
-					pLsBlockEnt->pos.y = hole.posY;
-					pLsBlockEnt->m_fSize = hole.d + hole.increment;
-				}
 				continue;
-			}
 			if (baseInfo.m_sPartNo.GetLength() > 0)
 				sPartNo.Copy(baseInfo.m_sPartNo);
 			else
@@ -253,9 +226,12 @@ void SmartExtractPlate(CPNCModel *pModel)
 	//绘制提取的钢板外形--支持排版
 	pModel->DrawPlates();
 	//更新构件列表
-	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-	if (pPartListDlg != NULL)
-		pPartListDlg->UpdatePartList();
+	if (pModel == &model)
+	{
+		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+		if (pPartListDlg != NULL)
+			pPartListDlg->UpdatePartList();
+	}
 #else
 	//UBOM只需要更新钢板的基本信息
 	pModel->MergeManyPartNo();

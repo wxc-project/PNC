@@ -435,6 +435,8 @@ static void InsertBoltBolckItem(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTree
 	CXhChar16 hole_d;
 	sprintf(hole_d, "%d", pSchema->diameter);
 	lpInfoItem->SetSubItemText(2, _T(hole_d));
+	sprintf(hole_d, "%.3lf", pSchema->hole_d);
+	lpInfoItem->SetSubItemText(3, _T(hole_d));
 	lpInfoItem->SetCheck(TRUE);
 	CSuperGridCtrl::CTreeItem* pItem = pListCtrl->InsertItem(pGroupItem, lpInfoItem);
 	if (pSchema != &schema)
@@ -544,6 +546,10 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 				case 2:
 					pBoltD->diameter = atoi(m_ModifyText);
 					break;
+				case 3:
+					pBoltD->hole_d = atof(m_ModifyText);
+					break;
+
 				}
 			}
 			else
@@ -555,6 +561,7 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 					pBoltD1.sGroupName = m_lpNodeInfo->GetSubItemText(0);
 					pBoltD1.sBlockName = pListCtrl->GetItemText(iRows, 1);
 					pBoltD1.diameter = atoi(pListCtrl->GetItemText(iRows, 2));
+					pBoltD1.hole_d = atof(pListCtrl->GetItemText(iRows, 3));
 					g_pncSysPara.hashBoltDList.SetValue(pListCtrl->GetItemText(iRows, 1), pBoltD1);
 				}
 			}
@@ -713,8 +720,9 @@ void CPNCSysSettingDlg::RefreshCtrlState()
 		{
 			hashGroupByItemName.Empty();
 			m_listCtrlSysSetting.InsertColumn(0, _T("·Ö×é"), LVCFMT_LEFT, 130);
-			m_listCtrlSysSetting.InsertColumn(1, _T("ÂÝË¨Í¼·û"), LVCFMT_LEFT, 140);
-			m_listCtrlSysSetting.InsertColumn(2, _T("ÂÝË¨Ö±¾¶"), LVCFMT_LEFT, 140);
+			m_listCtrlSysSetting.InsertColumn(1, _T("ÂÝË¨Í¼·û"), LVCFMT_LEFT, 100);
+			m_listCtrlSysSetting.InsertColumn(2, _T("ÂÝË¨Ö±¾¶"), LVCFMT_LEFT, 100);
+			m_listCtrlSysSetting.InsertColumn(3, _T("ÂÝË¨¿×¾¶"), LVCFMT_LEFT, 100);
 			for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
 			{
 				if (!hashGroupByItemName.GetValue(pBoltD->sGroupName))

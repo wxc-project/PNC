@@ -49,6 +49,7 @@ protected:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg void OnNMClickPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMDblclkPartList(NMHDR *pNMHDR, LRESULT *pResult);
+	afx_msg void OnNMRClickPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnBnClickedBtnSendToPpe();
 	afx_msg void OnBnClickedBtnExportDxf();
@@ -58,5 +59,6 @@ protected:
 	afx_msg void OnBnClickedBtnMove();
 	afx_msg void OnBnClickedBtnMoveMkRect();
 	afx_msg void OnBnClickedChkEditMk();
+	afx_msg void OnRetrievedPlate();
 };
 #endif

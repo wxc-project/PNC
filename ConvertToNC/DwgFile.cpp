@@ -545,6 +545,7 @@ int CDwgFileInfo::GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet)
 //提取板的轮廓边,确定闭合区域
 BOOL CDwgFileInfo::RetrievePlates()
 {
+	CPNCModel::m_bSendCommand = TRUE;
 	SmartExtractPlate(&m_xPncMode);
 	return TRUE;
 }
