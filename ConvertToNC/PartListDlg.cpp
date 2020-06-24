@@ -53,6 +53,7 @@ BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_WM_MOVE()
 	ON_NOTIFY(NM_CLICK, IDC_PART_LIST, &CPartListDlg::OnNMClickPartList)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_PART_LIST, &CPartListDlg::OnKeydownListPart)
+	ON_BN_CLICKED(IDC_BTN_EXTRACT, &CPartListDlg::OnBnClickedBtnExtract)
 	ON_BN_CLICKED(IDC_BTN_SEND_TO_PPE, &CPartListDlg::OnBnClickedBtnSendToPpe)
 	ON_BN_CLICKED(IDC_BTN_EXPORT_DXF, &CPartListDlg::OnBnClickedBtnExportDxf)
 	ON_BN_CLICKED(IDC_BTN_ANTICLOCKWISE_ROTATION, &CPartListDlg::OnBnClickedBtnAnticlockwiseRotation)
@@ -109,9 +110,33 @@ void CPartListDlg::RefreshCtrlState()
 	GetDlgItem(IDC_CHK_EDIT_MK)->ShowWindow(nShowCode);
 }
 
+BOOL CPartListDlg::IsValidDoc(CString &sFileName)
+{
+	CString file_name;
+	AcApDocument* pDoc = acDocManager->curDocument();
+	if (pDoc)
+		file_name = pDoc->fileName();
+	if (file_name.GetLength() <= 0 || file_name.CompareNoCase("Drawing1.dwg") == 0)
+		return FALSE;
+	sFileName = file_name;
+	return TRUE;
+}
+
+void CPartListDlg::ClearPartList()
+{
+	model.Empty();
+	//
+	m_partList.DeleteAllItems();
+	m_sNote = "总数{0},成功{0},失败{0}";
+	UpdateData(FALSE);
+}
+
 BOOL CPartListDlg::UpdatePartList()
 {
 	m_partList.DeleteAllItems();
+	CString file_name;
+	if (!IsValidDoc(file_name) || model.m_sCurWorkFile.CompareNoCase(file_name) != 0)
+		return FALSE;
 	CStringArray str_arr;
 	str_arr.SetSize(4);
 	CSortedModel sortedModel(&model);
@@ -244,8 +269,12 @@ void CPartListDlg::RelayoutWnd()
 {
 	if (m_partList.GetSafeHwnd() == NULL)
 		return;
-	CRect rectWnd, rectList, rectBtm;
+	CRect rectWnd, rectList, rectBtm, rectPic;
 	GetClientRect(&rectWnd);
+	GetDlgItem(IDC_BTN_ANTICLOCKWISE_ROTATION)->GetWindowRect(&rectPic);
+	ScreenToClient(&rectPic);
+	int nPicRectHight = (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG) ? rectPic.Height()+1 : 0;
+	//
 	GetDlgItem(IDC_E_NOTE)->GetWindowRect(&rectBtm);
 	ScreenToClient(&rectBtm);
 	rectBtm.left = rectWnd.left;
@@ -258,6 +287,7 @@ void CPartListDlg::RelayoutWnd()
 	ScreenToClient(&rectList);
 	rectList.left = rectWnd.left;
 	rectList.right = rectWnd.right;
+	rectList.top = rectPic.top + nPicRectHight;
 	rectList.bottom = rectBtm.top - 1;
 	m_partList.MoveWindow(rectList);
 }
@@ -361,7 +391,36 @@ void CPartListDlg::OnRetrievedPlate()
 		AfxMessageBox(CXhChar50("钢板{%s}重新提取失败!",(char*)sPartNo));
 		return;
 	}
-	pSelPlate->CloneAttributes(pFirstPlate);
+	pSelPlate->CopyAttributes(pFirstPlate);
+	UpdatePartList();
+}
+
+void CPartListDlg::OnBnClickedBtnExtract()
+{
+	CString file_name;
+	if (!IsValidDoc(file_name))
+		return;
+	CPNCModel::m_bSendCommand = TRUE;
+	if (model.m_sCurWorkFile.CompareNoCase(file_name) == 0)
+	{	//同一文档（分次处理）
+		CPNCModel tempMode;
+		SmartExtractPlate(&tempMode);
+		//数据拷贝
+		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
+		for (pSrcPlate = tempMode.EnumFirstPlate(FALSE); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate(FALSE))
+		{
+			pDestPlate = model.GetPlateInfo(pSrcPlate->GetPartNo());
+			if (pDestPlate == NULL)
+				pDestPlate = model.AppendPlate(pSrcPlate->GetPartNo());
+			pDestPlate->CopyAttributes(pSrcPlate);
+		}
+	}
+	else
+	{	//不同文档(重新处理)
+		model.Empty();
+		model.m_sCurWorkFile = file_name;
+		SmartExtractPlate(&model);
+	}
 	UpdatePartList();
 }
 

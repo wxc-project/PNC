@@ -139,7 +139,7 @@ public:
 	void CheckProfileEdge();
 	//生成中性文件
 	void CreatePPiFile(const char* file_path);
-	void CloneAttributes(CPlateProcessInfo* pSrcPlate);
+	void CopyAttributes(CPlateProcessInfo* pSrcPlate);
 	//绘制钢板
 	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
 	void InitEdgeEntIdMap();
@@ -188,6 +188,7 @@ public:
 	CXhChar50 m_sTaAlias;		//代号
 	CXhChar50 m_sTaStampNo;		//钢印号
 	CXhChar500 m_sWorkPath;		//当前模型对应的工作路径 wht 19-04-02
+	CString m_sCurWorkFile;		//当前正在操作的文件
 	static const float ASSIST_RADIUS;
 	static const float DIST_ERROR;
 	static BOOL m_bSendCommand;

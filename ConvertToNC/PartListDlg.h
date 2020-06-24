@@ -27,8 +27,10 @@ public:
 	CString m_sNote;
 	CXhListCtrl m_partList;
 public:
+	BOOL IsValidDoc(CString& sFileName);
 	BOOL CreateDlg();
 	BOOL UpdatePartList();
+	void ClearPartList();
 	void RefreshCtrlState();
 	void SelectPart(int iCurSel, BOOL bClone = TRUE);
 	void ProcessKeyDown(WORD wVKey);
@@ -51,6 +53,7 @@ protected:
 	afx_msg void OnNMDblclkPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnNMRClickPartList(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnBnClickedBtnExtract();
 	afx_msg void OnBnClickedBtnSendToPpe();
 	afx_msg void OnBnClickedBtnExportDxf();
 	afx_msg void OnBnClickedBtnAnticlockwiseRotation();

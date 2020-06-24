@@ -113,7 +113,10 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 #ifndef __UBOM_ONLY_
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg != NULL)
+		{
 			pPartListDlg->RefreshCtrlState();
+			pPartListDlg->RelayoutWnd();
+		}
 #endif
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciArrangeType"))

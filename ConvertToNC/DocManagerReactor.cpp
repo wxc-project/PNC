@@ -20,8 +20,23 @@ void CDocManagerReactor::documentActivated(AcApDocument* pActivatedDoc)
 	//
 	CAcModuleResourceOverride useThisRes;
 #ifndef __UBOM_ONLY_
-	CExplodeTxtDlg* pDlg=g_xDockBarManager.GetExplodeTxtDlgPtr();
-	if (pDlg)
-		pDlg->SetFocus();
+	CPartListDlg* pPartDlg = g_xDockBarManager.GetPartListDlgPtr();
+	if (pPartDlg)
+		pPartDlg->ClearPartList();
+#endif
+}
+
+void CDocManagerReactor::documentDestroyed(const char* fileName)
+{
+	if (strlen(fileName) <= 0)
+		return;
+	CAcModuleResourceOverride useThisRes;
+#ifndef __UBOM_ONLY_
+	if (model.m_sCurWorkFile.CompareNoCase(fileName) == 0)
+	{
+		CPartListDlg* pPartDlg = g_xDockBarManager.GetPartListDlgPtr();
+		if (pPartDlg)
+			pPartDlg->ClearPartList();
+	}
 #endif
 }

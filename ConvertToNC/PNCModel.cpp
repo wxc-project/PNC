@@ -1443,9 +1443,9 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 	}
 }
 //属性成员拷贝
-void CPlateProcessInfo::CloneAttributes(CPlateProcessInfo* pSrcPlate)
+void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 {
-	xPlate.ClonePart(&(pSrcPlate->xPlate));
+	pSrcPlate->xPlate.ClonePart(&xPlate);
 	//
 	vertexList.Empty();
 	CPlateObject::VERTEX* pSrcVertex = NULL;
@@ -2529,8 +2529,11 @@ CPNCModel::~CPNCModel()
 void CPNCModel::Empty()
 {
 	m_hashPlateInfo.Empty();
+	m_hashSolidLineTypeId.Empty();
 	m_xAllEntIdSet.Empty();
+	m_xAllLineHash.Empty();
 	m_xBoltBlockHash.Empty();
+	m_sCurWorkFile.Empty();
 }
 //从选中的图元中剔除无效的非轮廓边图元（孤立线条、短焊缝线等）
 void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols)

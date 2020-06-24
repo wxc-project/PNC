@@ -23,19 +23,20 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////////
 void SmartExtractPlate()
 {
-	CPNCModel::m_bSendCommand = FALSE;
-	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
-	{	//下料预审模式，保留上次提取的钢板信息，避免重复提取
-		CString file_path;
-		GetCurWorkPath(file_path);
-		if (!model.m_sWorkPath.EqualNoCase(file_path))
-		{
-			model.Empty();
-			model.m_sWorkPath.Copy(file_path);
-		}
+	//获取当前激活文件
+	CString file_name;
+	AcApDocument* pDoc = acDocManager->curDocument();
+	if (pDoc)
+		file_name = pDoc->fileName();
+	if (file_name.GetLength() <= 0 || file_name.CompareNoCase("Drawing1.dwg") == 0)
+	{
+		AfxMessageBox("请打开有效的文件!");
+		return;
 	}
-	else
-		model.Empty();
+	//提取当前文件的钢板信息
+	CPNCModel::m_bSendCommand = FALSE;
+	model.Empty();
+	model.m_sCurWorkFile = file_name;
 	SmartExtractPlate(&model);
 }
 
@@ -225,8 +226,8 @@ void SmartExtractPlate(CPNCModel *pModel)
 	}
 	//绘制提取的钢板外形--支持排版
 	pModel->DrawPlates();
-	//更新构件列表
-	if (pModel == &model)
+	//通过菜单提取的钢板需更新构件列表
+	if (CPNCModel::m_bSendCommand == FALSE)
 	{
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg != NULL)
