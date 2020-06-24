@@ -420,21 +420,6 @@ void CPlateProcessInfo::PreprocessorBoltEnt(int *piInvalidCirCountForText)
 				strstr(pEnt->sText, "Φ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
 				strstr(pEnt->sText, "%%c") != NULL|| strstr(pEnt->sText, "焊") != NULL)
 				continue;
-			int nLen = strlen(pEnt->sText);
-			if (nLen < 3)
-			{
-				bool bDigit = true;
-				for (int i = 0; i < nLen; i++)
-				{
-					if (!isdigit(pEnt->sText[i]))
-					{
-						bDigit = false;
-						break;
-					}
-				}
-				if (bDigit)
-					continue;	//文字为小于100的数字，不可能为件号 wht 19-12-11
-			}
 			//排除件号标注圆圈
 			SCOPE_STRU scope;
 			for (CAD_ENTITY **ppCirEnt = hashEntPtrByCenterStr.GetFirst(); ppCirEnt; ppCirEnt = hashEntPtrByCenterStr.GetNext())
@@ -1447,6 +1432,8 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 {
 	pSrcPlate->xPlate.ClonePart(&xPlate);
 	//
+	dim_pos = pSrcPlate->dim_pos;
+	dim_vec = pSrcPlate->dim_vec;
 	vertexList.Empty();
 	CPlateObject::VERTEX* pSrcVertex = NULL;
 	for (CPlateObject::VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
