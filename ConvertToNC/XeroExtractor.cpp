@@ -789,8 +789,10 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 	else if(pEnt->isKindOf(AcDbCircle::desc()))
 	{
 		AcDbCircle* pCircle=(AcDbCircle*)pEnt;
-		if(int(pCircle->radius())<=0)	//去除点
-			return FALSE;
+		if(int(pCircle->radius())<=0)	
+			return FALSE;	//去除点
+		if (g_pncSysPara.m_ciMKPos == 2 && g_pncSysPara.m_fMKHoleD == pCircle->radius()*2)
+			return FALSE;	//去除号位孔
 		/* 特殊孔直径直接设置直径，不设孔径增大值，
 		/*否则在PPE中统一处理孔径增大值时会丢失此处提取的孔径增大值 wht 19-09-12
 		/*对孔径进行圆整，精确到小数点一位

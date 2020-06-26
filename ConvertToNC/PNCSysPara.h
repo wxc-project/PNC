@@ -47,7 +47,8 @@ private:
 public:
 	int m_iPPiMode;			//PPI文件生成模式 0.一板一号 1.一板多号
 	bool m_bIncDeformed;	//是否考虑了火曲变形
-	BOOL m_bMKPos;			//是否获取钢印区位置
+	BYTE m_ciMKPos;			//钢印位置:0.件号文字标注|1.钢印字盒块|2.钢印号位孔
+	double m_fMKHoleD;		//号位孔直径
 	BOOL m_bUseMaxEdge;		//是否启用最大边长
 	int m_nMaxEdgeLen;		//最大边长
 	int m_nMkRectLen;		//钢印字盒长度
@@ -60,6 +61,7 @@ public:
 	static const BYTE LAYOUT_SEG	 = 3;
 	BYTE m_ciLayoutMode;	//显示模式 0.克隆模式|1.对比模式|2.排版模式|3.预审模式
 	BYTE m_ciArrangeType;	//0.以行为主|1.以列为主
+	BYTE m_ciGroupType;		//0.不分组|1.段号|2.材质+厚度
 	int m_nMapLength;		//图纸长度 0表示不设置纸张长度
 	int m_nMapWidth;		//图纸宽度
 	int m_nMinDistance;		//最小间距

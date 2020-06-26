@@ -496,7 +496,7 @@ void ShowPartList()
 //////////////////////////////////////////////////////////////////////////
 void DrawPlates()
 {
-	int draw_type = 0, idRet = 0;
+	int draw_type = 0, idRet = 0, group_type = 0;
 	BOOL bDrawByVert = TRUE;
 #ifdef _ARX_2007
 	ACHAR result[20] = { 0 };
@@ -528,6 +528,16 @@ void DrawPlates()
 				bDrawByVert = FALSE;
 		}
 	}
+	else if (draw_type == 2)
+	{
+		if (acedGetString(NULL, _T("\n分组方式[不分组(0)/段号(1)/厚度&材质(2)]<0>:"), result) == RTNORM)
+		{
+			if (strlen(result) <= 0 || result[0] == '0')
+				group_type = 0;
+			else
+				group_type = result[0] - '0';
+		}
+	}
 #endif
 	if(draw_type==0)
 	{
@@ -542,6 +552,8 @@ void DrawPlates()
 	g_pncSysPara.m_ciLayoutMode = draw_type;
 	if (draw_type == 1)
 		g_pncSysPara.m_ciArrangeType = bDrawByVert;
+	else if (draw_type == 2)
+		g_pncSysPara.m_ciGroupType = group_type;
 	model.DrawPlates();
 	//更新构件列表
 	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();

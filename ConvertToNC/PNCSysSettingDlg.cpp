@@ -11,6 +11,7 @@
 #include "CadToolFunc.h"
 #include "DrawDamBoard.h"
 #include "resource.h"
+#include "SelColorDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -80,13 +81,16 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_sJgCardBlockName = valueStr;
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fMaxLenErr"))
 		g_pncSysPara.m_fMaxLenErr = atof(valueStr);
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bMKPos"))
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciMKPos"))
 	{
-		if (valueStr.Compare("是") == 0)
-			g_pncSysPara.m_bMKPos = true;
-		else
-			g_pncSysPara.m_bMKPos = false;
+		g_pncSysPara.m_ciMKPos = valueStr[0] - '0';
+		//
+		pPropList->DeleteAllSonItems(pItem);
+		if (g_pncSysPara.m_ciMKPos == 2)
+			oper.InsertEditPropItem(pItem, "m_fMKHoleD", "", "", -1, TRUE);
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fMKHoleD"))
+		g_pncSysPara.m_fMKHoleD = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMaxHoleD"))
 		g_pncSysPara.m_nMaxHoleD = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_bUseMaxEdge"))
@@ -121,6 +125,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciArrangeType"))
 		g_pncSysPara.m_ciArrangeType = valueStr[0] - '0';
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciGroupType"))
+		g_pncSysPara.m_ciGroupType = valueStr[0] - '0';
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapWidth"))
 		g_pncSysPara.m_nMapWidth=atoi(valueStr);
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_nMapLength"))
@@ -269,6 +275,19 @@ static BOOL ButtonClickSystemSetting(CPropertyList *pPropList, CPropTreeItem* pI
 		pDlg->m_iSelTabGroup = 2;
 		pDlg->m_ctrlPropGroup.SetCurSel(2);
 		pDlg->RefreshCtrlState();
+	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("crMode"))
+	{
+		CSelColorDlg dlg;
+		if (dlg.DoModal() == IDOK)
+		{
+			oper.UpdatePropItemValue("crMode.crEdge");
+			oper.UpdatePropItemValue("crMode.crLS12");
+			oper.UpdatePropItemValue("crMode.crLS16");
+			oper.UpdatePropItemValue("crMode.crLS20");
+			oper.UpdatePropItemValue("crMode.crLS24");
+			oper.UpdatePropItemValue("crMode.crOtherLS");
+		}
 	}
 	return TRUE;
 }
@@ -932,7 +951,9 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	if(g_pncSysPara.m_bUseMaxEdge)
 		oper.InsertCmbListPropItem(pPropItem, "m_nMaxEdgeLen");
 	oper.InsertEditPropItem(pGroupItem, "m_nMaxHoleD");
-	oper.InsertCmbListPropItem(pGroupItem, "m_bMKPos");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_ciMKPos");
+	if (g_pncSysPara.m_ciMKPos == 2)
+		oper.InsertEditPropItem(pPropItem, "m_fMKHoleD");
 	oper.InsertCmbListPropItem(pGroupItem, "AxisXCalType");
 	oper.InsertCmbListPropItem(pGroupItem, "m_iPPiMode");
 	//识别模式设置
@@ -985,6 +1006,7 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 	m_propList.DeleteAllSonItems(pParentItem);
 	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PRINT)
 	{	//自动排版
+		oper.InsertCmbListPropItem(pParentItem, "m_ciGroupType", "", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMapWidth", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMapLength", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMinDistance", "", "", -1, TRUE);
@@ -999,11 +1021,14 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
 	{
 		oper.InsertCmbListPropItem(pParentItem, "m_ciArrangeType", "", "", "", -1, TRUE);
-		oper.InsertCmbColorPropItem(pParentItem, "crMode.crEdge","","","",-1,TRUE);
-		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS12", "", "", "", -1, TRUE);
-		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS16", "", "", "", -1, TRUE);
-		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS20", "", "", "", -1, TRUE);
-		oper.InsertCmbColorPropItem(pParentItem, "crMode.crLS24", "", "", "", -1, TRUE);
+		oper.InsertCmbListPropItem(pParentItem, "m_ciGroupType", "", "", "", -1, TRUE);
+		CPropTreeItem* pItem = oper.InsertButtonPropItem(pParentItem, "crMode", "", "", -1, TRUE);
+		pItem->m_bHideChildren = TRUE;
+		oper.InsertCmbColorPropItem(pItem, "crMode.crEdge","","","",-1,TRUE);
+		oper.InsertCmbColorPropItem(pItem, "crMode.crLS12", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pItem, "crMode.crLS16", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pItem, "crMode.crLS20", "", "", "", -1, TRUE);
+		oper.InsertCmbColorPropItem(pItem, "crMode.crLS24", "", "", "", -1, TRUE);
 	}
 }
 void CPNCSysSettingDlg::OnBnClickedBtnDefault()

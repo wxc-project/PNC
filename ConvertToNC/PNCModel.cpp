@@ -3145,62 +3145,75 @@ void CPNCModel::DrawPlatesToLayout()
 	int minDistance = g_pncSysPara.m_nMinDistance;
 	int hight = g_pncSysPara.m_nMapWidth;
 	int paperLen = (g_pncSysPara.m_nMapLength <= 0) ? 100000 : g_pncSysPara.m_nMapLength;
-	CHashStrList<CDrawingRect> hashDrawingRectByLabel;
-	for (CPlateProcessInfo *pPlate = m_hashPlateInfo.GetFirst(); pPlate; pPlate = m_hashPlateInfo.GetNext())
+	CSortedModel sortedModel(this);
+	if (g_pncSysPara.m_ciGroupType == 1)
+		sortedModel.DividPlatesBySeg();			//根据段号对钢板进行分组
+	else if (g_pncSysPara.m_ciGroupType == 2)
+		sortedModel.DividPlatesByThickMat();	//根据板厚材质对钢板进行分组
+	else
+		sortedModel.DividPlatesByPartNo();		//根据件号对钢板进行分组
+	double paperX = 0, paperY = 0;
+	for (CSortedModel::PARTGROUP* pGroup = sortedModel.hashPlateGroup.GetFirst(); pGroup;pGroup = sortedModel.hashPlateGroup.GetNext())
 	{
-		fPtList ptList;
-		minRect = pPlate->GetMinWrapRect((double)minDistance, &ptList);
-		CDrawingRect *pRect = hashDrawingRectByLabel.Add(pPlate->GetPartNo());
-		pRect->m_pDrawing = pPlate;
-		pRect->height = minRect.Height();
-		pRect->width = minRect.Width();
-		pRect->m_vertexArr.Empty();
-		for (f3dPoint *pPt = ptList.GetFirst(); pPt; pPt = ptList.GetNext())
-			pRect->m_vertexArr.append(GEPOINT(*pPt));
-		pRect->topLeft.Set(minRect.topLeft.x, minRect.topLeft.y);
-	}
-	double paperX = 0;
-	while (hashDrawingRectByLabel.GetNodeNum() > 0)
-	{
-		CDrawingRectLayout rectLayout;
-		for (CDrawingRect *pRect = hashDrawingRectByLabel.GetFirst(); pRect; pRect = hashDrawingRectByLabel.GetNext())
-			rectLayout.drawRectArr.Add(*pRect);
-		if (rectLayout.Relayout(hight, paperLen) == FALSE)
-		{	//所有的板都布局失败
+		CHashStrList<CDrawingRect> hashDrawingRectByLabel;
+		for (CPlateProcessInfo *pPlate = pGroup->EnumFirstPlate(); pPlate; pPlate = pGroup->EnumNextPlate())
+		{
+			fPtList ptList;
+			minRect = pPlate->GetMinWrapRect((double)minDistance, &ptList);
+			CDrawingRect *pRect = hashDrawingRectByLabel.Add(pPlate->GetPartNo());
+			pRect->m_pDrawing = pPlate;
+			pRect->height = minRect.Height();
+			pRect->width = minRect.Width();
+			pRect->m_vertexArr.Empty();
+			for (f3dPoint *pPt = ptList.GetFirst(); pPt; pPt = ptList.GetNext())
+				pRect->m_vertexArr.append(GEPOINT(*pPt));
+			pRect->topLeft.Set(minRect.topLeft.x, minRect.topLeft.y);
+		}
+		paperX = 0;
+		while (hashDrawingRectByLabel.GetNodeNum() > 0)
+		{
+			CDrawingRectLayout rectLayout;
 			for (CDrawingRect *pRect = hashDrawingRectByLabel.GetFirst(); pRect; pRect = hashDrawingRectByLabel.GetNext())
-			{
-				CPlateProcessInfo *pPlateDraw = (CPlateProcessInfo*)pRect->m_pDrawing;
-				if (pRect->m_bException)
-					logerr.Log("钢板%s排版失败,钢板矩形宽度大于指定出图宽度!", (char*)pPlateDraw->GetPartNo());
-				else
-					logerr.Log("钢板%s排版失败!", (char*)pPlateDraw->GetPartNo());
+				rectLayout.drawRectArr.Add(*pRect);
+			if (rectLayout.Relayout(hight, paperLen) == FALSE)
+			{	//所有的板都布局失败
+				for (CDrawingRect *pRect = hashDrawingRectByLabel.GetFirst(); pRect; pRect = hashDrawingRectByLabel.GetNext())
+				{
+					CPlateProcessInfo *pPlateDraw = (CPlateProcessInfo*)pRect->m_pDrawing;
+					if (pRect->m_bException)
+						logerr.Log("钢板%s排版失败,钢板矩形宽度大于指定出图宽度!", (char*)pPlateDraw->GetPartNo());
+					else
+						logerr.Log("钢板%s排版失败!", (char*)pPlateDraw->GetPartNo());
+				}
+				break;
 			}
-			break;
-		}
-		else
-		{	//布局成功，但是其中可能某些板没有布局成功
-			AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
-			CreateAcadLine(pBlockTableRecord, f3dPoint(paperX, 0), f3dPoint(paperX + paperLen, 0));
-			CreateAcadLine(pBlockTableRecord, f3dPoint(paperX, -hight), f3dPoint(paperX + paperLen, -hight));
-			CreateAcadLine(pBlockTableRecord, f3dPoint(paperX, 0), f3dPoint(paperX, -hight));
-			CreateAcadLine(pBlockTableRecord, f3dPoint(paperX + paperLen, 0), f3dPoint(paperX + paperLen, -hight));
-			pBlockTableRecord->close();
-			f3dPoint topLeft;
-			for (int i = 0; i < rectLayout.drawRectArr.GetSize(); i++)
-			{
-				CDrawingRect drawingRect = rectLayout.drawRectArr[i];
-				CPlateProcessInfo *pPlate = (CPlateProcessInfo*)drawingRect.m_pDrawing;
-				if (!drawingRect.m_bLayout)
-					continue;
-				topLeft = drawingRect.topLeft;
-				topLeft.x += paperX;
-				GEPOINT center(topLeft.x + drawingRect.width*0.5, topLeft.y - drawingRect.height*0.5);
-				pPlate->DrawPlate(&topLeft, FALSE, TRUE, &center);
-				//
-				hashDrawingRectByLabel.DeleteNode(pPlate->GetPartNo());
+			else
+			{	//布局成功，但是其中可能某些板没有布局成功
+				AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+				CreateAcadLine(pBlockTableRecord, f3dPoint(paperX, paperY), f3dPoint(paperX + paperLen, paperY));
+				CreateAcadLine(pBlockTableRecord, f3dPoint(paperX, paperY - hight), f3dPoint(paperX + paperLen, paperY - hight));
+				CreateAcadLine(pBlockTableRecord, f3dPoint(paperX, paperY), f3dPoint(paperX, paperY - hight));
+				CreateAcadLine(pBlockTableRecord, f3dPoint(paperX + paperLen, paperY), f3dPoint(paperX + paperLen, paperY - hight));
+				pBlockTableRecord->close();
+				f3dPoint topLeft;
+				for (int i = 0; i < rectLayout.drawRectArr.GetSize(); i++)
+				{
+					CDrawingRect drawingRect = rectLayout.drawRectArr[i];
+					CPlateProcessInfo *pPlate = (CPlateProcessInfo*)drawingRect.m_pDrawing;
+					if (!drawingRect.m_bLayout)
+						continue;
+					topLeft = drawingRect.topLeft;
+					topLeft.x += paperX;
+					topLeft.y += paperY;
+					GEPOINT center(topLeft.x + drawingRect.width*0.5, topLeft.y - drawingRect.height*0.5);
+					pPlate->DrawPlate(&topLeft, FALSE, TRUE, &center);
+					//
+					hashDrawingRectByLabel.DeleteNode(pPlate->GetPartNo());
+				}
+				paperX += (paperLen + 50);
 			}
-			paperX += (paperLen + 50);
 		}
+		paperY -= (hight + 50);
 	}
 #ifdef __DRAG_ENT_
 	SCOPE_STRU scope;
@@ -3225,9 +3238,14 @@ void CPNCModel::DrawPlatesToCompare()
 	f3dPoint datum_pos;
 	double fSegSpace = 0;
 	CSortedModel sortedModel(this);
-	sortedModel.DividPlatesBySeg();		//根据段号对钢板进行分组
-	for (CSortedModel::SAMESEG_PARTGROUP* pGroup = sortedModel.hashPlateGroupBySeg.GetFirst(); pGroup;
-		pGroup = sortedModel.hashPlateGroupBySeg.GetNext())
+	if (g_pncSysPara.m_ciGroupType == 1)
+		sortedModel.DividPlatesBySeg();			//根据段号对钢板进行分组
+	else if (g_pncSysPara.m_ciGroupType == 2)
+		sortedModel.DividPlatesByThickMat();	//根据板厚材质对钢板进行分组
+	else 
+		sortedModel.DividPlatesByPartNo();		//根据件号对钢板进行分组
+	for (CSortedModel::PARTGROUP* pGroup = sortedModel.hashPlateGroup.GetFirst(); pGroup;
+		pGroup = sortedModel.hashPlateGroup.GetNext())
 	{
 		if (g_pncSysPara.m_ciArrangeType == 0)
 		{	//以行为主
@@ -3457,7 +3475,7 @@ CPlateProcessInfo *CSortedModel::EnumNextPlate()
 }
 void CSortedModel::DividPlatesBySeg()
 {
-	hashPlateGroupBySeg.Empty();
+	hashPlateGroup.Empty();
 	SEGI segI, temSegI;
 	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
 	{
@@ -3469,13 +3487,40 @@ void CSortedModel::DividPlatesBySeg()
 			if (ParsePartNo(sSegStr, &temSegI, NULL, "SHPGT"))
 				segI = temSegI;
 		}
-		SAMESEG_PARTGROUP* pPlateGroup = hashPlateGroupBySeg.GetValue(segI.iSeg);
+		PARTGROUP* pPlateGroup = hashPlateGroup.GetValue(segI.ToString());
 		if (pPlateGroup == NULL)
-			pPlateGroup = hashPlateGroupBySeg.Add(segI.iSeg);
-		pPlateGroup->sameSegPlateList.append(pPlate);
+		{
+			pPlateGroup = hashPlateGroup.Add(segI.ToString());
+			pPlateGroup->sKey.Copy(segI.ToString());
+		}
+		pPlateGroup->sameGroupPlateList.append(pPlate);
 	}
 }
-double CSortedModel::SAMESEG_PARTGROUP::GetMaxHight()
+
+void CSortedModel::DividPlatesByThickMat()
+{
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+	{
+		int thick = ftoi(pPlate->xPlate.GetThick());
+		CXhChar50 sKey("%C_%d", pPlate->xPlate.cMaterial, thick);
+		PARTGROUP* pPlateGroup = hashPlateGroup.GetValue(sKey);
+		if (pPlateGroup == NULL)
+		{
+			pPlateGroup = hashPlateGroup.Add(sKey);
+			pPlateGroup->sKey.Copy(sKey);
+		}
+		pPlateGroup->sameGroupPlateList.append(pPlate);
+	}
+}
+
+void CSortedModel::DividPlatesByPartNo()
+{
+	PARTGROUP* pPlateGroup = hashPlateGroup.Add("ALL");
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+		pPlateGroup->sameGroupPlateList.append(pPlate);
+}
+
+double CSortedModel::PARTGROUP::GetMaxHight()
 {
 	CMaxDouble maxHeight;
 	for (CPlateProcessInfo* pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
@@ -3485,7 +3530,7 @@ double CSortedModel::SAMESEG_PARTGROUP::GetMaxHight()
 	}
 	return maxHeight.number;
 }
-double CSortedModel::SAMESEG_PARTGROUP::GetMaxWidth()
+double CSortedModel::PARTGROUP::GetMaxWidth()
 {
 	CMaxDouble maxHeight;
 	for (CPlateProcessInfo* pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
@@ -3495,19 +3540,20 @@ double CSortedModel::SAMESEG_PARTGROUP::GetMaxWidth()
 	}
 	return maxHeight.number;
 }
-CPlateProcessInfo* CSortedModel::SAMESEG_PARTGROUP::EnumFirstPlate()
+CPlateProcessInfo* CSortedModel::PARTGROUP::EnumFirstPlate()
 {
-	CPlateProcessInfo** ppPlate = sameSegPlateList.GetFirst();
+	CPlateProcessInfo** ppPlate = sameGroupPlateList.GetFirst();
 	if (ppPlate)
 		return *ppPlate;
 	else
 		return NULL;
 }
-CPlateProcessInfo* CSortedModel::SAMESEG_PARTGROUP::EnumNextPlate()
+CPlateProcessInfo* CSortedModel::PARTGROUP::EnumNextPlate()
 {
-	CPlateProcessInfo** ppPlate = sameSegPlateList.GetNext();
+	CPlateProcessInfo** ppPlate = sameGroupPlateList.GetNext();
 	if (ppPlate)
 		return *ppPlate;
 	else
 		return NULL;
 }
+

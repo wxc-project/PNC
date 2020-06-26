@@ -64,7 +64,8 @@ void CPNCSysPara::Init()
 	m_nMapWidth = 1500;
 	m_nMapLength = 0;
 	m_nMinDistance = 0;
-	m_bMKPos = 0;
+	m_ciMKPos = 0;
+	m_fMKHoleD = 10;
 	m_nMkRectWidth = 30;
 	m_nMkRectLen = 60;
 	//图纸比例设置
@@ -150,7 +151,8 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_fMaxLenErr", PROPLIST_ITEM(id++, "长度最大误差值", "数据校审时，长度比较的最大误差值"));
 	AddPropItem("m_bIncDeformed",PROPLIST_ITEM(id++,"已考虑火曲变形","待提取的钢板图形已考虑火曲变形量","是|否"));
 	AddPropItem("m_iPPiMode",PROPLIST_ITEM(id++,"文件生成模型","PPI文件生成模式","0.一板一号|1.一板多号"));
-	AddPropItem("m_bMKPos",PROPLIST_ITEM(id++,"提取钢印位置","提取钢印位置","是|否"));
+	AddPropItem("m_ciMKPos",PROPLIST_ITEM(id++,"钢印区位置","提取钢印位置","0.件号文字标注|1.钢印字盒块|2.钢印号位孔"));
+	AddPropItem("m_fMKHoleD", PROPLIST_ITEM(id++, "号位孔直径"));
 	AddPropItem("m_nMaxHoleD", PROPLIST_ITEM(id++, "最大螺栓孔径", "最大螺栓孔径"));
 	AddPropItem("AxisXCalType",PROPLIST_ITEM(id++,"X轴计算方式","加工坐标系X轴的计算方式","0.最长边优先|1.螺栓平行边优先|2.焊接边优先"));
 	AddPropItem("m_bUseMaxEdge", PROPLIST_ITEM(id++, "处理特殊边长", "用于处理料片提取", "是|否"));
@@ -182,7 +184,9 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("CDrawDamBoard::m_bDrawAllBamBoard", PROPLIST_ITEM(id++, "档板显示模式", "档板显示模式", "0.仅显示选中钢板档板|1.显示所有档板"));
 	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
 	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
-	AddPropItem("m_ciArrangeType", PROPLIST_ITEM(id++, "排布方案", "","0.以行为主|1.以列为主"));
+	AddPropItem("m_ciArrangeType", PROPLIST_ITEM(id++, "布局方案", "","0.以行为主|1.以列为主"));
+	AddPropItem("m_ciGroupType", PROPLIST_ITEM(id++, "分组方案", "", "0.不分组|1.按段号|2.材质&厚度"));
+	AddPropItem("crMode", PROPLIST_ITEM(id++, "颜色方案"));
 	AddPropItem("crMode.crEdge", PROPLIST_ITEM(id++, "轮廓边颜色"));
 	AddPropItem("crMode.crLS12", PROPLIST_ITEM(id++, "M12孔径颜色"));
 	AddPropItem("crMode.crLS16", PROPLIST_ITEM(id++, "M16孔径颜色"));
@@ -233,13 +237,17 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else if (g_pncSysPara.m_iAxisXCalType == 2)
 			sText.Copy("2.焊接边优先");
 	}
-	else if (GetPropID("m_bMKPos") == id)
+	else if (GetPropID("m_ciMKPos") == id)
 	{
-		if (g_pncSysPara.m_bMKPos)
-			sText.Copy("是");
+		if (g_pncSysPara.m_ciMKPos == 1)
+			sText.Copy("1.钢印字盒块");
+		else if(g_pncSysPara.m_ciMKPos == 2)
+			sText.Copy("2.钢印号位孔");
 		else
-			sText.Copy("否");
+			sText.Copy("0.件号文字标注");
 	}
+	else if (GetPropID("m_fMKHoleD") == id)
+		sText.Printf("%g", m_fMKHoleD);
 	else if (GetPropID("m_nMaxHoleD") == id)
 		sText.Printf("%d", g_pncSysPara.m_nMaxHoleD);
 	else if(GetPropID("m_fMapScale")==id)
@@ -261,6 +269,15 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 			sText.Copy("0.以行为主");
 		else
 			sText.Copy("1.以列为主");
+	}
+	else if (GetPropID("m_ciGroupType") == id)
+	{
+		if (g_pncSysPara.m_ciGroupType == 1)
+			sText.Copy("1.按段号");
+		else if (g_pncSysPara.m_ciGroupType == 2)
+			sText.Copy("2.材质&厚度");
+		else
+			sText.Copy("0.不分组");
 	}
 	else if(GetPropID("m_nMapLength")==id)
 		sText.Printf("%d",g_pncSysPara.m_nMapLength);
@@ -403,124 +420,144 @@ BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/
 
 BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 {
-	if(m_bMKPos==FALSE)	//不需要提取钢印号
-		return FALSE;
-	if(pEnt->isKindOf(AcDbText::desc()))
-	{	//获取钢印区
-		AcDbText* pText=(AcDbText*)pEnt;
+	if(m_ciMKPos==0)
+		return FALSE;	//不需要提取钢印号
+	if (m_ciMKPos == 1)
+	{	//钢印矩形块
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{	//获取钢印区
+			AcDbText* pText = (AcDbText*)pEnt;
 #ifdef _ARX_2007
-		CXhChar50 sText(_bstr_t(pText->textString()));
+			CXhChar50 sText(_bstr_t(pText->textString()));
 #else
-		CXhChar50 sText(pText->textString());
+			CXhChar50 sText(pText->textString());
 #endif
-		if(!sText.Equal("钢印区"))
-			return FALSE;
-		double len=DrawTextLength(sText,pText->height(),pText->textStyle());
-		f3dPoint dim_vec(cos(pText->rotation()),sin(pText->rotation()));
-		f3dPoint origin(pText->position().x,pText->position().y,pText->position().z);
-		origin+=dim_vec*len*0.5;
-		f2dRect rect;
-		rect.topLeft.Set(origin.x-10,origin.y+10);
-		rect.bottomRight.Set(origin.x+10,origin.y-10);
-		ZoomAcadView(rect,200);		//对钢印区进行适当缩放
-		ads_name seqent;
-		AcDbObjectId initLastObjId,plineId;
-		acdbEntLast(seqent);
-		acdbGetObjectId(initLastObjId,seqent);
-		ads_point base_pnt;
-		base_pnt[X]=origin.x;
-		base_pnt[Y]=origin.y;
-		base_pnt[Z]=origin.z;
+			if (!sText.Equal("钢印区"))
+				return FALSE;
+			double len = DrawTextLength(sText, pText->height(), pText->textStyle());
+			f3dPoint dim_vec(cos(pText->rotation()), sin(pText->rotation()));
+			f3dPoint origin(pText->position().x, pText->position().y, pText->position().z);
+			origin += dim_vec * len*0.5;
+			f2dRect rect;
+			rect.topLeft.Set(origin.x - 10, origin.y + 10);
+			rect.bottomRight.Set(origin.x + 10, origin.y - 10);
+			ZoomAcadView(rect, 200);		//对钢印区进行适当缩放
+			ads_name seqent;
+			AcDbObjectId initLastObjId, plineId;
+			acdbEntLast(seqent);
+			acdbGetObjectId(initLastObjId, seqent);
+			ads_point base_pnt;
+			base_pnt[X] = origin.x;
+			base_pnt[Y] = origin.y;
+			base_pnt[Z] = origin.z;
 #ifdef _ARX_2007
-		int resCode=acedCommand(RTSTR,L"-boundary",RTSTR,L"a",RTSTR,L"i",RTSTR,L"n",RTSTR,L"",RTSTR,L"",RTPOINT,base_pnt,RTSTR,L"",RTNONE);
+			int resCode = acedCommand(RTSTR, L"-boundary", RTSTR, L"a", RTSTR, L"i", RTSTR, L"n", RTSTR, L"", RTSTR, L"", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
 #else
-		int resCode=acedCommand(RTSTR,"-boundary",RTSTR,"a",RTSTR,"i",RTSTR,"n",RTSTR,"",RTSTR,"",RTPOINT,base_pnt,RTSTR,"",RTNONE);
+			int resCode = acedCommand(RTSTR, "-boundary", RTSTR, "a", RTSTR, "i", RTSTR, "n", RTSTR, "", RTSTR, "", RTPOINT, base_pnt, RTSTR, "", RTNONE);
 #endif		
-		if(resCode!=RTNORM)
-			return FALSE;
-		acdbEntLast(seqent);
-		acdbGetObjectId(plineId,seqent);
-		if(initLastObjId==plineId)
-			return FALSE;
-		AcDbEntity *pEnt=NULL;
-		acdbOpenAcDbEntity(pEnt,plineId,AcDb::kForWrite);
-		AcDbPolyline *pPline=(AcDbPolyline*)pEnt;
-		if(pPline==NULL||pPline->numVerts()!=nNum)
-		{
-			if(pPline)
+			if (resCode != RTNORM)
+				return FALSE;
+			acdbEntLast(seqent);
+			acdbGetObjectId(plineId, seqent);
+			if (initLastObjId == plineId)
+				return FALSE;
+			AcDbEntity *pEnt = NULL;
+			acdbOpenAcDbEntity(pEnt, plineId, AcDb::kForWrite);
+			AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+			if (pPline == NULL || pPline->numVerts() != nNum)
 			{
-				pPline->erase(Adesk::kTrue);
-				pPline->close();
-			}
-			return FALSE;
-		}
-		AcGePoint3d location;
-		for(int iVertIndex=0;iVertIndex<nNum;iVertIndex++)
-		{
-			pPline->getPointAt(iVertIndex,location);
-			ptArr[iVertIndex].Set(location.x,location.y,location.z);
-		}
-		pPline->erase(Adesk::kTrue);	//删除polyline对象
-		pPline->close();
-	}
-	else if(pEnt->isKindOf(AcDbBlockReference::desc()))
-	{	//钢印区图块
-		AcDbBlockReference* pReference=(AcDbBlockReference*)pEnt;
-		AcDbObjectId blockId=pReference->blockTableRecord();
-		AcDbBlockTableRecord *pTempBlockTableRecord=NULL;
-		acdbOpenObject(pTempBlockTableRecord,blockId,AcDb::kForRead);
-		if(pTempBlockTableRecord==NULL)
-			return FALSE;
-		pTempBlockTableRecord->close();
-		CXhChar50 sName;
-#ifdef _ARX_2007
-		ACHAR* sValue=new ACHAR[50];
-		pTempBlockTableRecord->getName(sValue);
-		sName.Copy((char*)_bstr_t(sValue));
-		delete[] sValue;
-#else
-		char *sValue=new char[50];
-		pTempBlockTableRecord->getName(sValue);
-		sName.Copy(sValue);
-		delete[] sValue;
-#endif
-		if(!sName.Equal("MK"))
-			return FALSE;
-		double rot_angle=pReference->rotation();
-		f3dPoint orig(pReference->position().x,pReference->position().y,0);
-		AcGeScale3d scaleXYZ = pReference->scaleFactors();
-		AcDbBlockTableRecordIterator *pIterator=NULL;
-		pTempBlockTableRecord->newIterator( pIterator);
-		for(;!pIterator->done();pIterator->step())
-		{
-			pIterator->getEntity(pEnt,AcDb::kForRead);
-			CAcDbObjLife entObj(pEnt);
-			if(pEnt->isKindOf(AcDbPolyline::desc()))
-			{
-				AcGePoint3d location;
-				AcDbPolyline* pPolyLine=(AcDbPolyline*)pEnt;
-				for(int iVertIndex=0;iVertIndex<nNum;iVertIndex++)
+				if (pPline)
 				{
-					pPolyLine->getPointAt(iVertIndex,location);
-					ptArr[iVertIndex].Set(location.x,location.y,location.z);
-					ptArr[iVertIndex].x *= scaleXYZ.sx;
-					ptArr[iVertIndex].y *= scaleXYZ.sy;
-					ptArr[iVertIndex].z *= scaleXYZ.sz;
+					pPline->erase(Adesk::kTrue);
+					pPline->close();
 				}
-				break;
+				return FALSE;
+			}
+			AcGePoint3d location;
+			for (int iVertIndex = 0; iVertIndex < nNum; iVertIndex++)
+			{
+				pPline->getPointAt(iVertIndex, location);
+				ptArr[iVertIndex].Set(location.x, location.y, location.z);
+			}
+			pPline->erase(Adesk::kTrue);	//删除polyline对象
+			pPline->close();
+		}
+		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
+		{	//钢印区图块
+			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+			AcDbObjectId blockId = pReference->blockTableRecord();
+			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+			if (pTempBlockTableRecord == NULL)
+				return FALSE;
+			pTempBlockTableRecord->close();
+			CXhChar50 sName;
+#ifdef _ARX_2007
+			ACHAR* sValue = new ACHAR[50];
+			pTempBlockTableRecord->getName(sValue);
+			sName.Copy((char*)_bstr_t(sValue));
+			delete[] sValue;
+#else
+			char *sValue = new char[50];
+			pTempBlockTableRecord->getName(sValue);
+			sName.Copy(sValue);
+			delete[] sValue;
+#endif
+			if (!sName.Equal("MK"))
+				return FALSE;
+			double rot_angle = pReference->rotation();
+			f3dPoint orig(pReference->position().x, pReference->position().y, 0);
+			AcGeScale3d scaleXYZ = pReference->scaleFactors();
+			AcDbBlockTableRecordIterator *pIterator = NULL;
+			pTempBlockTableRecord->newIterator(pIterator);
+			for (; !pIterator->done(); pIterator->step())
+			{
+				pIterator->getEntity(pEnt, AcDb::kForRead);
+				CAcDbObjLife entObj(pEnt);
+				if (pEnt->isKindOf(AcDbPolyline::desc()))
+				{
+					AcGePoint3d location;
+					AcDbPolyline* pPolyLine = (AcDbPolyline*)pEnt;
+					for (int iVertIndex = 0; iVertIndex < nNum; iVertIndex++)
+					{
+						pPolyLine->getPointAt(iVertIndex, location);
+						ptArr[iVertIndex].Set(location.x, location.y, location.z);
+						ptArr[iVertIndex].x *= scaleXYZ.sx;
+						ptArr[iVertIndex].y *= scaleXYZ.sy;
+						ptArr[iVertIndex].z *= scaleXYZ.sz;
+					}
+					break;
+				}
+			}
+			pTempBlockTableRecord->close();
+			//更新钢印区实际坐标
+			for (int i = 0; i < nNum; i++)
+			{
+				if (fabs(rot_angle) > 0)	//图块有旋转角度
+					rotate_point_around_axis(ptArr[i], rot_angle, f3dPoint(), 100 * f3dPoint(0, 0, 1));
+				ptArr[i] += orig;
 			}
 		}
-		pTempBlockTableRecord->close();
-		//更新钢印区实际坐标
-		for(int i=0;i<nNum;i++)
-		{
-			if(fabs(rot_angle)>0)	//图块有旋转角度
-				rotate_point_around_axis(ptArr[i],rot_angle,f3dPoint(),100*f3dPoint(0,0,1));
-			ptArr[i]+=orig;
-		}
+		else
+			return FALSE;
 	}
-	else
-		return FALSE;
+	else if (m_ciMKPos == 2)
+	{	//号位孔
+		if (pEnt->isKindOf(AcDbCircle::desc()))
+		{
+			AcDbCircle* pCircle = (AcDbCircle*)pEnt;
+			double fRidius = pCircle->radius();
+			if (fRidius * 2 != g_pncSysPara.m_fMKHoleD)
+				return FALSE;
+			AcGePoint3d center = pCircle->center();
+			ptArr[0].Set(center.x + fRidius, center.y, 0);
+			ptArr[1].Set(center.x - fRidius, center.y, 0);
+			ptArr[2].Set(center.x, center.y + fRidius, 0);
+			ptArr[3].Set(center.x, center.y - fRidius, 0);
+		}
+		else
+			return FALSE;
+	}
 	return TRUE;
 }
 BOOL CPNCSysPara::IsJgCardBlockName(const char* sBlockName)
@@ -651,7 +688,12 @@ void PNCSysSetImportDefault()
 			g_pncSysPara.m_sPnNumKey.Replace(" ", "");
 		}
 		else if (_stricmp(key_word, "MKPos") == 0)
-			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_bMKPos);
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_ciMKPos);
+		else if (_stricmp(key_word, "MKHole") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.m_fMKHoleD = atof(skey);
+		}
 		else if (_stricmp(key_word, "MapScale") == 0)
 			sscanf(line_txt, "%s%f", key_word, &g_pncSysPara.m_fMapScale);
 		else if (_stricmp(key_word, "bIncFilterLayer") == 0)
@@ -763,6 +805,16 @@ void PNCSysSetImportDefault()
 			sscanf(line_txt, "%s%d", key_word, &nTemp);
 			g_pncSysPara.m_ciLayoutMode = nTemp;
 		}
+		else if (_stricmp(key_word, "ArrangeType") == 0)
+		{
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciArrangeType = nTemp;
+		}
+		else if (_stricmp(key_word, "GroupType") == 0)
+		{
+			sscanf(line_txt, "%s%d", key_word, &nTemp);
+			g_pncSysPara.m_ciGroupType = nTemp;
+		}
 		else if (_stricmp(key_word, "MapLength") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMapLength);
 		else if (_stricmp(key_word, "MapWidth") == 0)
@@ -847,6 +899,11 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "MapWidth=%d ;图纸宽度\n", g_pncSysPara.m_nMapWidth);
 	fprintf(fp, "MapLength=%d ;图纸长度\n", g_pncSysPara.m_nMapLength);
 	fprintf(fp, "MinDistance=%d ;最小间距\n", g_pncSysPara.m_nMinDistance);
+	fprintf(fp, "ArrangeType=%d ;对比布局方案\n", (char*)g_pncSysPara.m_ciArrangeType);
+	fprintf(fp, "GroupType=%d ;绘制分组方式\n", (char*)g_pncSysPara.m_ciGroupType);
+	fprintf(fp, "MKPos=%d ;提取钢印位置\n", (char*)g_pncSysPara.m_ciMKPos);
+	fprintf(fp, "MKHole=%g ;号位孔直径\n", g_pncSysPara.m_fMKHoleD);
+	fprintf(fp, "AxisXCalType=%d ;X轴计算方式\n", (char*)g_pncSysPara.m_iAxisXCalType);
 	fprintf(fp, "m_nMkRectWidth=%d ;字盒宽度\n", g_pncSysPara.m_nMkRectWidth);
 	fprintf(fp, "m_nMkRectLen=%d ;字盒长度\n", g_pncSysPara.m_nMkRectLen);
 	fprintf(fp, "m_nMaxEdgeLen=%d ;最长边长\n", g_pncSysPara.m_nMaxEdgeLen);
@@ -869,8 +926,6 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "ThickKey=%s ;厚度标识符\n", (char*)g_pncSysPara.m_sThickKey);
 	fprintf(fp, "MatKey=%s ;材质标识符\n", (char*)g_pncSysPara.m_sMatKey);
 	fprintf(fp, "PnNumKey=%s ;件数标识符\n", (char*)g_pncSysPara.m_sPnNumKey);
-	fprintf(fp, "MKPos=%d ;提取钢印位置\n", (char*)g_pncSysPara.m_bMKPos);
-	fprintf(fp, "AxisXCalType=%d ;X轴计算方式\n", (char*)g_pncSysPara.m_iAxisXCalType);
 	fprintf(fp, "螺栓识别设置\n");
 	for (BOLT_BLOCK *pBoltBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBoltBlock; pBoltBlock = g_pncSysPara.hashBoltDList.GetNext())
 	{

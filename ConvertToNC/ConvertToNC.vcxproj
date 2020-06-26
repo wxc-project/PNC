@@ -2987,6 +2987,7 @@
     <ClCompile Include="PolygonObject.cpp" />
     <ClCompile Include="PrintSet.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
+    <ClCompile Include="SelColorDlg.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'">Create</PrecompiledHeader>
@@ -3234,6 +3235,7 @@
     <ClInclude Include="PolygonObject.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RevisionDlg.h" />
+    <ClInclude Include="SelColorDlg.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="SteelSealReactor.h" />
     <ClInclude Include="TestCode.h" />

@@ -37,6 +37,7 @@
 #define IDC_BTN_ANTICLOCKWISE_ROTATION  126
 #define IDC_BTN_MOVE                    127
 #define IDC_BTN_MOVE_MK_RECT            128
+#define IDD_SEL_COLOR_DLG               128
 #define IDC_CHECK1                      129
 #define IDC_CHK_EDIT_MK                 129
 #define IDC_CHK_GRADE                   131
@@ -55,6 +56,12 @@
 #define IDC_E_FILE_NAME                 142
 #define IDC_E_NUM                       143
 #define IDC_BTN_EXTRACT                 144
+#define IDC_CMB_EDGE_CLR                145
+#define IDC_CMB_M12_CLR                 146
+#define IDC_CMB_M16_CLR                 147
+#define IDC_CMB_M20_CLR                 148
+#define IDC_CMB_M24_CLR                 149
+#define IDC_CMB_OTHER_CLR               150
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
 #define IDC_JG_LIST                     6000
@@ -116,9 +123,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        128
+#define _APS_NEXT_RESOURCE_VALUE        130
 #define _APS_NEXT_COMMAND_VALUE         32793
-#define _APS_NEXT_CONTROL_VALUE         145
+#define _APS_NEXT_CONTROL_VALUE         146
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

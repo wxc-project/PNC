@@ -348,6 +348,9 @@
     <ClCompile Include="CadObjLife.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
+    <ClCompile Include="SelColorDlg.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -625,6 +628,9 @@
     </ClInclude>
     <ClInclude Include="Version.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="SelColorDlg.h">
+      <Filter>PNC</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

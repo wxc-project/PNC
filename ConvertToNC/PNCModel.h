@@ -251,23 +251,25 @@ class CSortedModel
 {
 	ARRAY_LIST<CPlateProcessInfo*> platePtrList;
 public:
-	struct SAMESEG_PARTGROUP
+	struct PARTGROUP
 	{
-		ATOM_LIST<CPlateProcessInfo*> sameSegPlateList;
-		long iSeg;
+		ATOM_LIST<CPlateProcessInfo*> sameGroupPlateList;
+		CXhChar50 sKey;
 		//
 		double GetMaxHight();
 		double GetMaxWidth();
 		CPlateProcessInfo *EnumFirstPlate();
 		CPlateProcessInfo *EnumNextPlate();
 	};
-	CHashList<SAMESEG_PARTGROUP> hashPlateGroupBySeg;
+	CHashStrList<PARTGROUP> hashPlateGroup;
 public:
 	CSortedModel(CPNCModel *pModel);
 	//
 	CPlateProcessInfo *EnumFirstPlate();
 	CPlateProcessInfo *EnumNextPlate();
 	void DividPlatesBySeg();
+	void DividPlatesByThickMat();
+	void DividPlatesByPartNo();
 };
 //////////////////////////////////////////////////////////////////////////
 //
