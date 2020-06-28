@@ -2,14 +2,6 @@
 // Microsoft Visual C++ 生成的包含文件。
 // 供 PNC.rc 使用
 //
-#define FILE_VER_MAIN2                  0
-#define FILE_VER_SUB                    0
-#define PRODUCT_VER_SUB                 0
-#define RELEASE_VER                     1
-#define FILE_VER_MAIN                   1
-#define FILE_VER_SUB2                   1
-#define PRODUCT_VER_MAIN                1
-#define PRODUCT_VER_MAIN2               2
 #define IDOK2                           3
 #define ID_BTN_PPE                      3
 #define IDD_PNC_DIALOG                  102
