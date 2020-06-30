@@ -848,7 +848,8 @@ void EnvGeneralSet()
 void RevisionPartProcess()
 {
 	CLogErrorLife logErrLife;
-	if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE))
+	if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE)||
+		g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 	{	//º”‘ÿΩ«∏÷π§“’ø®
 		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "";
 		GetAppPath(APP_PATH);

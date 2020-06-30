@@ -620,13 +620,7 @@ void PNCSysSetImportAttach()
 		sprintf(line_txt, "%s", sLine);
 		char *skey = strtok((char*)sText, "=,;");
 		strncpy(key_word, skey, 100);
-		if (_stricmp(key_word, "JgCardBlockName") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			sprintf(g_pncSysPara.m_sJgCardBlockName, "%s", skey);
-			g_pncSysPara.m_sJgCardBlockName.Replace(" ", "");
-		}
-		else if (_stricmp(key_word, "PartLabelTitle") == 0)
+		if (_stricmp(key_word, "PartLabelTitle") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			sprintf(g_pncSysPara.m_sPartLabelTitle, "%s", skey);

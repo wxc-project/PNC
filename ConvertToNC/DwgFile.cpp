@@ -169,6 +169,13 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			m_ciType = TYPE_JIG;
 		else if (strstr(sSpec, "G"))
 			m_ciType = TYPE_GGS;
+		else
+		{	//默认按角钢处理(40*3)
+			m_ciType = TYPE_JG;
+			sprintf(m_xAngle.sSpec, "L%s", (char*)sSpec);
+			m_xAngle.sSpec.Replace(" ", "");
+			sSpec.Copy(m_xAngle.sSpec);
+		}
 		//
 		int nWidth=0,nThick=0;
 		//从规格中提取材质 wht 19-08-05
