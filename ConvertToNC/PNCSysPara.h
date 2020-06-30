@@ -55,13 +55,14 @@ public:
 	int m_nMkRectWidth;		//钢印字盒宽度
 	int m_nMaxHoleD;		//最大螺栓直径
 
-	static const BYTE LAYOUT_NONE	 = 0;	//
-	static const BYTE LAYOUT_COMPARE = 1;
-	static const BYTE LAYOUT_PRINT	 = 2;
-	static const BYTE LAYOUT_SEG	 = 3;
-	BYTE m_ciLayoutMode;	//显示模式 0.克隆模式|1.对比模式|2.排版模式|3.预审模式
+	static const BYTE LAYOUT_CLONE		= 0;	//克隆模式
+	static const BYTE LAYOUT_COMPARE	= 1;	//对比模式
+	static const BYTE LAYOUT_PRINT		= 2;	//排版模式
+	static const BYTE LAYOUT_PROCESS	= 3;	//预审模式
+	static const BYTE LAYOUT_FILTRATE	= 4;	//筛选模式
+	BYTE m_ciLayoutMode;	//显示模式
 	BYTE m_ciArrangeType;	//0.以行为主|1.以列为主
-	BYTE m_ciGroupType;		//0.不分组|1.段号|2.材质+厚度
+	BYTE m_ciGroupType;		//0.不分组|1.段号|2.材质&厚度|3.材质|4.厚度
 	int m_nMapLength;		//图纸长度 0表示不设置纸张长度
 	int m_nMapWidth;		//图纸宽度
 	int m_nMinDistance;		//最小间距

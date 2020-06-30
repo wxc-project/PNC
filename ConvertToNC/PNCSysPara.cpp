@@ -176,7 +176,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("standardM24", PROPLIST_ITEM(id++, "M24标准孔径"));
 	//显示模式
 	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
-	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","1.钢板对比|2.自动排版|3.下料预审"));
+	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","钢板对比|自动排版|下料预审|图元筛选"));
 	AddPropItem("m_nMapWidth", PROPLIST_ITEM(id++, "图纸宽度", "图纸宽度"));
 	AddPropItem("m_nMapLength", PROPLIST_ITEM(id++, "图纸长度", "图纸长度"));
 	AddPropItem("m_nMinDistance", PROPLIST_ITEM(id++, "最小间距", "图形之间的最小间距"));
@@ -185,7 +185,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
 	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
 	AddPropItem("m_ciArrangeType", PROPLIST_ITEM(id++, "布局方案", "","0.以行为主|1.以列为主"));
-	AddPropItem("m_ciGroupType", PROPLIST_ITEM(id++, "分组方案", "", "0.不分组|1.按段号|2.材质&厚度"));
+	AddPropItem("m_ciGroupType", PROPLIST_ITEM(id++, "分组方案", "", "1.按段号|2.材质&厚度|3.材质|4.厚度"));
 	AddPropItem("crMode", PROPLIST_ITEM(id++, "颜色方案"));
 	AddPropItem("crMode.crEdge", PROPLIST_ITEM(id++, "轮廓边颜色"));
 	AddPropItem("crMode.crLS12", PROPLIST_ITEM(id++, "M12孔径颜色"));
@@ -255,13 +255,15 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	else if (GetPropID("m_ciLayoutMode") == id)
 	{
 		if (g_pncSysPara.m_ciLayoutMode == 1)
-			sText.Copy("1.钢板对比");
+			sText.Copy("钢板对比");
 		else if (g_pncSysPara.m_ciLayoutMode == 2)
-			sText.Copy("2.自动排版");
+			sText.Copy("自动排版");
 		else if (g_pncSysPara.m_ciLayoutMode == 3)
-			sText.Copy("3.下料预审");
+			sText.Copy("下料预审");
+		else if (g_pncSysPara.m_ciLayoutMode == 4)
+			sText.Copy("图元筛选");
 		else
-			sText.Copy("0.图元克隆");
+			sText.Copy("图元克隆");
 	}
 	else if (GetPropID("m_ciArrangeType") == id)
 	{
@@ -276,6 +278,10 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 			sText.Copy("1.按段号");
 		else if (g_pncSysPara.m_ciGroupType == 2)
 			sText.Copy("2.材质&厚度");
+		else if (g_pncSysPara.m_ciGroupType == 3)
+			sText.Copy("3.材质");
+		else if (g_pncSysPara.m_ciGroupType == 4)
+			sText.Copy("4.厚度");
 		else
 			sText.Copy("0.不分组");
 	}

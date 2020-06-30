@@ -99,7 +99,7 @@ BOOL CPartListDlg::OnInitDialog()
 }
 void CPartListDlg::RefreshCtrlState()
 {
-	int nShowCode = (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG) ? SW_SHOW : SW_HIDE;
+	int nShowCode = (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS) ? SW_SHOW : SW_HIDE;
 	//GetDlgItem(IDC_BTN_SEND_TO_PPE)->ShowWindow(nShowCode);
 	//GetDlgItem(IDC_BTN_EXPORT_DXF)->ShowWindow(nShowCode);
 	GetDlgItem(IDC_BTN_ANTICLOCKWISE_ROTATION)->ShowWindow(nShowCode);
@@ -161,7 +161,7 @@ BOOL CPartListDlg::UpdatePartList()
 			nValid++;
 		nSum++;
 	}
-	if(CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+	if(CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 	{
 		m_xDamBoardManager.DrawAllDamBoard(&model);
 		m_xDamBoardManager.DrawAllSteelSealRect(&model);
@@ -181,7 +181,7 @@ void CPartListDlg::SelectPart(int iCurSel, BOOL bClone /*= TRUE*/)
 	{	//定位到新绘制的图形范围
 		if (pPlate->IsValid())
 		{	//钢板提取成功，显示
-			if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+			if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 			{	//下料预审时处理挡板
 				SCOPE_STRU scope = pPlate->GetCADEntScope(TRUE);
 				f2dPoint leftBtm(scope.fMinX, scope.fMinY);
@@ -273,7 +273,7 @@ void CPartListDlg::RelayoutWnd()
 	GetClientRect(&rectWnd);
 	GetDlgItem(IDC_BTN_ANTICLOCKWISE_ROTATION)->GetWindowRect(&rectPic);
 	ScreenToClient(&rectPic);
-	int nPicRectHight = (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG) ? rectPic.Height()+1 : 0;
+	int nPicRectHight = (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS) ? rectPic.Height()+1 : 0;
 	//
 	GetDlgItem(IDC_E_NOTE)->GetWindowRect(&rectBtm);
 	ScreenToClient(&rectBtm);

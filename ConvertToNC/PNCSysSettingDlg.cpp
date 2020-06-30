@@ -112,7 +112,16 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_iAxisXCalType = valueStr[0] - '0';
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciLayoutMode"))
 	{
-		g_pncSysPara.m_ciLayoutMode = valueStr[0] - '0';
+		if (valueStr.CompareNoCase("钢板对比") == 0)
+			g_pncSysPara.m_ciLayoutMode = CPNCSysPara::LAYOUT_COMPARE;
+		else if (valueStr.CompareNoCase("自动排版") == 0)
+			g_pncSysPara.m_ciLayoutMode = CPNCSysPara::LAYOUT_PRINT;
+		else if (valueStr.CompareNoCase("下料预审") == 0)
+			g_pncSysPara.m_ciLayoutMode = CPNCSysPara::LAYOUT_PROCESS;
+		else if (valueStr.CompareNoCase("图元筛选") == 0)
+			g_pncSysPara.m_ciLayoutMode = CPNCSysPara::LAYOUT_FILTRATE;
+		else
+			g_pncSysPara.m_ciLayoutMode = CPNCSysPara::LAYOUT_CLONE;
 		pSysSettingDlg->UpdateLayoutProperty(pItem);
 #ifndef __UBOM_ONLY_
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
@@ -138,7 +147,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	{
 		CDrawDamBoard::BOARD_HEIGHT = atoi(valueStr);
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("CDrawDamBoard::m_bDrawAllBamBoard"))
@@ -146,7 +155,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		CDrawDamBoard::m_bDrawAllBamBoard = valueStr[0] - '0';
 		CLockDocumentLife lockDocument;
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
 #endif
@@ -1006,12 +1015,11 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 	m_propList.DeleteAllSonItems(pParentItem);
 	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PRINT)
 	{	//自动排版
-		oper.InsertCmbListPropItem(pParentItem, "m_ciGroupType", "", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMapWidth", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMapLength", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMinDistance", "", "", -1, TRUE);
 	}
-	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 	{	//下料预审
 		oper.InsertEditPropItem(pParentItem, "CDrawDamBoard::BOARD_HEIGHT", "", "", -1, TRUE);
 		oper.InsertCmbListPropItem(pParentItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
@@ -1021,7 +1029,7 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
 	{
 		oper.InsertCmbListPropItem(pParentItem, "m_ciArrangeType", "", "", "", -1, TRUE);
-		oper.InsertCmbListPropItem(pParentItem, "m_ciGroupType", "", "", "", -1, TRUE);
+		oper.InsertCmbListPropItem(pParentItem, "m_ciGroupType", "1.段号|2.材质&厚度", "", "", -1, TRUE);
 		CPropTreeItem* pItem = oper.InsertButtonPropItem(pParentItem, "crMode", "", "", -1, TRUE);
 		pItem->m_bHideChildren = TRUE;
 		oper.InsertCmbColorPropItem(pItem, "crMode.crEdge","","","",-1,TRUE);
@@ -1030,6 +1038,11 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 		oper.InsertCmbColorPropItem(pItem, "crMode.crLS20", "", "", "", -1, TRUE);
 		oper.InsertCmbColorPropItem(pItem, "crMode.crLS24", "", "", "", -1, TRUE);
 	}
+	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_FILTRATE)
+	{
+		CPropTreeItem* pItem = oper.InsertCmbListPropItem(pParentItem, "m_ciGroupType", "", "", "", -1, TRUE);
+		pItem->m_lpNodeInfo->m_strPropName = "筛选方案";
+	}	
 }
 void CPNCSysSettingDlg::OnBnClickedBtnDefault()
 {

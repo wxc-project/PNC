@@ -500,7 +500,7 @@ void DrawPlates()
 	BOOL bDrawByVert = TRUE;
 #ifdef _ARX_2007
 	ACHAR result[20] = { 0 };
-	idRet = acedGetString(NULL, L"\n输入绘制模式[对比(1)/排版(2)/下料(3)]<1>:", result);
+	idRet = acedGetString(NULL, L"\n输入绘制模式[对比(1)/排版(2)/下料(3)/筛选(4)]]<1>:", result);
 	if (idRet == RTNORM)
 		draw_type = (wcslen(result) > 0) ? atoi(_bstr_t(result)) : 1;
 	if(draw_type == 1)
@@ -513,9 +513,19 @@ void DrawPlates()
 				bDrawByVert = FALSE;
 		}
 	}
+	else if (draw_type == 4)
+	{
+		if (acedGetString(NULL, L"\n筛选方式[段号(1)/材质&厚度(2)/材质(3)/厚度(4)]<1>:", result) == RTNORM)
+		{
+			if (strlen(result) <= 0 || result[0] == '1')
+				group_type = 1;
+			else
+				group_type = result[0] - '0';
+		}
+	}
 #else
 	char result[20] = "";
-	idRet = acedGetString(NULL, _T("\n输入绘制模式[对比(1)/排版(2)/下料(3)]<1>:"), result);
+	idRet = acedGetString(NULL, _T("\n输入绘制模式[对比(1)/排版(2)/下料(3)/筛选(4)]<1>:"), result);
 	if (idRet == RTNORM)
 		draw_type = (strlen(result) > 0) ? atoi(result) : 1;
 	if (draw_type == 1)
@@ -528,12 +538,12 @@ void DrawPlates()
 				bDrawByVert = FALSE;
 		}
 	}
-	else if (draw_type == 2)
+	else if (draw_type == 4)
 	{
-		if (acedGetString(NULL, _T("\n分组方式[不分组(0)/段号(1)/厚度&材质(2)]<0>:"), result) == RTNORM)
+		if (acedGetString(NULL, _T("\n筛选方式[段号(1)/材质&厚度(2)/材质(3)/厚度(4)]<1>:"), result) == RTNORM)
 		{
-			if (strlen(result) <= 0 || result[0] == '0')
-				group_type = 0;
+			if (strlen(result) <= 0 || result[0] == '1')
+				group_type = 1;
 			else
 				group_type = result[0] - '0';
 		}
@@ -552,7 +562,7 @@ void DrawPlates()
 	g_pncSysPara.m_ciLayoutMode = draw_type;
 	if (draw_type == 1)
 		g_pncSysPara.m_ciArrangeType = bDrawByVert;
-	else if (draw_type == 2)
+	else if (draw_type == 4)
 		g_pncSysPara.m_ciGroupType = group_type;
 	model.DrawPlates();
 	//更新构件列表

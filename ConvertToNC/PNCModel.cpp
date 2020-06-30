@@ -3146,12 +3146,7 @@ void CPNCModel::DrawPlatesToLayout()
 	int hight = g_pncSysPara.m_nMapWidth;
 	int paperLen = (g_pncSysPara.m_nMapLength <= 0) ? 100000 : g_pncSysPara.m_nMapLength;
 	CSortedModel sortedModel(this);
-	if (g_pncSysPara.m_ciGroupType == 1)
-		sortedModel.DividPlatesBySeg();			//根据段号对钢板进行分组
-	else if (g_pncSysPara.m_ciGroupType == 2)
-		sortedModel.DividPlatesByThickMat();	//根据板厚材质对钢板进行分组
-	else
-		sortedModel.DividPlatesByPartNo();		//根据件号对钢板进行分组
+	sortedModel.DividPlatesByPartNo();
 	double paperX = 0, paperY = 0;
 	for (CSortedModel::PARTGROUP* pGroup = sortedModel.hashPlateGroup.GetFirst(); pGroup;pGroup = sortedModel.hashPlateGroup.GetNext())
 	{
@@ -3214,6 +3209,53 @@ void CPNCModel::DrawPlatesToLayout()
 			}
 		}
 		paperY -= (hight + 50);
+	}
+#ifdef __DRAG_ENT_
+	SCOPE_STRU scope;
+	DRAGSET.GetDragScope(scope);
+	ads_point base;
+	base[X] = scope.fMinX;
+	base[Y] = scope.fMaxY;
+	base[Z] = 0;
+	DragEntSet(base, "请点取构件图的插入点");
+#endif
+}
+void CPNCModel::DrawPlatesToFiltrate()
+{
+	CLockDocumentLife lockCurDocumentLife;
+	if (m_hashPlateInfo.GetNodeNum() <= 0)
+	{
+		logerr.Log("缺少钢板信息，请先正确提取钢板信息！");
+		return;
+	}
+	DRAGSET.ClearEntSet();
+	f3dPoint datum_pos;
+	double fSegSpace = 0;
+	CSortedModel sortedModel(this);
+	if (g_pncSysPara.m_ciGroupType == 1)
+		sortedModel.DividPlatesBySeg();			//根据段号对钢板进行分组
+	else if (g_pncSysPara.m_ciGroupType == 2)
+		sortedModel.DividPlatesByThickMat();	//根据板厚材质对钢板进行分组
+	else if (g_pncSysPara.m_ciGroupType == 3)
+		sortedModel.DividPlatesByMat();			//根据材质对钢板进行分组
+	else if (g_pncSysPara.m_ciGroupType == 4)
+		sortedModel.DividPlatesByThick();		//根据板厚对钢板进行分组
+	else
+		sortedModel.DividPlatesByPartNo();		//根据件号对钢板进行分组
+	for (CSortedModel::PARTGROUP* pGroup = sortedModel.hashPlateGroup.GetFirst(); pGroup;
+		pGroup = sortedModel.hashPlateGroup.GetNext())
+	{
+		datum_pos.x = 0;
+		datum_pos.y += fSegSpace;
+		double fRectH = pGroup->GetMaxHight() + 20;
+		fSegSpace = fRectH + 50;
+		for (CPlateProcessInfo *pPlate = pGroup->EnumFirstPlate(); pPlate; pPlate = pGroup->EnumNextPlate())
+		{
+			SCOPE_STRU scope = pPlate->GetCADEntScope();
+			pPlate->InitLayoutVertex(scope, 0);
+			pPlate->DrawPlate(&f3dPoint(datum_pos.x, datum_pos.y));
+			datum_pos.x += scope.wide() + 50;
+		}
 	}
 #ifdef __DRAG_ENT_
 	SCOPE_STRU scope;
@@ -3340,7 +3382,7 @@ void CPNCModel::DrawPlatesToProcess()
 			needUpdatePlateList.append(pPlate);
 	}
 	//更新字盒子位置之后，同步更新PPI文件中钢印号位置
-	for (CPlateProcessInfo *pPlate = model.EnumFirstPlate(TRUE); pPlate; pPlate = model.EnumNextPlate(TRUE))
+	for (CPlateProcessInfo *pPlate = needUpdatePlateList.GetFirst(); pPlate; pPlate = needUpdatePlateList.GetNext())
 		pPlate->InitEdgeEntIdMap();	//初始化轮廓边对应关系
 	for (CPlateProcessInfo *pPlate = needUpdatePlateList.GetFirst(); pPlate; pPlate = needUpdatePlateList.GetNext())
 	{	
@@ -3387,10 +3429,12 @@ void CPNCModel::DrawPlates()
 	}
 	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PRINT)
 		return DrawPlatesToLayout();
-	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_SEG)
+	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 		return DrawPlatesToProcess();
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
 		return DrawPlatesToCompare();
+	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_FILTRATE)
+		return DrawPlatesToFiltrate();
 	else
 		return DrawPlatesToClone();
 }
@@ -3503,6 +3547,37 @@ void CSortedModel::DividPlatesByThickMat()
 	{
 		int thick = ftoi(pPlate->xPlate.GetThick());
 		CXhChar50 sKey("%C_%d", pPlate->xPlate.cMaterial, thick);
+		PARTGROUP* pPlateGroup = hashPlateGroup.GetValue(sKey);
+		if (pPlateGroup == NULL)
+		{
+			pPlateGroup = hashPlateGroup.Add(sKey);
+			pPlateGroup->sKey.Copy(sKey);
+		}
+		pPlateGroup->sameGroupPlateList.append(pPlate);
+	}
+}
+
+void CSortedModel::DividPlatesByThick()
+{
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+	{
+		int thick = ftoi(pPlate->xPlate.GetThick());
+		CXhChar50 sKey("%d", thick);
+		PARTGROUP* pPlateGroup = hashPlateGroup.GetValue(sKey);
+		if (pPlateGroup == NULL)
+		{
+			pPlateGroup = hashPlateGroup.Add(sKey);
+			pPlateGroup->sKey.Copy(sKey);
+		}
+		pPlateGroup->sameGroupPlateList.append(pPlate);
+	}
+}
+
+void CSortedModel::DividPlatesByMat()
+{
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
+	{
+		CXhChar16 sKey = CProcessPart::QuerySteelMatMark(pPlate->xPlate.cMaterial);
 		PARTGROUP* pPlateGroup = hashPlateGroup.GetValue(sKey);
 		if (pPlateGroup == NULL)
 		{

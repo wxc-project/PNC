@@ -209,6 +209,7 @@ public:
 	void DrawPlatesToCompare();
 	void DrawPlatesToProcess();
 	void DrawPlatesToClone();
+	void DrawPlatesToFiltrate();
 	//
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }
@@ -269,6 +270,8 @@ public:
 	CPlateProcessInfo *EnumNextPlate();
 	void DividPlatesBySeg();
 	void DividPlatesByThickMat();
+	void DividPlatesByThick();
+	void DividPlatesByMat();
 	void DividPlatesByPartNo();
 };
 //////////////////////////////////////////////////////////////////////////
