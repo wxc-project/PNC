@@ -41,7 +41,6 @@ public:
 	CView* GetView(const CRuntimeClass *pClass);
 	BOOL WriteToParentProcess();
 	//
-	void AmendHoleIncrement(CProcessPlate* pPlate,int iNcMode);
 	void InitPlateGroupByThickMat(CHashStrList<PLATE_GROUP> &hashPlateByThickMat);
 	bool CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat, char* thickSetStr,
 		const char* mainFolder, int iNcMode, int iNcFileType, BOOL bIsPmzCheck = FALSE);

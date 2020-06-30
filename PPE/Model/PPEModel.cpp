@@ -3,6 +3,7 @@
 #include "ArrayList.h"
 #include "SortFunc.h"
 #include "ComparePartNoString.h"
+#include "NcPart.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -65,6 +66,10 @@ CPPEModel::~CPPEModel(void)
 void CPPEModel::Empty()
 {
 	m_hashPartByPartNo.Empty();
+	m_hashFilePathByPartNo.Empty();
+#ifdef __PNC_
+	m_hashRelaPlateByPartNo.Empty();
+#endif
 }
 BOOL CPPEModel::FromBuffer(CBuffer &buffer)
 {
@@ -158,8 +163,8 @@ BOOL LoadBufferFromFile(char* sFileName,CBuffer &buffer)
 }
 BOOL CPPEModel::InitModelByFolderPath(const char *folder_path)
 {
+	Empty();
 	m_sFolderPath.Copy(folder_path);
-	m_hashPartByPartNo.Empty();
 	//使用SetCurrentDirectory设置工作路径后，使用相对路径写文件
 	//可以避免文件夹中带"."无法保存或者路径名太长无法保存的问题 wht 19-04-24
 	SetCurrentDirectory(m_sFolderPath);
@@ -184,8 +189,16 @@ BOOL CPPEModel::InitModelByFolderPath(const char *folder_path)
 		pPart->FromPPIBuffer(buffer);
 	}while(FindNextFile(hFindFile,&FindFileData));
 	FindClose(hFindFile);
+	InitPlateRelaNcPlate();
 	InitPlateMcsAndCutPt(true);
 	return TRUE;
+}
+CXhChar500 CPPEModel::GetFolderPath()
+{
+	if (m_sOutputPath.GetLength() > 0)
+		return m_sOutputPath;
+	else
+		return m_sFolderPath;
 }
 CXhChar500 CPPEModel::GetPartFilePath(const char *sPartNo)
 {
@@ -208,7 +221,36 @@ BOOL CPPEModel::DeletePart(const char *sPartNo)
 	if(sPartNo==NULL)
 		return FALSE;
 	m_hashFilePathByPartNo.DeleteNode(sPartNo);
+#ifdef __PNC_
+	m_hashRelaPlateByPartNo.DeleteNode(sPartNo);
+#endif
 	return m_hashPartByPartNo.DeleteNode(sPartNo);
+}
+
+CProcessPart* CPPEModel::FromPartNo(const char *sPartNo, int iNcType /*= 0*/)
+{
+#ifdef __PNC_
+	CProcessPart* pSrcPart = m_hashPartByPartNo.GetValue(sPartNo);
+	if (iNcType == 0 || !pSrcPart->IsPlate())
+		return  pSrcPart;
+	RELA_PLATE* pRelaPlate = m_hashRelaPlateByPartNo.GetValue(sPartNo);
+	if (pRelaPlate == NULL)
+		return pSrcPart;
+	if (iNcType == CNCPart::FLAME_MODE)
+		return &pRelaPlate->destPlateOfFlame;
+	else if (iNcType == CNCPart::PLASMA_MODE)
+		return &pRelaPlate->destPlateOfPlasma;
+	else if (iNcType == CNCPart::PUNCH_MODE)
+		return &pRelaPlate->destPlateOfPunch;
+	else if (iNcType == CNCPart::DRILL_MODE)
+		return &pRelaPlate->destPlateOfDrill;
+	else if (iNcType == CNCPart::LASER_MODE)
+		return &pRelaPlate->destPlateOfLaser;
+	else
+		return pSrcPart;
+#else
+	return m_hashPartByPartNo.GetValue(sPartNo);
+#endif
 }
 
 typedef CProcessPart* CProcessPartPtr;
@@ -270,18 +312,63 @@ void CPPEModel::ModifyPartNo(const char* sOldPartNo,const char* sNewPartNo)
 	//修改对应哈希表的键值
 	m_hashPartByPartNo.ModifyKeyStr(sOldPartNo,sNewPartNo);
 	m_hashFilePathByPartNo.ModifyKeyStr(sOldPartNo,sNewPartNo);
-}
-BOOL CPPEModel::IsAllDeformedProfile()
-{
-	for(CProcessPart *pPart=EnumPartFirst();pPart;pPart=EnumPartNext())
+#ifdef __PNC_
+	RELA_PLATE* pRelaPlate = model.m_hashRelaPlateByPartNo.GetValue(sOldPartNo);
+	if (pRelaPlate)
 	{
-		if(!pPart->IsPlate())
-			continue;
-		CProcessPlate* pPlate=(CProcessPlate*)pPart;
-		if(!pPlate->m_bIncDeformed)
-			return FALSE;
+		pRelaPlate->SetNewPartNo(sNewPartNo);
+		m_hashRelaPlateByPartNo.ModifyKeyStr(sOldPartNo, sNewPartNo);
 	}
-	return TRUE;
+#endif
+}
+void CPPEModel::SyncPlateMcsInfo(CProcessPlate* pWorkPlate)
+{
+#ifdef __PNC_
+	if (pWorkPlate == NULL || !pWorkPlate->IsPlate())
+		return;
+	CProcessPlate* pSrcPlate = (CProcessPlate*)m_hashPartByPartNo.GetValue(pWorkPlate->GetPartNo());
+	pSrcPlate->mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+	pSrcPlate->mkpos = pWorkPlate->mkpos;
+	pSrcPlate->mkVec = pWorkPlate->mkVec;
+	//
+	RELA_PLATE* pRelaPlate = m_hashRelaPlateByPartNo.GetValue(pWorkPlate->GetPartNo());
+	if (pRelaPlate)
+	{
+		pRelaPlate->destPlateOfFlame.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+		pRelaPlate->destPlateOfFlame.mkpos = pWorkPlate->mkpos;
+		pRelaPlate->destPlateOfFlame.mkVec = pWorkPlate->mkVec;
+		pRelaPlate->destPlateOfPlasma.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+		pRelaPlate->destPlateOfPlasma.mkpos = pWorkPlate->mkpos;
+		pRelaPlate->destPlateOfPlasma.mkVec = pWorkPlate->mkVec;
+		pRelaPlate->destPlateOfPunch.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+		pRelaPlate->destPlateOfPunch.mkpos = pWorkPlate->mkpos;
+		pRelaPlate->destPlateOfPunch.mkVec = pWorkPlate->mkVec;
+		pRelaPlate->destPlateOfDrill.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+		pRelaPlate->destPlateOfDrill.mkpos = pWorkPlate->mkpos;
+		pRelaPlate->destPlateOfDrill.mkVec = pWorkPlate->mkVec;
+		pRelaPlate->destPlateOfLaser.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+		pRelaPlate->destPlateOfLaser.mkpos = pWorkPlate->mkpos;
+		pRelaPlate->destPlateOfLaser.mkVec = pWorkPlate->mkVec;
+	}	
+#endif
+}
+void CPPEModel::InitPlateRelaNcPlate()
+{
+#ifdef __PNC_
+	for (CProcessPart *pPart = EnumPartFirst(); pPart; pPart = EnumPartNext())
+	{
+		if (!pPart->IsPlate())
+			continue;
+		CProcessPlate* pSrcPlate = (CProcessPlate*)pPart;
+		RELA_PLATE* pRelaPlate = m_hashRelaPlateByPartNo.Add(pSrcPlate->GetPartNo());
+		pRelaPlate->SetKeyId(pSrcPlate->GetKey());
+		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfFlame);
+		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfPlasma);
+		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfPunch);
+		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfDrill);
+		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfLaser);
+	}
+#endif
 }
 void CPPEModel::InitPlateMcsAndCutPt(bool bSaveToFile/*=false*/)
 {	//初始化钢板加工坐标系及切入点

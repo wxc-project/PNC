@@ -238,6 +238,7 @@ CPPEView::CPPEView()
 	m_nScrWide = 0;
 	m_nScrHigh = 0;
 	m_bStartOpenWndSelTest=FALSE;
+	m_bDisplayLsOrder = FALSE;
 	g_pSolidDraw=NULL;
 	g_pSolidSet=NULL;
 	g_pSolidSnap=NULL;
@@ -1414,8 +1415,8 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 {
 	if(!theApp.starter.IsMultiPartsMode())
 		return;
-	if(part_no && strlen(part_no)>0)
-		m_pProcessPart=model.FromPartNo(part_no);
+	if (part_no && strlen(part_no) > 0)
+		m_pProcessPart = model.FromPartNo(part_no, g_sysPara.nc.m_ciDisplayType);
 	else
 		m_pProcessPart=NULL;
 	if(g_pPartEditor)
@@ -1479,7 +1480,7 @@ bool CPPEView::SyncPartInfo(bool bToPEC,bool bReDraw/*=true*/)
 			Refresh();
 	}
 	//存在对应文件时保存PPI文件
-	SavePartInfoToFile();
+	//SavePartInfoToFile();
 	return true;
 }
 void CPPEView::UpdateSelectEnt()
@@ -1536,11 +1537,84 @@ void CPPEView::AmendHoleIncrement()
 	CXhChar16 sCurPartNo;
 	if(m_pProcessPart)
 		sCurPartNo=m_pProcessPart->GetPartNo();
-	for(m_pProcessPart=model.EnumPartFirst();m_pProcessPart;m_pProcessPart=model.EnumPartNext())
+	CProcessPart* pProcessPart = NULL;
+#ifdef __PNC_
+	//修正不同加工工艺下钢板螺栓孔径增大值
+	for (int i = 1; i <= 5; i++)
 	{
-		if(!m_pProcessPart->IsPlate())
+		NC_INFO_PARA* pNCPare = NULL;
+		DWORD iNcMode = GetSingleWord(i);
+		if (iNcMode == CNCPart::FLAME_MODE)
+			pNCPare = &g_sysPara.nc.m_xFlamePara;
+		else if (iNcMode == CNCPart::PLASMA_MODE)
+			pNCPare = &g_sysPara.nc.m_xPlasmaPara;
+		else if (iNcMode == CNCPart::PUNCH_MODE)
+			pNCPare = &g_sysPara.nc.m_xPunchPara;
+		else if (iNcMode == CNCPart::DRILL_MODE)
+			pNCPare = &g_sysPara.nc.m_xDrillPara;
+		else if (iNcMode == CNCPart::LASER_MODE)
+			pNCPare = &g_sysPara.nc.m_xLaserPara;
+		for (pProcessPart = model.EnumPartFirst(); pProcessPart; pProcessPart = model.EnumPartNext())
+		{
+			if (!pProcessPart->IsPlate()|| pProcessPart->m_xBoltInfoList.GetNodeNum() <= 0)
+				continue;
+			CProcessPlate* pSrcPlate = (CProcessPlate*)pProcessPart;
+			CProcessPlate* pDestPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), iNcMode);
+			for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+			{
+				if (pBolt->bolt_d == 12 && pBolt->cFuncType == 0)
+					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM12;
+				else if (pBolt->bolt_d == 16 && pBolt->cFuncType == 0)
+					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM16;
+				else if (pBolt->bolt_d == 20 && pBolt->cFuncType == 0)
+					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM20;
+				else if (pBolt->bolt_d == 24 && pBolt->cFuncType == 0)
+					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM24;
+				else if (pBolt->cFuncType >= 2)
+				{	//特殊孔
+					if (pBolt->bolt_d >= g_sysPara.nc.m_fLimitSH)
+					{	//大号孔处理
+						pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fCutSH;
+					}
+					else
+					{	//小号孔处理
+						if ((iNcMode == CNCPart::PUNCH_MODE&&pNCPare->m_bReduceSmallSH) ||
+							(iNcMode == CNCPart::DRILL_MODE&&pNCPare->m_bReduceSmallSH))
+						{	//板床孔进行降级处理
+							if (pBolt->bolt_d >= 24)
+							{
+								pBolt->bolt_d = 24;
+								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM24;
+							}
+							else if (pBolt->bolt_d >= 20)
+							{
+								pBolt->bolt_d = 20;
+								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM20;
+							}
+							else if (pBolt->bolt_d >= 16)
+							{
+								pBolt->bolt_d = 16;
+								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM16;
+							}
+							else
+							{
+								pBolt->bolt_d = 12;
+								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM12;
+							}
+						}
+						else
+							pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fProSH;
+					}
+				}
+			}
+		}
+	}
+#else
+	for (pProcessPart = model.EnumPartFirst(); pProcessPart; pProcessPart = model.EnumPartNext())
+	{
+		if (!pProcessPart->IsPlate() || pProcessPart->m_xBoltInfoList.GetNodeNum() <= 0)
 			continue;
-		for(BOLT_INFO* pBolt=m_pProcessPart->m_xBoltInfoList.GetFirst();pBolt;pBolt=m_pProcessPart->m_xBoltInfoList.GetNext())
+		for(BOLT_INFO* pBolt=pProcessPart->m_xBoltInfoList.GetFirst();pBolt;pBolt=pProcessPart->m_xBoltInfoList.GetNext())
 		{
 			if(pBolt->bolt_d==12&&pBolt->cFuncType==0)
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM12;
@@ -1558,7 +1632,10 @@ void CPPEView::AmendHoleIncrement()
 					pBolt->hole_d_increment = (float)g_sysPara.holeIncrement.m_fProSH;
 			}
 		}
-		SyncPartInfo(true,false);
+
 	}
+#endif
 	UpdateCurWorkPartByPartNo(sCurPartNo);
+	UpdatePropertyPage();
+	Refresh();
 }

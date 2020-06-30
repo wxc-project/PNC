@@ -21,6 +21,34 @@ private:
 	CXhChar500 m_sFolderPath;	//文件夹路径
 	CSuperHashStrList<CProcessPart> m_hashPartByPartNo;
 	CHashStrList<CXhChar500> m_hashFilePathByPartNo;
+#ifdef __PNC_
+	struct RELA_PLATE
+	{
+		CProcessPlate destPlateOfFlame;
+		CProcessPlate destPlateOfPlasma;
+		CProcessPlate destPlateOfPunch;
+		CProcessPlate destPlateOfDrill;
+		CProcessPlate destPlateOfLaser;
+		//
+		void SetNewPartNo(const char* sNewPartNo)
+		{
+			destPlateOfFlame.SetPartNo(sNewPartNo);
+			destPlateOfPlasma.SetPartNo(sNewPartNo);
+			destPlateOfPunch.SetPartNo(sNewPartNo);
+			destPlateOfDrill.SetPartNo(sNewPartNo);
+			destPlateOfLaser.SetPartNo(sNewPartNo);
+		}
+		void SetKeyId(int idKey)
+		{
+			destPlateOfFlame.SetKey(idKey);
+			destPlateOfPlasma.SetKey(idKey);
+			destPlateOfPunch.SetKey(idKey);
+			destPlateOfDrill.SetKey(idKey);
+			destPlateOfLaser.SetKey(idKey);
+		}
+	};
+	CHashStrList<RELA_PLATE> m_hashRelaPlateByPartNo;
+#endif
 public:
 	CXhChar50 m_sVersion;		//版本号
 	CXhChar100 m_sCompanyName;	//设计单位
@@ -71,31 +99,30 @@ public:
 public:
 	CPPEModel(void);
 	~CPPEModel(void);
-	void (*DisplayProcess)(int percent,char *sTitle);	//进度显示回调函数
+	//
+	void Empty();
 	BOOL FromBuffer(CBuffer &buffer);
 	void ToBuffer(CBuffer &buffer,const char *file_version);
 	BOOL InitModelByFolderPath(const char *folder_path);
 	void InitPlateMcsAndCutPt(bool bSaveToFile=false);	//初始化钢板加工坐标系及切入点
-	void Empty();
-	CXhChar500 GetFolderPath(){
-		if (m_sOutputPath.GetLength() > 0)
-			return m_sOutputPath;
-		else
-			return m_sFolderPath;
-	}
-	//
-	CXhChar500 GetPartFilePath(const char *sPartNo);
-	bool SavePartToFile(CProcessPart *pPart);
+	void InitPlateRelaNcPlate();
+	//数据操作
 	CProcessPart* AddPart(const char *sPartNo,BYTE cType,const char *sFilePath=NULL);
 	BOOL DeletePart(const char *sPartNo);
-	CProcessPart* FromPartNo(const char *sPartNo){return m_hashPartByPartNo.GetValue(sPartNo);}
+	CProcessPart* FromPartNo(const char *sPartNo, int iNcType = 0);
 	CProcessPart* EnumPartFirst(){return m_hashPartByPartNo.GetFirst();}
 	CProcessPart* EnumPartNext(){return m_hashPartByPartNo.GetNext();}
 	DWORD PartCount(){return m_hashPartByPartNo.GetNodeNum();}
 	void ModifyPartNo(const char* sOldPartNo,const char* sNewPartNo);
-	BOOL IsAllDeformedProfile();
+	void SyncPlateMcsInfo(CProcessPlate* pWorkPlate);
+	//关联文件路径
+	CXhChar500 GetFolderPath();
+	CXhChar500 GetPartFilePath(const char *sPartNo);
+	bool SavePartToFile(CProcessPart *pPart);
 	//得到有序集合(角钢集合和钢板集合)
 	void GetSortedAngleSetAndPlateSet(CXhPtrSet<CProcessAngle> &angleSet,CXhPtrSet<CProcessPlate> &plateSet);
 	void ReadPrjTowerInfoFromCfgFile(const char* cfg_file_path);
+	//进度显示回调函数
+	void(*DisplayProcess)(int percent, char *sTitle);
 };
 extern CPPEModel model;

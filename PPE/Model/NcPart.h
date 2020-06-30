@@ -53,11 +53,8 @@ public:
 	static const BYTE ALG_BACKTRACK	= 2;	//回溯算法
 	static const BYTE ALG_ANNEAL	= 3;	//退火算法
 public:
-	static BOOL m_bDisplayLsOrder;		//显示螺栓顺序（用于测试使用）
-	static BOOL m_bSortHole;			//对螺栓进行排序（导出PBJ文件进行控制）
 	static BOOL m_bDeformedProfile;		//考虑火曲变形
 	static CString m_sExportPartInfoKeyStr;	//钢板输出明细
-	static double m_fHoleIncrement;		//孔径增大值 wht 19-07-25
 public:
 	static void DeformedPlateProfile(CProcessPlate *pPlate);
 	//钢板操作
@@ -67,11 +64,8 @@ public:
 #ifdef __PNC_
 	static void ImprotPlateCncOrTextFile(CProcessPlate *pPlate, const char* file_path);
 	static void InitStoreMode(CHashList<CDrillBolt>& hashDrillBoltByD, ARRAY_LIST<double> &holeDList, BOOL bIncSH = TRUE);
-	static void RefreshPlateHoles(CProcessPlate *pPlate, BOOL bSortByHoleD = TRUE, BYTE ciAlgType = 0);
-	static void InitDrillBoltHashTbl(CProcessPlate *pPlate, CHashList<CDrillBolt>& hashDrillBoltByD,
-									 BOOL bMergeHole = FALSE, BOOL bIncSpecialHole=TRUE, BOOL bDrillGroupSort=FALSE);
-	static void OptimizeBolt(CProcessPlate *pPlate,CHashList<CDrillBolt>& hashDrillBoltByD,
-							 BOOL bSortByHoleD=TRUE,BYTE ciAlgType=0,BOOL bMergeHole=FALSE,BOOL bIncSpecialHole=TRUE);
+	static void RefreshPlateHoles(CProcessPlate *pPlate, BYTE ciNcMode, BYTE ciAlgType = 0);
+	static void OptimizeBolt(CProcessPlate *pPlate, CHashList<CDrillBolt>& hashDrillBoltByD, BYTE ciNcMode, BYTE ciAlgType = 0);
 	static bool CreatePlatePbjFile(CProcessPlate *pPlate,const char* file_path);
 	static bool CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path);
 	static bool CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_path);

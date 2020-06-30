@@ -161,17 +161,24 @@ void CHoleIncrementSetDlg::RefreshCtrlState()
 		GetDlgItem(IDC_CHK_M24)->EnableWindow(TRUE);
 		GetDlgItem(IDC_E_M24)->EnableWindow(TRUE);
 		m_arrIsCanUse[3] = TRUE;
-		GetDlgItem(IDC_CHK_PRO_SH)->EnableWindow(TRUE);
-		GetDlgItem(IDC_E_PRO_SH)->EnableWindow(TRUE);
-		m_arrIsCanUse[5] = TRUE;
+		//保留切割大号孔
 		BOOL bEnable = FALSE;
-		if (m_ciCurNcMode == CNCPart::PUNCH_MODE&&g_sysPara.nc.m_xPunchPara.m_bNeedSH)
+		if (m_ciCurNcMode == CNCPart::PUNCH_MODE&&g_sysPara.nc.m_xPunchPara.m_bReserveBigSH)
 			bEnable = TRUE;
-		if (m_ciCurNcMode == CNCPart::DRILL_MODE&&g_sysPara.nc.m_xDrillPara.m_bNeedSH)
+		if (m_ciCurNcMode == CNCPart::DRILL_MODE&&g_sysPara.nc.m_xDrillPara.m_bReserveBigSH)
 			bEnable = TRUE;
 		m_arrIsCanUse[4] = bEnable;
 		GetDlgItem(IDC_CHK_CUT_SH)->EnableWindow(bEnable);
 		GetDlgItem(IDC_E_CUT_SH)->EnableWindow(bEnable);
+		//降级处理小号孔
+		bEnable = TRUE;
+		if (m_ciCurNcMode == CNCPart::PUNCH_MODE&&g_sysPara.nc.m_xPunchPara.m_bReduceSmallSH)
+			bEnable = FALSE;
+		if (m_ciCurNcMode == CNCPart::DRILL_MODE&&g_sysPara.nc.m_xDrillPara.m_bReduceSmallSH)
+			bEnable = FALSE;
+		m_arrIsCanUse[5] = bEnable;
+		GetDlgItem(IDC_CHK_PRO_SH)->EnableWindow(bEnable);
+		GetDlgItem(IDC_E_PRO_SH)->EnableWindow(bEnable);
 	}
 	else
 	{

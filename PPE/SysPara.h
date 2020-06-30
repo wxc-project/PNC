@@ -25,7 +25,9 @@ struct NC_INFO_PARA
 	BOOL m_bCutSpecialHole;
 	WORD m_wEnlargedSpace;
 	//板床加工参数
-	BOOL m_bNeedSH;
+	BOOL m_bReserveBigSH;	//保留切割孔
+	BOOL m_bReduceSmallSH;	//降级处理板床孔
+	BYTE m_ciHoldSortType;	//螺栓孔排序0.混排|1.分组+距离|2.分组+孔径
 public:
 	NC_INFO_PARA();
 	//
@@ -50,14 +52,14 @@ public:
 	//NC数据参数
 	struct NC_PARA{
 		//钢板NC设置
-		BOOL m_bSortByHoleD;	//是否按孔径进行分组优化
-		BYTE m_ciGroupSortType;	//分组排序方案 0.按孔径从大到小|1.按距离从远到进
 		double m_fBaffleHigh;	//挡板高度
 		BOOL m_bDispMkRect;		//显示字盒
+		BYTE m_ciMkVect;		//字盒朝向 0.保持原朝向|1.保持水平
 		double m_fMKHoleD,m_fMKRectW,m_fMKRectL;
 		BYTE m_iNcMode;			//火焰|等离子|冲床|钻床|激光加工
 		double m_fLimitSH;		//特殊孔径界限值
 		BOOL m_iDxfMode;		//DXF文件分类 0.不分类 1.按厚度
+		BYTE m_ciDisplayType;	//当前显示加工模式
 		//钢板输出设置
 		NC_INFO_PARA m_xFlamePara;
 		NC_INFO_PARA m_xPlasmaPara;
@@ -80,14 +82,12 @@ public:
 		BOOL m_bPmzCheck;	//输出预审PMZ格式
 	}pmz;
 	//火焰切割
-	BYTE m_cDisplayCutType;		//当前显示类型0.火焰切割；1.等离子切割
 	struct FLAME_CUT_PARA{
 		CXhChar16 m_sOutLineLen;
 		CXhChar16 m_sIntoLineLen;
 		BOOL m_bInitPosFarOrg;
 		BOOL m_bCutPosInInitPos;
 	}flameCut,plasmaCut;
-	
 	//颜色方案
 	struct COLOR_MODE{
 		COLORREF crLS12;
@@ -97,6 +97,7 @@ public:
 		COLORREF crOtherLS;
 		COLORREF crMark;
 		COLORREF crEdge;
+		COLORREF crHuoQu;
 		COLORREF crText;
 	}crMode;
 	//角钢工艺卡参数

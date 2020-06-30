@@ -1530,45 +1530,6 @@ static BOOL IsPositionOverlap(f3dPoint ls_pt,ATOM_LIST<f3dPoint>& ptList)
 		return TRUE;
 	return FALSE;
 }
-static COLORREF GetBoltColorRef(long bolt_d)
-{
-	CXhChar100 sEnter,sValue;
-	COLORREF ls_color;
-	if(bolt_d==12)
-	{
-		ls_color=RGB(128,0,64);
-		sEnter="M12Color";
-	}
-	else if(bolt_d==16)
-	{
-		ls_color=RGB(255,0,255);
-		sEnter="M16Color";
-	}
-	else if(bolt_d==20)
-	{
-		ls_color=RGB(255,165,79);
-		sEnter="M20Color";
-	}
-	else if(bolt_d==24)
-	{
-		ls_color=RGB(128,0,255);
-		sEnter="M24Color";
-	}
-	else
-	{
-		ls_color=RGB(46,0,91);
-		sEnter="OtherColor";
-	}
-	if(CPEC::GetSysParaFromReg(sEnter,sValue))
-	{
-		char tem_str[100]="";
-		sprintf(tem_str,"%s",(char*)sValue);
-		memmove(tem_str, tem_str+3, 97);
-		sscanf(tem_str,"%X",&ls_color);
-	}
-	return ls_color;
-}
-
 int GetLineLenFromExpression(double fThick,const char* sValue)
 {
 	CExpression expression;
@@ -1620,6 +1581,241 @@ static void GetCutParamFromReg(BYTE cType,double fThick,int *pnIntoLineLen,int *
 			*pbCutSpecialHole = atoi(sValue);
 	}
 }
+static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pSolidSet, COLORREF color, BOOL bDrawCutPt = FALSE)
+{
+	if (pPlate == NULL || pSolidSet == NULL || pDrawing == NULL)
+		return;
+	char sValue[MAX_PATH] = "", tem_str[100] = "";
+	//获取显示工艺模式
+	BYTE ciDisplayNcMode = 0;
+	if (CPEC::GetSysParaFromReg("m_ciDisplayType", sValue))
+		ciDisplayNcMode = atoi(sValue);
+	//获取颜色设置
+	COLORREF crEdge = color, crText = color, crHuoQu = color;
+	if (CPEC::GetSysParaFromReg("EdgeColor", sValue))
+	{
+		sprintf(tem_str, "%s", sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crEdge);
+	}
+	if (CPEC::GetSysParaFromReg("TextColor", sValue))
+	{
+		sprintf(tem_str, "%s", sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crText);
+	}
+	if (CPEC::GetSysParaFromReg("HuoQuColor", sValue))
+	{
+		sprintf(tem_str, "%s", sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crHuoQu);
+	}
+	//绘制钢板
+	HIBERID plateId(pPlate->GetKey());
+	if (pPlate->m_cFaceN == 3 && !(pPlate->top_point.IsZero()))
+		AppendDbPoint(pDrawing, pPlate->top_point, plateId);
+	//绘制直线
+	int i = 0; 
+	PROFILE_VER *pVertex = NULL, *pPrevPnt = pPlate->vertex_list.GetTail(), *pPrevPrevPnt = pPlate->vertex_list.GetPrev();
+	for (pVertex = pPlate->vertex_list.GetFirst(); pVertex; pVertex = pPlate->vertex_list.GetNext(), i++)
+	{
+		//轮廓点
+		pVertex->hiberId.masterId = pPlate->GetKey();
+		pPrevPnt->hiberId.masterId = pPlate->GetKey();
+		if (pPlate->mcsFlg.ciBottomEdge != i)
+			AppendDbPoint(pDrawing, pVertex->vertex, pVertex->hiberId, PS_SOLID, crEdge);
+		else
+			AppendDbPoint(pDrawing, pVertex->vertex, pVertex->hiberId, PS_SOLID, RGB(127, 255, 0), 8);
+		//轮廓线
+		int nPenWidth = pPrevPnt->m_bWeldEdge ? 2 : 1;
+		if (pPlate->m_cFaceN < 3 || pPrevPnt->vertex.feature != 3 || pVertex->vertex.feature != 2)
+		{
+			if (pPrevPnt->type == 2)
+			{	//圆弧
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+				pArcLine->CreateMethod2(pPrevPnt->vertex, pVertex->vertex, pPrevPnt->work_norm, pPrevPnt->sector_angle);
+			}
+			else if (pPrevPnt->type == 3)
+			{	//椭圆弧
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+				pArcLine->CreateEllipse(pPrevPnt->center, pPrevPnt->vertex, pVertex->vertex, pPrevPnt->column_norm,
+					pPrevPnt->work_norm, pPrevPnt->radius);
+			}
+			else	//直线
+				AppendDbLine(pDrawing, pPrevPnt->vertex, pVertex->vertex, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+		}
+		else
+		{
+			AppendDbLine(pDrawing, pPrevPnt->vertex, pPlate->top_point, pPrevPnt->hiberId, PS_SOLID, crEdge, nPenWidth);
+			AppendDbLine(pDrawing, pPlate->top_point, pVertex->vertex, pVertex->hiberId, PS_SOLID, crEdge, nPenWidth);
+		}
+		pPrevPrevPnt = pPrevPnt;
+		pPrevPnt = pVertex;
+	}
+	//绘制内圆
+	if (pPlate->m_fInnerRadius > 0)
+	{
+		if (!pPlate->m_tInnerColumnNorm.IsZero() && fabs(pPlate->m_tInnerColumnNorm*f3dPoint(0, 0, 1)) < EPS_COS)
+		{	//椭圆
+			f3dPoint center = pPlate->m_tInnerOrigin, workNorm(0, 0, 1), columnNorm = pPlate->m_tInnerColumnNorm;
+			f3dPoint minorAxis = columnNorm ^ workNorm;
+			normalize(minorAxis);	//椭圆短轴方向
+			f3dPoint majorAxis(-minorAxis.y, minorAxis.x, minorAxis.z);
+			normalize(majorAxis);	//椭圆长轴方向
+			double radiusRatio = fabs(columnNorm*workNorm);
+			double minorRadius = pPlate->m_fInnerRadius;				//椭圆短半轴长度
+			double majorRadius = pPlate->m_fInnerRadius / radiusRatio;	//椭圆长半轴长度
+			workNorm *= (columnNorm*workNorm < EPS) ? -1 : 1;
+			for (int i = 0; i < 4; i++)
+			{
+				f3dPoint ptS, ptE;
+				if (i == 0)
+				{
+					ptS = center + majorAxis * majorRadius;
+					ptE = center + minorAxis * minorRadius;
+				}
+				else if (i == 1)
+				{
+					ptS = center + minorAxis * minorRadius;
+					ptE = center - majorAxis * majorRadius;
+				}
+				else if (i == 2)
+				{
+					ptS = center - majorAxis * majorRadius;
+					ptE = center - minorAxis * minorRadius;
+				}
+				else
+				{
+					ptS = center - minorAxis * minorRadius;
+					ptE = center + majorAxis * majorRadius;
+				}
+				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, plateId, PS_SOLID, crEdge);
+				pArcLine->CreateEllipse(center, ptS, ptE, columnNorm, workNorm, minorRadius);
+			}
+		}
+		else
+			AppendDbCircle(pDrawing, pPlate->m_tInnerOrigin, f3dPoint(0, 0, 1), pPlate->m_fInnerRadius, plateId, PS_SOLID, crEdge);
+	}
+	//绘制火曲线
+	for (int i = 2; i <= pPlate->m_cFaceN; i++)
+	{
+		f3dLine line;
+		if (pPlate->GetBendLineAt(i - 2, &line) != 0)
+		{
+			int ID = i - 1;	//第一条火曲线
+			HIBERID huoquLineId(pPlate->GetKey(), HIBERARCHY(0, 0, 1, line.ID));
+			AppendDbLine(pDrawing, line.startPt, line.endPt, huoquLineId, PS_DASHDOT, crHuoQu);
+		}
+		else
+			logerr.Log("第%d火曲线始末段绘制顶点查找失败", i - 1);
+	}
+	//螺栓孔
+	if (pPlate->m_xBoltInfoList.GetNodeNum() > 0)
+	{
+		double fSpecialD = (CPEC::GetSysParaFromReg("LimitSH", sValue)) ? atof(sValue) : 0;
+		ATOM_LIST<f3dPoint> lsPtList;
+		for (BOLT_INFO *pBoltInfo = pPlate->m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = pPlate->m_xBoltInfoList.GetNext())
+			lsPtList.append(f3dPoint(pBoltInfo->posX, pBoltInfo->posY, 0));
+		BOLT_INFO* pFirstBolt = pPlate->m_xBoltInfoList.GetFirst();
+		f3dPoint pre_ls_pt, cur_ls_pt;
+		pre_ls_pt.Set(pFirstBolt->posX, pFirstBolt->posY, 0);
+		COLORREF ls_color = color;
+		for (BOLT_INFO *pBoltInfo = pPlate->m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = pPlate->m_xBoltInfoList.GetNext())
+		{
+			f3dCircle circle;
+			circle.norm.Set(0, 0, 1);
+			circle.centre.Set(pBoltInfo->posX, pBoltInfo->posY, 0);
+			circle.radius = (pBoltInfo->bolt_d + pBoltInfo->hole_d_increment) / 2;
+			circle.ID = pBoltInfo->hiberId.HiberDownId(2);
+			pBoltInfo->hiberId.masterId = pPlate->GetKey();
+			CXhChar100 sEnter;
+			if (pBoltInfo->bolt_d == 12 && pBoltInfo->cFuncType == 0)
+				sEnter = "M12Color";
+			else if (pBoltInfo->bolt_d == 16 && pBoltInfo->cFuncType == 0)
+				sEnter = "M16Color";
+			else if (pBoltInfo->bolt_d == 20 && pBoltInfo->cFuncType == 0)
+				sEnter = "M20Color";
+			else if (pBoltInfo->bolt_d == 24 && pBoltInfo->cFuncType == 0)
+				sEnter = "M24Color";
+			else
+				sEnter = "OtherColor";
+			if (CPEC::GetSysParaFromReg(sEnter, sValue))
+			{
+				char tem_str[100] = "";
+				sprintf(tem_str, "%s", (char*)sValue);
+				memmove(tem_str, tem_str + 3, 97);
+				sscanf(tem_str, "%X", &ls_color);
+			}
+			if (ciDisplayNcMode == 0X01 || ciDisplayNcMode == 0X02)
+			{	//切割下料模式下，显示切割孔
+				if (pBoltInfo->bolt_d >= fSpecialD)
+					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+			}
+			else if (ciDisplayNcMode == 0x04 || ciDisplayNcMode == 0x08)
+			{	//板床打孔模式下
+				BOOL bNeedSH = FALSE;
+				if (ciDisplayNcMode == 0x04 && CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
+					bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
+				if (ciDisplayNcMode == 0x08 && CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
+					bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
+				if (pBoltInfo->cFuncType == 0)
+					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				else if (pBoltInfo->bolt_d < fSpecialD)	//对小号特殊孔进行加工
+					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				else if (pBoltInfo->bolt_d >= fSpecialD && bNeedSH)
+					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+			}
+			else if (ciDisplayNcMode == 0x10)
+			{	//激光加工模式下，生成所有孔
+				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+			}
+			else
+				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+			//显示螺栓顺序
+			if (CProcessPartDraw::m_bDispBoltOrder)
+			{
+				cur_ls_pt = circle.centre;
+				double fTextHeight = (CPEC::GetSysParaFromReg("TextHeight", sValue)) ? atof(sValue) : 10;
+				CXhChar50 text("%d", pBoltInfo->keyId);
+				AppendDbText(pDrawing, cur_ls_pt, text, 0, fTextHeight, IDbText::AlignMiddleCenter, plateId, 0, crText, 2);
+				if (pBoltInfo != pFirstBolt)
+					AppendDbLine(pDrawing, pre_ls_pt, cur_ls_pt, HIBERID(pPlate->GetKey()), PS_DASH, crText);
+			}
+			pre_ls_pt = cur_ls_pt;
+		}
+	}
+	if (ciDisplayNcMode == 0X01 || ciDisplayNcMode == 0X02)
+	{	//火焰切割或等离子切割时，绘制切割路径
+		pVertex = pPlate->vertex_list.GetValue(pPlate->m_xCutPt.hEntId);
+		if (bDrawCutPt&&pVertex)
+		{
+			HIBERID hiberId = pPlate->m_xCutPt.GetHiberId(pPlate->GetKey());
+			HIBERID inLineHiberId = pPlate->m_xCutPt.GetInLineHiberId(pPlate->GetKey());
+			HIBERID outLineHiberId = pPlate->m_xCutPt.GetOutLineHiberId(pPlate->GetKey());
+			f3dCircle circle;
+			circle.norm.Set(0, 0, 1);
+			circle.centre.Set(pVertex->vertex.x, pVertex->vertex.y, 0);
+			circle.radius = 3;
+			AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, hiberId, PS_SOLID, RGB(255, 0, 0), 2);
+			int n = pPlate->vertex_list.GetNodeNum();
+			long prev_index = (pPlate->m_xCutPt.hEntId == n) ? 1 : pPlate->m_xCutPt.hEntId + 1;
+			long next_index = (pPlate->m_xCutPt.hEntId == 1) ? n : pPlate->m_xCutPt.hEntId - 1;
+			PROFILE_VER *pPrevVertex = pPlate->vertex_list.GetValue(prev_index), *pNextVertex = pPlate->vertex_list.GetValue(next_index);
+			if (pPrevVertex&&pNextVertex)
+			{
+				GEPOINT prev_vec = pVertex->vertex - pPrevVertex->vertex, next_vec = pVertex->vertex - pNextVertex->vertex;
+				normalize(prev_vec);
+				normalize(next_vec);
+				int nInLineLen = pPlate->m_xCutPt.cInLineLen, nOutLineLen = pPlate->m_xCutPt.cOutLineLen;
+				GetCutParamFromReg(-1, pPlate->m_fThick, &nInLineLen, &nOutLineLen, NULL);
+				if (nOutLineLen > 0)
+					AppendDbLine(pDrawing, pVertex->vertex, pVertex->vertex + nOutLineLen * next_vec, outLineHiberId, PS_SOLID, RGB(255, 0, 0), 4);
+				if (nInLineLen > 0)
+					AppendDbLine(pDrawing, pVertex->vertex, pVertex->vertex + nInLineLen * prev_vec, inLineHiberId, PS_SOLID, RGB(0, 255, 0), 4);
+			}
+		}
+	}
+}
 static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolidSet,COLORREF color,BOOL bDrawCutPt=FALSE)
 {
 	if(pPlate==NULL||pSolidSet==NULL||pDrawing==NULL)
@@ -1629,7 +1825,7 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		AppendDbPoint(pDrawing,pPlate->top_point,plateId);
 	//获取颜色设置
 	char sValue[MAX_PATH] = "", tem_str[100] = "";
-	COLORREF crEdge = color, crText = color;
+	COLORREF crEdge = color, crText = color, crHuoQu = color;
 	if (CPEC::GetSysParaFromReg("EdgeColor", sValue))
 	{
 		sprintf(tem_str, "%s", sValue);
@@ -1642,6 +1838,12 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		sprintf(tem_str, "%s", sValue);
 		memmove(tem_str, tem_str + 3, 97);
 		sscanf(tem_str, "%X", &crText);
+	}
+	if (CPEC::GetSysParaFromReg("HuoQuColor", sValue))
+	{
+		sprintf(tem_str, "%s", sValue);
+		memmove(tem_str, tem_str + 3, 97);
+		sscanf(tem_str, "%X", &crHuoQu);
 	}
 	//绘制直线
 	int i = 0;
@@ -1739,7 +1941,7 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		{
 			int ID=i-1;	//第一条火曲线
 			HIBERID huoquLineId(pPlate->GetKey(),HIBERARCHY(0,0,1,line.ID));
-			AppendDbLine(pDrawing,line.startPt,line.endPt,huoquLineId,PS_DASHDOT,RGB(255,0,0));
+			AppendDbLine(pDrawing, line.startPt, line.endPt, huoquLineId, PS_DASHDOT, crHuoQu);
 		}
 		else
 			logerr.Log("第%d火曲线始末段绘制顶点查找失败",i-1);
@@ -1764,7 +1966,24 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 			circle.ID	  = pBoltInfo->hiberId.HiberDownId(2);
 			pBoltInfo->hiberId.masterId=pPlate->GetKey();
 			//只有特殊孔才可能是小数，特殊孔也查不到合适的颜色，此处可强制转为整数 wht 19-09-12
-			ls_color=GetBoltColorRef((long)pBoltInfo->bolt_d);
+			CXhChar100 sEnter;
+			if (pBoltInfo->bolt_d == 12 && pBoltInfo->cFuncType == 0)
+				sEnter = "M12Color";
+			else if (pBoltInfo->bolt_d == 16 && pBoltInfo->cFuncType == 0)
+				sEnter = "M16Color";
+			else if (pBoltInfo->bolt_d == 20 && pBoltInfo->cFuncType == 0)
+				sEnter = "M20Color";
+			else if (pBoltInfo->bolt_d == 24 && pBoltInfo->cFuncType == 0)
+				sEnter = "M24Color";
+			else
+				sEnter = "OtherColor";
+			if (CPEC::GetSysParaFromReg(sEnter, sValue))
+			{
+				char tem_str[100] = "";
+				sprintf(tem_str, "%s", (char*)sValue);
+				memmove(tem_str, tem_str + 3, 97);
+				sscanf(tem_str, "%X", &ls_color);
+			}
 			if(IsPositionOverlap(cur_ls_pt,lsPtList))	//同一个位置出现多个螺栓孔，特殊标记RGB(123,104,238)
 				AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,RGB(127,255,0),3);
 			else
@@ -1835,37 +2054,6 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		}
 		pPrevPnt=pVertex;
 	}
-	//
-#ifdef __PNC_
-	pVertex=pPlate->vertex_list.GetValue(pPlate->m_xCutPt.hEntId);
-	if(bDrawCutPt&&pVertex)
-	{
-		HIBERID hiberId=pPlate->m_xCutPt.GetHiberId(pPlate->GetKey());
-		HIBERID inLineHiberId=pPlate->m_xCutPt.GetInLineHiberId(pPlate->GetKey());
-		HIBERID outLineHiberId=pPlate->m_xCutPt.GetOutLineHiberId(pPlate->GetKey());
-		f3dCircle circle;
-		circle.norm.Set(0,0,1);
-		circle.centre.Set(pVertex->vertex.x,pVertex->vertex.y,0);
-		circle.radius = 3;
-		AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,hiberId,PS_SOLID,RGB(255,0,0),2);
-		int n=pPlate->vertex_list.GetNodeNum();
-		long prev_index=(pPlate->m_xCutPt.hEntId==n)?1:pPlate->m_xCutPt.hEntId+1;
-		long next_index=(pPlate->m_xCutPt.hEntId==1)?n:pPlate->m_xCutPt.hEntId-1;
-		PROFILE_VER *pPrevVertex=pPlate->vertex_list.GetValue(prev_index),*pNextVertex=pPlate->vertex_list.GetValue(next_index);
-		if(pPrevVertex&&pNextVertex)
-		{
-			GEPOINT prev_vec=pVertex->vertex-pPrevVertex->vertex,next_vec=pVertex->vertex-pNextVertex->vertex;
-			normalize(prev_vec);
-			normalize(next_vec);
-			int nInLineLen=pPlate->m_xCutPt.cInLineLen,nOutLineLen=pPlate->m_xCutPt.cOutLineLen;
-			GetCutParamFromReg(-1,pPlate->m_fThick,&nInLineLen,&nOutLineLen,NULL);
-			if(nOutLineLen>0)
-				AppendDbLine(pDrawing,pVertex->vertex,pVertex->vertex+nOutLineLen*next_vec,outLineHiberId,PS_SOLID,RGB(255,0,0),4);
-			if(nInLineLen>0)
-				AppendDbLine(pDrawing,pVertex->vertex,pVertex->vertex+nInLineLen*prev_vec,inLineHiberId,PS_SOLID,RGB(0,255,0),4);
-		}
-	}
-#endif
 }
 static void DrawNcBackGraphic(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolidSet,int shieldHeight)
 {
@@ -1927,7 +2115,11 @@ void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 		AppendDbText(pDrawing,dim_pos,sPartInfo,0,fTextHeight,IDbText::AlignMiddleLeft,HIBERID(m_pPart->GetKey()),PS_SOLID,color);
 	}
 	//3.绘制钢板外形
-	DrawPlate(&tempPlate,pDrawing,pSolidSet,color,TRUE);
+#ifdef __PNC_
+	DrawPlateNc(&tempPlate, pDrawing, pSolidSet, color, TRUE);
+#else
+	DrawPlate(&tempPlate, pDrawing, pSolidSet, color, TRUE);
+#endif
 	//4.绘制打号位置
 	if(m_pPart->IsPlate() && !((CProcessPlate*)m_pPart)->IsDisplayMK())
 		return;
@@ -1954,13 +2146,17 @@ void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 		bDisplayMkRect=atoi(sValue);
 	if(bDisplayMkRect)
 	{
+		BYTE ciVectType = (CPEC::GetSysParaFromReg("MKVectType", sValue)) ? atoi(sValue) : 0;
+		double fLen = (CPEC::GetSysParaFromReg("MKRectL", sValue)) ? atof(sValue) : 60;
+		double fWidth = (CPEC::GetSysParaFromReg("MKRectW", sValue)) ? atof(sValue) : 30;
+		if (ciVectType == 1)
+		{	//保持水平
+			f3dPoint vec(1, 0, 0);
+			vector_trans(vec, mcs, TRUE);
+			tempPlate.mkVec = vec;
+		}
 		ATOM_LIST<f3dPoint> ptArr;
-		double fLen=60,fWidth=30;
-		if(CPEC::GetSysParaFromReg("MKRectL",sValue))
-			fLen=atof(sValue);
-		if(CPEC::GetSysParaFromReg("MKRectW",sValue))
-			fWidth=atof(sValue);
-		tempPlate.GetMkRect(fLen,fWidth,ptArr);
+		tempPlate.GetMkRect(fLen, fWidth, ptArr);
 		for(int i=0;i<4;i++)
 		{
 			f3dPoint startPt(ptArr[i]);
