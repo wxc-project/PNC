@@ -1530,14 +1530,6 @@ static BOOL IsPositionOverlap(f3dPoint ls_pt,ATOM_LIST<f3dPoint>& ptList)
 		return TRUE;
 	return FALSE;
 }
-static COLORREF GetBoltColorRef(long bolt_d)
-{
-	CXhChar100 sEnter,sValue;
-	COLORREF ls_color;
-	
-	return ls_color;
-}
-
 int GetLineLenFromExpression(double fThick,const char* sValue)
 {
 	CExpression expression;
@@ -1974,7 +1966,24 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 			circle.ID	  = pBoltInfo->hiberId.HiberDownId(2);
 			pBoltInfo->hiberId.masterId=pPlate->GetKey();
 			//只有特殊孔才可能是小数，特殊孔也查不到合适的颜色，此处可强制转为整数 wht 19-09-12
-			ls_color=GetBoltColorRef((long)pBoltInfo->bolt_d);
+			CXhChar100 sEnter;
+			if (pBoltInfo->bolt_d == 12 && pBoltInfo->cFuncType == 0)
+				sEnter = "M12Color";
+			else if (pBoltInfo->bolt_d == 16 && pBoltInfo->cFuncType == 0)
+				sEnter = "M16Color";
+			else if (pBoltInfo->bolt_d == 20 && pBoltInfo->cFuncType == 0)
+				sEnter = "M20Color";
+			else if (pBoltInfo->bolt_d == 24 && pBoltInfo->cFuncType == 0)
+				sEnter = "M24Color";
+			else
+				sEnter = "OtherColor";
+			if (CPEC::GetSysParaFromReg(sEnter, sValue))
+			{
+				char tem_str[100] = "";
+				sprintf(tem_str, "%s", (char*)sValue);
+				memmove(tem_str, tem_str + 3, 97);
+				sscanf(tem_str, "%X", &ls_color);
+			}
 			if(IsPositionOverlap(cur_ls_pt,lsPtList))	//同一个位置出现多个螺栓孔，特殊标记RGB(123,104,238)
 				AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,RGB(127,255,0),3);
 			else
