@@ -41,13 +41,17 @@ public:
 };
 class CPPEView : public CView
 {
+protected: // create from serialization only
+	DECLARE_DYNCREATE(CPPEView)
+	BOOL ReceiveFromParentProcess();
+	//
 	BYTE m_cCurTask;
 	IDrawSolid* m_pDrawSolid;
 	CPoint m_ptLBDownPos;
 	BOOL m_bStartOpenWndSelTest;
 	BOOL m_bEnableOpenWndSelectTest;
+	BOOL m_bDisplayLsOrder;
 	CProcessPart* m_pProcessPart;
-	BOOL ReceiveFromParentProcess();
 public:
 	static const int TASK_OTHER = 0;
 	static const int TASK_OPEN_WND_SEL = 1;
@@ -56,12 +60,17 @@ public:
 	static const int TASK_SPEC_WCS_AXIS_X = 4;
 	static const int TASK_VIEW_PART_FEATURE=5;
 	static const int TASK_DEF_PLATE_CUT_IN_PT=6;	//定义钢板切入点
-protected: // create from serialization only
-	CPPEView();
-	DECLARE_DYNCREATE(CPPEView)
+	//
+	static int m_nScrWide, m_nScrHigh;
+	CSelectEntity m_xSelectEntity;
 
-// Attributes
 public:
+	CPPEView();
+	virtual ~CPPEView();
+#ifdef _DEBUG
+	virtual void AssertValid() const;
+	virtual void Dump(CDumpContext& dc) const;
+#endif
 	CPPEDoc* GetDocument();
 	void Refresh(BOOL bZoomAll=TRUE);
 	void UpdateCurWorkPartByPartNo(const char *part_no);
@@ -72,31 +81,7 @@ public:
 	void SetCurTast(int iCurTask){m_cCurTask=iCurTask;}
 	bool SavePartInfoToFile();
 	void AmendHoleIncrement();
-// Operations
-public:
-	static int m_nScrWide,m_nScrHigh;
-	CSelectEntity m_xSelectEntity;
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CPPEView)
-public:
-	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
-	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
-protected:
-	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
-	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
-	virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo);
-	virtual void OnPrint(CDC* pDC, CPrintInfo* pInfo);
-	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
-	//}}AFX_VIRTUAL
-
-// Implementation
-public:
-	virtual ~CPPEView();
-#ifdef _DEBUG
-	virtual void AssertValid() const;
-	virtual void Dump(CDumpContext& dc) const;
-#endif
+	//属性栏显示
 	void UpdatePropertyPage();
 	BOOL DisplayPlateProperty();
 	BOOL DisplayLineAngleProperty();
@@ -105,9 +90,18 @@ public:
 	BOOL DisplayEdgeLineProperty();
 	BOOL DisplayVertexProperty();
 	BOOL DisplayCutPointProperty();
-protected:
-
-// Generated message map functions
+	//操作
+	void OpenWndSel();
+	void OperOther();
+public:
+	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
+	virtual void OnInitialUpdate();
+	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
+	virtual BOOL OnPreparePrinting(CPrintInfo* pInfo);
+	virtual void OnBeginPrinting(CDC* pDC, CPrintInfo* pInfo);
+	virtual void OnPrepareDC(CDC* pDC, CPrintInfo* pInfo);
+	virtual void OnPrint(CDC* pDC, CPrintInfo* pInfo);
+	virtual void OnEndPrinting(CDC* pDC, CPrintInfo* pInfo);
 protected:
 	//{{AFX_MSG(CPPEView)
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -116,7 +110,6 @@ protected:
 	afx_msg void OnLButtonDblClk(UINT nFlags, CPoint point);
 	afx_msg LRESULT ObjectSnappedProcess(WPARAM ID, LPARAM ent_type);
 	afx_msg LRESULT ObjectSelectProcess(WPARAM nSelect, LPARAM other);
-	virtual void OnInitialUpdate();
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 	afx_msg void OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags);
@@ -146,9 +139,6 @@ protected:
 	afx_msg void OnUpdateBatchSortHole(CCmdUI *pCmdUI);
 	//}}AFX_MSG
 	DECLARE_MESSAGE_MAP()
-public:
-	void OpenWndSel();
-	void OperOther();
 };
 
 #ifndef _DEBUG  // debug version in PPEView.cpp

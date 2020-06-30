@@ -108,10 +108,7 @@ static void RemoveCollinearPoint(CProcessPlate *pPlate)
 //////////////////////////////////////////////////////////////////////////
 //CNCPart
 //////////////////////////////////////////////////////////////////////////
-BOOL CNCPart::m_bDisplayLsOrder = FALSE;
-BOOL CNCPart::m_bSortHole = FALSE;
 BOOL CNCPart::m_bDeformedProfile = FALSE;
-double CNCPart::m_fHoleIncrement = 1.5;
 CString CNCPart::m_sExportPartInfoKeyStr;
 //ttp格式
 //13字节文件名称
@@ -277,24 +274,36 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		logerr.Log("%s钢板中的轮廓点已经过火曲变形处理",(char*)pPlate->GetPartNo());
 		return false;
 	}
-	GECS mcs;
-	pPlate->GetMCS(mcs);
 	CProcessPlate tempPlate;
 	pPlate->ClonePart(&tempPlate);
 	//对有卷边工艺的钢板需提取卷边轮廓点
 	if(tempPlate.IsRollEdge())
 		tempPlate.ProcessRollEdgeVertex();
+	//有轮廓边增大值时，对轮廓点进行延展
+	CXhChar100 sValue;
+	double fShapeAddDist = 0;
+	if (dxf_mode == CNCPart::FLAME_MODE && GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+		fShapeAddDist = atof(sValue);
+	else if (dxf_mode == CNCPart::PLASMA_MODE && GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
+		fShapeAddDist = atof(sValue);
+	else if (dxf_mode == CNCPart::LASER_MODE && GetSysParaFromReg("laserPara.m_wEnlargedSpace", sValue))
+		fShapeAddDist = atof(sValue);
+	ATOM_LIST<PROFILE_VER> xDestList;
+	tempPlate.CalEquidistantShape(fShapeAddDist, &xDestList);
+	if (fShapeAddDist > 0)
+	{
+		tempPlate.vertex_list.Empty();
+		for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
+			pPlate->vertex_list.Append(*pVertex);
+	}
 	//生成钢板NC数据需考虑火曲变形，则对钢板中的顶点和螺栓进行火曲变形处理
 	if(m_bDeformedProfile && !tempPlate.m_bIncDeformed)
 		DeformedPlateProfile(&tempPlate);
+	//转化到加工坐标系下
+	GECS mcs;
+	tempPlate.GetMCS(mcs);
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
-	SCOPE_STRU scope;
-	GetPlateScope(tempPlate,scope);
 	//
-	double fSpecialD = 0, fShapeAddDist = 0;
-	CXhChar100 sValue;
-	if(GetSysParaFromReg("LimitSH",sValue))
-		fSpecialD=atof(sValue);
 	int nEdgeClrIndex = -1, nTextClrIndex = -1;
 	if (GetSysParaFromReg("EdgeColor", sValue))
 	{
@@ -328,10 +337,10 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 			}
 		}
 	}
-	ATOM_LIST<PROFILE_VER> xDestList;
 	if(tempPlate.m_cFaceN!=3)	//三面板不能执行共线点命令
 		RemoveCollinearPoint(&tempPlate);
-	tempPlate.CalEquidistantShape(fShapeAddDist,&xDestList);
+	//生成DXF文件
+	SCOPE_STRU scope = tempPlate.GetVertexsScope();
 	CDxfFile file;
 	file.extmin.Set(scope.fMinX,scope.fMaxY);
 	file.extmax.Set(scope.fMaxX,scope.fMinY);
@@ -438,6 +447,9 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				file.NewCircle(tempPlate.m_tInnerOrigin, tempPlate.m_fInnerRadius);
 		}
 		//绘制螺栓孔
+		double fSpecialD = 0;
+		if (GetSysParaFromReg("LimitSH", sValue))
+			fSpecialD = atof(sValue);
 		f3dPoint centre,startPt;
 		for(BOLT_INFO *pHole=tempPlate.m_xBoltInfoList.GetFirst();pHole;pHole=tempPlate.m_xBoltInfoList.GetNext())
 		{
@@ -454,7 +466,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				BOOL bNeedSH = FALSE;
 				if (GetSysParaFromReg("DrillNeedSH", sValue) && dxf_mode == CNCPart::DRILL_MODE)
 					bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
-				if (GetSysParaFromReg("PunchNeedSH", sValue) && dxf_mode == CNCPart::DRILL_MODE)
+				if (GetSysParaFromReg("PunchNeedSH", sValue) && dxf_mode == CNCPart::PUNCH_MODE)
 					bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
 				if (pHole->cFuncType == 0)
 					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
@@ -481,41 +493,15 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				f3dPoint centre(tempPlate.mkpos.x,tempPlate.mkpos.y);
 				coord_trans(centre,mcs,FALSE);
 				file.NewCircle(f3dPoint(centre.x,centre.y),fMkHoldD/2.0);
-			}
-			//字盒
-			BOOL bDrawRect=0;
-			if(GetSysParaFromReg("DispMkRect",sValue))
-				bDrawRect=atoi(sValue);
-			if(bDrawRect)
-			{
-				if(GetSysParaFromReg("MKRectL",sValue))
-					fMkRectL=atof(sValue);
-				if(GetSysParaFromReg("MKRectW",sValue))
-					fMkRectW=atof(sValue);
-				if(tempPlate.mkVec.IsZero())
-				{
-					tempPlate.mkVec.Set(1,0,0);
-					vector_trans(tempPlate.mkVec,mcs,TRUE);
-				}
-				ATOM_LIST<f3dPoint> ptArr;
-				tempPlate.GetMkRect(fMkRectL,fMkRectW,ptArr);
-				for(int i=0;i<4;i++)
-				{
-					f3dPoint startPt(ptArr[i]);
-					f3dPoint endPt(ptArr[(i+1)%4]);
-					coord_trans(startPt,mcs,FALSE);
-					coord_trans(endPt,mcs,FALSE);
-					file.NewLine(startPt,endPt);
-				}
 			}	
 		}
 		if (dxf_mode == CNCPart::LASER_MODE)
 		{	//输出火曲线并用+、-标识正反曲 wht 19-09-26
 			double fFontH = 10;
 			BOOL bOutputBendLine = FALSE, bOutputBendType = FALSE;
-			if (GetSysParaFromReg("nc.LaserPara.m_bOutputBendLine", sValue))
+			if (GetSysParaFromReg("laserPara.m_bOutputBendLine", sValue))
 				bOutputBendLine = atoi(sValue);
-			if (GetSysParaFromReg("nc.LaserPara.m_bOutputBendType", sValue))
+			if (GetSysParaFromReg("laserPara.m_bOutputBendType", sValue))
 				bOutputBendType = atoi(sValue);
 			if (GetSysParaFromReg("DxfTextSize", sValue))
 				fFontH = atof(sValue);
@@ -685,171 +671,83 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		return false;
 }
 #ifdef __PNC_
-void CNCPart::InitDrillBoltHashTbl(CProcessPlate *pPlate, CHashList<CDrillBolt>& hashDrillBoltByD,
-								   BOOL bMergeHole /*= FALSE*/, BOOL bIncSpecialHole /*= TRUE*/, BOOL bDrillGroupSort/*=FALSE*/)
-{	
-	f3dPoint startPt(0, 0, 0), ls_pos;
-	//1、根据螺栓的孔径对螺栓进行分类,并排序
-	double fSpecialD = 0;
-	CXhChar100 sValue;
-	if (GetSysParaFromReg("LimitSH", sValue))
-		fSpecialD = atof(sValue);
-	//三种标准孔径
-	const double D16_HOLE = 16 + CNCPart::m_fHoleIncrement;
-	const double D20_HOLE = 20 + CNCPart::m_fHoleIncrement;
-	const double D24_HOLE = 24 + CNCPart::m_fHoleIncrement;
-	ARRAY_LIST<DRILL_BOLT_INFO> drillInfoArr;
-	for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-	{
-		if (pBolt->bolt_d <= 0)
-			continue;
-		double fHoleD = pBolt->bolt_d + pBolt->hole_d_increment;
-		if (bMergeHole)
-		{	//需要合并孔时在此处处理特殊孔 wht 19-07-25
-			BOOL bSpecialHole = (fSpecialD > 0 && fHoleD >= fSpecialD);
-			if (!bIncSpecialHole&&bSpecialHole)
-				continue;	//过滤掉特殊孔 wht 19-07-25
-		}
-		DRILL_BOLT_INFO* pInfo = NULL;
-		ls_pos.Set(pBolt->posX, pBolt->posY, 0);
-		double fDist = DISTANCE(startPt, ls_pos);
-		for (pInfo = drillInfoArr.GetFirst(); pInfo; pInfo = drillInfoArr.GetNext())
-		{
-			if (pInfo->fHoleD == fHoleD)
-			{
-				pInfo->nBoltNum++;
-				if (pInfo->fMinDist > fDist)
-					pInfo->fMinDist = fDist;
-				break;
-			}
-		}
-		if (pInfo == NULL)
-		{
-			pInfo = drillInfoArr.append();
-			pInfo->fHoleD = fHoleD;
-			pInfo->nBoltNum++;
-			pInfo->fMinDist = fDist;
-		}
-	}
-	CHashList<double> hashDrillDByHoleD;	//记录代孔映射关系
-	if (bMergeHole)
-	{	//将小于特殊孔径的非标孔，使用标准钻\冲头加工 wht 19-07-25
-
-		for (int i = 0; i < drillInfoArr.GetSize(); i++)
-		{
-			if (drillInfoArr[i].fHoleD == D16_HOLE ||
-				drillInfoArr[i].fHoleD == D20_HOLE ||
-				drillInfoArr[i].fHoleD == D24_HOLE)
-				continue;	//标准孔
-			double fDestHoleD = 0;
-			if (drillInfoArr[i].fHoleD > D24_HOLE)
-				fDestHoleD = D24_HOLE;
-			else if (drillInfoArr[i].fHoleD > D20_HOLE)
-				fDestHoleD = D20_HOLE;
-			else if (drillInfoArr[i].fHoleD > D16_HOLE)
-				fDestHoleD = D16_HOLE;
-			else
-				continue;
-			for (int j = 0; j < drillInfoArr.GetSize(); j++)
-			{
-				if (j == i)
-					continue;
-				if (drillInfoArr[j].fHoleD == fDestHoleD)
-				{	//将非标孔合并至当前组，并记录孔对应关系
-					drillInfoArr[j].nBoltNum += drillInfoArr[i].nBoltNum;
-					if (drillInfoArr[i].fMinDist < drillInfoArr[j].fMinDist)
-						drillInfoArr[j].fMinDist = drillInfoArr[i].fMinDist;
-					int key = ftoi(drillInfoArr[i].fHoleD * 10);
-					hashDrillDByHoleD.SetValue(key, drillInfoArr[j].fHoleD);
-					drillInfoArr.RemoveAt(i);
-					break;
-				}
-			}
-		}
-		DRILL_BOLT_INFO *pDrillInfo175 = NULL, *pDrillInfo215 = NULL, *pDrillInfo255 = NULL;
-		for (int i = 0; i < drillInfoArr.GetSize(); i++)
-		{
-			if (drillInfoArr[i].fHoleD == D16_HOLE)
-				pDrillInfo175 = &drillInfoArr[i];
-			if (drillInfoArr[i].fHoleD == D20_HOLE)
-				pDrillInfo215 = &drillInfoArr[i];
-			if (drillInfoArr[i].fHoleD == D24_HOLE)
-				pDrillInfo255 = &drillInfoArr[i];
-		}
-		//根据规则合并钻头数据（常熟风范定制） wht 19-07-25
-		if (pDrillInfo175&&pDrillInfo215&&pDrillInfo255&&drillInfoArr.GetSize() == 3)
-		{
-			BOOL bDeleteDrillInfo215 = FALSE;
-			if (pDrillInfo255->nBoltNum >= pDrillInfo215->nBoltNum)
-			{	//25.5孔数 > 21.5孔数：21.5孔径计入17.5，然后人工扩孔（T1默认为钢印位置，T2为25.5冲头，T3为17.5冲头）
-				//pDrillInfo215==>pDrillInfo175 21.5合并至17.5
-				pDrillInfo175->nBoltNum += pDrillInfo215->nBoltNum;
-				if (pDrillInfo215->fMinDist < pDrillInfo175->fMinDist)
-					pDrillInfo175->fMinDist = pDrillInfo215->fMinDist;
-				int key = ftoi(pDrillInfo215->fHoleD * 10);
-				hashDrillDByHoleD.SetValue(key, pDrillInfo175->fHoleD);
-				bDeleteDrillInfo215 = TRUE;
-			}
-			else //if(pDrillInfo3->nBoltNum<pDrillInfo2->nBoltNum)
-			{	//25.5孔数 < 21.5孔数：25.5孔径计入21.5，然后人工扩孔（T1默认为钢印位置，T2为21.5冲头，T3为17.5冲头）
-				//pDrillInfo255==>pDrillInfo215 25.5合并至21.5
-				pDrillInfo215->nBoltNum += pDrillInfo255->nBoltNum;
-				if (pDrillInfo255->fMinDist < pDrillInfo215->fMinDist)
-					pDrillInfo215->fMinDist = pDrillInfo255->fMinDist;
-				int key = ftoi(pDrillInfo255->fHoleD * 10);
-				hashDrillDByHoleD.SetValue(key, pDrillInfo215->fHoleD);
-				bDeleteDrillInfo215 = FALSE;
-			}
-			for (int i = 0; i < drillInfoArr.GetSize(); i++)
-			{
-				if ((bDeleteDrillInfo215&&pDrillInfo215 == &drillInfoArr[i]) ||
-					(!bDeleteDrillInfo215&&pDrillInfo255 == &drillInfoArr[i]))
-					drillInfoArr.RemoveAt(i);
-			}
-		}
-	}
-	int	iSortType = (GetSysParaFromReg("GroupSortType", sValue)) ? atoi(sValue) : 0;
-	if (iSortType == 1)
-		CQuickSort<DRILL_BOLT_INFO>::QuickSort(drillInfoArr.m_pData, drillInfoArr.GetSize(), compare_boltInfo);
-	else
-		CQuickSort<DRILL_BOLT_INFO>::QuickSort(drillInfoArr.m_pData, drillInfoArr.GetSize(), compare_boltInfo2);
-	//2、填充hashDrillBoltByD
-	for (int i = 0; i < drillInfoArr.GetSize(); i++)
-	{
-		CDrillBolt* pDrillBolt = hashDrillBoltByD.Add(ftoi(drillInfoArr[i].fHoleD * 10));
-		pDrillBolt->fHoleD = drillInfoArr[i].fHoleD;
-		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-		{
-			double fCurHoleD = pBolt->bolt_d + pBolt->hole_d_increment;
-			for (int j = 0; j < 2; j++)
-			{	//根据螺栓孔径查询对应的加工孔径,最多需要查询两次（一次为非标孔转为标准孔，一次为标准孔合并） wht 19-07-25
-				int key = ftoi(fCurHoleD * 10);
-				double *pfValue = hashDrillDByHoleD.GetValue(key);
-				if (pfValue)
-					fCurHoleD = *pfValue;
-			}
-			if (fCurHoleD != pDrillBolt->fHoleD)
-				continue;
-			BOLT_INFO newBolt;
-			newBolt.CloneBolt(pBolt);
-			pDrillBolt->boltList.append(newBolt);
-		}
-	}
-}
-
-void CNCPart::OptimizeBolt( CProcessPlate *pPlate,CHashList<CDrillBolt>& hashDrillBoltByD,
-							BOOL bSortByHoleD/*=TRUE*/, BYTE ciAlgType /*= 0*/, 
-							BOOL bMergeHole /*= FALSE*/, BOOL bIncSpecialHole /*= TRUE*/)
+void CNCPart::OptimizeBolt( CProcessPlate *pPlate,CHashList<CDrillBolt>& hashDrillBoltByD, BYTE ciNcMode, BYTE ciAlgType /*= 0*/)
 {
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	if (bSortByHoleD)
-		InitDrillBoltHashTbl(pPlate, hashDrillBoltByD, bMergeHole, bIncSpecialHole, TRUE);
+	CXhChar100 sValue;
+	double fSpecialD = (GetSysParaFromReg("LimitSH", sValue)) ? atof(sValue) : 0;
+	BOOL bNeedSH = FALSE;
+	if (ciNcMode == CNCPart::PUNCH_MODE && GetSysParaFromReg("PunchNeedSH", sValue))
+		bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
+	if (ciNcMode == CNCPart::DRILL_MODE && GetSysParaFromReg("DrillNeedSH", sValue))
+		bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
+	int iSortType = 0;
+	if (ciNcMode == CNCPart::PUNCH_MODE && GetSysParaFromReg("PunchHoldSortType", sValue))
+		iSortType = atoi(sValue);
+	if (ciNcMode == CNCPart::DRILL_MODE && GetSysParaFromReg("DrillHoldSortType", sValue))
+		iSortType = atoi(sValue);
+	if (iSortType>0)
+	{	//根据孔径进行分组
+		f3dPoint startPt(0, 0, 0), ls_pos;
+		ARRAY_LIST<DRILL_BOLT_INFO> drillInfoArr;
+		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
+		{
+			if (pBolt->bolt_d <= 0)
+				continue;
+			if (pBolt->bolt_d >= fSpecialD && !bNeedSH)
+				continue;	//不保留大号孔
+			double fHoleD = pBolt->bolt_d + pBolt->hole_d_increment;
+			DRILL_BOLT_INFO* pInfo = NULL;
+			ls_pos.Set(pBolt->posX, pBolt->posY, 0);
+			double fDist = DISTANCE(startPt, ls_pos);
+			for (pInfo = drillInfoArr.GetFirst(); pInfo; pInfo = drillInfoArr.GetNext())
+			{
+				if (pInfo->fHoleD == fHoleD)
+				{
+					pInfo->nBoltNum++;
+					if (pInfo->fMinDist > fDist)
+						pInfo->fMinDist = fDist;
+					break;
+				}
+			}
+			if (pInfo == NULL)
+			{
+				pInfo = drillInfoArr.append();
+				pInfo->fHoleD = fHoleD;
+				pInfo->nBoltNum++;
+				pInfo->fMinDist = fDist;
+			}
+		}
+		if (iSortType == 2)
+			CQuickSort<DRILL_BOLT_INFO>::QuickSort(drillInfoArr.m_pData, drillInfoArr.GetSize(), compare_boltInfo);
+		else
+			CQuickSort<DRILL_BOLT_INFO>::QuickSort(drillInfoArr.m_pData, drillInfoArr.GetSize(), compare_boltInfo2);
+		//填充hashDrillBoltByD
+		for (int i = 0; i < drillInfoArr.GetSize(); i++)
+		{
+			CDrillBolt* pDrillBolt = hashDrillBoltByD.Add(ftoi(drillInfoArr[i].fHoleD * 10));
+			pDrillBolt->fHoleD = drillInfoArr[i].fHoleD;
+			for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
+			{
+				double fCurHoleD = pBolt->bolt_d + pBolt->hole_d_increment;
+				if (fCurHoleD != pDrillBolt->fHoleD)
+					continue;
+				BOLT_INFO newBolt;
+				newBolt.CloneBolt(pBolt);
+				pDrillBolt->boltList.append(newBolt);
+			}
+		}
+	}
 	else
 	{	//不根据孔径进行分类
 		CDrillBolt* pDrillBolt=hashDrillBoltByD.Add(0);
 		for(BOLT_INFO* pBolt=pPlate->m_xBoltInfoList.GetFirst();pBolt;pBolt=pPlate->m_xBoltInfoList.GetNext())
 		{
+			if (pBolt->bolt_d <= 0)
+				continue;
+			if(pBolt->bolt_d >= fSpecialD && !bNeedSH)
+				continue;	//不保留大号孔
 			BOLT_INFO newBolt;
 			newBolt.CloneBolt(pBolt);
 			pDrillBolt->fHoleD=pBolt->bolt_d+pBolt->hole_d_increment;
@@ -908,25 +806,20 @@ void CNCPart::InitStoreMode(CHashList<CDrillBolt>& hashDrillBoltByD, ARRAY_LIST<
 	}
 }
 //重新更新钢板的螺栓孔信息
-void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate,BOOL bSortByHoleD/*=TRUE*/, BYTE ciAlgType/*=0*/)
+void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate, BYTE ciNcMode, BYTE ciAlgType /*= 0*/)
 {
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
 	if(pPlate==NULL)
 		return;
 	GECS mcs;
-	CHashList<CDrillBolt> hashDrillBoltByD;
 	CProcessPlate tempPlate;
 	pPlate->ClonePart(&tempPlate);
 	pPlate->GetMCS(mcs);
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
-	CXhChar100 sValue;
-	BOOL bIncSH = FALSE, bMergeHole = FALSE;
-	if (GetSysParaFromReg("PunchNeedSH", sValue))
-		bIncSH = atoi(sValue);
-	if (GetSysParaFromReg("PbjMergeHole", sValue))
-		bMergeHole = atoi(sValue);
-	OptimizeBolt(&tempPlate,hashDrillBoltByD,bSortByHoleD,ciAlgType,bMergeHole,bIncSH);
+	//排序处理
+	CHashList<CDrillBolt> hashDrillBoltByD;
+	OptimizeBolt(&tempPlate, hashDrillBoltByD, ciNcMode, ciAlgType);
 	//重新写入螺栓
 	pPlate->m_xBoltInfoList.Empty();
 	for(CDrillBolt* pDrillBolt=hashDrillBoltByD.GetFirst();pDrillBolt;pDrillBolt=hashDrillBoltByD.GetNext())
@@ -949,15 +842,14 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 	if (pPlate == NULL)
 		return false;
 	CXhChar16 sValue;
-	BOOL bIncVertex = FALSE, bAutoSplitFile = FALSE, bIncSH = FALSE, bMergeHole = FALSE;
+	BOOL bIncVertex = FALSE, bAutoSplitFile = FALSE, bIncSH = FALSE;
 	if (GetSysParaFromReg("PunchNeedSH", sValue))
 		bIncSH = atoi(sValue); 
 	if (GetSysParaFromReg("PbjIncVertex", sValue))
 		bIncVertex = atoi(sValue);
 	if (GetSysParaFromReg("PbjAutoSplitFile", sValue))
 		bAutoSplitFile = atoi(sValue);
-	if (GetSysParaFromReg("PbjMergeHole", sValue))
-		bMergeHole = atoi(sValue);
+	//
 	CLogErrorLife logErrLife;
 	CProcessPlate tempPlate;
 	pPlate->ClonePart(&tempPlate);
@@ -965,12 +857,19 @@ bool CNCPart::CreatePlatePbjFile(CProcessPlate *pPlate, const char* file_path)
 	pPlate->GetMCS(mcs);
 	CProcessPlate::TransPlateToMCS(&tempPlate, mcs);
 	CHashList<CDrillBolt> hashDrillBoltByD;
-	if (m_bSortHole)
-		OptimizeBolt(&tempPlate, hashDrillBoltByD,TRUE,0,bMergeHole,bIncSH);	//对螺栓进行顺序优化
-	else
-	{	//根据孔径初始化螺栓信息
-		InitDrillBoltHashTbl(&tempPlate, hashDrillBoltByD, bMergeHole, bIncSH, FALSE);
+	for (BOLT_INFO* pBolt = tempPlate.m_xBoltInfoList.GetFirst(); pBolt; pBolt = tempPlate.m_xBoltInfoList.GetNext())
+	{
+		double fHoleD = pBolt->bolt_d + pBolt->hole_d_increment;
+		int nKeyD = ftoi(fHoleD * 10);
+		CDrillBolt* pDrillBolt = hashDrillBoltByD.GetValue(nKeyD);
+		if (pDrillBolt == NULL)
+			pDrillBolt = hashDrillBoltByD.Add(nKeyD);
+		BOLT_INFO newBolt;
+		newBolt.CloneBolt(pBolt);
+		pDrillBolt->fHoleD = fHoleD;
+		pDrillBolt->boltList.append(newBolt);
 	}
+	//
 	ARRAY_LIST<double> holeDList;
 	InitStoreMode(hashDrillBoltByD, holeDList, bIncSH);
 	if (!bAutoSplitFile&&holeDList.GetSize() > 2)
@@ -1166,24 +1065,20 @@ bool CNCPart::CreatePlatePmzFile(CProcessPlate *pPlate,const char* file_path)
 	GECS mcs;
 	pPlate->GetMCS(mcs);
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
+	//根据孔径初始化螺栓信息
 	CHashList<CDrillBolt> hashDrillBoltByD;
-	if(m_bSortHole)
-		OptimizeBolt(&tempPlate,hashDrillBoltByD);	//对螺栓进行顺序优化
-	else
-	{	//根据孔径初始化螺栓信息
-		CDrillBolt* pDrillBolt=NULL;
-		for(BOLT_INFO* pBolt=tempPlate.m_xBoltInfoList.GetFirst();pBolt;pBolt=tempPlate.m_xBoltInfoList.GetNext())
-		{
-			double fHoleD=pBolt->bolt_d+pBolt->hole_d_increment;
-			int nKeyD=ftoi(fHoleD*10);
-			pDrillBolt=hashDrillBoltByD.GetValue(nKeyD);
-			if(pDrillBolt==NULL)
-				pDrillBolt=hashDrillBoltByD.Add(nKeyD);
-			BOLT_INFO newBolt;
-			newBolt.CloneBolt(pBolt);
-			pDrillBolt->fHoleD=fHoleD;
-			pDrillBolt->boltList.append(newBolt);
-		}
+	CDrillBolt* pDrillBolt=NULL;
+	for(BOLT_INFO* pBolt=tempPlate.m_xBoltInfoList.GetFirst();pBolt;pBolt=tempPlate.m_xBoltInfoList.GetNext())
+	{
+		double fHoleD=pBolt->bolt_d+pBolt->hole_d_increment;
+		int nKeyD=ftoi(fHoleD*10);
+		pDrillBolt=hashDrillBoltByD.GetValue(nKeyD);
+		if(pDrillBolt==NULL)
+			pDrillBolt=hashDrillBoltByD.Add(nKeyD);
+		BOLT_INFO newBolt;
+		newBolt.CloneBolt(pBolt);
+		pDrillBolt->fHoleD=fHoleD;
+		pDrillBolt->boltList.append(newBolt);
 	}
 	CXhChar500 sFile(file_path);
 	double fSpecialD=(GetSysParaFromReg("LimitSH",sValue))?atof(sValue):0;

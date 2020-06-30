@@ -156,8 +156,8 @@ void CPPEView::OnDisplayBoltSort()
 		return;
 	if(g_pPartEditor->GetDrawMode()!=IPEC::DRAW_MODE_NC)
 		return;
-	CNCPart::m_bDisplayLsOrder=!CNCPart::m_bDisplayLsOrder;
-	g_pPartEditor->SetDrawBoltMode(CNCPart::m_bDisplayLsOrder);
+	m_bDisplayLsOrder=!m_bDisplayLsOrder;
+	g_pPartEditor->SetDrawBoltMode(m_bDisplayLsOrder);
 	g_pSolidDraw->BuildDisplayList(this);
 #endif
 }
@@ -170,7 +170,7 @@ void CPPEView::OnUpdateDisplayBoltSort(CCmdUI *pCmdUI)
 #endif
 	pCmdUI->Enable(bEnable);
 	if(bEnable)
-		pCmdUI->SetCheck(CNCPart::m_bDisplayLsOrder);
+		pCmdUI->SetCheck(m_bDisplayLsOrder);
 }
 void CPPEView::OnSmartSortBolts1()
 {
@@ -181,9 +181,9 @@ void CPPEView::OnSmartSortBolts1()
 		return;
 	CWaitCursor waitCursor;
 	CProcessPlate* pPlate = (CProcessPlate*)m_pProcessPart;
-	CNCPart::RefreshPlateHoles(pPlate,g_sysPara.nc.m_bSortByHoleD, CNCPart::ALG_GREEDY);
+	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_ciDisplayType, CNCPart::ALG_GREEDY);
 	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	SyncPartInfo(false,true);
+	Refresh();
 #endif
 }
 void CPPEView::OnUpdateSmartSortBolts1(CCmdUI *pCmdUI)
@@ -204,9 +204,9 @@ void CPPEView::OnSmartSortBolts2()
 		return;
 	CWaitCursor waitCursor;
 	CProcessPlate* pPlate = (CProcessPlate*)m_pProcessPart;
-	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_bSortByHoleD, CNCPart::ALG_BACKTRACK);
+	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_ciDisplayType, CNCPart::ALG_BACKTRACK);
 	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	SyncPartInfo(false, true);
+	Refresh();
 #endif
 }
 void CPPEView::OnUpdateSmartSortBolts2(CCmdUI *pCmdUI)
@@ -227,9 +227,9 @@ void CPPEView::OnSmartSortBolts3()
 		return;
 	CWaitCursor waitCursor;
 	CProcessPlate* pPlate = (CProcessPlate*)m_pProcessPart;
-	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_bSortByHoleD, CNCPart::ALG_ANNEAL);
+	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_ciDisplayType, CNCPart::ALG_ANNEAL);
 	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	SyncPartInfo(false, true);
+	Refresh();
 #endif
 }
 void CPPEView::OnUpdateSmartSortBolts3(CCmdUI *pCmdUI)
@@ -246,22 +246,28 @@ void CPPEView::OnBatchSortHole()
 #ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	int i=0,num=model.PartCount();
+	int index = 0, num = model.PartCount();
 	CXhChar16 sCurPartNo;
 	if(m_pProcessPart)
 		sCurPartNo=m_pProcessPart->GetPartNo();
 	model.DisplayProcess(0,"批量优化螺栓顺序进度");
-	for(m_pProcessPart=model.EnumPartFirst();m_pProcessPart;m_pProcessPart=model.EnumPartNext())
+	for(m_pProcessPart=model.EnumPartFirst();m_pProcessPart;m_pProcessPart=model.EnumPartNext(), index++)
 	{
-		i++;
-		model.DisplayProcess(ftoi(100*i/num),"批量优化螺栓顺序进度");
-		if(m_pProcessPart->IsPlate())
-		{
-			CNCPart::RefreshPlateHoles((CProcessPlate*)m_pProcessPart,g_sysPara.nc.m_bSortByHoleD);
-			SyncPartInfo(true,false);
+		model.DisplayProcess(ftoi(100* index /num),"批量优化螺栓顺序进度");
+		CProcessPlate* pSrcPlate = NULL, *pDestPlate = NULL;
+		if (m_pProcessPart->IsPlate())
+		{	//对于冲床和钻床工艺的钢板进行螺栓排序
+			pSrcPlate = (CProcessPlate*)m_pProcessPart;
+			//冲床工艺下的螺栓孔排序
+			pDestPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), CNCPart::PUNCH_MODE);
+			CNCPart::RefreshPlateHoles((CProcessPlate*)pDestPlate, CNCPart::PUNCH_MODE);
+			//钻床工艺下的螺栓孔排序
+			pDestPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), CNCPart::DRILL_MODE);
+			CNCPart::RefreshPlateHoles((CProcessPlate*)pDestPlate, CNCPart::DRILL_MODE);
 		}
 	}
 	model.DisplayProcess(100,"批量优化螺栓顺序完成");
+	//
 	UpdateCurWorkPartByPartNo(sCurPartNo);
 	Refresh();
 #endif

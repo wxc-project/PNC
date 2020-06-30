@@ -291,7 +291,6 @@ void CPPEDoc::OpenFolder(const char* sFolderPath)
 	if (pPPEView)
 	{	//将当前构件设置为空，避免连续打开多个文件夹导致死机
 		pPPEView->SetCurProcessPart(NULL);
-		pPPEView->AmendHoleIncrement();
 	}
 }
 void CPPEDoc::OnFileOpen() 
@@ -425,41 +424,6 @@ void CPPEDoc::InitPlateGroupByThickMat(CHashStrList<PLATE_GROUP> &hashPlateByThi
 		pPlateGroup->plateSet.append((CProcessPlate*)pPart);
 	}
 }
-void CPPEDoc::AmendHoleIncrement(CProcessPlate* pPlate, int iNcMode)
-{
-	if (pPlate->m_xBoltInfoList.GetNodeNum() <= 0)
-		return;
-	NC_INFO_PARA* pNCPare = NULL;
-	if (iNcMode == CNCPart::FLAME_MODE)
-		pNCPare = &g_sysPara.nc.m_xFlamePara;
-	else if (iNcMode == CNCPart::PLASMA_MODE)
-		pNCPare = &g_sysPara.nc.m_xPlasmaPara;
-	else if (iNcMode == CNCPart::PUNCH_MODE)
-		pNCPare = &g_sysPara.nc.m_xPunchPara;
-	else if (iNcMode == CNCPart::DRILL_MODE)
-		pNCPare = &g_sysPara.nc.m_xDrillPara;
-	else if (iNcMode == CNCPart::LASER_MODE)
-		pNCPare = &g_sysPara.nc.m_xLaserPara;
-	for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-	{
-		
-		if (pBolt->bolt_d == 12 && pBolt->cFuncType == 0)
-			pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM12;
-		else if (pBolt->bolt_d == 16 && pBolt->cFuncType == 0)
-			pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM16;
-		else if (pBolt->bolt_d == 20 && pBolt->cFuncType == 0)
-			pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM20;
-		else if (pBolt->bolt_d == 24 && pBolt->cFuncType == 0)
-			pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM24;
-		else if (pBolt->cFuncType >= 2)
-		{	//特殊孔
-			if (pBolt->bolt_d >= g_sysPara.nc.m_fLimitSH)
-				pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fCutSH;
-			else
-				pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fProSH;
-		}
-	}
-}
 CXhChar16 CPPEDoc::GetSubFolder(int iNcMode)
 {
 	CXhChar16 sSubFolder;
@@ -529,16 +493,14 @@ bool CPPEDoc::CreatePlateNcFiles(CHashStrList<PLATE_GROUP> &hashPlateByThickMat,
 			sNcFileDir.Printf("%s\\%s\\%s", (char*)mainFolder, (char*)sSubFolder, (char*)sNcFileFolder);
 		if (access(sNcFileDir, 0) == -1)
 			MakeDirectory(sNcFileDir);
-		for (CProcessPlate *pPlate = pPlateGroup->plateSet.GetFirst(); pPlate; pPlate = pPlateGroup->plateSet.GetNext())
+		for (CProcessPlate *pSrcPlate = pPlateGroup->plateSet.GetFirst(); pSrcPlate; pSrcPlate = pPlateGroup->plateSet.GetNext())
 		{
 			index++;
 			model.DisplayProcess(ftoi(100 * index / num), sTitle);
-			CXhChar100  sFileName = GetValidFileName(pPlate);
-			if (sFileName.Length() <= 0)
+			CProcessPlate *pPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), iNcMode);
+			CXhChar100  sFileName = GetValidFileName(pSrcPlate);
+			if (sFileName.Length() <= 0 || pPlate == NULL)
 				continue;
-			//根据不同NC模式，修订螺栓增大值
-			AmendHoleIncrement(pPlate, iNcMode);
-			//
 			sFilePath.Printf("%s\\%s.%s", (char*)sNcFileDir, (char*)sFileName, (char*)sNcExt);
 			if (CNCPart::PLATE_DXF_FILE == iNcFileType)			//钢板DXF类型文件
 				CNCPart::CreatePlateDxfFile(pPlate, sFilePath, iNcMode);
@@ -672,16 +634,13 @@ void CPPEDoc::CreatePlateFiles(int iFileType)
 void CPPEDoc::OnFileSaveDxf()
 {
 	CNCPart::m_bDeformedProfile=TRUE;
-	if(model.IsAllDeformedProfile()==FALSE)
-	{
-		if(AfxMessageBox("DXF文件中是否考虑火曲变形",MB_YESNO)==IDYES)
-			CNCPart::m_bDeformedProfile=TRUE;
-		else
-			CNCPart::m_bDeformedProfile=FALSE;
-	}
 #ifdef __PNC_
 	CreatePlateDxfFiles();
 #else
+	if (AfxMessageBox("DXF文件中是否考虑火曲变形", MB_YESNO) == IDYES)
+		CNCPart::m_bDeformedProfile = TRUE;
+	else
+		CNCPart::m_bDeformedProfile = FALSE;
 	CreatePlateFiles(CNCPart::PLATE_DXF_FILE);
 #endif
 }
@@ -707,10 +666,6 @@ void CPPEDoc::OnFileSavePbj()
 #ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_PBJ_FILE))
 		return;
-	if(AfxMessageBox("PBJ文件中螺栓孔是否进行排序(已排序请选择否)",MB_YESNO)==IDYES)
-		CNCPart::m_bSortHole=TRUE;
-	else
-		CNCPart::m_bSortHole=FALSE;
 	CreatePlateNcFiles(CNCPart::PLATE_PBJ_FILE);
 #endif
 }
@@ -728,10 +683,6 @@ void CPPEDoc::OnFileSavePmz()
 #ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_PBJ_FILE))
 		return;
-	if(AfxMessageBox("PMZ文件中螺栓孔是否进行排序(已排序请选择否)",MB_YESNO)==IDYES)
-		CNCPart::m_bSortHole=TRUE;
-	else
-		CNCPart::m_bSortHole=FALSE;
 	CreatePlateNcFiles(CNCPart::PLATE_PMZ_FILE);
 #endif
 }

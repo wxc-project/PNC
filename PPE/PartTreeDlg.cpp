@@ -116,7 +116,7 @@ void CPartTreeDlg::OnTvnSelchangedTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 			pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());
 		else
 			pView->UpdateCurWorkPartByPartNo(NULL);
-		pView->SyncPartInfo(false,true);
+		pView->Refresh();
 		pView->UpdatePropertyPage();
 	}
 	*pResult = 0;
@@ -196,11 +196,12 @@ void CPartTreeDlg::SmartSortBolts(BYTE ciAlgType)
 	if (pPart == NULL || !pPart->IsPlate())
 		return;
 	CWaitCursor waitCursor;
-	CProcessPlate* pPlate = (CProcessPlate*)pPart;
-	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_bSortByHoleD, ciAlgType);
+	CProcessPlate* pPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
+	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_ciDisplayType, ciAlgType);
+	//
 	CPPEView* pView = (CPPEView*)theApp.GetView();
 	pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());
-	pView->SyncPartInfo(false, true);
+	pView->Refresh();
 #endif
 }
 void CPartTreeDlg::OnSmartSortBolts1()
