@@ -20,8 +20,8 @@ CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 			continue;	//计算钢板区域时不计算文字区域 wht 19-10-17
 		m_xEntIdList.append(MkCadObjId(*pId));
 	}
-	m_curRect=GetCadEntRect(m_xEntIdList);
-	m_origin.Set(m_curRect.topLeft.x,m_curRect.bottomRight.y);
+	f2dRect curRect=GetCadEntRect(m_xEntIdList);
+	m_origin.Set(curRect.topLeft.x,curRect.bottomRight.y);
 }
 
 CAdjustPlateMCS::~CAdjustPlateMCS(void)
@@ -29,10 +29,32 @@ CAdjustPlateMCS::~CAdjustPlateMCS(void)
 
 }
 
-
+void CAdjustPlateMCS::UpdateCloneEdgePos()
+{
+	for (ACAD_LINEID *pLineId = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetFirst(); pLineId;
+		pLineId = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetNext())
+		pLineId->UpdatePos();
+}
+void CAdjustPlateMCS::MoveCloneEnts(AcGeMatrix3d moveMat)
+{
+	AcDbEntity *pEnt = NULL;
+	for (ULONG *pId = m_pPlateInfo->m_cloneEntIdList.GetFirst(); pId; pId = m_pPlateInfo->m_cloneEntIdList.GetNext())
+	{
+		AcDbObjectId entId = MkCadObjId(*pId);
+		Acad::ErrorStatus es = acdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
+		if (es != Acad::eOk)
+			AfxMessageBox(CXhChar50("%d", es));
+		if (pEnt == NULL)
+			continue;
+		pEnt->transformBy(moveMat);
+		pEnt->close();
+	}
+}
 
 bool CAdjustPlateMCS::Rotation()
 {
+	UpdateCloneEdgePos();
+	//
 	int n = m_pPlateInfo->xPlate.vertex_list.GetNodeNum();
 	int cur_edge = m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge;
 	int next_edge = (cur_edge + 1) % n;
@@ -52,28 +74,15 @@ bool CAdjustPlateMCS::Rotation()
 	AcGeMatrix3d rotationMat;
 	f3dPoint ptS = pLineS->m_ptStart;
 	f3dPoint ptE = pLineE->m_ptStart;
-	GEPOINT src_vec= ptE - ptS;
-	if(m_pPlateInfo->xPlate.mcsFlg.ciOverturn>0)
-		src_vec= ptS - ptE;
+	GEPOINT src_vec= (ptE - ptS).normalized();
+	if (m_pPlateInfo->xPlate.mcsFlg.ciOverturn > 0)
+		src_vec = -1;
 	GEPOINT dest_vec(1,0,0);
 	double fDegAngle=Cal2dLineAng(0,0,dest_vec.x,dest_vec.y)-Cal2dLineAng(0,0,src_vec.x,src_vec.y);
 	rotationMat.setToRotation(fDegAngle,AcGeVector3d::kZAxis,AcGePoint3d(ptS.x, ptS.y,0));
-	AcDbEntity *pEnt=NULL;
-	ARRAY_LIST<AcDbObjectId> entIdList;
-	for(ULONG *pId=m_pPlateInfo->m_cloneEntIdList.GetFirst();pId;pId=m_pPlateInfo->m_cloneEntIdList.GetNext())
-	{
-		AcDbObjectId entId=MkCadObjId(*pId);
-		Acad::ErrorStatus es=acdbOpenAcDbEntity(pEnt,entId,AcDb::kForWrite);
-		if(es!=Acad::eOk)
-			AfxMessageBox(CXhChar50("%d",es));
-		CAcDbObjLife entLife(pEnt);
-		if(pEnt==NULL)
-			continue;
-		pEnt->transformBy(rotationMat);
-		entIdList.append(entId);
-	}
+	MoveCloneEnts(rotationMat);
 	//2.将钢板移动至坐标系原点
-	f2dRect rect=GetCadEntRect(entIdList);
+	f2dRect rect=GetCadEntRect(m_xEntIdList);
 	AcGeMatrix3d moveMat;
 	ads_point ptFrom,ptTo;
 	ptFrom[X]=rect.topLeft.x;
@@ -83,29 +92,18 @@ bool CAdjustPlateMCS::Rotation()
 	ptTo[Y]=m_origin.y;
 	ptTo[Z]=0;
 	moveMat.setToTranslation(AcGeVector3d(ptTo[X]-ptFrom[X],ptTo[Y]-ptFrom[Y],ptTo[Z]-ptFrom[Z]));
-	for(ULONG *pId=m_pPlateInfo->m_cloneEntIdList.GetFirst();pId;pId=m_pPlateInfo->m_cloneEntIdList.GetNext())
-	{
-		AcDbObjectId entId=MkCadObjId(*pId);
-		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForWrite);
-		CAcDbObjLife entLife(pEnt);
-		if(pEnt==NULL)
-			continue;
-		pEnt->transformBy(moveMat);
-	}
+	MoveCloneEnts(moveMat);
 	//3. 旋转钢印号位置
-	pEnt = NULL;
+	AcDbEntity *pEnt = NULL;
 	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_pPlateInfo->m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
 	if (pEnt)
 	{
-		CAcDbObjLife entLife(pEnt);
 		pEnt->transformBy(rotationMat);
 		pEnt->transformBy(moveMat);
+		pEnt->close();
 	}
-	//4.刷新界面
-	actrTransactionManager->flushGraphics();
-	acedUpdateDisplay();
-	//5.更新钢板对应实体位置
-	m_pPlateInfo->UpdateEdgeEntPos();
+	//4.更新钢板对应实体位置
+	UpdateCloneEdgePos();
 	return true;
 }
 
@@ -159,22 +157,9 @@ void CAdjustPlateMCS::Mirror()
 	AcGePoint3d start(m_origin.x,m_origin.y,0),end(m_origin.x,m_origin.y+1000,0);
 	line3d.set(start,end);
 	mirrorMat.setToMirroring(line3d);
-	AcDbEntity *pEnt=NULL;
-	ARRAY_LIST<AcDbObjectId> entIdList;
-	for(ULONG *pId=m_pPlateInfo->m_cloneEntIdList.GetFirst();pId;pId=m_pPlateInfo->m_cloneEntIdList.GetNext())
-	{
-		AcDbObjectId entId=MkCadObjId(*pId);
-		Acad::ErrorStatus es=acdbOpenAcDbEntity(pEnt,entId,AcDb::kForWrite);
-		if(es!=Acad::eOk)
-			AfxMessageBox(CXhChar50("%d",es));
-		CAcDbObjLife entLife(pEnt);
-		if(pEnt==NULL)
-			continue;
-		pEnt->transformBy(mirrorMat);
-		entIdList.append(entId);
-	}
+	MoveCloneEnts(mirrorMat);
 	//2.将钢板移动至坐标系原点
-	f2dRect rect=GetCadEntRect(entIdList);
+	f2dRect rect=GetCadEntRect(m_xEntIdList);
 	AcGeMatrix3d moveMat;
 	ads_point ptFrom,ptTo;
 	ptFrom[X]=rect.topLeft.x;
@@ -184,20 +169,9 @@ void CAdjustPlateMCS::Mirror()
 	ptTo[Y]=m_origin.y;
 	ptTo[Z]=0;
 	moveMat.setToTranslation(AcGeVector3d(ptTo[X]-ptFrom[X],ptTo[Y]-ptFrom[Y],ptTo[Z]-ptFrom[Z]));
-	for(ULONG *pId=m_pPlateInfo->m_cloneEntIdList.GetFirst();pId;pId=m_pPlateInfo->m_cloneEntIdList.GetNext())
-	{
-		AcDbObjectId entId=MkCadObjId(*pId);
-		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForWrite);
-		CAcDbObjLife entLife(pEnt);
-		if(pEnt==NULL)
-			continue;
-		pEnt->transformBy(moveMat);
-	}
-	//3.刷新界面
-	actrTransactionManager->flushGraphics();
-	acedUpdateDisplay();
-	//4.更新钢板对应实体位置
-	m_pPlateInfo->UpdateEdgeEntPos();
+	MoveCloneEnts(moveMat);
+	//3.更新钢板对应实体位置
+	UpdateCloneEdgePos();
 }
 
 bool CAdjustPlateMCS::IsValidDockVertex(BYTE ciEdgeIndex)

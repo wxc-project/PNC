@@ -2264,117 +2264,28 @@ bool CPlateProcessInfo::InitLayoutVertexByBottomEdgeIndex(f2dRect &rect)
 }
 void CPlateProcessInfo::InitEdgeEntIdMap()
 {
-	AcDbEntity *pEnt=NULL;
-	//1.初始化原始直线与克隆直线
-	ARRAY_LIST<ACAD_LINEID> lineIdList;
-	CHashList<ACAD_LINEID> hashCloneEntIdByLineId;
-	for(CAD_ENTITY *pCadEnt= m_xHashRelaEntIdList.GetFirst();pCadEnt;pCadEnt= m_xHashRelaEntIdList.GetNext())
-	{
-		AcDbObjectId entId=MkCadObjId(pCadEnt->idCadEnt);
-		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
-		CAcDbObjLife entLife(pEnt);
-		if(pEnt==NULL)
-			continue;
-		if (pEnt->isKindOf(AcDbLine::desc()))
-		{
-			AcDbLine *pLine = (AcDbLine*)pEnt;
-			ACAD_LINEID *pLineId = lineIdList.append();
-			GEPOINT start(pLine->startPoint().x, pLine->startPoint().y, 0), end(pLine->endPoint().x, pLine->endPoint().y, 0);
-			pLineId->Init(entId, start, end);
-		}
-		else if (pEnt->isKindOf(AcDbArc::desc()))
-		{
-			AcDbArc* pArc = (AcDbArc*)pEnt;
-			AcGePoint3d startPt, endPt;
-			pArc->getStartPoint(startPt);
-			pArc->getEndPoint(endPt);
-			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
-			ACAD_LINEID *pLineId = lineIdList.append();
-			pLineId->Init(entId, start, end);
-		}
-		else if (pEnt->isKindOf(AcDbEllipse::desc()))
-		{
-			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
-			AcGePoint3d startPt, endPt;
-			pEllipse->getStartPoint(startPt);
-			pEllipse->getEndPoint(endPt);
-			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
-			ACAD_LINEID *pLineId = lineIdList.append();
-			pLineId->Init(entId, start, end);
-		}
-	}
-	for(ULONG *pId=m_cloneEntIdList.GetFirst();pId;pId=m_cloneEntIdList.GetNext())
-	{
-		AcDbObjectId entId=MkCadObjId(*pId);
-		acdbOpenAcDbEntity(pEnt,entId,AcDb::kForRead);
-		CAcDbObjLife entLife(pEnt);
-		if(pEnt==NULL)
-			continue;
-		if (pEnt->isKindOf(AcDbLine::desc()))
-		{
-			AcDbLine *pLine = (AcDbLine*)pEnt;
-			ACAD_LINEID *pLineId = hashCloneEntIdByLineId.Add(*pId);
-			GEPOINT start(pLine->startPoint().x, pLine->startPoint().y, 0), end(pLine->endPoint().x, pLine->endPoint().y, 0);
-			pLineId->Init(entId, start, end);
-		}
-		else if (pEnt->isKindOf(AcDbArc::desc()))
-		{
-			AcDbArc* pArc = (AcDbArc*)pEnt;
-			AcGePoint3d startPt, endPt;
-			pArc->getStartPoint(startPt);
-			pArc->getEndPoint(endPt);
-			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
-			ACAD_LINEID *pLineId = hashCloneEntIdByLineId.Add(*pId);
-			pLineId->Init(entId, start, end);
-		}
-		else if (pEnt->isKindOf(AcDbEllipse::desc()))
-		{
-			AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
-			AcGePoint3d startPt, endPt;
-			pEllipse->getStartPoint(startPt);
-			pEllipse->getEndPoint(endPt);
-			GEPOINT start(startPt.x, startPt.y, 0), end(endPt.x, endPt.y, 0);
-			ACAD_LINEID *pLineId = hashCloneEntIdByLineId.Add(*pId);
-			pLineId->Init(entId, start, end);
-		}
-	}
-	//2.初始化轮廓边对应的CAD实体
-	int n=vertexList.GetNodeNum();
 	m_hashCloneEdgeEntIdByIndex.Empty();
-	for(ACAD_LINEID *pLineId=hashCloneEntIdByLineId.GetFirst();pLineId;pLineId=hashCloneEntIdByLineId.GetNext())
-		pLineId->UpdatePos();
-	for(int i=0;i<n;i++)
+	for(int i=0;i<vertexList.GetNodeNum();i++)
 	{
-		VERTEX *pCurVertex=vertexList.GetByIndex(i);
-		VERTEX *pNextVertex=vertexList.GetByIndex((i+1)%n);
-		GEPOINT start=pCurVertex->pos,end=pNextVertex->pos;
-		for(ACAD_LINEID *pLineId=lineIdList.GetFirst();pLineId;pLineId=lineIdList.GetNext())
+		VERTEX *pCurVertex = vertexList.GetByIndex(i);
+		if (pCurVertex->tag.lParam <= 0)
+			continue;
+		ULONG *pCloneEntId = m_hashColneEntIdBySrcId.GetValue(pCurVertex->tag.lParam);
+		if(pCloneEntId==NULL)
+			continue;
+		ACAD_LINEID lineId(*pCloneEntId);
+		if (lineId.UpdatePos())
 		{
-			ULONG *pCloneEntId=m_hashColneEntIdBySrcId.GetValue(pLineId->m_lineId);
-			ACAD_LINEID *pCloneLineId=pCloneEntId?hashCloneEntIdByLineId.GetValue(*pCloneEntId):NULL;
-			if(pCloneLineId==NULL)
-				continue;
-			if(pLineId->m_ptStart.IsEqual(start)&&pLineId->m_ptEnd.IsEqual(end))
+			if (lineId.m_ptEnd.IsEqual(pCurVertex->pos, EPS2))
 			{
-				m_hashCloneEdgeEntIdByIndex.SetValue(i+1,*pCloneLineId);
-				break;
+				GEPOINT temp = lineId.m_ptStart;
+				lineId.m_ptStart = lineId.m_ptEnd;
+				lineId.m_ptEnd = temp;
+				lineId.m_bReverse = TRUE;
 			}
-			else if(pLineId->m_ptStart.IsEqual(end)&&pLineId->m_ptEnd.IsEqual(start))
-			{
-				GEPOINT temp=pCloneLineId->m_ptStart;
-				pCloneLineId->m_ptStart=pCloneLineId->m_ptEnd;
-				pCloneLineId->m_ptEnd=temp;
-				pCloneLineId->m_bReverse=TRUE;
-				m_hashCloneEdgeEntIdByIndex.SetValue(i+1,*pCloneLineId);
-				break;
-			}
+			m_hashCloneEdgeEntIdByIndex.SetValue(i + 1, lineId);
 		}
 	}
-}
-void CPlateProcessInfo::UpdateEdgeEntPos()
-{
-	for(ACAD_LINEID *pLineId=m_hashCloneEdgeEntIdByIndex.GetFirst();pLineId;pLineId=m_hashCloneEdgeEntIdByIndex.GetNext())
-		pLineId->UpdatePos();
 }
 
 //根据克隆钢板中MKPOS位置，更新钢印号位置 wht 19-03-05
@@ -3537,12 +3448,13 @@ void CPNCModel::DrawPlatesToProcess()
 	CXhPtrSet<CPlateProcessInfo> needUpdatePlateList;
 	for (CPlateProcessInfo *pPlate = sortedModel.EnumFirstPlate(); pPlate; pPlate = sortedModel.EnumNextPlate())
 	{
+		//初始化轮廓边对应关系
+		pPlate->InitEdgeEntIdMap();	
+		//调整钢印位置
 		if (pPlate->AutoCorrectedSteelSealPos())
 			needUpdatePlateList.append(pPlate);
 	}
 	//更新字盒子位置之后，同步更新PPI文件中钢印号位置
-	for (CPlateProcessInfo *pPlate = needUpdatePlateList.GetFirst(); pPlate; pPlate = needUpdatePlateList.GetNext())
-		pPlate->InitEdgeEntIdMap();	//初始化轮廓边对应关系
 	for (CPlateProcessInfo *pPlate = needUpdatePlateList.GetFirst(); pPlate; pPlate = needUpdatePlateList.GetNext())
 	{	
 		pPlate->SyncSteelSealPos();

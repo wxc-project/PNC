@@ -151,8 +151,6 @@ public:
 	bool AutoCorrectedSteelSealPos();
 	bool GetSteelSealPos(GEPOINT &pos);
 	bool UpdateSteelSealPos(GEPOINT &pos);
-	//
-	void UpdateEdgeEntPos();
 	//刷新钢板显示数量
 	void RefreshPlateNum();
 };

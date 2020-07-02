@@ -3,21 +3,21 @@
 
 class CAdjustPlateMCS
 {
-	BOOL m_bDrawClonePlateBoard;
 	CPlateProcessInfo *m_pPlateInfo;
 	ARRAY_LIST<AcDbObjectId> m_xEntIdList;
 	f2dPoint m_origin;
-	f2dRect m_curRect;
+protected:
 	bool IsValidDockVertex(BYTE ciEdgeIndex);
 	bool IsConcavePt(BYTE ciEdgeIndex);
+	void MoveCloneEnts(AcGeMatrix3d moveMat);
+	void UpdateCloneEdgePos();
 	bool Rotation();
 public:
 	CAdjustPlateMCS(CPlateProcessInfo *pPlate);
 	~CAdjustPlateMCS(void);
-
+	//
 	void AnticlockwiseRotation();
 	void ClockwiseRotation();
 	void Mirror();
-	f2dRect GetRect() { return m_curRect; }
 };
 
