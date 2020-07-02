@@ -40,9 +40,6 @@
     <ClCompile Include="SideBaffleHighDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\Query.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -195,6 +192,9 @@
     </ClCompile>
     <ClCompile Include="SelPlateNcModeDlg.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp">
+      <Filter>ToolCode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

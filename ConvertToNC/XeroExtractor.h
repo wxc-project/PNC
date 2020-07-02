@@ -48,6 +48,19 @@ class CPlateObject
 {
 	POLYGON region;
 public:
+	struct CIR_PLATE {
+		BOOL m_bCirclePlate;	// «∑ÒŒ™‘≤–Õ∞Â
+		GEPOINT cir_center;
+		GEPOINT norm, column_norm;
+		double m_fRadius;
+		double m_fInnerR;
+		CIR_PLATE() {
+			m_bCirclePlate = FALSE;
+			m_fRadius = m_fInnerR = 0;
+			norm.Set(0, 0, 1);
+			column_norm.Set(0, 0, 1);
+		}
+	}cir_plate_para;
 	struct VERTEX{
 		GEPOINT pos;
 		char ciEdgeType;	//1:∆’Õ®÷±±ﬂ 2:‘≤ª° 3:Õ÷‘≤ª°

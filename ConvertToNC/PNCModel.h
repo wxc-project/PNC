@@ -87,8 +87,6 @@ private:
 	GECS ucs;
 	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
 public:
-	BOOL m_bCirclePlate;	//是否为圆型板
-	GEPOINT cir_center;
 	BOOL m_bEnableReactor;
 	CProcessPlate xPlate;
 	PART_PLATE xBomPlate;
@@ -129,6 +127,7 @@ public:
 	//初始化钢板轮廓边信息
 	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
+	BOOL InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle);
 	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);
 	BOOL InitProfileByAcdbLineList(ARRAY_LIST<ACAD_LINEID>& xLineArr);
 	BOOL InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_LIST<ACAD_LINEID>& xLineArr);

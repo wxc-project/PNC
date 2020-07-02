@@ -151,7 +151,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("m_fMaxLenErr", PROPLIST_ITEM(id++, "长度最大误差值", "数据校审时，长度比较的最大误差值"));
 	AddPropItem("m_bIncDeformed",PROPLIST_ITEM(id++,"已考虑火曲变形","待提取的钢板图形已考虑火曲变形量","是|否"));
 	AddPropItem("m_iPPiMode",PROPLIST_ITEM(id++,"文件生成模型","PPI文件生成模式","0.一板一号|1.一板多号"));
-	AddPropItem("m_ciMKPos",PROPLIST_ITEM(id++,"钢印区位置","提取钢印位置","0.件号文字标注|1.钢印字盒块|2.钢印号位孔"));
+	AddPropItem("m_ciMKPos",PROPLIST_ITEM(id++,"钢印识别方式","提取钢印位置","0.件号文字标注|1.钢印字盒块|2.钢印号位孔"));
 	AddPropItem("m_fMKHoleD", PROPLIST_ITEM(id++, "号位孔直径"));
 	AddPropItem("m_nMaxHoleD", PROPLIST_ITEM(id++, "最大螺栓孔径", "最大螺栓孔径"));
 	AddPropItem("AxisXCalType",PROPLIST_ITEM(id++,"X轴计算方式","加工坐标系X轴的计算方式","0.最长边优先|1.螺栓平行边优先|2.焊接边优先"));
@@ -407,12 +407,20 @@ BOOL CPNCSysPara::IsProfileEnt(AcDbEntity* pEnt)
 		return TRUE;	//直线
 	if (pEnt->isKindOf(AcDbArc::desc()))
 		return TRUE;	//圆弧
-	//if (pEnt->isKindOf(AcDbEllipse::desc()))
-		//return TRUE;	//椭圆弧简化为直线处理了
+	if (pEnt->isKindOf(AcDbEllipse::desc()))
+		return TRUE;	//椭圆弧
 	if (pEnt->isKindOf(AcDbPolyline::desc()))
 		return TRUE;	//面域中包括轮廓边
 	if (pEnt->isKindOf(AcDbRegion::desc()))
 		return TRUE;	//多线段
+	if (pEnt->isKindOf(AcDbCircle::desc()))
+	{	//智能提取时，处理原板
+		if (m_ciRecogMode != CPNCSysPara::FILTER_BY_PIXEL)
+			return FALSE;
+		AcDbCircle* pCir = (AcDbCircle*)pEnt;
+		if (pCir->radius() * 2 > m_nMaxHoleD)
+			return TRUE;
+	}
 	return FALSE;
 }
 

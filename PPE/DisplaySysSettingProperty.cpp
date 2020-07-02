@@ -141,6 +141,7 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		else
 			g_sysPara.nc.m_xDrillPara.m_bReduceSmallSH = FALSE;
 		g_sysPara.WriteSysParaToReg("DrillReduceSmallSH");
+		bUpdateHoleInc = TRUE;
 	}
 	else if (CSysPara::GetPropID("nc.DrillPara.m_ciHoldSortType") == pItem->m_idProp)
 	{
@@ -239,6 +240,7 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		else
 			g_sysPara.nc.m_xPunchPara.m_bReduceSmallSH = FALSE;
 		g_sysPara.WriteSysParaToReg("PunchReduceSmallSH");
+		bUpdateHoleInc = TRUE;
 	}
 	else if (CSysPara::GetPropID("nc.PunchPara.m_ciHoldSortType") == pItem->m_idProp)
 	{
@@ -731,19 +733,31 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 	{
 		CHoleIncrementSetDlg dlg;
 		dlg.m_ciCurNcMode = CNCPart::FLAME_MODE;
-		dlg.DoModal();
+		if (dlg.DoModal() == IDOK)
+		{
+			CPPEView *pView = (CPPEView*)theApp.GetView();
+			pView->AmendHoleIncrement();
+		}
 	}
 	else if (CSysPara::GetPropID("nc.PlasmaPara.m_xHoleIncrement") == pItem->m_idProp)
 	{
 		CHoleIncrementSetDlg dlg;
 		dlg.m_ciCurNcMode = CNCPart::PLASMA_MODE;
-		dlg.DoModal();
+		if (dlg.DoModal() == IDOK)
+		{
+			CPPEView *pView = (CPPEView*)theApp.GetView();
+			pView->AmendHoleIncrement();
+		}
 	}
 	else if (CSysPara::GetPropID("nc.PunchPara.m_xHoleIncrement") == pItem->m_idProp)
 	{
 		CHoleIncrementSetDlg dlg;
 		dlg.m_ciCurNcMode = CNCPart::PUNCH_MODE;
-		dlg.DoModal();
+		if (dlg.DoModal() == IDOK)
+		{
+			CPPEView *pView = (CPPEView*)theApp.GetView();
+			pView->AmendHoleIncrement();
+		}
 	}
 	else if (CSysPara::GetPropID("nc.DrillPara.m_xHoleIncrement") == pItem->m_idProp)
 	{
@@ -755,7 +769,11 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 	{
 		CHoleIncrementSetDlg dlg;
 		dlg.m_ciCurNcMode = CNCPart::LASER_MODE;
-		dlg.DoModal();
+		if (dlg.DoModal() == IDOK)
+		{
+			CPPEView *pView = (CPPEView*)theApp.GetView();
+			pView->AmendHoleIncrement();
+		}
 	}
 	else if (CSysPara::GetPropID("nc.LaserPara.Config") == pItem->m_idProp)
 	{
@@ -858,7 +876,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_PROCESSCARD_INFO-1,"工艺卡");
 	pPropDlg->m_arrPropGroupLabel.SetAt(GROUP_DISPLAY - 1, "显示");
 #endif
-	pPropDlg->RefreshTabCtrl(0);
+	pPropDlg->RefreshTabCtrl(CSysPara::m_iCurDisplayPropGroup);
 	//
 	CPropertyList *pPropList = pPropDlg->GetPropertyList();
 	pPropList->CleanCallBackFunc();
@@ -909,8 +927,6 @@ BOOL CPPEView::DisplaySysSettingProperty()
 #endif
 #endif
 #ifdef __PNC_
-	//钢板切割模式
-	oper.InsertCmbListPropItem(pParentItem, "nc.m_ciDisplayType");
 	//文件设置
 	pParentItem = oper.InsertPropItem(pRootItem, "FileSet");
 	pParentItem->m_dwPropGroup = GetSingleWord(GROUP_NCINFO);
@@ -947,6 +963,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
 	oper.InsertButtonPropItem(pParentItem, "nc.m_iNcMode");
+	oper.InsertCmbListPropItem(pParentItem, "nc.m_ciDisplayType");
 	//火焰切割
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bFlameCut");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::FLAME_MODE);

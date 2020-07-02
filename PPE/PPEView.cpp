@@ -1537,6 +1537,7 @@ void CPPEView::AmendHoleIncrement()
 	CXhChar16 sCurPartNo;
 	if(m_pProcessPart)
 		sCurPartNo=m_pProcessPart->GetPartNo();
+	CWaitCursor waitCursor;
 	CProcessPart* pProcessPart = NULL;
 #ifdef __PNC_
 	//修正不同加工工艺下钢板螺栓孔径增大值
@@ -1636,6 +1637,5 @@ void CPPEView::AmendHoleIncrement()
 	}
 #endif
 	UpdateCurWorkPartByPartNo(sCurPartNo);
-	UpdatePropertyPage();
 	Refresh();
 }

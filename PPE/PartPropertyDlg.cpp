@@ -9,6 +9,7 @@
 #include "HashTable.h"
 #include "PropertyList.h"
 #include "PropListItem.h"
+#include "SysPara.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -396,13 +397,13 @@ void CPartPropertyDlg::SetCurSelPropGroup(int iCurSel)
 	switch(m_propList.m_nObjClassTypeId)
 	{
 	case CProcessPart::TYPE_PLATE:
-		//CLDSNode::m_iCurDisplayPropGroup=iCurSel;
+		CProcessPlate::m_iCurDisplayPropGroup = iCurSel;
 		break;
 	case CProcessPart::TYPE_LINEANGLE:
-		//CLDSLinePart::m_iCurDisplayPropGroup=iCurSel;
+		CProcessAngle::m_iCurDisplayPropGroup = iCurSel;
 		break;
 	default:
-		//CLDSApp::m_iCurDisplayPropGroup=iCurSel;
+		CSysPara::m_iCurDisplayPropGroup = iCurSel;
 		break;
 	}
 }
