@@ -347,8 +347,8 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 	if(file.OpenFile(file_path))
 	{
 		//»æÖÆÂÖÀª±ß
-		PROFILE_VER* pPrevVertex=xDestList.GetTail();
-		for(PROFILE_VER* pVertex=xDestList.GetFirst();pVertex;pVertex=xDestList.GetNext())
+		PROFILE_VER* pPrevVertex= tempPlate.vertex_list.GetTail();
+		for(PROFILE_VER* pVertex= tempPlate.vertex_list.GetFirst();pVertex;pVertex= tempPlate.vertex_list.GetNext())
 		{
 			if (pPlate->m_cFaceN < 3 || pPrevVertex->vertex.feature != 3 || pVertex->vertex.feature != 2)
 			{
