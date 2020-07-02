@@ -517,7 +517,7 @@ void DrawPlates()
 	{
 		if (acedGetString(NULL, L"\n筛选方式[段号(1)/材质&厚度(2)/材质(3)/厚度(4)]<1>:", result) == RTNORM)
 		{
-			if (strlen(result) <= 0 || result[0] == '1')
+			if (wcslen(result) <= 0 || result[0] == '1')
 				group_type = 1;
 			else
 				group_type = result[0] - '0';
