@@ -24,7 +24,6 @@ struct TREEITEM_INFO{
 class CPartTreeDlg : public CDialogEx
 {
 	DECLARE_DYNCREATE(CPartTreeDlg)
-	CXhTreeCtrl m_treeCtrl;
 	CImageList m_xModelImages;
 	ATOM_LIST<TREEITEM_INFO>itemInfoList;
 	HTREEITEM m_hAngleParentItem,m_hPlateParentItem;
@@ -33,10 +32,9 @@ class CPartTreeDlg : public CDialogEx
 public:
 	CPartTreeDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CPartTreeDlg();
-	CTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}
 // 对话框数据
 	enum { IDD = IDD_PART_TREE_DLG };
-
+	CXhTreeCtrl m_treeCtrl;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -59,6 +57,7 @@ protected:
 	afx_msg void OnGroupByThickMaterial();
 	afx_msg void OnTvnKeydownTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult);
 public:
+	CTreeCtrl *GetTreeCtrl() { return &m_treeCtrl; }
 	void InitTreeView(const char* cur_part_no=NULL);
 	void InsertTreeItem(char* sText,CProcessPart *pPart);
 	void ContextMenu(CWnd *pWnd, CPoint point);

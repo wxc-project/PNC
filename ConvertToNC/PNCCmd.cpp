@@ -231,7 +231,11 @@ void SmartExtractPlate(CPNCModel *pModel)
 	{
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg != NULL)
+		{
+			pPartListDlg->RefreshCtrlState();
+			pPartListDlg->RelayoutWnd();
 			pPartListDlg->UpdatePartList();
+		}
 	}
 #else
 	//UBOM只需要更新钢板的基本信息
@@ -503,7 +507,7 @@ void DrawPlates()
 	idRet = acedGetString(NULL, L"\n输入绘制模式[对比(1)/排版(2)/下料(3)/筛选(4)]]<1>:", result);
 	if (idRet == RTNORM)
 		draw_type = (wcslen(result) > 0) ? atoi(_bstr_t(result)) : 1;
-	if(draw_type == 1)
+	if (draw_type == 1)
 	{
 		if (acedGetString(NULL, L"\n布局以列为主？[是(Y)/否(N)]<Y>:", result) == RTNORM)
 		{
@@ -549,7 +553,7 @@ void DrawPlates()
 		}
 	}
 #endif
-	if(draw_type==0)
+	if (draw_type == 0)
 	{
 #ifdef _ARX_2007
 		acutPrintf(L"\n无效的输入!");
@@ -568,7 +572,11 @@ void DrawPlates()
 	//更新构件列表
 	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
 	if (pPartListDlg != NULL)
+	{
+		pPartListDlg->RefreshCtrlState();
+		pPartListDlg->RelayoutWnd();
 		pPartListDlg->UpdatePartList();
+	}
 }
 //////////////////////////////////////////////////////////////////////////
 //实时插入钢印区

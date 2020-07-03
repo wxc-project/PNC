@@ -3,6 +3,7 @@
 
 #include "stdafx.h"
 #include "PPE.h"
+#include "MainFrm.h"
 #include "PartTreeDlg.h"
 #include "ProcessPart.h"
 #include "InputAnValDlg.h"
@@ -14,9 +15,66 @@
 #include "ArrayList.h"
 #include "LicFuncDef.h"
 #include "PartLib.h"
+#include "ComparePartNoString.h"
 
+//////////////////////////////////////////////////////////////////////////
+//
+typedef CProcessPlate* CProcessPlatePtr;
+static int ComparePartNo(const CProcessPlatePtr &plate1, const CProcessPlatePtr &plate2)
+{
+	CXhChar16 sPartNo1 = plate1->GetPartNo();
+	CXhChar16 sPartNo2 = plate2->GetPartNo();
+	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
+}
+static int CompareThick(const CProcessPlatePtr &plate1, const CProcessPlatePtr &plate2)
+{
+	return compare_double(plate1->GetThick(), plate2->GetThick());
+}
+static int CompareMaterial(const CProcessPlatePtr &plate1, const CProcessPlatePtr &plate2)
+{
+	int index1 = QuerySteelMatIndex(plate1->cMaterial);
+	int index2 = QuerySteelMatIndex(plate2->cMaterial);
+	return compare_int(index1, index2);
+}
+typedef PLATE_GROUP* PLATE_GROUP_PTR;
+static int ComparePlateGroupPtr(const PLATE_GROUP_PTR &platePtr1, const PLATE_GROUP_PTR &platePtr2)
+{
+	int index1 = QuerySteelMatIndex(platePtr1->cMaterial);
+	int index2 = QuerySteelMatIndex(platePtr2->cMaterial);
+	if (index1 > index2)
+		return 1;
+	else if (index1 < index2)
+		return -1;
+	else if (platePtr1->thick > platePtr2->thick)
+		return 1;
+	else if (platePtr1->thick < platePtr2->thick)
+		return -1;
+	else
+		return 0;
+
+}
+typedef CProcessAngle* CProcessAnglePtr;
+static int ComparePartNo(const CProcessAnglePtr &jg1, const CProcessAnglePtr &jg2)
+{
+	CXhChar16 sPartNo1 = jg1->GetPartNo();
+	CXhChar16 sPartNo2 = jg2->GetPartNo();
+	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
+}
+static int CompareSpec(const CProcessAnglePtr &jg1, const CProcessAnglePtr &jg2)
+{
+	if (jg1->GetWidth() > jg2->GetWidth())
+		return 1;
+	else if (jg1->GetWidth() < jg2->GetWidth())
+		return -1;
+	else
+		return compare_double(jg1->GetThick(), jg2->GetThick());
+}
+static int CompareMaterial(const CProcessAnglePtr &jg1, const CProcessAnglePtr &jg2)
+{
+	return compare_char(jg1->cMaterial, jg2->cMaterial);
+}
+//////////////////////////////////////////////////////////////////////////
 // CPartTreeDlg 对话框
-
 IMPLEMENT_DYNCREATE(CPartTreeDlg, CDialogEx)
 
 CPartTreeDlg::CPartTreeDlg(CWnd* pParent /*=NULL*/)
@@ -70,6 +128,22 @@ BOOL CPartTreeDlg::PreTranslateMessage(MSG* pMsg)
 		{
 			CancelSelTreeItem();
 			return TRUE;
+		}
+		if (pMsg->wParam == VK_LEFT || pMsg->wParam == VK_RIGHT || pMsg->wParam== VK_NEXT)
+		{
+			HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
+			TREEITEM_INFO *pInfo = (hItem != NULL) ? (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem) : NULL;
+			if (pInfo && pInfo->itemType == TREEITEM_INFO::INFO_PLATE)
+			{
+				CMainFrame* pMainFrame = (CMainFrame*)theApp.m_pMainWnd;
+				if (pMsg->wParam == VK_LEFT)
+					pMainFrame->OnRotateAntiClockwise();
+				else if (pMsg->wParam == VK_RIGHT)
+					pMainFrame->OnRotateClockwise();
+				else
+					pMainFrame->OnOverturnPlate();
+				return TRUE;
+			}
 		}
 	}
 	return CDialogEx::PreTranslateMessage(pMsg);
@@ -514,39 +588,7 @@ void CPartTreeDlg::UpdateTreeItemText(HTREEITEM hItem/*=NULL*/)
 	CXhChar50 sText("%s#%s",(char*)pPart->GetPartNo(),(char*)pPart->GetSpec());
 	m_treeCtrl.SetItemText(hItem,sText);
 }
-typedef CProcessPlate* CProcessPlatePtr;
-static int ComparePartNo(const CProcessPlatePtr &plate1,const CProcessPlatePtr &plate2)
-{
-	CString str1(plate1->GetPartNo()),str2(plate1->GetPartNo());
-	return str1.Compare(str2);
-}
-static int CompareThick(const CProcessPlatePtr &plate1,const CProcessPlatePtr &plate2)
-{
-	return compare_double(plate1->GetThick(),plate2->GetThick());
-}
-static int CompareMaterial(const CProcessPlatePtr &plate1,const CProcessPlatePtr &plate2)
-{
-	int index1 = QuerySteelMatIndex(plate1->cMaterial);
-	int index2 = QuerySteelMatIndex(plate2->cMaterial);
-	return compare_int(index1,index2);
-}
-typedef PLATE_GROUP* PLATE_GROUP_PTR;
-static int ComparePlateGroupPtr(const PLATE_GROUP_PTR &platePtr1, const PLATE_GROUP_PTR &platePtr2)
-{
-	int index1 = QuerySteelMatIndex(platePtr1->cMaterial);
-	int index2 = QuerySteelMatIndex(platePtr2->cMaterial);
-	if (index1 > index2)
-		return 1;
-	else if (index1 < index2)
-		return -1;
-	else if (platePtr1->thick > platePtr2->thick)
-		return 1;
-	else if (platePtr1->thick < platePtr2->thick)
-		return -1;
-	else
-		return 0;
 
-}
 void CPartTreeDlg::UpdatePlateTreeItem(int sortByPN0_TK1_MAT2/*=0*/)
 {
 	HTREEITEM hItem=m_treeCtrl.GetSelectedItem();
@@ -612,11 +654,11 @@ void CPartTreeDlg::UpdatePlateTreeItem(int sortByPN0_TK1_MAT2/*=0*/)
 			if (pPart->IsPlate())
 				platePtrArr.append((CProcessPlate*)pPart);
 		}
-		CQuickSort<CProcessPlate*>::QuickSort(platePtrArr.m_pData, platePtrArr.GetSize(), ComparePartNo);
+		CBubbleSort<CProcessPlate*>::BubSort(platePtrArr.m_pData, platePtrArr.GetSize(), ComparePartNo);
 		if (sortByPN0_TK1_MAT2 == 1)
-			CQuickSort<CProcessPlate*>::QuickSort(platePtrArr.m_pData, platePtrArr.GetSize(), CompareThick);
+			CBubbleSort<CProcessPlate*>::BubSort(platePtrArr.m_pData, platePtrArr.GetSize(), CompareThick);
 		else if (sortByPN0_TK1_MAT2 == 2)
-			CQuickSort<CProcessPlate*>::QuickSort(platePtrArr.m_pData, platePtrArr.GetSize(), CompareMaterial);
+			CBubbleSort<CProcessPlate*>::BubSort(platePtrArr.m_pData, platePtrArr.GetSize(), CompareMaterial);
 		//更新钢板树形列表
 		CXhChar100 sText;
 		m_treeCtrl.DeleteAllSonItems(m_hPlateParentItem);
@@ -632,25 +674,6 @@ void CPartTreeDlg::UpdatePlateTreeItem(int sortByPN0_TK1_MAT2/*=0*/)
 		m_treeCtrl.Expand(m_hPlateParentItem, TVE_EXPAND);
 	}
 }
-typedef CProcessAngle* CProcessAnglePtr;
-static int ComparePartNo(const CProcessAnglePtr &jg1,const CProcessAnglePtr &jg2)
-{
-	CString str1(jg1->GetPartNo()),str2(jg2->GetPartNo());
-	return str1.Compare(str2);
-}
-static int CompareSpec(const CProcessAnglePtr &jg1,const CProcessAnglePtr &jg2)
-{
-	if(jg1->GetWidth()>jg2->GetWidth())
-		return 1;
-	else if(jg1->GetWidth()<jg2->GetWidth())
-		return -1;
-	else
-		return compare_double(jg1->GetThick(),jg2->GetThick());
-}
-static int CompareMaterial(const CProcessAnglePtr &jg1,const CProcessAnglePtr &jg2)
-{
-	return compare_char(jg1->cMaterial,jg2->cMaterial);
-}
 void CPartTreeDlg::UpdateAngleTreeItem(int sortByPN0_SPEC1_MAT2/*=0*/)
 {
 	HTREEITEM hItem=m_treeCtrl.GetSelectedItem();
@@ -663,11 +686,11 @@ void CPartTreeDlg::UpdateAngleTreeItem(int sortByPN0_SPEC1_MAT2/*=0*/)
 		if(pPart->IsAngle())
 			jgPtrArr.append((CProcessAngle*)pPart);
 	}
-	CQuickSort<CProcessAngle*>::QuickSort(jgPtrArr.m_pData,jgPtrArr.GetSize(),ComparePartNo);
+	CBubbleSort<CProcessAngle*>::BubSort(jgPtrArr.m_pData,jgPtrArr.GetSize(),ComparePartNo);
 	if(sortByPN0_SPEC1_MAT2==1)
-		CQuickSort<CProcessAngle*>::QuickSort(jgPtrArr.m_pData,jgPtrArr.GetSize(),CompareSpec);
+		CBubbleSort<CProcessAngle*>::BubSort(jgPtrArr.m_pData,jgPtrArr.GetSize(),CompareSpec);
 	else if(sortByPN0_SPEC1_MAT2==2)
-		CQuickSort<CProcessAngle*>::QuickSort(jgPtrArr.m_pData,jgPtrArr.GetSize(),CompareMaterial);
+		CBubbleSort<CProcessAngle*>::BubSort(jgPtrArr.m_pData,jgPtrArr.GetSize(),CompareMaterial);
 	//更新钢板树形列表
 	CXhChar100 sText;
 	m_treeCtrl.DeleteAllSonItems(m_hAngleParentItem);

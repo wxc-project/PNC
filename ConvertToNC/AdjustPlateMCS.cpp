@@ -75,8 +75,6 @@ bool CAdjustPlateMCS::Rotation()
 	f3dPoint ptS = pLineS->m_ptStart;
 	f3dPoint ptE = pLineE->m_ptStart;
 	GEPOINT src_vec= (ptE - ptS).normalized();
-	if (m_pPlateInfo->xPlate.mcsFlg.ciOverturn > 0)
-		src_vec = -1;
 	GEPOINT dest_vec(1,0,0);
 	double fDegAngle=Cal2dLineAng(0,0,dest_vec.x,dest_vec.y)-Cal2dLineAng(0,0,src_vec.x,src_vec.y);
 	rotationMat.setToRotation(fDegAngle,AcGeVector3d::kZAxis,AcGePoint3d(ptS.x, ptS.y,0));
@@ -114,10 +112,7 @@ void CAdjustPlateMCS::AnticlockwiseRotation()
 	for(int i=0;i<n;i++)
 	{
 		BYTE ciBottomEdge = m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge;
-		if (m_pPlateInfo->xPlate.mcsFlg.ciOverturn > 0)
-			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge + 1) % n;
-		else
-			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge - 1 + n) % n;
+		m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge - 1 + n) % n;
 		if (IsValidDockVertex(m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge))
 		{
 			if(Rotation())
@@ -133,10 +128,7 @@ void CAdjustPlateMCS::ClockwiseRotation()
 	for (int i = 0; i < n; i++)
 	{
 		BYTE ciBottomEdge = m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge;
-		if (m_pPlateInfo->xPlate.mcsFlg.ciOverturn > 0)
-			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge - 1 + n) % n;
-		else
-			m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge + 1) % n;
+		m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge = (m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge + 1) % n;
 		if (IsValidDockVertex(m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge))
 		{
 			if(Rotation())

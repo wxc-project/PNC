@@ -24,7 +24,7 @@ static char THIS_FILE[] = __FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // CMainFrame
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWndEx)
-	const int  iMaxUserToolbars = 10;
+const int  iMaxUserToolbars = 10;
 const UINT uiFirstUserToolBarId = AFX_IDW_CONTROLBAR_FIRST + 40;
 const UINT uiLastUserToolBarId = uiFirstUserToolBarId + iMaxUserToolbars - 1;
 
@@ -54,7 +54,6 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_COMMAND(ID_OVERTURN_PLATE, OnOverturnPlate)
 	ON_COMMAND(ID_FIRST_PART, OnFirstPart)
 	ON_COMMAND(ID_FINAL_PART, OnFinalPart)
-	//}}AFX_MSG_MAP
 	ON_COMMAND(ID_DRAW_MODE_NC, &CMainFrame::OnDrawModeNc)
 	ON_COMMAND(ID_DRAW_MODE_EDIT, &CMainFrame::OnDrawModeEdit)
 	ON_COMMAND(ID_DRAW_MODE_PROCESSCARD, &CMainFrame::OnDrawModeProcesscard)

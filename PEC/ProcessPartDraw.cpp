@@ -1772,7 +1772,7 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 			else
 				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			//ÏÔÊ¾ÂÝË¨Ë³Ðò
-			if (CProcessPartDraw::m_bDispBoltOrder)
+			if (CProcessPartDraw::m_bDispBoltOrder && ciDisplayNcMode != 0x04 && ciDisplayNcMode != 0x08)
 			{
 				cur_ls_pt = circle.centre;
 				double fTextHeight = (CPEC::GetSysParaFromReg("TextHeight", sValue)) ? atof(sValue) : 10;

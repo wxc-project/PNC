@@ -2961,15 +2961,14 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	dwPreTick = timer.Relay(2, dwPreTick);
 #endif
 	//初始化坐标系,将轮廓线绘制到虚拟画布
-	double fSacle = g_pncSysPara.m_fPixelScale, fGap = 1 / fSacle;
 	GECS ocs;
-	ocs.origin.Set(scope.fMinX - fGap, scope.fMaxY + fGap, 0);
+	ocs.origin.Set(scope.fMinX - 2, scope.fMaxY + 2, 0);
 	ocs.axis_x.Set(1, 0, 0);
 	ocs.axis_y.Set(0, -1, 0);
 	ocs.axis_z.Set(0, 0, -1);
 	CVectorMonoImage xImage;
 	xImage.DisplayProcess = DisplayProgress;
-	xImage.SetOCS(ocs, fSacle);
+	xImage.SetOCS(ocs, 0.2);	//g_pncSysPara.m_fPixelScale
 	for (int i = 0; i < arrArcLine.GetNodeNum(); i++)
 		xImage.DrawArcLine(arrArcLine[i], arrArcLine[i].feature);
 #ifdef __TIMER_COUNT_
@@ -2979,7 +2978,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	xImage.DetectProfilePixelsByVisit();
 	//xImage.DetectProfilePixelsByTrack();
 #ifdef __ALFA_TEST_
-	//xImage.WriteBmpFileByVertStrip("F:\\11.bmp");
+	xImage.WriteBmpFileByVertStrip("F:\\11.bmp");
 	//xImage.WriteBmpFileByPixelHash("F:\\22.bmp");
 #endif
 #ifdef __TIMER_COUNT_

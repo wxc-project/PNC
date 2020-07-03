@@ -1582,17 +1582,17 @@ void CPPEView::AmendHoleIncrement()
 						if ((iNcMode == CNCPart::PUNCH_MODE&&pNCPare->m_bReduceSmallSH) ||
 							(iNcMode == CNCPart::DRILL_MODE&&pNCPare->m_bReduceSmallSH))
 						{	//板床孔进行降级处理
-							if (pBolt->bolt_d >= 24)
+							if (pBolt->bolt_d > 24)
 							{
 								pBolt->bolt_d = 24;
 								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM24;
 							}
-							else if (pBolt->bolt_d >= 20)
+							else if (pBolt->bolt_d > 20)
 							{
 								pBolt->bolt_d = 20;
 								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM20;
 							}
-							else if (pBolt->bolt_d >= 16)
+							else if (pBolt->bolt_d > 16)
 							{
 								pBolt->bolt_d = 16;
 								pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM16;

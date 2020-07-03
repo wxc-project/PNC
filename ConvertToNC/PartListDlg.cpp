@@ -427,33 +427,34 @@ void CPartListDlg::OnBnClickedBtnExtract()
 void CPartListDlg::OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	LV_KEYDOWN* pLVKeyDow = (LV_KEYDOWN*)pNMHDR;
-	ProcessKeyDown(pLVKeyDow->wVKey);
-	*pResult = 0;
-}
-
-void CPartListDlg::ProcessKeyDown(WORD wVKey)
-{
 	int iCurSel = -1;
 	POSITION pos = m_partList.GetFirstSelectedItemPosition();
 	if (pos != NULL)
 		iCurSel = m_partList.GetNextSelectedItem(pos);
-	if(iCurSel>=0)
+	if (iCurSel >= 0)
 	{
-		if (wVKey == VK_UP)
+		if (pLVKeyDow->wVKey == VK_UP)
 		{
 			if (iCurSel >= 1)
 				iCurSel--;
 			if (iCurSel >= 0)
 				SelectPart(iCurSel);
 		}
-		else if (wVKey == VK_DOWN)
+		else if (pLVKeyDow->wVKey == VK_DOWN)
 		{
 			if (iCurSel < m_partList.GetItemCount())
 				iCurSel++;
 			if (iCurSel >= 0)
 				SelectPart(iCurSel);
 		}
+		else if (pLVKeyDow->wVKey == VK_LEFT)
+			OnBnClickedBtnAnticlockwiseRotation();
+		else if (pLVKeyDow->wVKey == VK_RIGHT)
+			OnBnClickedBtnClockwiseRotation();
+		else if (pLVKeyDow->wVKey == VK_NEXT)
+			OnBnClickedBtnMirror();
 	}
+	*pResult = 0;
 }
 
 void CPartListDlg::OnBnClickedBtnSendToPpe()
@@ -490,8 +491,10 @@ void CPartListDlg::OnBnClickedBtnAnticlockwiseRotation()
 		return;
 	CPlateReactorLife reactorLife(pPlateInfo, FALSE);
 	CAdjustPlateMCS mcs(pPlateInfo);
-	mcs.AnticlockwiseRotation();
-	
+	if (pPlateInfo->xPlate.mcsFlg.ciOverturn == TRUE)
+		mcs.ClockwiseRotation();
+	else
+		mcs.AnticlockwiseRotation();
 	CLockDocumentLife lockLife;
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 	//更新PPI文件
@@ -514,8 +517,10 @@ void CPartListDlg::OnBnClickedBtnClockwiseRotation()
 		return;
 	CPlateReactorLife reactorLife(pPlateInfo, FALSE);
 	CAdjustPlateMCS mcs(pPlateInfo);
-	mcs.ClockwiseRotation();
-
+	if (pPlateInfo->xPlate.mcsFlg.ciOverturn == TRUE)
+		mcs.AnticlockwiseRotation();
+	else
+		mcs.ClockwiseRotation();
 	CLockDocumentLife lockLife;
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 	//更新PPI文件

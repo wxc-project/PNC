@@ -33,7 +33,6 @@ public:
 	void ClearPartList();
 	void RefreshCtrlState();
 	void SelectPart(int iCurSel, BOOL bClone = TRUE);
-	void ProcessKeyDown(WORD wVKey);
 	void RelayoutWnd();
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö

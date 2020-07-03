@@ -18,53 +18,40 @@
 
 class CMainFrame : public CFrameWndEx
 {
+	DECLARE_DYNCREATE(CMainFrame)
 	CSplitterWnd m_wndSplitter;
 	BOOL CreateDockingWindows();
-protected: // create from serialization only
-	CMainFrame();
-	DECLARE_DYNCREATE(CMainFrame)
-
-// Attributes
-public:
-
-// Operations
+protected:  // control bar embedded members
+	CMouseStatusBar  m_wndStatusBar;
+	CPPEToolBar		m_wndToolBar;
+	CPPEToolBar		m_wndToolBarPlate;
+	CPPEToolBar		m_wndToolBarFile;
+	CPPEToolBar		m_wndToolBarEdit;
+	CPPEToolBar		m_wndToolBarPBJ;
+	CPPEToolBar		m_wndToolBarCutPlate;
+	CPPEToolBar		m_wndToolBarToolKit;
+	CMFCMenuBar		m_wndMenuBar;
+	CDialogPanel	m_partPropertyView;
+	CDialogPanel	m_partTreeView;
+	CMFCToolBarImages	m_userImages;
 public:
 	CPartPropertyDlg* GetPartPropertyPage(){return (CPartPropertyDlg*)m_partPropertyView.GetDlgPtr();}
 	CPartTreeDlg* GetPartTreePage(){return (CPartTreeDlg*)m_partTreeView.GetDlgPtr();}
 	void CloseProcess();	//¹Ø±Õ³ÌÐò
-// Overrides
-	// ClassWizard generated virtual function overrides
-	//{{AFX_VIRTUAL(CMainFrame)
+	void SetPaneText(int nIndex, LPCTSTR lpszNewText, BOOL bUpdate = TRUE);
+	void ModifyDockpageStatus(CRuntimeClass *pRuntimeClass, BOOL bShow);
+public:
+	CMainFrame();
+	virtual ~CMainFrame();
+	//
+	virtual void OnUpdateFrameTitle(BOOL bAddToTitle);
 	virtual BOOL PreCreateWindow(CREATESTRUCT& cs);
 	virtual BOOL LoadFrame(UINT nIDResource, DWORD dwDefaultStyle = WS_OVERLAPPEDWINDOW | FWS_ADDTOTITLE, CWnd* pParentWnd = NULL, CCreateContext* pContext = NULL);
-	//}}AFX_VIRTUAL
-
-// Implementation
-public:
-	virtual ~CMainFrame();
-	virtual void OnUpdateFrameTitle(BOOL bAddToTitle);
-	void SetPaneText(int nIndex, LPCTSTR lpszNewText, BOOL bUpdate=TRUE);
-	void ModifyDockpageStatus(CRuntimeClass *pRuntimeClass, BOOL bShow);
+	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
 #ifdef _DEBUG
 	virtual void AssertValid() const;
 	virtual void Dump(CDumpContext& dc) const;
 #endif
-
-protected:  // control bar embedded members
-	CMouseStatusBar  m_wndStatusBar;
-	CPPEToolBar	m_wndToolBar;
-	CPPEToolBar	m_wndToolBarPlate;
-	CPPEToolBar	m_wndToolBarFile;
-	CPPEToolBar	m_wndToolBarEdit;
-	CPPEToolBar	m_wndToolBarPBJ;
-	CPPEToolBar	m_wndToolBarCutPlate;
-	CPPEToolBar	m_wndToolBarToolKit;
-	CMFCToolBarImages	m_userImages;
-	CMFCMenuBar			m_wndMenuBar;
-	CDialogPanel		m_partPropertyView;
-	CDialogPanel		m_partTreeView;
-// Generated message map functions
-protected:
 	//{{AFX_MSG(CMainFrame)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnViewCustomize();
@@ -79,10 +66,6 @@ protected:
 	afx_msg void OnOverturnPlate();
 	afx_msg void OnFirstPart();
 	afx_msg void OnFinalPart();
-	//}}AFX_MSG
-	DECLARE_MESSAGE_MAP()
-	virtual BOOL OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext);
-public:
 	afx_msg void OnClose();
 	afx_msg void OnDrawModeNc();
 	afx_msg void OnDrawModeEdit();
@@ -119,6 +102,8 @@ public:
 	afx_msg void OnMeasureDist();
 	afx_msg void OnAmendHoleIncrement();
 	afx_msg void OnUpdateAmendHoleIncrement(CCmdUI *pCmdUI);
+	//}}AFX_MSG
+	DECLARE_MESSAGE_MAP()
 };
 
 /////////////////////////////////////////////////////////////////////////////

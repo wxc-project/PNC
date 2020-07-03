@@ -265,7 +265,7 @@ static int CompareProcessPart(const CProcessPartPtr &part1,const CProcessPartPtr
 	char* szExt2=SearchChar(sPartNo2,'#',true);
 	if(szExt2)	//¼þºÅÖÐº¬ÓÐ¾ä±ú
 		*szExt2=0;
-	return ComparePartNoString(sPartNo1,sPartNo2);
+	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
 }
 static int CompareFileName(const CProcessPartPtr &part1,const CProcessPartPtr &part2)
 {
@@ -293,12 +293,7 @@ void CPPEModel::GetSortedAngleSetAndPlateSet(CXhPtrSet<CProcessAngle> &angleSet,
 	}
 	if(platePtrArr.GetSize()>0)
 	{
-#if defined(__PNC_)
-		CQuickSort<CProcessPart*>::QuickSort(platePtrArr.m_pData,platePtrArr.GetSize(),CompareFileName);
-#else
-		CQuickSort<CProcessPart*>::QuickSort(platePtrArr.m_pData,platePtrArr.GetSize(),CompareProcessPart);
-#endif
-		
+		CQuickSort<CProcessPart*>::QuickSort(platePtrArr.m_pData,platePtrArr.GetSize(),CompareProcessPart);		
 		for(CProcessPart **ppPart=platePtrArr.GetFirst();ppPart;ppPart=platePtrArr.GetNext())
 			plateSet.append((CProcessPlate*)*ppPart);
 	}
