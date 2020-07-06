@@ -1540,7 +1540,7 @@ void CPPEView::AmendHoleIncrement()
 	CWaitCursor waitCursor;
 	CProcessPart* pProcessPart = NULL;
 #ifdef __PNC_
-	//修正不同加工工艺下钢板螺栓孔径增大值
+	//修正不同加工工艺下钢板螺栓孔径增大值（从原始数据中进行处理）
 	for (int i = 1; i <= 5; i++)
 	{
 		NC_INFO_PARA* pNCPare = NULL;
@@ -1561,6 +1561,24 @@ void CPPEView::AmendHoleIncrement()
 				continue;
 			CProcessPlate* pSrcPlate = (CProcessPlate*)pProcessPart;
 			CProcessPlate* pDestPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), iNcMode);
+			//从原始数据中拷贝螺栓孔径信息，然后再进行修正
+			pSrcPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo());
+			for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+			{
+				GEPOINT pos(pBolt->posX, pBolt->posY, 0);
+				BOLT_INFO* pSrcBolt = NULL;
+				for (pSrcBolt = pSrcPlate->m_xBoltInfoList.GetFirst(); pSrcBolt; pSrcBolt = pSrcPlate->m_xBoltInfoList.GetNext())
+				{
+					if (pos.IsEqual(GEPOINT(pSrcBolt->posX, pSrcBolt->posY), EPS2))
+						break;
+				}
+				if (pSrcBolt)
+				{
+					pBolt->bolt_d = pSrcBolt->bolt_d;
+					pBolt->hole_d_increment = pSrcBolt->hole_d_increment;
+				}
+			}
+			//根据用户设置，修正螺栓孔径及孔径增大值
 			for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
 			{
 				if (pBolt->bolt_d == 12 && pBolt->cFuncType == 0)

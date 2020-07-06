@@ -25,9 +25,10 @@ struct NC_INFO_PARA
 	BOOL m_bCutSpecialHole;
 	WORD m_wEnlargedSpace;
 	//板床加工参数
-	BOOL m_bReserveBigSH;	//保留切割孔
+	BOOL m_bReserveBigSH;	//输出切割孔
 	BOOL m_bReduceSmallSH;	//降级处理板床孔
 	BYTE m_ciHoldSortType;	//螺栓孔排序0.混排|1.分组+距离|2.分组+孔径
+	BOOL m_bSortHasBigSH;	//切割大孔是否参与排序
 public:
 	NC_INFO_PARA();
 	//

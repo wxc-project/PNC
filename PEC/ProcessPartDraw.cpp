@@ -1772,7 +1772,34 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 			else
 				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			//ÏÔÊ¾ÂÝË¨Ë³Ðò
-			if (CProcessPartDraw::m_bDispBoltOrder && (ciDisplayNcMode == 0x04 || ciDisplayNcMode == 0x08))
+			BOOL bNeedDispBoltOrder = FALSE;
+			if (ciDisplayNcMode == 0x04)
+			{	//³å¿×ÊÇ·ñÏÔÊ¾ÌØÊâ´ó¿×£¨Êä³öÇÒ²ÎÓëÅÅÐò£©
+				BOOL bNeedSH = FALSE;
+				if (CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
+					bNeedSH = atoi(sValue);
+				if (bNeedSH && CPEC::GetSysParaFromReg("PunchSortHasBigSH", sValue))
+					bNeedSH = atoi(sValue);
+				//
+				if (pBoltInfo->bolt_d < fSpecialD)
+					bNeedDispBoltOrder = TRUE;
+				else if (bNeedSH)
+					bNeedDispBoltOrder = TRUE;
+			}
+			if (ciDisplayNcMode == 0x08)
+			{	//×ê¿×ÊÇ·ñÏÔÊ¾ÌØÊâ´ó¿×£¨Êä³öÇÒ²ÎÓëÅÅÐò£©
+				BOOL bNeedSH = FALSE;
+				if (CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
+					bNeedSH = atoi(sValue);
+				if (bNeedSH && CPEC::GetSysParaFromReg("DrillSortHasBigSH", sValue))
+					bNeedSH = atoi(sValue);
+				//
+				if (pBoltInfo->bolt_d < fSpecialD)
+					bNeedDispBoltOrder = TRUE;
+				else if (bNeedSH)
+					bNeedDispBoltOrder = TRUE;
+			}
+			if (CProcessPartDraw::m_bDispBoltOrder && bNeedDispBoltOrder)
 			{
 				cur_ls_pt = circle.centre;
 				double fTextHeight = (CPEC::GetSysParaFromReg("TextHeight", sValue)) ? atof(sValue) : 10;

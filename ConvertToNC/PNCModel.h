@@ -188,6 +188,7 @@ public:
 	CString m_sCurWorkFile;		//当前正在操作的文件
 	static const float ASSIST_RADIUS;
 	static const float DIST_ERROR;
+	static const float WELD_MAX_HEIGHT;
 	static BOOL m_bSendCommand;
 public:
 	CPNCModel(void);

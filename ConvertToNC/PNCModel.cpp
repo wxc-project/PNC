@@ -469,10 +469,15 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	AcDbEntity *pEnt = NULL;
 	CSymbolRecoginzer symbols;
 	CHashSet<CAD_ENTITY*> bendDimTextSet;
+	CHashSet<BOOL> weldMarkLineSet;
+	CHashStrList< ATOM_LIST<ACAD_LINEID> > hashLineArrByPosKeyStr;
 	for(CAD_ENTITY *pRelaObj=m_xHashRelaEntIdList.GetFirst();pRelaObj;pRelaObj=m_xHashRelaEntIdList.GetNext())
 	{
 		if( pRelaObj->ciEntType!=TYPE_SPLINE&&
-			pRelaObj->ciEntType!=TYPE_TEXT)
+			pRelaObj->ciEntType!=TYPE_TEXT&&
+			pRelaObj->ciEntType!=TYPE_LINE&&
+			pRelaObj->ciEntType!=TYPE_ARC&&
+			pRelaObj->ciEntType!=TYPE_ELLIPSE)
 			continue;
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
 		if ((pEnt = objLife.GetEnt()) == NULL)
@@ -484,6 +489,38 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			if (g_pncSysPara.IsMatchBendRule(pRelaObj->sText))
 				bendDimTextSet.SetValue(pRelaObj->idCadEnt,pRelaObj);
 		}
+		else
+		{
+			AcDbCurve* pCurve = (AcDbCurve*)pEnt;
+			AcGePoint3d acad_ptS, acad_ptE;
+			pCurve->getStartPoint(acad_ptS);
+			pCurve->getEndPoint(acad_ptE);
+			GEPOINT ptS, ptE;
+			Cpy_Pnt(ptS, acad_ptS);
+			Cpy_Pnt(ptE, acad_ptE);
+			ptS.z = ptE.z = 0;
+			double len = DISTANCE(ptS, ptE);
+			//记录始端点坐标处的连接线
+			CXhChar50 startKeyStr(ptS);
+			ATOM_LIST<ACAD_LINEID> *pStartLineList = hashLineArrByPosKeyStr.GetValue(startKeyStr);
+			if (pStartLineList == NULL)
+				pStartLineList = hashLineArrByPosKeyStr.Add(startKeyStr);
+			pStartLineList->append(ACAD_LINEID(pEnt->objectId(), len));
+			//记录终端点坐标处的连接线
+			CXhChar50 endKeyStr(ptE);
+			ATOM_LIST<ACAD_LINEID> *pEndLineList = hashLineArrByPosKeyStr.GetValue(endKeyStr);
+			if (pEndLineList == NULL)
+				pEndLineList = hashLineArrByPosKeyStr.Add(endKeyStr);
+			pEndLineList->append(ACAD_LINEID(pEnt->objectId(), len));
+		}
+	}
+	for (ATOM_LIST<ACAD_LINEID> *pList = hashLineArrByPosKeyStr.GetFirst(); pList; pList = hashLineArrByPosKeyStr.GetNext())
+	{
+		if (pList->GetNodeNum() != 1)
+			continue;
+		ACAD_LINEID *pLineId = pList->GetFirst();
+		if (pLineId&&pLineId->m_fLen < CPNCModel::WELD_MAX_HEIGHT)
+			weldMarkLineSet.SetValue(pLineId->m_lineId, TRUE);
 	}
 	//
 	boltList.Empty();
@@ -572,7 +609,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			continue;
 		}
 		//提取火曲线信息
-		if(pEnt->isKindOf(AcDbLine::desc()))
+		if(pEnt->isKindOf(AcDbLine::desc())&&weldMarkLineSet.GetValue(pRelaObj->idCadEnt)==NULL)
 		{	
 			f3dLine line;
 			AcDbLine* pAcDbLine=(AcDbLine*)pEnt;
@@ -1068,6 +1105,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle)
 		pVer->ciEdgeType = 2;
 		pVer->arc.radius = pCircle->radius();
 		pVer->arc.center = center;
+		pVer->arc.fSectAngle = 0.5*Pi;
 		pVer->arc.work_norm.Set(0, 0, 1);
 	}
 	if (!IsValidVertexs())
@@ -2513,6 +2551,7 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 //ExtractPlateProfile
 const float CPNCModel::ASSIST_RADIUS = 1;
 const float CPNCModel::DIST_ERROR = 0.5;
+const float CPNCModel::WELD_MAX_HEIGHT = 20;
 BOOL CPNCModel::m_bSendCommand = FALSE;
 CPNCModel::CPNCModel()
 {
@@ -2556,7 +2595,6 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 	}
 	selectedEntIdSet.Clean();
 	//剔除孤立线条以及焊缝线
-	const int WELD_MAX_HEIGHT = 20;
 	CHashStrList< ATOM_LIST<ACAD_LINEID> > hashLineArrByPosKeyStr;
 	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(),index++)
 	{
@@ -2596,7 +2634,7 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 		if (pList->GetNodeNum() != 1)
 			continue;
 		ACAD_LINEID *pLineId = pList->GetFirst();
-		if (pLineId&&pLineId->m_fLen < WELD_MAX_HEIGHT)
+		if (pLineId&&pLineId->m_fLen < CPNCModel::WELD_MAX_HEIGHT)
 			selectedEntIdSet.DeleteNode(pLineId->m_lineId);
 	}
 	selectedEntIdSet.Clean();

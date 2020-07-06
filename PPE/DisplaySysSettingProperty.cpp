@@ -132,7 +132,22 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 			g_sysPara.nc.m_xDrillPara.m_bReserveBigSH = TRUE;
 		else
 			g_sysPara.nc.m_xDrillPara.m_bReserveBigSH = FALSE;
+		CPropTreeItem* pFindItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.DrillPara.m_bSortHasBigSH"), NULL);
+		if (pFindItem)
+		{
+			pFindItem->SetReadOnly(!g_sysPara.nc.m_xDrillPara.m_bReserveBigSH);
+			oper.UpdatePropItemValue("nc.DrillPara.m_bSortHasBigSH");
+		}
+		//
 		g_sysPara.WriteSysParaToReg("DrillNeedSH");
+	}
+	else if (CSysPara::GetPropID("nc.DrillPara.m_bSortHasBigSH") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xDrillPara.m_bSortHasBigSH = TRUE;
+		else
+			g_sysPara.nc.m_xDrillPara.m_bSortHasBigSH = FALSE;
+		g_sysPara.WriteSysParaToReg("DrillSortHasBigSH");
 	}
 	else if (CSysPara::GetPropID("nc.DrillPara.m_bReduceSmallSH") == pItem->m_idProp)
 	{
@@ -231,7 +246,22 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 			g_sysPara.nc.m_xPunchPara.m_bReserveBigSH = TRUE;
 		else
 			g_sysPara.nc.m_xPunchPara.m_bReserveBigSH = FALSE;
+		CPropTreeItem* pFindItem = pPropList->FindItemByPropId(CSysPara::GetPropID("nc.PunchPara.m_bSortHasBigSH"), NULL);
+		if (pFindItem)
+		{
+			pFindItem->SetReadOnly(!g_sysPara.nc.m_xPunchPara.m_bReserveBigSH);
+			oper.UpdatePropItemValue("nc.PunchPara.m_bSortHasBigSH");
+		}
+		//
 		g_sysPara.WriteSysParaToReg("PunchNeedSH");
+	}
+	else if (CSysPara::GetPropID("nc.PunchPara.m_bSortHasBigSH") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xPunchPara.m_bSortHasBigSH = TRUE;
+		else
+			g_sysPara.nc.m_xPunchPara.m_bSortHasBigSH = FALSE;
+		g_sysPara.WriteSysParaToReg("PunchSortHasBigSH");
 	}
 	else if (CSysPara::GetPropID("nc.PunchPara.m_bReduceSmallSH") == pItem->m_idProp)
 	{
@@ -885,7 +915,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pPropList->SetModifyValueFunc(ModifySyssettingProperty);
 	pPropList->SetButtonClickFunc(SyssettingButtonClick);
 	CPropTreeItem *pRootItem = pPropList->GetRootItem();
-	CPropTreeItem *pParentItem = NULL, *pGroupItem = NULL, *pPropItem = NULL;
+	CPropTreeItem *pParentItem = NULL, *pGroupItem = NULL, *pPropItem = NULL, *pLeftItem = NULL;
 	CPropertyListOper<CSysPara> oper(pPropList, &g_sysPara);
 	//文件属性
 	pParentItem = oper.InsertPropItem(pRootItem, "Model");
@@ -986,7 +1016,9 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_bReserveBigSH");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_bReduceSmallSH");
 	oper.InsertButtonPropItem(pGroupItem, "nc.PunchPara.m_xHoleIncrement");
-	oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_ciHoldSortType");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_ciHoldSortType");
+	pLeftItem = oper.InsertCmbListPropItem(pPropItem, "nc.PunchPara.m_bSortHasBigSH");
+	pLeftItem->SetReadOnly(!g_sysPara.nc.m_xPunchPara.m_bReserveBigSH);
 	oper.InsertEditPropItem(pGroupItem, "nc.PunchPara.m_sThick");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.PunchPara.m_dwFileFlag");
 	//钻床加工
@@ -995,7 +1027,9 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_bReserveBigSH");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_bReduceSmallSH");
 	oper.InsertButtonPropItem(pGroupItem, "nc.DrillPara.m_xHoleIncrement");
-	oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_ciHoldSortType");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_ciHoldSortType");
+	pLeftItem = oper.InsertCmbListPropItem(pPropItem, "nc.DrillPara.m_bSortHasBigSH");
+	pLeftItem->SetReadOnly(!g_sysPara.nc.m_xDrillPara.m_bReserveBigSH);
 	oper.InsertEditPropItem(pGroupItem, "nc.DrillPara.m_sThick");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.DrillPara.m_dwFileFlag");
 	//激光复合机

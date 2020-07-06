@@ -19,6 +19,7 @@ NC_INFO_PARA::NC_INFO_PARA()
 	m_bReserveBigSH = FALSE;
 	m_bReduceSmallSH = TRUE;
 	m_ciHoldSortType = 0;
+	m_bSortHasBigSH = FALSE;
 	m_bOutputBendLine = m_bOutputBendType = FALSE;
 }
 DWORD NC_INFO_PARA::AddFileFlag(DWORD dwFlag)
@@ -114,6 +115,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.PunchPara.m_bReduceSmallSH", PROPLIST_ITEM(id++, "降级处理小号孔", "降级处理小号孔", "是|否"));
 	AddPropItem("nc.PunchPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.PunchPara.m_ciHoldSortType", PROPLIST_ITEM(id++, "圆孔排序方案", "", "0.混排|1.分组+距离|2.分组+孔径"));
+	AddPropItem("nc.PunchPara.m_bSortHasBigSH", PROPLIST_ITEM(id++, "切割孔参与排序", "圆孔排序时是否考虑切割大号特殊孔", "是|否"));
 	AddPropItem("nc.PunchPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围","*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.PunchPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|PBJ|WKF|TTP|DXF+PBJ|DXF+WKF|DXF+TTP|DXF+PBJ+WKF"));
 	AddPropItem("nc.bDrillPress", PROPLIST_ITEM(id++, "钻床加工", "", "启用|禁用"));
@@ -121,6 +123,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.DrillPara.m_bReduceSmallSH", PROPLIST_ITEM(id++, "降级处理小号孔", "降级处理小号孔", "是|否"));
 	AddPropItem("nc.DrillPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.DrillPara.m_ciHoldSortType", PROPLIST_ITEM(id++, "圆孔排序方案", "", "0.混排|1.分组+距离|2.分组+孔径"));
+	AddPropItem("nc.DrillPara.m_bSortHasBigSH", PROPLIST_ITEM(id++, "切割孔参与排序", "圆孔排序时是否考虑切割大号特殊孔", "是|否"));
 	AddPropItem("nc.DrillPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.DrillPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|PMZ|DXF+PMZ"));
 	//激光加工
@@ -481,9 +484,11 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("DrillNeedSH");
 	WriteSysParaToReg("DrillReduceSmallSH");
 	WriteSysParaToReg("DrillHoldSortType");
+	WriteSysParaToReg("DrillSortHasBigSH");
 	WriteSysParaToReg("PunchNeedSH");
 	WriteSysParaToReg("PunchReduceSmallSH");
 	WriteSysParaToReg("PunchHoldSortType");
+	WriteSysParaToReg("PunchSortHasBigSH");
 	WriteSysParaToReg("flameCut.m_bCutPosInInitPos");
 	WriteSysParaToReg("flameCut.m_bInitPosFarOrg");
 	WriteSysParaToReg("flameCut.m_sIntoLineLen");
@@ -762,9 +767,11 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("DrillNeedSH");
 	ReadSysParaFromReg("DrillReduceSmallSH");
 	ReadSysParaFromReg("DrillHoldSortType");
+	ReadSysParaFromReg("DrillSortHasBigSH");
 	ReadSysParaFromReg("PunchNeedSH");
 	ReadSysParaFromReg("PunchReduceSmallSH");
 	ReadSysParaFromReg("PunchHoldSortType");
+	ReadSysParaFromReg("PunchSortHasBigSH");
 	ReadSysParaFromReg("flameCut.m_bCutPosInInitPos");
 	ReadSysParaFromReg("flameCut.flameCut.m_bInitPosFarOrg");
 	ReadSysParaFromReg("flameCut.m_sIntoLineLen");
@@ -837,12 +844,16 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "%d", nc.m_xDrillPara.m_bReduceSmallSH);
 		else if (stricmp(lpszEntry, "DrillHoldSortType") == 0)
 			sprintf(sValue, "%d", nc.m_xDrillPara.m_ciHoldSortType);
+		else if (stricmp(lpszEntry, "DrillSortHasBigSH") == 0)
+			sprintf(sValue, "%d", nc.m_xDrillPara.m_bSortHasBigSH);
 		else if (stricmp(lpszEntry, "PunchNeedSH") == 0)
 			sprintf(sValue, "%d", nc.m_xPunchPara.m_bReserveBigSH);
 		else if (stricmp(lpszEntry, "PunchReduceSmallSH") == 0)
 			sprintf(sValue, "%d", nc.m_xPunchPara.m_bReduceSmallSH);
 		else if (stricmp(lpszEntry, "PunchHoldSortType") == 0)
 			sprintf(sValue, "%d", nc.m_xPunchPara.m_ciHoldSortType);
+		else if (stricmp(lpszEntry, "PunchSortHasBigSH") == 0)
+			sprintf(sValue, "%d", nc.m_xPunchPara.m_bSortHasBigSH);
 		else if (stricmp(lpszEntry, "DispMkRect") == 0)
 			sprintf(sValue, "%d", nc.m_bDispMkRect);
 		else if (stricmp(lpszEntry, "MKVectType") == 0)
@@ -933,12 +944,16 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			nc.m_xDrillPara.m_bReduceSmallSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "DrillHoldSortType") == 0)
 			nc.m_xDrillPara.m_ciHoldSortType = atoi(sValue);
+		else if (stricmp(lpszEntry, "DrillSortHasBigSH") == 0)
+			nc.m_xDrillPara.m_bSortHasBigSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "PunchNeedSH") == 0)
 			nc.m_xPunchPara.m_bReserveBigSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "PunchReduceSmallSH") == 0)
 			nc.m_xPunchPara.m_bReduceSmallSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "PunchHoldSortType") == 0)
 			nc.m_xPunchPara.m_ciHoldSortType = atoi(sValue);
+		else if (stricmp(lpszEntry, "PunchSortHasBigSH") == 0)
+			nc.m_xPunchPara.m_bSortHasBigSH = atoi(sValue);
 		else if (stricmp(lpszEntry, "DispMkRect") == 0)
 			nc.m_bDispMkRect = atoi(sValue);
 		else if (stricmp(lpszEntry, "MKVectType") == 0)
@@ -1066,6 +1081,7 @@ void CSysPara::UpdateHoleIncrement(double fHoleInc)
 }
 int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/)
 {
+	BOOL bContinueJustify = FALSE;
 	CXhChar200 sText;
 	if(GetPropID("font.fTextHeight")==id)
 	{
@@ -1131,6 +1147,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	else if(GetPropID("nc.DrillPara.m_bReserveBigSH")==id)
 	{
 		if(nc.m_xDrillPara.m_bReserveBigSH)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
+	}
+	else if (GetPropID("nc.DrillPara.m_bSortHasBigSH") == id)
+	{
+		if (nc.m_xDrillPara.m_bSortHasBigSH)
 			sText.Copy("是");
 		else
 			sText.Copy("否");
@@ -1219,6 +1242,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 			strcpy(sText, "是");
 		else
 			strcpy(sText, "否");
+	}
+	else if (GetPropID("nc.PunchPara.m_bSortHasBigSH") == id)
+	{
+		if (nc.m_xPunchPara.m_bSortHasBigSH)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
 	}
 	else if (GetPropID("nc.PunchPara.m_bReduceSmallSH") == id)
 	{
@@ -1471,7 +1501,16 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		sText.Printf("%f",font.fDimTextSize);
 		SimplifiedNumString(sText);
 	}
-	else if(GetPropID("jgDrawing.iDimPrecision")==id)
+	else
+		bContinueJustify = TRUE;
+	if (!bContinueJustify)
+	{	//if-else判断太多编译通不过去，所以只能在中间断开
+		if (valueStr)
+			StrCopy(valueStr, sText, nMaxStrBufLen);
+		return strlen(sText);
+	}
+	bContinueJustify = FALSE;
+	if(GetPropID("jgDrawing.iDimPrecision")==id)
 	{
 		if(jgDrawing.iDimPrecision==0)
 			sText.Copy("1.0mm");

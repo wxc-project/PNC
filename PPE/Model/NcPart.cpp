@@ -678,10 +678,20 @@ void CNCPart::OptimizeBolt( CProcessPlate *pPlate,CHashList<CDrillBolt>& hashDri
 	CXhChar100 sValue;
 	double fSpecialD = (GetSysParaFromReg("LimitSH", sValue)) ? atof(sValue) : 0;
 	BOOL bNeedSH = FALSE;
-	if (ciNcMode == CNCPart::PUNCH_MODE && GetSysParaFromReg("PunchNeedSH", sValue))
-		bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
-	if (ciNcMode == CNCPart::DRILL_MODE && GetSysParaFromReg("DrillNeedSH", sValue))
-		bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
+	if (ciNcMode == CNCPart::PUNCH_MODE)
+	{	//冲孔考虑是否保留特殊大孔（输出且参与排序）
+		if(GetSysParaFromReg("PunchNeedSH", sValue))
+			bNeedSH = atoi(sValue);	
+		if (bNeedSH && GetSysParaFromReg("PunchSortHasBigSH", sValue))
+			bNeedSH = atoi(sValue);
+	}
+	if (ciNcMode == CNCPart::DRILL_MODE)
+	{	//钻孔考虑是否保留特殊大孔（输出且参与排序）
+		if(GetSysParaFromReg("DrillNeedSH", sValue))
+			bNeedSH = atoi(sValue);	
+		if (bNeedSH && GetSysParaFromReg("DrillSortHasBigSH", sValue))
+			bNeedSH = atoi(sValue);
+	}
 	int iSortType = 0;
 	if (ciNcMode == CNCPart::PUNCH_MODE && GetSysParaFromReg("PunchHoldSortType", sValue))
 		iSortType = atoi(sValue);
@@ -821,6 +831,7 @@ void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate, BYTE ciNcMode, BYTE ciAlg
 	CHashList<CDrillBolt> hashDrillBoltByD;
 	OptimizeBolt(&tempPlate, hashDrillBoltByD, ciNcMode, ciAlgType);
 	//重新写入螺栓
+	pPlate->ClonePart(&tempPlate);
 	pPlate->m_xBoltInfoList.Empty();
 	for(CDrillBolt* pDrillBolt=hashDrillBoltByD.GetFirst();pDrillBolt;pDrillBolt=hashDrillBoltByD.GetNext())
 	{
@@ -832,6 +843,25 @@ void CNCPart::RefreshPlateHoles(CProcessPlate *pPlate, BYTE ciNcMode, BYTE ciAlg
 			pNewBolt->CloneBolt(pBolt);
 			pNewBolt->posX=(float)ls_pos.x;
 			pNewBolt->posY=(float)ls_pos.y;
+		}
+	}
+	//补齐没有进行排序的特殊孔
+	if (pPlate->m_xBoltInfoList.GetNodeNum() < tempPlate.m_xBoltInfoList.GetNodeNum())
+	{
+		for (BOLT_INFO* pSrcBolt = tempPlate.m_xBoltInfoList.GetFirst(); pSrcBolt; pSrcBolt = tempPlate.m_xBoltInfoList.GetNext())
+		{
+			GEPOINT pos(pSrcBolt->posX, pSrcBolt->posY, 0);
+			BOLT_INFO* pNewBolt = NULL;
+			for (pNewBolt = pPlate->m_xBoltInfoList.GetFirst(); pNewBolt; pNewBolt = pPlate->m_xBoltInfoList.GetNext())
+			{
+				if (pos.IsEqual(GEPOINT(pNewBolt->posX, pNewBolt->posY), EPS2))
+					break;
+			}
+			if (pNewBolt ==NULL)
+			{
+				pNewBolt = pPlate->m_xBoltInfoList.Add(0);
+				pNewBolt->CloneBolt(pSrcBolt);
+			}
 		}
 	}
 }
