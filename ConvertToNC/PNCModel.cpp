@@ -2962,7 +2962,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 #endif
 	//初始化坐标系,将轮廓线绘制到虚拟画布
 	GECS ocs;
-	ocs.origin.Set(scope.fMinX - 2, scope.fMaxY + 2, 0);
+	ocs.origin.Set(scope.fMinX - 5, scope.fMaxY + 5, 0);
 	ocs.axis_x.Set(1, 0, 0);
 	ocs.axis_y.Set(0, -1, 0);
 	ocs.axis_z.Set(0, 0, -1);
@@ -2977,10 +2977,10 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	//识别钢板外轮廓边
 	xImage.DetectProfilePixelsByVisit();
 	//xImage.DetectProfilePixelsByTrack();
-#ifdef __ALFA_TEST_
+//#ifdef __ALFA_TEST_
 	xImage.WriteBmpFileByVertStrip("F:\\11.bmp");
 	//xImage.WriteBmpFileByPixelHash("F:\\22.bmp");
-#endif
+//#endif
 #ifdef __TIMER_COUNT_
 	dwPreTick = timer.Relay(4, dwPreTick);
 #endif
