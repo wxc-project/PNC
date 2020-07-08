@@ -107,7 +107,6 @@ void CPPEApp::InitPPEModel()
 {
 	model.DisplayProcess=DisplayProcess;
 	CPPEModel::log2file=&logerr;
-	CPPEModel::sysPara=&g_sysPara;
 }
 char* SearchChar(char* srcStr,char ch,bool reverseOrder=false)
 {

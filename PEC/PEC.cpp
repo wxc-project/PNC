@@ -1224,8 +1224,6 @@ void CPEC::DefPlateCutInPt()
 		PROFILE_VER *pVertex=pPlate->FromVertexHiberId(pEnt->GetHiberId());
 		pPlate->m_xCutPt.hEntId=pVertex->keyId;
 		pPlate->m_xCutPt.fInAngle=pPlate->m_xCutPt.fOutAngle=0;
-		pPlate->m_xCutPt.cInLineLen=10;
-		pPlate->m_xCutPt.cOutLineLen=5;
 	}
 	else if(pEnt->GetDbEntType()==IDbEntity::DbCircle)
 	{

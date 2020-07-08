@@ -558,7 +558,6 @@ void CMainFrame::OnRotateAntiClockwise()
 	else
 		g_pPartEditor->ExecuteCommand(IPEC::CMD_ROTATEANTICLOCKWISE_PLATE);
 	pView->SyncPartInfo(false);
-	model.SyncPlateMcsInfo(pPlate);
 }
 //¸Ö°å²Ù×÷£ºË³Ê±ÕëÐý×ª
 void CMainFrame::OnRotateClockwise() 
@@ -572,7 +571,6 @@ void CMainFrame::OnRotateClockwise()
 	else
 		g_pPartEditor->ExecuteCommand(IPEC::CMD_ROTATECLOCKWISE_PLATE);
 	pView->SyncPartInfo(false);
-	model.SyncPlateMcsInfo(pPlate);
 }
 //·­×ª¸Ö°å
 void CMainFrame::OnOverturnPlate() 
@@ -580,13 +578,6 @@ void CMainFrame::OnOverturnPlate()
 	g_pPartEditor->ExecuteCommand(IPEC::CMD_OVERTURN_PART);
 	CPPEView *pView=theApp.GetView();
 	pView->SyncPartInfo(false);
-	//
-	if (GetCurPartType() == CProcessPart::TYPE_PLATE)
-	{
-		CPPEView *pView = theApp.GetView();
-		CProcessPlate* pPlate = (CProcessPlate*)pView->GetCurProcessPart();
-		model.SyncPlateMcsInfo(pPlate);
-	}
 }
 void CMainFrame::OnDrawModeNc()
 {

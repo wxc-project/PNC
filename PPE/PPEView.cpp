@@ -1423,14 +1423,6 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 		g_pPartEditor->ClearProcessParts();
 	if (m_pProcessPart == NULL)
 		return;
-#ifdef __PNC_
-	if(m_pProcessPart->IsPlate())
-	{	//根据系统设置初始化引入线长度 
-		CProcessPlate *pPlate=(CProcessPlate*)m_pProcessPart;
-		pPlate->m_xCutPt.cOutLineLen=(BYTE)g_sysPara.GetCutOutLineLen(pPlate->GetThick());
-		pPlate->m_xCutPt.cInLineLen=(BYTE)g_sysPara.GetCutInLineLen(pPlate->GetThick());
-	}
-#endif
 	CBuffer buffer;
 	m_pProcessPart->ToPPIBuffer(buffer);
 	buffer.SeekToBegin();
@@ -1476,7 +1468,10 @@ bool CPPEView::SyncPartInfo(bool bToPEC,bool bReDraw/*=true*/)
 			return false;
 		part_buffer.SeekToBegin();
 		m_pProcessPart->FromPPIBuffer(part_buffer);
-		if(bReDraw)
+		//更新关联钢板信息:钢印信息、切割信息、摆放信息
+		if (m_pProcessPart->m_cPartType == CProcessPart::TYPE_PLATE)
+			model.SyncRelaPlateInfo((CProcessPlate*)m_pProcessPart);
+		if (bReDraw)
 			Refresh();
 	}
 	//存在对应文件时保存PPI文件

@@ -196,6 +196,9 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\PropertyList.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
+    <ClCompile Include="SelDisplayNcDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
@@ -385,6 +388,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SelPlateNcModeDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SelDisplayNcDlg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

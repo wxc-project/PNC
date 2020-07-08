@@ -62,9 +62,9 @@ CNCPlate::CNCPlate(CProcessPlate *pPlate,int iNo/*=0*/)
 	m_iNo = iNo;
 	m_cCSMode = 0;
 	m_bClockwise = FALSE;
-	m_ciStartId = pPlate ? (BYTE)pPlate->m_xCutPt.hEntId : 0;
-	m_nInLineLen = pPlate ? pPlate->m_xCutPt.cInLineLen : 0;
-	m_nOutLineLen = pPlate ? pPlate->m_xCutPt.cOutLineLen : 0;
+	m_ciStartId = pPlate ? (BYTE)pPlate->m_xCutPt.hEntId : 1;
+	m_nInLineLen = pPlate ? pPlate->m_xCutPt.cInLineLen : 4;
+	m_nOutLineLen = pPlate ? pPlate->m_xCutPt.cOutLineLen : 4;
 	m_nExtraInLen = m_nExtraOutLen = 0;
 	m_nEnlargedSpace = 0;
 	m_bCutSpecialHole = FALSE;

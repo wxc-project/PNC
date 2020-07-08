@@ -1546,12 +1546,12 @@ static void GetCutParamFromReg(BYTE cType,double fThick,int *pnIntoLineLen,int *
 							   BOOL *pbInitPosFarOrg = NULL, BOOL *pbCutPosInInitPos = NULL, BOOL *pbCutSpecialHole=NULL)
 {
 	CXhChar100 sValue;
-	if(cType==0xFF&&CPEC::GetSysParaFromReg("m_cDisplayCutType",sValue))
+	if(cType==0xFF&&CPEC::GetSysParaFromReg("m_ciDisplayType",sValue))
 		cType=atoi(sValue);
 	if(cType==0xFF)
-		cType=0;
-	if(cType==0)
-	{
+		cType= 0X01;
+	if(cType&0X01)
+	{	//火焰切割
 		if(pnEnlargedSpace&&CPEC::GetSysParaFromReg("flameCut.m_wEnlargedSpace",sValue))
 			*pnEnlargedSpace=atoi(sValue);
 		if(pnOutLineLen&&CPEC::GetSysParaFromReg("flameCut.m_sOutLineLen",sValue))
@@ -1565,8 +1565,8 @@ static void GetCutParamFromReg(BYTE cType,double fThick,int *pnIntoLineLen,int *
 		if (pbCutSpecialHole&&CPEC::GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
 			*pbCutSpecialHole = atoi(sValue);
 	}
-	else
-	{
+	else if(cType&0X02)
+	{	//等离子切割
 		if(pnEnlargedSpace&&CPEC::GetSysParaFromReg("plasmaCut.m_wEnlargedSpace",sValue))
 			*pnEnlargedSpace=atoi(sValue);
 		if(pnOutLineLen&&CPEC::GetSysParaFromReg("plasmaCut.m_sOutLineLen",sValue))
@@ -1751,12 +1751,12 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 				if (pBoltInfo->bolt_d >= fSpecialD)
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			}
-			else if (ciDisplayNcMode == 0x04 || ciDisplayNcMode == 0x08)
+			else if (ciDisplayNcMode&0x04 || ciDisplayNcMode&0x08)
 			{	//板床打孔模式下
 				BOOL bNeedSH = FALSE;
-				if (ciDisplayNcMode == 0x04 && CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
+				if (ciDisplayNcMode&0x04 && CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
 					bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
-				if (ciDisplayNcMode == 0x08 && CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
+				if (ciDisplayNcMode&0x08 && CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
 					bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
 				if (pBoltInfo->cFuncType == 0)
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
@@ -1765,15 +1765,13 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 				else if (pBoltInfo->bolt_d >= fSpecialD && bNeedSH)
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			}
-			else if (ciDisplayNcMode == 0x10)
-			{	//激光加工模式下，生成所有孔
+			else if (ciDisplayNcMode == 0x10 || ciDisplayNcMode == 0)
+			{	//原始或激光加工模式下，生成所有孔
 				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			}
-			else
-				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			//显示螺栓顺序
 			BOOL bNeedDispBoltOrder = FALSE;
-			if (ciDisplayNcMode == 0x04)
+			if (ciDisplayNcMode&0x04)
 			{	//冲孔是否显示特殊大孔（输出且参与排序）
 				BOOL bNeedSH = FALSE;
 				if (CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
@@ -1786,7 +1784,7 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 				else if (bNeedSH)
 					bNeedDispBoltOrder = TRUE;
 			}
-			if (ciDisplayNcMode == 0x08)
+			if (ciDisplayNcMode&0x08)
 			{	//钻孔是否显示特殊大孔（输出且参与排序）
 				BOOL bNeedSH = FALSE;
 				if (CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
@@ -1811,7 +1809,7 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 			pre_ls_pt = cur_ls_pt;
 		}
 	}
-	if (ciDisplayNcMode == 0X01 || ciDisplayNcMode == 0X02)
+	if (ciDisplayNcMode&0X01 || ciDisplayNcMode&0X02)
 	{	//火焰切割或等离子切割时，绘制切割路径
 		pVertex = pPlate->vertex_list.GetValue(pPlate->m_xCutPt.hEntId);
 		if (bDrawCutPt&&pVertex)
@@ -1834,7 +1832,6 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 				normalize(prev_vec);
 				normalize(next_vec);
 				int nInLineLen = pPlate->m_xCutPt.cInLineLen, nOutLineLen = pPlate->m_xCutPt.cOutLineLen;
-				GetCutParamFromReg(-1, pPlate->m_fThick, &nInLineLen, &nOutLineLen, NULL);
 				if (nOutLineLen > 0)
 					AppendDbLine(pDrawing, pVertex->vertex, pVertex->vertex + nOutLineLen * next_vec, outLineHiberId, PS_SOLID, RGB(255, 0, 0), 4);
 				if (nInLineLen > 0)
@@ -2220,8 +2217,8 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 	CNCPlate ncPlate((CProcessPlate*)m_pPart);
 	//初始化切割路径
 	CXhChar100 sValue;
-	BYTE cCutType = (CPEC::GetSysParaFromReg("m_cDisplayCutType", sValue)) ? atoi(sValue) : 0;
-	if (cCutType == 0)
+	BYTE cCutType = (CPEC::GetSysParaFromReg("m_ciDisplayType", sValue)) ? atoi(sValue) : 0;
+	if (cCutType & 0X01)
 	{	//火焰切割(逆时针)
 		ncPlate.m_bClockwise = FALSE;
 		if (CPEC::GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
@@ -2233,7 +2230,7 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 		if (CPEC::GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
 			ncPlate.m_bCutSpecialHole = atoi(sValue);
 	}
-	else
+	else if (cCutType & 0X02)
 	{	//等离子切割（顺时针）,目前生成NC数据时不考虑轮廓边增大值和特殊孔  wxc-20.05.22
 		ncPlate.m_bClockwise = TRUE;
 		if (CPEC::GetSysParaFromReg("plasmaCut.m_sOutLineLen", sValue))
@@ -2245,6 +2242,8 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 		//if (CPEC::GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
 			//ncPlate.m_bCutSpecialHole = atoi(sValue);
 	}
+	else
+		return;
 	ncPlate.InitPlateNcInfo();
 	//绘制特殊孔切割路径
 	COLORREF cutLineClr = RGB(255, 0, 0), otherLineClr = RGB(0, 0, 0), ptClr = RGB(181, 0, 181);
@@ -2373,13 +2372,14 @@ void CProcessPlateDraw::InitNcDrawMode()
 	if(pPlate->mkVec.IsZero())
 		InitMkRect();
 	//3.初始化切入点
-	BOOL bCutPosInInitPos=FALSE,bInitFarOrg=FALSE;
-	GetCutParamFromReg(-1,0,NULL,NULL,NULL,&bInitFarOrg,&bCutPosInInitPos);
+	int nInLineLen = 0, nOutLineLen = 0;
+	BOOL bCutPosInInitPos = FALSE, bInitFarOrg = FALSE;
+	GetCutParamFromReg(-1, pPlate->m_fThick, &nInLineLen, &nOutLineLen, NULL, &bInitFarOrg, &bCutPosInInitPos);
 	if(bCutPosInInitPos)
-	{
 		pPlate->m_xCutPt.hEntId=0;
-		pPlate->InitCutPt(bInitFarOrg==TRUE);
-	}
+	pPlate->InitCutPt(bInitFarOrg==TRUE);
+	pPlate->m_xCutPt.cInLineLen = (BYTE)nInLineLen;
+	pPlate->m_xCutPt.cOutLineLen = (BYTE)nOutLineLen;
 }
 
 void CProcessPlateDraw::RotateAntiClockwise() 
@@ -2398,10 +2398,8 @@ void CProcessPlateDraw::RotateAntiClockwise()
 	BOOL bCutPosInInitPos=FALSE,bInitFarOrg=FALSE;
 	GetCutParamFromReg(-1,0,NULL,NULL,NULL,&bInitFarOrg,&bCutPosInInitPos);
 	if(bCutPosInInitPos)
-	{
 		pPlate->m_xCutPt.hEntId=0;
-		pPlate->InitCutPt(bInitFarOrg==TRUE);
-	}
+	pPlate->InitCutPt(bInitFarOrg==TRUE);
 #endif
 }
 
@@ -2421,10 +2419,8 @@ void CProcessPlateDraw::RotateClockwise()
 	BOOL bCutPosInInitPos=FALSE,bInitFarOrg=FALSE;
 	GetCutParamFromReg(-1,0,NULL,NULL,NULL,&bInitFarOrg,&bCutPosInInitPos);
 	if(bCutPosInInitPos)
-	{
 		pPlate->m_xCutPt.hEntId=0;
-		pPlate->InitCutPt(bInitFarOrg==TRUE);
-	}
+	pPlate->InitCutPt(bInitFarOrg==TRUE);
 #endif
 }
 
@@ -2441,10 +2437,8 @@ void CProcessPlateDraw::OverturnPart()
 	BOOL bCutPosInInitPos=FALSE,bInitFarOrg=FALSE;
 	GetCutParamFromReg(-1,0,NULL,NULL,NULL,&bInitFarOrg,&bCutPosInInitPos);
 	if(bCutPosInInitPos)
-	{
 		pPlate->m_xCutPt.hEntId=0;
-		pPlate->InitCutPt(bInitFarOrg==TRUE);
-	}
+	pPlate->InitCutPt(bInitFarOrg==TRUE);
 #endif
 }
 static IDbEntity* GetLineByHiberId(IDrawing* pDrawing,HIBERARCHY hiberId)

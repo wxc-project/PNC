@@ -593,6 +593,7 @@
       <BrowseInformation Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">true</BrowseInformation>
     </ClCompile>
     <ClCompile Include="PromptDlg.cpp" />
+    <ClCompile Include="SelDisplayNcDlg.cpp" />
     <ClCompile Include="SelPlateNcModeDlg.cpp" />
     <ClCompile Include="SideBaffleHighDlg.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
@@ -717,6 +718,7 @@
     <ClInclude Include="PPEView.h" />
     <ClInclude Include="PromptDlg.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SelDisplayNcDlg.h" />
     <ClInclude Include="SelPlateNcModeDlg.h" />
     <ClInclude Include="SideBaffleHighDlg.h" />
     <ClInclude Include="StdAfx.h" />

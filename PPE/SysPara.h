@@ -35,7 +35,7 @@ public:
 	DWORD AddFileFlag(DWORD dwFlag);
 	bool IsValidFile(DWORD dwFlag);
 };
-class CSysPara : public ISysPara
+class CSysPara
 {
 public:
 	//DockPage停靠参数
@@ -156,17 +156,6 @@ public:
 	CSysPara(void);
 	~CSysPara(void);
 	//
-	virtual double GetCutInLineLen(double fThick, BYTE cType = -1);
-	virtual double GetCutOutLineLen(double fThick, BYTE cType = -1);
-	virtual BOOL GetCutInitPosFarOrg(BYTE cType = -1);
-	virtual BOOL GetCutPosInInitPos(BYTE cType = -1);
-	virtual bool IsValidNcFlag(BYTE ciNcFlag) {
-		if ((ciNcFlag&nc.m_iNcMode) > 0)
-			return true;
-		else
-			return false;
-	}
-	//
 	BOOL Read(CString file_path);	//读配置文件
 	BOOL Write(CString file_path);	//写配置文件
 	void WriteSysParaToReg(LPCTSTR lpszEntry);	//保存共用参数至注册表
@@ -175,6 +164,12 @@ public:
 	//
 	void AngleDrawingParaToBuffer(CBuffer &buffer);
 	//钢板NC模式设置
+	bool IsValidNcFlag(BYTE ciNcFlag) {
+		if ((ciNcFlag&nc.m_iNcMode) > 0)
+			return true;
+		else
+			return false;
+	}
 	DWORD AddNcFlag(BYTE ciNcFlag) {
 		nc.m_iNcMode |= ciNcFlag;
 		return nc.m_iNcMode;
@@ -183,6 +178,13 @@ public:
 		BYTE ciCode = 0xff - ciNcFlag;
 		nc.m_iNcMode &= ciCode;
 		return nc.m_iNcMode;
+	}
+	//钢板的显示模式设置
+	bool IsValidDisplayFlag(BYTE ciNcFlag){
+		if (ciNcFlag&nc.m_ciDisplayType)
+			return true;
+		else
+			return false;
 	}
 	//属性栏操作
 	DECLARE_PROP_FUNC(CSysPara);

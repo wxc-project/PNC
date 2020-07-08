@@ -43,7 +43,6 @@ const CXhChar16 CPPEModel::KEY_SINGLE_NUM	= "单基数";
 const CXhChar16 CPPEModel::KEY_PROCESS_NUM	= "加工数";
 static CLogFile emptylogfile;
 ILog2File* CPPEModel::log2file=NULL;	//错误日志文件
-ISysPara* CPPEModel::sysPara=NULL;
 ILog2File* CPPEModel::Log2File()
 {
 	if(log2file)
@@ -246,6 +245,8 @@ CProcessPart* CPPEModel::FromPartNo(const char *sPartNo, int iNcType /*= 0*/)
 		return &pRelaPlate->destPlateOfDrill;
 	else if (iNcType == CNCPart::LASER_MODE)
 		return &pRelaPlate->destPlateOfLaser;
+	else if (iNcType > 0)
+		return &pRelaPlate->destPlateOfComposite;
 	else
 		return pSrcPart;
 #else
@@ -316,7 +317,7 @@ void CPPEModel::ModifyPartNo(const char* sOldPartNo,const char* sNewPartNo)
 	}
 #endif
 }
-void CPPEModel::SyncPlateMcsInfo(CProcessPlate* pWorkPlate)
+void CPPEModel::SyncRelaPlateInfo(CProcessPlate* pWorkPlate)
 {
 #ifdef __PNC_
 	if (pWorkPlate == NULL || !pWorkPlate->IsPlate())
@@ -344,6 +345,36 @@ void CPPEModel::SyncPlateMcsInfo(CProcessPlate* pWorkPlate)
 		pRelaPlate->destPlateOfLaser.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
 		pRelaPlate->destPlateOfLaser.mkpos = pWorkPlate->mkpos;
 		pRelaPlate->destPlateOfLaser.mkVec = pWorkPlate->mkVec;
+		pRelaPlate->destPlateOfComposite.mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
+		pRelaPlate->destPlateOfComposite.mkpos = pWorkPlate->mkpos;
+		pRelaPlate->destPlateOfComposite.mkVec = pWorkPlate->mkVec;
+		//更新切割参数
+		CXhChar100 sValue;
+		float fThick = pSrcPlate->GetThick();
+		//火焰切割的切割信息
+		BOOL bCutPosInInitPos = (GetSysParaFromReg("flameCut.m_bCutPosInInitPos", sValue)) ? atoi(sValue) : false;
+		if(bCutPosInInitPos)
+			pRelaPlate->destPlateOfFlame.m_xCutPt.hEntId = 0;
+		bool bInitFarOrg = false;
+		if (GetSysParaFromReg("flameCut.m_bInitPosFarOrg", sValue))
+			bInitFarOrg = (atoi(sValue) == 1) ? true : false;
+		pRelaPlate->destPlateOfFlame.InitCutPt(bInitFarOrg);
+		if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
+			pRelaPlate->destPlateOfFlame.m_xCutPt.cOutLineLen = (BYTE)CNCPart::GetLineLenFromExpression(fThick, sValue);
+		if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
+			pRelaPlate->destPlateOfFlame.m_xCutPt.cInLineLen = (BYTE)CNCPart::GetLineLenFromExpression(fThick, sValue);
+		//等离子切割的切割信息
+		bCutPosInInitPos = (GetSysParaFromReg("plasmaCut.m_bCutPosInInitPos", sValue)) ? atoi(sValue) : false;
+		if(bCutPosInInitPos)
+			pRelaPlate->destPlateOfPlasma.m_xCutPt.hEntId = 0;
+		bInitFarOrg = false;
+		if (GetSysParaFromReg("plasmaCut.m_bInitPosFarOrg", sValue))
+			bInitFarOrg = (atoi(sValue) == 1) ? true : false;
+		pRelaPlate->destPlateOfPlasma.InitCutPt(bInitFarOrg);
+		if (GetSysParaFromReg("plasmaCut.m_sOutLineLen", sValue))
+			pRelaPlate->destPlateOfPlasma.m_xCutPt.cOutLineLen = (BYTE)CNCPart::GetLineLenFromExpression(fThick, sValue);
+		if (GetSysParaFromReg("plasmaCut.m_sIntoLineLen", sValue))
+			pRelaPlate->destPlateOfPlasma.m_xCutPt.cInLineLen = (BYTE)CNCPart::GetLineLenFromExpression(fThick, sValue);
 	}	
 #endif
 }
@@ -362,21 +393,19 @@ void CPPEModel::InitPlateRelaNcPlate()
 		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfPunch);
 		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfDrill);
 		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfLaser);
+		pSrcPlate->ClonePart(&pRelaPlate->destPlateOfComposite);
 	}
 #endif
 }
 void CPPEModel::InitPlateMcsAndCutPt(bool bSaveToFile/*=false*/)
 {	//初始化钢板加工坐标系及切入点
-	bool bInitFarOrg=false;
-	if(sysPara)
-		bInitFarOrg=(sysPara->GetCutInitPosFarOrg()==TRUE);
 	for(CProcessPart *pPart=EnumPartFirst();pPart;pPart=EnumPartNext())
 	{
 		if(!pPart->IsPlate())
 			continue;
 		CProcessPlate* pPlate=(CProcessPlate*)pPart;
 		pPlate->InitMCS();
-		pPlate->InitCutPt(bInitFarOrg);
+		SyncRelaPlateInfo(pPlate);
 		if(bSaveToFile)
 			SavePartToFile(pPlate);
 	}

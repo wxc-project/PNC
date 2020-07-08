@@ -5,15 +5,6 @@
 #include <vector>
 
 using std::vector;
-struct ISysPara
-{
-	virtual bool IsValidNcFlag(BYTE ciNcFlag) = 0;
-	//
-	virtual double GetCutInLineLen(double fThick,BYTE cType=-1)=0;
-	virtual double GetCutOutLineLen(double fThick,BYTE cType=-1)=0;
-	virtual int GetCutInitPosFarOrg(BYTE cType=-1)=0;
-	virtual int GetCutPosInInitPos(BYTE cType=-1)=0;
-};
 
 class CPPEModel
 {
@@ -29,6 +20,7 @@ private:
 		CProcessPlate destPlateOfPunch;
 		CProcessPlate destPlateOfDrill;
 		CProcessPlate destPlateOfLaser;
+		CProcessPlate destPlateOfComposite;	//复合模式
 		//
 		void SetNewPartNo(const char* sNewPartNo)
 		{
@@ -37,6 +29,7 @@ private:
 			destPlateOfPunch.SetPartNo(sNewPartNo);
 			destPlateOfDrill.SetPartNo(sNewPartNo);
 			destPlateOfLaser.SetPartNo(sNewPartNo);
+			destPlateOfComposite.SetPartNo(sNewPartNo);
 		}
 		void SetKeyId(int idKey)
 		{
@@ -45,6 +38,7 @@ private:
 			destPlateOfPunch.SetKey(idKey);
 			destPlateOfDrill.SetKey(idKey);
 			destPlateOfLaser.SetKey(idKey);
+			destPlateOfComposite.SetKey(idKey);
 		}
 	};
 	CHashStrList<RELA_PLATE> m_hashRelaPlateByPartNo;
@@ -92,10 +86,25 @@ public:
 		}
 		bool IsValidFormat() { return m_sKeyMarkArr.size() > 0; }
 	}file_format;
+#ifdef __PNC_
+	//PNC的功能权限控制
+	static const BYTE FUNC_IDENTITY_FLAME_CUT	  = 0x01;	//火焰切割
+	static const BYTE FUNC_IDENTITY_PLASMA_CUT	  = 0x02;	//等离子切割
+	static const BYTE FUNC_IDENTITY_PUNCH_PROCESS = 0x04;	//冲床加工
+	static const BYTE FUNC_IDENTITY_DRILL_PROCESS = 0x08;	//钻床加工
+	static const BYTE FUNC_IDENTITY_LASER_PROCESS = 0x10;	//激光复合机
+	static const BYTE FUNC_IDENTITY_HOLE_SORT	  = 0X11;	//螺栓孔排序
+	DWORD m_dwFunctionFlag;
+	bool VerifyValidFunction(BYTE ciFuncFlag) {
+		if ((ciFuncFlag&m_dwFunctionFlag) > 0)
+			return true;
+		else
+			return false;
+	}
+#endif
 public:
 	static ILog2File* log2file;
 	static ILog2File* Log2File();//永远会返回一个有效指针,但只有log2file!=NULL时,才会真正记录错误日志
-	static ISysPara* sysPara;
 public:
 	CPPEModel(void);
 	~CPPEModel(void);
@@ -114,7 +123,7 @@ public:
 	CProcessPart* EnumPartNext(){return m_hashPartByPartNo.GetNext();}
 	DWORD PartCount(){return m_hashPartByPartNo.GetNodeNum();}
 	void ModifyPartNo(const char* sOldPartNo,const char* sNewPartNo);
-	void SyncPlateMcsInfo(CProcessPlate* pWorkPlate);
+	void SyncRelaPlateInfo(CProcessPlate* pWorkPlate);
 	//关联文件路径
 	CXhChar500 GetFolderPath();
 	CXhChar500 GetPartFilePath(const char *sPartNo);

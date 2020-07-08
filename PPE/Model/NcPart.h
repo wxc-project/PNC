@@ -57,6 +57,7 @@ public:
 	static CString m_sExportPartInfoKeyStr;	//¸Ö°åÊä³öÃ÷Ï¸
 public:
 	static void DeformedPlateProfile(CProcessPlate *pPlate);
+	static int GetLineLenFromExpression(double fThick, const char* sValue);
 	//¸Ö°å²Ù×÷
 	static bool CreatePlateTtpFile(CProcessPlate *pPlate,const char* file_path);
 	static bool CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int dxf_mode);

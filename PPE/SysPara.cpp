@@ -68,7 +68,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("CutLimitSH", PROPLIST_ITEM(id++, "切割式特殊孔(大孔)", "通过切割工艺进行加工的特殊孔"));
 	AddPropItem("ProLimitSH", PROPLIST_ITEM(id++, "板床式特殊孔(小孔)", "通过板床工艺进行加工的特殊孔"));
 	AddPropItem("nc.m_sNcDriverPath",PROPLIST_ITEM(id++,"角钢NC驱动"));
-	AddPropItem("nc.m_ciDisplayType", PROPLIST_ITEM(id++, "当前显示NC模式", "当前显示的加工模式", "原始钢板|火焰切割|等离子切割|冲床加工|钻冲加工|激光复合机"));
+	AddPropItem("nc.m_ciDisplayType", PROPLIST_ITEM(id++, "当前显示模式", "当前显示的加工模式", "原始|火焰|等离子|冲床|钻床|激光|复合模式"));
 	//文件设置
 	AddPropItem("FileSet", PROPLIST_ITEM(id++, "文件设置"));
 	AddPropItem("FileFormat", PROPLIST_ITEM(id++, "输出文件格式"));
@@ -82,17 +82,17 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("pmz.m_bIncVertex", PROPLIST_ITEM(id++, "输出顶点", "导出PBJ时，是否包括顶点", "是|否"));
 	AddPropItem("pmz.m_bPmzCheck", PROPLIST_ITEM(id++, "输出预审Pmz", "输出用于预审的Pmz文件，一个钢板上取3~4个孔做为定位孔,用于加工前预审", "是|否"));
 	//等离子切割显示
-	AddPropItem("plasmaCut",PROPLIST_ITEM(id++,"NC切割设置"));
+	AddPropItem("plasmaCut",PROPLIST_ITEM(id++,"等离子切割设置"));
 	AddPropItem("plasmaCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("plasmaCut.m_sIntoLineLen",PROPLIST_ITEM(id++,"引入线长","引入线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
-	AddPropItem("plasmaCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点","初始点","0.靠近原点|1.远离原点"));
-	AddPropItem("plasmaCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点位置","切入点位置","0.在指定轮廓点|1.始终在初始点"));
+	AddPropItem("plasmaCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点位置","初始点位置","0.靠近原点|1.远离原点"));
+	AddPropItem("plasmaCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点定位","切入点位置","0.在指定轮廓点|1.始终在初始点"));
 	//火焰切割显示
-	AddPropItem("flameCut",PROPLIST_ITEM(id++,"CNC切割设置"));
+	AddPropItem("flameCut",PROPLIST_ITEM(id++,"火焰切割设置"));
 	AddPropItem("flameCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("flameCut.m_sIntoLineLen",PROPLIST_ITEM(id++,"引入线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
-	AddPropItem("flameCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点","初始点","0.靠近原点|1.远离原点"));
-	AddPropItem("flameCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点位置","切入点位置","0.在指定轮廓点|1.始终在初始点"));
+	AddPropItem("flameCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点位置","初始点","0.靠近原点|1.远离原点"));
+	AddPropItem("flameCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点定位","切入点位置","0.在指定轮廓点|1.始终在初始点"));
 	//输出设置
 	AddPropItem("OutPutSet", PROPLIST_ITEM(id++, "输出设置"));
 	AddPropItem("nc.m_iDxfMode", PROPLIST_ITEM(id++, "按厚度分类", "生成DXF是否进行分类", "是|否"));
@@ -1374,17 +1374,19 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	else if(GetPropID("nc.m_ciDisplayType")==id)
 	{
 		if (g_sysPara.nc.m_ciDisplayType == CNCPart::FLAME_MODE)
-			sText.Copy("火焰切割");
+			sText.Copy("火焰");
 		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::PLASMA_MODE)
-			sText.Copy("等离子切割");
+			sText.Copy("等离子");
 		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::PUNCH_MODE)
-			sText.Copy("冲床加工");
+			sText.Copy("冲床");
 		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::DRILL_MODE)
-			sText.Copy("钻床加工");
+			sText.Copy("钻床");
 		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::LASER_MODE)
-			sText.Copy("等离子复合机");
+			sText.Copy("激光");
+		else if (g_sysPara.nc.m_ciDisplayType > 0)
+			sText.Copy("复合模式");
 		else
-			sText.Copy("原始钢板");
+			sText.Copy("原始");
 	}
 	//等离子切割
 	else if(GetPropID("plasmaCut.m_sOutLineLen")==id)
@@ -1776,58 +1778,6 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	if(valueStr)
 		StrCopy(valueStr,sText,nMaxStrBufLen);
 	return sText.Length();
-}
-double CSysPara::GetCutInLineLen(double fThick,BYTE cType/*=-1*/)
-{
-	CExpression expression;
-	EXPRESSION_VAR* pVar = expression.varList.Append();
-	pVar->fValue = fThick;
-	strcpy(pVar->variableStr, "T");
-	if (cType == 0xFF)
-		cType = g_sysPara.nc.m_ciDisplayType;
-	if (CNCPart::FLAME_MODE == cType)
-		return expression.SolveExpression(g_sysPara.flameCut.m_sIntoLineLen);
-	else if (CNCPart::PLASMA_MODE == cType)
-		return expression.SolveExpression(g_sysPara.plasmaCut.m_sIntoLineLen);
-	else
-		return 0;
-}
-double CSysPara::GetCutOutLineLen(double fThick,BYTE cType/*=-1*/)
-{
-	CExpression expression;
-	EXPRESSION_VAR* pVar=expression.varList.Append();
-	pVar->fValue=fThick;
-	strcpy(pVar->variableStr,"T");
-	if (cType == 0xFF)
-		cType = g_sysPara.nc.m_ciDisplayType;
-	if (CNCPart::FLAME_MODE == cType)
-		return expression.SolveExpression(g_sysPara.flameCut.m_sOutLineLen);
-	else if (CNCPart::PLASMA_MODE == cType)
-		return expression.SolveExpression(g_sysPara.plasmaCut.m_sOutLineLen);
-	else
-		return 0;
-}
-BOOL CSysPara::GetCutInitPosFarOrg(BYTE cType/*=-1*/)
-{
-	if (cType == 0xFF)
-		cType = g_sysPara.nc.m_ciDisplayType;
-	if (CNCPart::FLAME_MODE == cType)
-		return g_sysPara.flameCut.m_bInitPosFarOrg;
-	else if (CNCPart::PLASMA_MODE == cType)
-		return g_sysPara.plasmaCut.m_bInitPosFarOrg;
-	else
-		return FALSE;
-}
-BOOL CSysPara::GetCutPosInInitPos(BYTE cType/*=-1*/)
-{
-	if (cType == 0xFF)
-		cType = g_sysPara.nc.m_ciDisplayType;
-	if (CNCPart::FLAME_MODE == cType)
-		return g_sysPara.flameCut.m_bCutPosInInitPos;
-	else if (CNCPart::PLASMA_MODE == cType)
-		return g_sysPara.plasmaCut.m_bCutPosInInitPos;
-	else
-		return FALSE;
 }
 void CSysPara::AngleDrawingParaToBuffer(CBuffer &buffer)
 {

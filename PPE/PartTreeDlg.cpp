@@ -270,8 +270,26 @@ void CPartTreeDlg::SmartSortBolts(BYTE ciAlgType)
 	if (pPart == NULL || !pPart->IsPlate())
 		return;
 	CWaitCursor waitCursor;
-	CProcessPlate* pPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-	CNCPart::RefreshPlateHoles(pPlate, g_sysPara.nc.m_ciDisplayType, ciAlgType);
+	CProcessPlate* pPlate = NULL;
+	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
+	{
+		pPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), CNCPart::PUNCH_MODE);
+		CNCPart::RefreshPlateHoles(pPlate, CNCPart::PUNCH_MODE, ciAlgType);
+	}
+	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
+	{
+		pPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), CNCPart::DRILL_MODE);
+		CNCPart::RefreshPlateHoles(pPlate, CNCPart::DRILL_MODE, ciAlgType);
+	}
+	else
+		return;
+	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+	{
+		CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
+		pCompPlate->m_xBoltInfoList.Empty();
+		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
+			pCompPlate->m_xBoltInfoList.Append(*pBolt, pPlate->m_xBoltInfoList.GetCursorKey());
+	}
 	//
 	CPPEView* pView = (CPPEView*)theApp.GetView();
 	pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());

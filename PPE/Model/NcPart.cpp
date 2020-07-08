@@ -1335,7 +1335,7 @@ bool CNCPart::CreatePlatePmzCheckFile(CProcessPlate *pPlate, const char* file_pa
 	fclose(fp);
 	return true;
 }
-int GetLineLenFromExpression(double fThick, const char* sValue)
+int CNCPart::GetLineLenFromExpression(double fThick, const char* sValue)
 {
 	CExpression expression;
 	EXPRESSION_VAR* pVar = expression.varList.Append();
@@ -1351,18 +1351,15 @@ bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 	CNCPlate ncPlate(pPlate);
 	ncPlate.m_nInLineLen = -1;
 	ncPlate.m_nOutLineLen = -1;
-	if(CPPEModel::sysPara!=NULL)
-	{
-		CXhChar100 sValue;
-		if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
-			ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
-		if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
-			ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
-		if (GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
-			ncPlate.m_nEnlargedSpace = atoi(sValue);
-		if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
-			ncPlate.m_bCutSpecialHole = atoi(sValue);
-	}
+	CXhChar100 sValue;
+	if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
+		ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+	if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
+		ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+	if (GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+		ncPlate.m_nEnlargedSpace = atoi(sValue);
+	if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
+		ncPlate.m_bCutSpecialHole = atoi(sValue);
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
 }
@@ -1376,18 +1373,15 @@ bool CNCPart::CreatePlateNcFile(CProcessPlate *pPlate,const char* file_path)
 	ncPlate.m_nOutLineLen = -1;
 	ncPlate.m_nExtraInLen = 5;
 	ncPlate.m_nExtraOutLen = 2;
-	if(CPPEModel::sysPara!=NULL)
-	{
-		CXhChar100 sValue;
-		if (GetSysParaFromReg("plasmaCut.m_sOutLineLen", sValue))
-			ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
-		if (GetSysParaFromReg("plasmaCut.m_sIntoLineLen", sValue))
-			ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
-		if (GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
-			ncPlate.m_nEnlargedSpace = atoi(sValue);
-		if (GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
-			ncPlate.m_bCutSpecialHole = atoi(sValue);
-	}
+	CXhChar100 sValue;
+	if (GetSysParaFromReg("plasmaCut.m_sOutLineLen", sValue))
+		ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+	if (GetSysParaFromReg("plasmaCut.m_sIntoLineLen", sValue))
+		ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+	if (GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
+		ncPlate.m_nEnlargedSpace = atoi(sValue);
+	if (GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
+		ncPlate.m_bCutSpecialHole = atoi(sValue);
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateNcFile(file_path);
 }
@@ -1396,18 +1390,15 @@ bool CNCPart::CreatePlateCncFile(CProcessPlate *pPlate,const char* file_path)
 	CNCPlate ncPlate(pPlate);
 	ncPlate.m_nInLineLen = -1;
 	ncPlate.m_nOutLineLen = -1;
-	if(CPPEModel::sysPara!=NULL)
-	{
-		CXhChar100 sValue;
-		if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
-			ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
-		if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
-			ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
-		if (GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
-			ncPlate.m_nEnlargedSpace = atoi(sValue);
-		if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
-			ncPlate.m_bCutSpecialHole = atoi(sValue);
-	}
+	CXhChar100 sValue;
+	if (GetSysParaFromReg("flameCut.m_sOutLineLen", sValue))
+		ncPlate.m_nOutLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+	if (GetSysParaFromReg("flameCut.m_sIntoLineLen", sValue))
+		ncPlate.m_nInLineLen = GetLineLenFromExpression(pPlate->m_fThick, sValue);
+	if (GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+		ncPlate.m_nEnlargedSpace = atoi(sValue);
+	if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
+		ncPlate.m_bCutSpecialHole = atoi(sValue);
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
 }

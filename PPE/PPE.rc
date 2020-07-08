@@ -379,12 +379,12 @@ BEGIN
             MENUITEM "生成钢板TXT",                     ID_FILE_SAVE_TXT
             MENUITEM "生成钢板CNC",                     ID_FILE_SAVE_CNC
         END
-        MENUITEM "生成火焰NC数据",						ID_FLAME_NC_DATA
-        MENUITEM "生成等离子NC数据",					ID_PLASMA_NC_DATA
-		MENUITEM "生成冲床NC数据",						ID_PUNCH_NC_DATA
-		MENUITEM "生成钻床NC数据",						ID_DRILL_NC_DATA
-        MENUITEM "生成激光NC数据",						ID_LASER_NC_DATA
-        MENUITEM "一键生成NC数据",						ID_CREATE_PLATE_NC_DATA
+        MENUITEM "生成火焰NC数据",                    ID_FLAME_NC_DATA
+        MENUITEM "生成等离子NC数据",                   ID_PLASMA_NC_DATA
+        MENUITEM "生成冲床NC数据",                    ID_PUNCH_NC_DATA
+        MENUITEM "生成钻床NC数据",                    ID_DRILL_NC_DATA
+        MENUITEM "生成激光NC数据",                    ID_LASER_NC_DATA
+        MENUITEM "一键生成NC数据",                    ID_CREATE_PLATE_NC_DATA
     END
     POPUP "工具(&W)"
     BEGIN
@@ -744,6 +744,21 @@ BEGIN
     CONTROL         "激光复合机",IDC_CHK_LASER,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,8,62,47,10
 END
 
+IDD_DISPLAY_NC_DLG DIALOGEX 0, 0, 114, 108
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "钢板显示模式"
+FONT 10, "宋体", 400, 0, 0x86
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,20,87,36,14
+    PUSHBUTTON      "取消",IDCANCEL,59,87,36,14
+    GROUPBOX        "切割加工",IDC_STATIC,9,3,97,35,BS_FLAT
+    GROUPBOX        "板床加工",IDC_STATIC,9,43,97,35
+    CONTROL         "火焰切割",IDC_RAD_FLAME,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,18,40,10
+    CONTROL         "等离子切割",IDC_RAD_PLASMA,"Button",BS_AUTORADIOBUTTON,56,18,48,10
+    CONTROL         "冲床加工",IDC_RAD_PUNCH,"Button",BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,13,58,40,10
+    CONTROL         "钻床加工",IDC_RAD_DRILL,"Button",BS_AUTORADIOBUTTON,56,59,46,10
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -822,6 +837,10 @@ BEGIN
         RIGHTMARGIN, 164
         TOPMARGIN, 7
         BOTTOMMARGIN, 66
+    END
+
+    IDD_PART_PROPERTY_DLG, DIALOG
+    BEGIN
     END
 
     IDD_PART_TREE_DLG, DIALOG
@@ -913,6 +932,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 91
     END
+
+    IDD_DISPLAY_NC_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 107
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 101
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -960,6 +987,11 @@ BEGIN
 END
 
 IDD_SEL_PLATE_NC_DLG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DISPLAY_NC_DLG AFX_DIALOG_LAYOUT
 BEGIN
     0
 END
