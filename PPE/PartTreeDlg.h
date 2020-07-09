@@ -65,6 +65,5 @@ public:
 	void UpdateTreeItemText(HTREEITEM hItem=NULL);
 	void UpdatePlateTreeItem(int sortByPN0_TK1_MAT2=0);
 	void UpdateAngleTreeItem(int sortByPN0_SPEC1_MAT2=0);
-	void SmartSortBolts(BYTE ciAlgType);
 	void CancelSelTreeItem();
 };

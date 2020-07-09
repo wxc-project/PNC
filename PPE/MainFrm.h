@@ -34,6 +34,8 @@ protected:  // control bar embedded members
 	CDialogPanel	m_partPropertyView;
 	CDialogPanel	m_partTreeView;
 	CMFCToolBarImages	m_userImages;
+	//
+	CMFCToolBarComboBoxButton  *m_comboBtn;
 public:
 	CPartPropertyDlg* GetPartPropertyPage(){return (CPartPropertyDlg*)m_partPropertyView.GetDlgPtr();}
 	CPartTreeDlg* GetPartTreePage(){return (CPartTreeDlg*)m_partTreeView.GetDlgPtr();}
@@ -56,9 +58,12 @@ public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnViewCustomize();
 	afx_msg LRESULT OnToolbarCreateNew(WPARAM wp, LPARAM lp);
+	afx_msg LRESULT OnToolbarReset(WPARAM, LPARAM);
 	afx_msg void OnApplicationLook(UINT id);
 	afx_msg void OnUpdateApplicationLook(CCmdUI* pCmdUI);
 	afx_msg void OnSettingChange(UINT uFlags, LPCTSTR lpszSection);
+	afx_msg void OnSelDisplayNC();
+	afx_msg void OnComboSelChangeClick();
 	afx_msg void OnPrevPart();
 	afx_msg void OnRotateAntiClockwise();
 	afx_msg void OnNextPart();

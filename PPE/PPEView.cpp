@@ -585,7 +585,8 @@ void CPPEView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 	if( m_pProcessPart&&m_pProcessPart->IsPlate()&&
 		g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)
-	{
+	{	//双击鼠标左键，快速打钢印号，不做选中处理
+		m_xSelectEntity.Empty();
 		f3dPoint user_pt,port_pt(point.x,point.y);
 		g_pSolidOper->ScreenToUser(&user_pt,port_pt);
 		UCS_STRU object_ucs;
@@ -676,21 +677,22 @@ void CPPEView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			m_xSelectEntity.Empty();
 			if (m_pProcessPart)
 				g_p2dDraw->RenderDrawing();
+			UpdatePropertyPage();
 		}
 		else if (m_pProcessPart)
-		{	//取消选中构件
-			CPartTreeDlg *pPartTreeDlg = ((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
-			pPartTreeDlg->CancelSelTreeItem();
+		{	//切换到系统属性栏
+			DisplaySysSettingProperty();
 		}
 		else
 		{
 			CPartTreeDlg *pPartTreeDlg=((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
 			pPartTreeDlg->GetTreeCtrl()->SelectItem(NULL);
 			Refresh();
+			UpdatePropertyPage();
 		}
 		if(g_pPromptMsg)
 			g_pPromptMsg->Destroy();
-		UpdatePropertyPage();
+		
 	}
 	else if(nChar==VK_DELETE)		//删除操作
 	{

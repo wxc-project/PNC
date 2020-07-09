@@ -14,6 +14,7 @@
 #include "PartTreeDlg.h"
 #include "PartPropertyDlg.h"
 #include "LicFuncDef.h"
+#include "SelDisplayNcDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -44,9 +45,12 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWndEx)
 	ON_WM_CLOSE()
 	ON_COMMAND(ID_VIEW_CUSTOMIZE, &CMainFrame::OnViewCustomize)
 	ON_REGISTERED_MESSAGE(AFX_WM_CREATETOOLBAR, &CMainFrame::OnToolbarCreateNew)
+	ON_REGISTERED_MESSAGE(AFX_WM_RESETTOOLBAR, &CMainFrame::OnToolbarReset)
 	ON_COMMAND_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnApplicationLook)
 	ON_UPDATE_COMMAND_UI_RANGE(ID_VIEW_APPLOOK_WIN_2000, ID_VIEW_APPLOOK_WINDOWS_7, &CMainFrame::OnUpdateApplicationLook)
 	ON_WM_SETTINGCHANGE()
+	ON_COMMAND(ID_DISPLAY_NC_MODE, OnSelDisplayNC)
+	ON_CBN_SELCHANGE(ID_DISPLAY_NC_MODE, OnComboSelChangeClick)
 	ON_COMMAND(ID_PREV_PART, OnPrevPart)
 	ON_COMMAND(ID_ROTATE_ANTI_CLOCKWISE, OnRotateAntiClockwise)
 	ON_COMMAND(ID_NEXT_PART, OnNextPart)
@@ -105,6 +109,7 @@ static UINT indicators[] =
 
 CMainFrame::CMainFrame()
 {
+	m_comboBtn = NULL;
 	theApp.m_nAppLook = ID_VIEW_APPLOOK_WINDOWS_7;	//theApp.GetInt(_T("ApplicationLook"), ID_VIEW_APPLOOK_OFF_2007_BLUE);
 	m_partPropertyView.Init(RUNTIME_CLASS(CPartPropertyDlg), IDD_PART_PROPERTY_DLG);
 	m_partTreeView.Init(RUNTIME_CLASS(CPartTreeDlg), IDD_PART_TREE_DLG);
@@ -112,7 +117,11 @@ CMainFrame::CMainFrame()
 
 CMainFrame::~CMainFrame()
 {
-	
+	if (NULL != m_comboBtn)
+	{
+		delete m_comboBtn;
+		m_comboBtn = NULL;
+	}
 }
 void CMainFrame::OnUpdateFrameTitle(BOOL bAddToTitle)
 {
@@ -387,6 +396,44 @@ LRESULT CMainFrame::OnToolbarCreateNew(WPARAM wp,LPARAM lp)
 	return lres;
 }
 
+afx_msg LRESULT CMainFrame::OnToolbarReset(WPARAM wp, LPARAM)
+{
+	UINT uiToolBarId = (UINT)wp;
+	if (uiToolBarId == IDR_MAINFRAME_PNC)
+	{
+		if (m_comboBtn == NULL)
+			m_comboBtn = new CMFCToolBarComboBoxButton(ID_DISPLAY_NC_MODE, GetCmdMgr()->GetCmdImage(ID_DISPLAY_NC_MODE, FALSE));
+		m_comboBtn->EnableWindow(TRUE);
+		m_comboBtn->SetCenterVert();
+		m_comboBtn->SetDropDownHeight(120);//设置下拉列表的高度  
+		m_comboBtn->SetFlatMode();
+		m_comboBtn->OnSize(100);			//设置下拉列表宽度 
+		m_comboBtn->AddItem(_T("原始钢板"));
+		m_comboBtn->AddItem(_T("火焰切割"));
+		m_comboBtn->AddItem(_T("等离子切割"));
+		m_comboBtn->AddItem(_T("冲床加工"));
+		m_comboBtn->AddItem(_T("钻床加工"));
+		m_comboBtn->AddItem(_T("激光复合机"));
+		m_comboBtn->AddItem(_T("组合模式..."));
+		if (g_sysPara.nc.m_ciDisplayType == 0)
+			m_comboBtn->SelectItem(0);
+		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::FLAME_MODE)
+			m_comboBtn->SelectItem(1);
+		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::PLASMA_MODE)
+			m_comboBtn->SelectItem(2);
+		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::PUNCH_MODE)
+			m_comboBtn->SelectItem(3);
+		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::DRILL_MODE)
+			m_comboBtn->SelectItem(4);
+		else if (g_sysPara.nc.m_ciDisplayType == CNCPart::LASER_MODE)
+			m_comboBtn->SelectItem(5);
+		else
+			m_comboBtn->SelectItem(6);
+		m_wndToolBar.ReplaceButton(ID_DISPLAY_NC_MODE, *m_comboBtn);
+	}
+	return 0;
+}
+
 void CMainFrame::OnApplicationLook(UINT id)
 {
 	CWaitCursor wait;
@@ -517,6 +564,45 @@ BOOL CMainFrame::OnCreateClient(LPCREATESTRUCT lpcs, CCreateContext* pContext)
 void CMainFrame::SetPaneText(int nIndex, LPCTSTR lpszNewText, BOOL bUpdate)
 {
 	m_wndStatusBar.SetPaneText(nIndex,lpszNewText,bUpdate);
+}
+//
+void CMainFrame::OnSelDisplayNC()
+{
+	CMFCToolBarComboBoxButton* pComboBtn = CMFCToolBarComboBoxButton::GetByCmd(ID_DISPLAY_NC_MODE, TRUE);
+	int index = pComboBtn->GetCurSel();
+	CString str = pComboBtn->GetItem(index);
+}
+//
+void CMainFrame::OnComboSelChangeClick()
+{
+	CMFCToolBarComboBoxButton* pComboBtn = CMFCToolBarComboBoxButton::GetByCmd(ID_DISPLAY_NC_MODE, TRUE);
+	int index = pComboBtn->GetCurSel();
+	if (index == 0)
+		g_sysPara.nc.m_ciDisplayType = 0;
+	else if (index == 1)
+		g_sysPara.nc.m_ciDisplayType = CNCPart::FLAME_MODE;
+	else if (index == 2)
+		g_sysPara.nc.m_ciDisplayType = CNCPart::PLASMA_MODE;
+	else if (index == 3)
+		g_sysPara.nc.m_ciDisplayType = CNCPart::PUNCH_MODE;
+	else if (index == 4)
+		g_sysPara.nc.m_ciDisplayType = CNCPart::DRILL_MODE;
+	else if (index == 5)
+		g_sysPara.nc.m_ciDisplayType = CNCPart::LASER_MODE;
+	else if (index == 6)
+	{
+		CSelDisplayNcDlg dlg;
+		dlg.DoModal();
+	}
+	g_sysPara.WriteSysParaToReg("m_ciDisplayType");
+	//
+	CPPEView *pView = theApp.GetView();
+	CProcessPart* pProcessPart = pView->GetCurProcessPart();
+	if (pProcessPart)
+	{
+		pView->UpdateCurWorkPartByPartNo(pProcessPart->GetPartNo());
+		pView->Refresh();
+	}
 }
 //第一个构件
 void CMainFrame::OnFirstPart() 
