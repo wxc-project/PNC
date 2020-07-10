@@ -1746,12 +1746,12 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 				memmove(tem_str, tem_str + 3, 97);
 				sscanf(tem_str, "%X", &ls_color);
 			}
-			if (ciDisplayNcMode == 0X01 || ciDisplayNcMode == 0X02)
+			if (ciDisplayNcMode&0X01 || ciDisplayNcMode&0X02)
 			{	//切割下料模式下，显示切割孔
 				if (pBoltInfo->bolt_d >= fSpecialD)
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			}
-			else if (ciDisplayNcMode&0x04 || ciDisplayNcMode&0x08)
+			if (ciDisplayNcMode&0x04 || ciDisplayNcMode&0x08)
 			{	//板床打孔模式下
 				BOOL bNeedSH = FALSE;
 				if (ciDisplayNcMode&0x04 && CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
@@ -1762,10 +1762,10 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 				else if (pBoltInfo->bolt_d < fSpecialD)	//对小号特殊孔进行加工
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
-				else if (pBoltInfo->bolt_d >= fSpecialD && bNeedSH)
+				else if (pBoltInfo->bolt_d >= fSpecialD && bNeedSH && (ciDisplayNcMode == 0x04 || ciDisplayNcMode == 0x08))
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			}
-			else if (ciDisplayNcMode == 0x10 || ciDisplayNcMode == 0)
+			if (ciDisplayNcMode == 0x10 || ciDisplayNcMode == 0)
 			{	//原始或激光加工模式下，生成所有孔
 				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
 			}
@@ -2145,49 +2145,45 @@ void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 	DrawPlate(&tempPlate, pDrawing, pSolidSet, color, TRUE);
 #endif
 	//4.绘制打号位置
-	if(m_pPart->IsPlate() && !((CProcessPlate*)m_pPart)->IsDisplayMK())
-		return;
-	COLORREF mkColRef=RGB(255,0,0);
-	if(CPEC::GetSysParaFromReg("MarkColor",sValue))
+	if (((CProcessPlate*)m_pPart)->IsDisplayMK())
 	{
-		char tem_str[100]="";
-		sprintf(tem_str,"%s",(char*)sValue);
-		memmove(tem_str, tem_str+3, 97);
-		sscanf(tem_str,"%X",&mkColRef);
-	}
-	if(!IsMainPartDraw())
-		mkColRef=RGB(0,128,128);
-	//号料孔
-	double fMKHoleD=8;
-	if(CPEC::GetSysParaFromReg("MKHoleD",sValue))
-		fMKHoleD=atof(sValue);
-	f3dPoint center(m_pPart->mkpos);
-	coord_trans(center,mcs,FALSE);
-	AppendDbCircle(pDrawing,center,f3dPoint(0,0,1),fMKHoleD*0.5,HIBERID(m_pPart->GetKey()),PS_SOLID,mkColRef,2);
-	//字盒
-	BOOL bDisplayMkRect=FALSE;
-	if(CPEC::GetSysParaFromReg("DispMkRect",sValue))
-		bDisplayMkRect=atoi(sValue);
-	if(bDisplayMkRect)
-	{
-		BYTE ciVectType = (CPEC::GetSysParaFromReg("MKVectType", sValue)) ? atoi(sValue) : 0;
-		double fLen = (CPEC::GetSysParaFromReg("MKRectL", sValue)) ? atof(sValue) : 60;
-		double fWidth = (CPEC::GetSysParaFromReg("MKRectW", sValue)) ? atof(sValue) : 30;
-		if (ciVectType == 1)
-		{	//保持水平
-			f3dPoint vec(1, 0, 0);
-			vector_trans(vec, mcs, TRUE);
-			tempPlate.mkVec = vec;
-		}
-		ATOM_LIST<f3dPoint> ptArr;
-		tempPlate.GetMkRect(fLen, fWidth, ptArr);
-		for(int i=0;i<4;i++)
+		COLORREF mkColRef = RGB(255, 0, 0);
+		if (CPEC::GetSysParaFromReg("MarkColor", sValue))
 		{
-			f3dPoint startPt(ptArr[i]);
-			f3dPoint endPt(ptArr[(i+1)%4]);
-			coord_trans(startPt,mcs,FALSE);
-			coord_trans(endPt,mcs,FALSE);	
-			AppendDbLine(pDrawing,startPt,endPt,HIBERID(m_pPart->GetKey()),PS_SOLID,mkColRef,2);
+			char tem_str[100] = "";
+			sprintf(tem_str, "%s", (char*)sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &mkColRef);
+		}
+		if (!IsMainPartDraw())
+			mkColRef = RGB(0, 128, 128);
+		//号料孔
+		double fMKHoleD = 8;
+		if (CPEC::GetSysParaFromReg("MKHoleD", sValue))
+			fMKHoleD = atof(sValue);
+		f3dPoint center(m_pPart->mkpos);
+		coord_trans(center, mcs, FALSE);
+		AppendDbCircle(pDrawing, center, f3dPoint(0, 0, 1), fMKHoleD*0.5, HIBERID(m_pPart->GetKey()), PS_SOLID, mkColRef, 2);
+		//字盒
+		BOOL bDisplayMkRect = FALSE;
+		if (CPEC::GetSysParaFromReg("DispMkRect", sValue))
+			bDisplayMkRect = atoi(sValue);
+		if (bDisplayMkRect)
+		{
+			BYTE ciVectType = (CPEC::GetSysParaFromReg("MKVectType", sValue)) ? atoi(sValue) : 0;
+			double fLen = (CPEC::GetSysParaFromReg("MKRectL", sValue)) ? atof(sValue) : 60;
+			double fWidth = (CPEC::GetSysParaFromReg("MKRectW", sValue)) ? atof(sValue) : 30;
+			if (ciVectType == 1)
+			{	//保持水平
+				f3dPoint vec(1, 0, 0);
+				vector_trans(vec, mcs, TRUE);
+				tempPlate.mkVec = vec;
+			}
+			GEPOINT ptArr[4];
+			tempPlate.GetMkRect(fLen, fWidth, ptArr);
+			for (int i = 0; i < 4; i++)
+				coord_trans(ptArr[i], mcs, FALSE);
+			AppendDbRect(pDrawing, ptArr[0], ptArr[2], HIBERID(m_pPart->GetKey()), PS_SOLID, mkColRef, 2);
 		}
 	}
 }

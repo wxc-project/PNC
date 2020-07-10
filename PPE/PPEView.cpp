@@ -48,12 +48,12 @@ BOOL CSelectEntity::IsSelectMK(CProcessPart* pProcessPart)
 	if(pEnt->GetDbEntType()==IDbEntity::DbCircle)
 	{
 		BOLT_INFO *pBolt=pProcessPart->FromHoleHiberId(pEnt->GetHiberId());
-		if(pBolt)
-			return FALSE;
+		if(pBolt==NULL)
+			return TRUE;
 	}
 	else if(pEnt->GetDbEntType()==IDbEntity::DbRect)
 		return TRUE;
-	return TRUE;
+	return FALSE;
 }
 void CSelectEntity::UpdateSelectEnt(HIBERARCHY entHibId)
 {
@@ -587,20 +587,24 @@ void CPPEView::OnLButtonDblClk(UINT nFlags, CPoint point)
 		g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)
 	{	
 		//双击鼠标左键，快速打钢印，不做选中处理
-		m_xSelectEntity.Empty();
-		f3dPoint user_pt,port_pt(point.x,point.y);
-		g_pSolidOper->ScreenToUser(&user_pt,port_pt);
+		CProcessPlate* pCurPlate = (CProcessPlate*)m_pProcessPart;
+		//获取鼠标位置，转换到当前模型坐标下
+		f3dPoint port_pt(point.x, point.y), mk_pos, mk_vec(1, 0, 0);
+		g_pSolidOper->ScreenToUser(&mk_pos, port_pt);
 		UCS_STRU object_ucs;
 		g_pSolidSet->GetObjectUcs(object_ucs);
-		coord_trans(user_pt,object_ucs,FALSE);
-		GECS cs;
-		g_pPartEditor->GetPlateNcUcs(cs);
-		coord_trans(user_pt,cs,TRUE);
-		g_pPartEditor->SetMarkPos(user_pt.x,user_pt.y);
-		g_pPartEditor->InitMkRect();
-		g_pSolidDraw->BuildDisplayList(this);
-		g_p2dDraw->RenderDrawing();
-		SyncPartInfo(false,false);
+		coord_trans(mk_pos, object_ucs, FALSE);
+		//转换到钢板绘图坐标系下
+		GECS draw_cs;
+		g_pPartEditor->GetPlateNcUcs(draw_cs);
+		coord_trans(mk_pos, draw_cs,TRUE);
+		vector_trans(mk_vec, draw_cs, TRUE);
+		pCurPlate->mkpos = mk_pos;
+		pCurPlate->mkVec = mk_vec;
+		model.SyncRelaPlateInfo(pCurPlate);
+		//
+		UpdateCurWorkPartByPartNo(pCurPlate->GetPartNo());
+		Refresh();
 	}
 }
 
@@ -715,12 +719,14 @@ void CPPEView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 					m_pProcessPart->DeleteVertexByHiberId(pEnt->GetHiberId());
 			}
 		}
-		else if(m_xSelectEntity.IsSelectMK(m_pProcessPart))		//删除号位孔
-			m_pProcessPart->mkpos.Set(1000000,0,0);
+		else if (m_xSelectEntity.IsSelectMK(m_pProcessPart))		//删除号位孔
+		{
+			m_pProcessPart->mkpos.Set(1000000, 0, 0);
+			model.SyncRelaPlateInfo((CProcessPlate*)m_pProcessPart);
+		}
 		g_pSolidDraw->ReleaseSnapStatus();
 		m_xSelectEntity.Empty();
-		SyncPartInfo(true,false);
-		//
+		UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
 		Refresh(FALSE);
 		UpdatePropertyPage();
 	}
@@ -1624,6 +1630,36 @@ void CPPEView::AmendHoleIncrement()
 							pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fProSH;
 					}
 				}
+			}
+		}
+	}
+	//更新组合模式下的螺栓信息
+	CProcessPlate *pDestPlate = NULL, *pCompPlate = NULL;
+	for (pProcessPart = model.EnumPartFirst(); pProcessPart; pProcessPart = model.EnumPartNext())
+	{
+		if (!pProcessPart->IsPlate() || pProcessPart->m_xBoltInfoList.GetNodeNum() <= 0)
+			continue;
+		CXhChar16 sPartNo = pProcessPart->GetPartNo();
+		if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+		{
+			pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);
+			if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+			{
+				pCompPlate = (CProcessPlate*)model.FromPartNo(sPartNo, g_sysPara.nc.m_ciDisplayType);
+				pCompPlate->m_xBoltInfoList.Empty();
+				for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+					pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
+			}
+		}
+		if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE)
+		{
+			pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);
+			if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+			{
+				pCompPlate = (CProcessPlate*)model.FromPartNo(sPartNo, g_sysPara.nc.m_ciDisplayType);
+				pCompPlate->m_xBoltInfoList.Empty();
+				for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+					pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
 			}
 		}
 	}

@@ -346,14 +346,6 @@ void CPEC::OverturnPart()
 	if(pPartDraw)
 		pPartDraw->OverturnPart();
 }
-void CPEC::SetMarkPos(double posX,double posY)
-{
-	CProcessPart *pPart=m_hashProcessPartBySerial.GetFirst();
-	if(pPart)
-	{
-		pPart->mkpos.Set(posX,posY);
-	}
-}
 void CPEC::GetPlateNcUcs(GECS& cs)
 {
 	if(m_cPartType!=CProcessPart::TYPE_PLATE)
@@ -361,15 +353,6 @@ void CPEC::GetPlateNcUcs(GECS& cs)
 	CProcessPlateDraw *pPlatePartDraw=(CProcessPlateDraw*)m_hashPartDrawBySerial.GetFirst();
 	if(pPlatePartDraw)
 		cs=pPlatePartDraw->GetMCS();
-}
-void CPEC::InitMkRect()
-{
-	if(m_cPartType!=CProcessPart::TYPE_PLATE)
-		return;
-	CProcessPlateDraw *pPlatePartDraw=(CProcessPlateDraw*)m_hashPartDrawBySerial.GetFirst();
-	if(pPlatePartDraw==NULL)
-		return;
-	pPlatePartDraw->InitMkRect();
 }
 void CPEC::NewBoltHole()
 {

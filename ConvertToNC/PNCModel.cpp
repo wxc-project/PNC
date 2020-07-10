@@ -1948,7 +1948,7 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 		}
 		if (!xPlate.mkpos.IsZero())
 		{
-			ATOM_LIST<f3dPoint> ptArr;
+			GEPOINT ptArr[4];
 			xPlate.GetMkRect(20, 10, ptArr);
 			for (int i = 0; i < 4; i++)
 			{

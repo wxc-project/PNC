@@ -60,9 +60,7 @@ public:
 	WORD GetCurCmdType(){return m_wCurCmdType;}
 	virtual char GetCurPartType();
 	//¸Ö°å²Ù×÷
-	virtual void SetMarkPos(double posX,double posY);
 	virtual void GetPlateNcUcs(GECS& cs);
-	virtual void InitMkRect();
 	//UI »æÍ¼»·¾³
 	virtual bool InitDrawEnviornment(HWND hWnd,I2dDrawing* p2dDraw,ISolidDraw* pSolidDraw,
 									 ISolidSet* pSolidSet,ISolidSnap* pSolidSnap,ISolidOper* pSolidOper);

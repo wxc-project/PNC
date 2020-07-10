@@ -42,9 +42,7 @@ struct PEC_API IPEC{
 
 	virtual char GetCurPartType()=0;
 	//¸Ö°å²Ù×÷
-	virtual void SetMarkPos(double posX,double posY)=0;
 	virtual void GetPlateNcUcs(GECS& cs)=0;
-	virtual void InitMkRect()=0;
 	//UI »æÍ¼»·¾³
 	virtual bool InitDrawEnviornment(HWND hWnd,I2dDrawing* p2dDraw,ISolidDraw* pSolidDraw,
 		ISolidSet* pSolidSet,ISolidSnap* pSolidSnap,ISolidOper* pSolidOper)=0;
