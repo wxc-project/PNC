@@ -207,15 +207,22 @@ void CNCPlate::InitPlateNcInfo()
 	}
 	//3.1 计算引入点坐标
 	//3.1.1 先计算第一个轮廓点坐标
+	f3dPoint inters_pt;
+	f3dLine prev_line, next_line;
 	curPt = pCurVertex->vertex;
 	if (m_nEnlargedSpace > 0)	//设置轮廓边增大值时，当前轮廓点沿法线方向偏移增大值
 	{
-		GEPOINT offset_vec = (next_vec + prev_vec)*0.5;
-		normalize(offset_vec);
-		double offset_len = m_nEnlargedSpace / 1.4142135623731;	//根据斜边计算直角边长度
-		curPt += offset_vec * offset_len;
-		//curPt += (next_vec*m_nEnlargedSpace);
-		//curPt += (next_norm*m_nEnlargedSpace);
+		GEPOINT prev_perp = curPt + (prev_norm*m_nEnlargedSpace);
+		GEPOINT next_perp = curPt + (next_norm*m_nEnlargedSpace);
+		prev_line.startPt = pPrevVertex->vertex + prev_norm * m_nEnlargedSpace;
+		prev_line.endPt = pCurVertex->vertex + prev_norm * m_nEnlargedSpace;
+		next_line.startPt = pCurVertex->vertex + next_norm * m_nEnlargedSpace;
+		next_line.endPt = pNextVertex->vertex + next_norm * m_nEnlargedSpace;
+		int nRetCode = Int3dpl(prev_line, next_line, inters_pt);
+		if (nRetCode == 1)
+			curPt = inters_pt;
+		else
+			curPt = (prev_perp + next_perp)*0.5;	//取底边中点
 	}
 	GEPOINT firstVertex = curPt;
 	//3.1.2 以增大后轮廓点为基准计算引入点坐标
@@ -232,7 +239,6 @@ void CNCPlate::InitPlateNcInfo()
 	//4.初始化轮廓点信息
 	iCurVertex = 0;
 	int initIndex = m_ciStartId;
-	f3dLine prev_line, next_line;
 	while (initIndex > 0)
 	{
 		BOOL bFinished = (iCurVertex == initIndex);
@@ -308,7 +314,6 @@ void CNCPlate::InitPlateNcInfo()
 				curPt = pCurVertex->vertex + next_norm * m_nEnlargedSpace;
 				next_line.startPt = curPt;	//当前节点所在的下一条轮廓边
 				next_line.endPt = pNextVertex->vertex + next_norm * m_nEnlargedSpace;
-				f3dPoint inters_pt;
 				int nRetCode = Int3dll(prev_line, next_line, inters_pt);
 				if (nRetCode == 1 || nRetCode == 2)
 				{	//交叉点为线段端点或内侧点(处理凹点或共线点) wht-17.06.08
