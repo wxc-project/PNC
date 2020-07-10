@@ -585,7 +585,9 @@ void CPPEView::OnLButtonDblClk(UINT nFlags, CPoint point)
 
 	if( m_pProcessPart&&m_pProcessPart->IsPlate()&&
 		g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)
-	{
+	{	
+		//双击鼠标左键，快速打钢印，不做选中处理
+		m_xSelectEntity.Empty();
 		f3dPoint user_pt,port_pt(point.x,point.y);
 		g_pSolidOper->ScreenToUser(&user_pt,port_pt);
 		UCS_STRU object_ucs;

@@ -93,7 +93,7 @@
     <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">..\..\LDS\bin\TMARelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">..\UBOMRelease\</OutDir>
     <OutDir Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">..\UBOMRelease\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">..\Release\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='PncRelease|Win32'">..\bin\Release\</OutDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='UBOMRelease07|Win32'">Release\</IntDir>
     <IntDir Condition="'$(Configuration)|$(Platform)'=='UBOMForTMARelease05-Dock|Win32'">Release\</IntDir>
@@ -276,9 +276,9 @@
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>stdafx.h</PrecompiledHeaderFile>
       <PrecompiledHeaderOutputFile>$(OutDir)PPE.pch</PrecompiledHeaderOutputFile>
-      <AssemblerListingLocation>$(OutDir)</AssemblerListingLocation>
-      <ObjectFileName>$(OutDir)</ObjectFileName>
-      <ProgramDataBaseFileName>$(OutDir)</ProgramDataBaseFileName>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
@@ -333,7 +333,7 @@
       <AdditionalDependencies>Version.lib;f_ent.lib;f_alg_fun.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;LmaDlg10.lib;DrawSolid.lib;PartLib.lib;PEC.lib;XeroCad.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)PPE.exe</OutputFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhCore-dll\LmaDlg\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\PEC\Debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>.\Debug;..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\DrawSolid\Release;..\..\XhCore-dll\XeroCad\Release;..\..\XhCore-dll\LmaDlg\Release;..\..\XhCore-dll\PartLib\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ProgramDatabaseFile>$(IntDir)PPE.pdb</ProgramDatabaseFile>
       <SubSystem>Windows</SubSystem>

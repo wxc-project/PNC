@@ -93,6 +93,9 @@ void CNCPlate::InitPlateNcInfo()
 {
 	if (m_pPlate == NULL || !VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
 		return;
+	m_xCutHole.Empty();
+	m_xCutEdge.cutPtArr.Empty();
+
 	CLogErrorLife logErrLife;
 	//初始化钢板加工坐标系
 	BOOL bInvertedTraverse = m_bClockwise ? TRUE : FALSE;
@@ -202,15 +205,28 @@ void CNCPlate::InitPlateNcInfo()
 		prev_norm *= -1.0;
 		next_norm *= -1.0;
 	}
+	//3.1 计算引入点坐标
+	//3.1.1 先计算第一个轮廓点坐标
+	curPt = pCurVertex->vertex;
+	if (m_nEnlargedSpace > 0)	//设置轮廓边增大值时，当前轮廓点沿法线方向偏移增大值
+	{
+		GEPOINT offset_vec = (next_vec + prev_vec)*0.5;
+		normalize(offset_vec);
+		double offset_len = m_nEnlargedSpace / 1.4142135623731;	//根据斜边计算直角边长度
+		curPt += offset_vec * offset_len;
+		//curPt += (next_vec*m_nEnlargedSpace);
+		//curPt += (next_norm*m_nEnlargedSpace);
+	}
+	GEPOINT firstVertex = curPt;
+	//3.1.2 以增大后轮廓点为基准计算引入点坐标
 	if (m_nExtraInLen > 0)
 	{
-		curPt = pCurVertex->vertex + next_vec * (m_nInLineLen + m_nExtraInLen + m_nEnlargedSpace);
+		curPt = firstVertex + next_vec * (m_nInLineLen + m_nExtraInLen);
 		m_xCutEdge.extraInVertex = ProcessPoint(curPt - prevPt);
 		prevPt = curPt;
 	}
-	curPt = pCurVertex->vertex + next_vec * (m_nInLineLen + m_nExtraInLen);
-	if (m_nEnlargedSpace > 0)
-		curPt += (next_norm*m_nEnlargedSpace);
+	//3.1.3 引入点
+	curPt = firstVertex + next_vec * m_nInLineLen;
 	m_xCutEdge.cutInVertex = ProcessPoint(curPt - prevPt);
 	prevPt = curPt;
 	//4.初始化轮廓点信息
@@ -274,7 +290,7 @@ void CNCPlate::InitPlateNcInfo()
 		if (m_nEnlargedSpace > 0)
 		{
 			if (bFirstVertex || bFinished)
-				curPt += next_vec * m_nEnlargedSpace + next_norm * m_nEnlargedSpace;
+				curPt = firstVertex;	//curPt += next_vec * m_nEnlargedSpace + next_norm * m_nEnlargedSpace;
 			else
 				curPt += prev_norm * m_nEnlargedSpace;
 		}

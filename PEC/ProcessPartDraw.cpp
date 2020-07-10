@@ -2285,7 +2285,7 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 		}
 	}
 	//绘制额外引出线
-	if (ncPlate.m_nExtraInLen)
+	if (ncPlate.m_nExtraInLen>0)
 	{	
 		ptE = ptS + ncPlate.m_xCutEdge.extraInVertex;
 		AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, otherLineClr, 3);
