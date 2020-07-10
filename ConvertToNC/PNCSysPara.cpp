@@ -176,7 +176,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("standardM24", PROPLIST_ITEM(id++, "M24标准孔径"));
 	//显示模式
 	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
-	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","钢板对比|自动排版|下料预审|图元筛选"));
+	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","图元克隆|钢板对比|自动排版|下料预审|图元筛选"));
 	AddPropItem("m_nMapWidth", PROPLIST_ITEM(id++, "图纸宽度", "图纸宽度"));
 	AddPropItem("m_nMapLength", PROPLIST_ITEM(id++, "图纸长度", "图纸长度"));
 	AddPropItem("m_nMinDistance", PROPLIST_ITEM(id++, "最小间距", "图形之间的最小间距"));

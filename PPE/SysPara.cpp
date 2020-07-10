@@ -87,25 +87,25 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("plasmaCut.m_sIntoLineLen",PROPLIST_ITEM(id++,"引入线长","引入线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("plasmaCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点位置","初始点位置","0.靠近原点|1.远离原点"));
 	AddPropItem("plasmaCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点定位","切入点位置","0.在指定轮廓点|1.始终在初始点"));
+	AddPropItem("plasmaCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割大号孔", "", "是|否"));
 	//火焰切割显示
 	AddPropItem("flameCut",PROPLIST_ITEM(id++,"火焰切割设置"));
 	AddPropItem("flameCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("flameCut.m_sIntoLineLen",PROPLIST_ITEM(id++,"引入线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
 	AddPropItem("flameCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点位置","初始点","0.靠近原点|1.远离原点"));
 	AddPropItem("flameCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点定位","切入点位置","0.在指定轮廓点|1.始终在初始点"));
+	AddPropItem("flameCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割大号孔", "输出切割数据时输出特殊孔切割路径", "是|否"));
 	//输出设置
 	AddPropItem("OutPutSet", PROPLIST_ITEM(id++, "输出设置"));
 	AddPropItem("nc.m_iDxfMode", PROPLIST_ITEM(id++, "按厚度分类", "生成DXF是否进行分类", "是|否"));
 	//切割下料
 	AddPropItem("nc.bFlameCut", PROPLIST_ITEM(id++, "火焰切割", "", "启用|禁用"));
 	AddPropItem("nc.FlamePara.m_wEnlargedSpace", PROPLIST_ITEM(id++, "轮廓边增大值", "轮廓边增大值"));
-	AddPropItem("nc.FlamePara.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割大号孔", "输出切割数据时输出特殊孔切割路径", "是|否"));
 	AddPropItem("nc.FlamePara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.FlamePara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.FlamePara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|TXT|CNC|DXF+TXT|DXF+CNC|DXF+TXT+CNC"));
 	AddPropItem("nc.bPlasmaCut", PROPLIST_ITEM(id++, "等离子切割", "", "启用|禁用"));
 	AddPropItem("nc.PlasmaPara.m_wEnlargedSpace", PROPLIST_ITEM(id++, "轮廓边增大值", "轮廓边增大值"));
-	AddPropItem("nc.PlasmaPara.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割大号孔", "", "是|否"));
 	AddPropItem("nc.PlasmaPara.m_xHoleIncrement", PROPLIST_ITEM(id++, "孔径增大值", "", ""));
 	AddPropItem("nc.PlasmaPara.m_sThick", PROPLIST_ITEM(id++, "板厚范围", "*所有厚度,a单个厚度,b-c厚度区间"));
 	AddPropItem("nc.PlasmaPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件", "", "DXF|NC|DXF+NC"));
@@ -1409,7 +1409,7 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("nc.PlasmaPara.m_wEnlargedSpace")==id)
 		sText.Printf("%d",nc.m_xPlasmaPara.m_wEnlargedSpace);
-	else if (GetPropID("nc.PlasmaPara.m_bCutSpecialHole") == id)
+	else if (GetPropID("plasmaCut.m_bCutSpecialHole") == id)
 	{
 		if (nc.m_xPlasmaPara.m_bCutSpecialHole)
 			sText.Copy("是");
@@ -1437,7 +1437,7 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("nc.FlamePara.m_wEnlargedSpace")==id)
 		sText.Printf("%d", nc.m_xFlamePara.m_wEnlargedSpace);
-	else if (GetPropID("nc.FlamePara.m_bCutSpecialHole") == id)
+	else if (GetPropID("flameCut.m_bCutSpecialHole") == id)
 	{
 		if(nc.m_xFlamePara.m_bCutSpecialHole)
 			sText.Copy("是");

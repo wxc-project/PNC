@@ -146,6 +146,24 @@ BOOL CPartTreeDlg::PreTranslateMessage(MSG* pMsg)
 				return TRUE;
 			}
 		}
+		if (pMsg->wParam == VK_F3 || pMsg->wParam == VK_F4 || pMsg->wParam == VK_F5)
+		{
+#ifdef __PNC_
+			HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
+			TREEITEM_INFO *pInfo = (hItem != NULL) ? (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem) : NULL;
+			if (pInfo && pInfo->itemType == TREEITEM_INFO::INFO_PLATE)
+			{
+				CPPEView* pView = (CPPEView*)theApp.GetView();
+				if (pMsg->wParam == VK_F3)
+					pView->SmartSortBolts(CNCPart::ALG_GREEDY);
+				else if (pMsg->wParam == VK_F4)
+					pView->SmartSortBolts(CNCPart::ALG_BACKTRACK);
+				else
+					pView->SmartSortBolts(CNCPart::ALG_ANNEAL);
+				return TRUE;
+			}
+#endif
+		}
 	}
 	return CDialogEx::PreTranslateMessage(pMsg);
 }
