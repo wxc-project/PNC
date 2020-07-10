@@ -294,7 +294,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 	{
 		tempPlate.vertex_list.Empty();
 		for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
-			pPlate->vertex_list.Append(*pVertex);
+			tempPlate.vertex_list.Append(*pVertex);
 	}
 	//生成钢板NC数据需考虑火曲变形，则对钢板中的顶点和螺栓进行火曲变形处理
 	if(m_bDeformedProfile && !tempPlate.m_bIncDeformed)

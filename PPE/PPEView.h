@@ -81,6 +81,8 @@ public:
 	void SetCurTast(int iCurTask){m_cCurTask=iCurTask;}
 	bool SavePartInfoToFile();
 	void AmendHoleIncrement();
+	void SmartSortBolts(BYTE ciAlgType);
+	void AdjustHoleOrder();
 	// Ù–‘¿∏œ‘ æ
 	void UpdatePropertyPage();
 	BOOL DisplayPlateProperty();

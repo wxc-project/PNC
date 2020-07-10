@@ -180,7 +180,102 @@ BOOL CPPEView::DisplayCutPointProperty()
 }
 
 //////////////////////////////////////////////////////////////////////////
-// 钢板打孔
+// 钢板孔处理
+//////////////////////////////////////////////////////////////////////////
+void CPPEView::AdjustHoleOrder()
+{
+#ifdef __PNC_
+	if (m_pProcessPart == NULL || !m_pProcessPart->IsPlate())
+		return;
+	CProcessPlate* pPlate = (CProcessPlate*)m_pProcessPart;
+	CXhChar16 sPartNo = pPlate->GetPartNo();
+	//进行调整操作
+	CHashList<BOLT_INFO> boltHashList;
+	BOLT_INFO* pBolt = NULL, *pNewBolt = NULL;
+	for (pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
+	{
+		pNewBolt = boltHashList.Add(pBolt->keyId);
+		pNewBolt->CloneBolt(pBolt);
+	}
+	CAdjustOrderDlg dlg;
+	dlg.pPlate = pPlate;
+	if (dlg.DoModal() != IDOK)
+		return;
+	//重新写入螺栓
+	CProcessPlate* pDestPlate = NULL, *pCompPlate = NULL;
+	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
+	{
+		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);
+		pDestPlate->m_xBoltInfoList.Empty();
+		for (int i = 0; i < dlg.keyList.GetNodeNum(); i++)
+		{
+			pBolt = boltHashList.GetValue(dlg.keyList[i]);
+			if(pBolt==NULL)
+				continue;
+			pNewBolt = pDestPlate->m_xBoltInfoList.Add(0);
+			pNewBolt->CloneBolt(pBolt);
+		}
+	}
+	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
+	{
+		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::DRILL_MODE);
+		pDestPlate->m_xBoltInfoList.Empty();
+		for (int i = 0; i < dlg.keyList.GetNodeNum(); i++)
+		{
+			pBolt = boltHashList.GetValue(dlg.keyList[i]);
+			if (pBolt == NULL)
+				continue;
+			pNewBolt = pDestPlate->m_xBoltInfoList.Add(0);
+			pNewBolt->CloneBolt(pBolt);
+		}
+	}
+	else
+		return;
+	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+	{	//复合钢板复制排序螺栓
+		pCompPlate = (CProcessPlate*)model.FromPartNo(sPartNo, g_sysPara.nc.m_ciDisplayType);
+		pCompPlate->m_xBoltInfoList.Empty();
+		for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+			pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
+	}
+	//刷新界面，并将修改信息保存到相应文件中
+	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
+	Refresh();
+#endif
+}
+void CPPEView::SmartSortBolts(BYTE ciAlgType)
+{
+#ifdef __PNC_
+	if (m_pProcessPart == NULL || !m_pProcessPart->IsPlate())
+		return;
+	CWaitCursor waitCursor;
+	CXhChar16 sPartNo = m_pProcessPart->GetPartNo();
+	CProcessPlate* pDestPlate = NULL, *pCompPlate = NULL;
+	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
+	{
+		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);
+		CNCPart::RefreshPlateHoles(pDestPlate, CNCPart::PUNCH_MODE, ciAlgType);
+	}
+	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
+	{
+		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::DRILL_MODE);
+		CNCPart::RefreshPlateHoles(pDestPlate, CNCPart::DRILL_MODE, ciAlgType);
+	}
+	else
+		return;
+	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+	{	//复合钢板复制排序螺栓
+		pCompPlate = (CProcessPlate*)model.FromPartNo(sPartNo, g_sysPara.nc.m_ciDisplayType);
+		pCompPlate->m_xBoltInfoList.Empty();
+		for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+			pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
+	}
+	//
+	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
+	Refresh();
+#endif
+}
+//显示螺栓孔序号（F2）
 void CPPEView::OnDisplayBoltSort()
 {
 #ifdef __PNC_
@@ -199,174 +294,108 @@ void CPPEView::OnUpdateDisplayBoltSort(CCmdUI *pCmdUI)
 {
 	BOOL bEnable=FALSE;
 #ifdef __PNC_
-	if(VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		bEnable=(g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)&&(m_pProcessPart&&m_pProcessPart->m_cPartType==CProcessPart::TYPE_PLATE);
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER) &&
+		g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC)
+		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 	if(bEnable)
 		pCmdUI->SetCheck(m_bDisplayLsOrder);
 }
+//贪吃算法进行螺栓排序（F3）
 void CPPEView::OnSmartSortBolts1()
 {
 #ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	if(m_pProcessPart==NULL || !m_pProcessPart->IsPlate())
-		return;
-	CWaitCursor waitCursor;
-	CProcessPlate* pPlate = NULL;
-	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), CNCPart::PUNCH_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::PUNCH_MODE, CNCPart::ALG_GREEDY);
-	}
-	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), CNCPart::DRILL_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::DRILL_MODE, CNCPart::ALG_GREEDY);
-	}
-	else
-		return;
-	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
-	{
-		CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-		pCompPlate->m_xBoltInfoList.Empty();
-		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-			pCompPlate->m_xBoltInfoList.Append(*pBolt, pPlate->m_xBoltInfoList.GetCursorKey());
-	}
-	//
-	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	Refresh();
+	SmartSortBolts(CNCPart::ALG_GREEDY);
 #endif
 }
 void CPPEView::OnUpdateSmartSortBolts1(CCmdUI *pCmdUI)
 {
 	BOOL bEnable=FALSE;
 #ifdef __PNC_
-	if(VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		bEnable=(g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)&&(m_pProcessPart&&m_pProcessPart->m_cPartType==CProcessPart::TYPE_PLATE);
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER) &&
+		g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC)
+		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 }
+//回溯算法进行螺栓排序（F4）
 void CPPEView::OnSmartSortBolts2()
 {
 #ifdef __PNC_
 	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	if (m_pProcessPart == NULL || !m_pProcessPart->IsPlate())
-		return;
-	CWaitCursor waitCursor;
-	CProcessPlate* pPlate = NULL;
-	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), CNCPart::PUNCH_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::PUNCH_MODE, CNCPart::ALG_BACKTRACK);
-	}
-	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), CNCPart::DRILL_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::DRILL_MODE, CNCPart::ALG_BACKTRACK);
-	}
-	else
-		return;
-	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
-	{
-		CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-		pCompPlate->m_xBoltInfoList.Empty();
-		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-			pCompPlate->m_xBoltInfoList.Append(*pBolt, pPlate->m_xBoltInfoList.GetCursorKey());
-	}
-	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	Refresh();
+	SmartSortBolts(CNCPart::ALG_BACKTRACK);
 #endif
 }
 void CPPEView::OnUpdateSmartSortBolts2(CCmdUI *pCmdUI)
 {
 	BOOL bEnable = FALSE;
 #ifdef __PNC_
-	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		bEnable = (g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC) && (m_pProcessPart&&m_pProcessPart->m_cPartType == CProcessPart::TYPE_PLATE);
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER) &&
+		g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC)
+		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 }
+//退火算法进行螺栓排序（F5）
 void CPPEView::OnSmartSortBolts3()
 {
 #ifdef __PNC_
 	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	if (m_pProcessPart == NULL || !m_pProcessPart->IsPlate())
-		return;
-	CWaitCursor waitCursor;
-	CProcessPlate* pPlate = NULL;
-	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), CNCPart::PUNCH_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::PUNCH_MODE, CNCPart::ALG_ANNEAL);
-	}
-	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), CNCPart::DRILL_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::DRILL_MODE, CNCPart::ALG_ANNEAL);
-	}
-	else
-		return;
-	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
-	{
-		CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(m_pProcessPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-		pCompPlate->m_xBoltInfoList.Empty();
-		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-			pCompPlate->m_xBoltInfoList.Append(*pBolt, pPlate->m_xBoltInfoList.GetCursorKey());
-	}
-	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	Refresh();
+	SmartSortBolts(CNCPart::ALG_ANNEAL);
 #endif
 }
 void CPPEView::OnUpdateSmartSortBolts3(CCmdUI *pCmdUI)
 {
 	BOOL bEnable = FALSE;
 #ifdef __PNC_
-	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		bEnable = (g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC) && (m_pProcessPart&&m_pProcessPart->m_cPartType == CProcessPart::TYPE_PLATE);
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER) &&
+		g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC)
+		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 }
+//批量进行智能螺栓排序
 void CPPEView::OnBatchSortHole()
 {
 #ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	int index = 0, num = model.PartCount();
 	CXhChar16 sCurPartNo;
-	if(m_pProcessPart)
-		sCurPartNo=m_pProcessPart->GetPartNo();
+	if (m_pProcessPart)
+		sCurPartNo = m_pProcessPart->GetPartNo();
+	int index = 0, num = model.PartCount();
 	model.DisplayProcess(0,"批量优化螺栓顺序进度");
-	for(m_pProcessPart=model.EnumPartFirst();m_pProcessPart;m_pProcessPart=model.EnumPartNext(), index++)
+	for (CProcessPart* pProcessPart = model.EnumPartFirst(); pProcessPart; pProcessPart = model.EnumPartNext(), index++)
 	{
-		model.DisplayProcess(ftoi(100* index /num),"批量优化螺栓顺序进度");
-		CProcessPlate* pSrcPlate = NULL, *pDestPlate = NULL;
-		if (m_pProcessPart->IsPlate())
-		{	//对于冲床和钻床工艺的钢板进行螺栓排序
-			pSrcPlate = (CProcessPlate*)m_pProcessPart;
-			//冲床工艺下的螺栓孔排序
-			pDestPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), CNCPart::PUNCH_MODE);
-			CNCPart::RefreshPlateHoles((CProcessPlate*)pDestPlate, CNCPart::PUNCH_MODE);
-			if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
-			{
-				CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-				pCompPlate->m_xBoltInfoList.Empty();
-				for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
-					pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
-			}
-			//钻床工艺下的螺栓孔排序
-			pDestPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), CNCPart::DRILL_MODE);
-			CNCPart::RefreshPlateHoles((CProcessPlate*)pDestPlate, CNCPart::DRILL_MODE);
-			if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE)&& g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE)
-			{
-				CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(pSrcPlate->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-				pCompPlate->m_xBoltInfoList.Empty();
-				for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
-					pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
-			}
+		model.DisplayProcess(ftoi(100 * index / num), "批量优化螺栓顺序进度");
+		if (!pProcessPart->IsPlate())
+			continue;
+		CXhChar16 sPartNo = pProcessPart->GetPartNo();
+		CProcessPlate *pDestPlate = NULL, *pCompPlate = NULL;
+		//冲床工艺下的螺栓孔排序
+		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);
+		CNCPart::RefreshPlateHoles(pDestPlate, CNCPart::PUNCH_MODE);
+		if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
+		{
+			pCompPlate = (CProcessPlate*)model.FromPartNo(sPartNo, g_sysPara.nc.m_ciDisplayType);
+			pCompPlate->m_xBoltInfoList.Empty();
+			for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+				pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
+		}
+		//钻床工艺下的螺栓孔排序
+		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::DRILL_MODE);
+		CNCPart::RefreshPlateHoles(pDestPlate, CNCPart::DRILL_MODE);
+		if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE)
+		{
+			pCompPlate = (CProcessPlate*)model.FromPartNo(sPartNo, g_sysPara.nc.m_ciDisplayType);
+			pCompPlate->m_xBoltInfoList.Empty();
+			for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
+				pCompPlate->m_xBoltInfoList.Append(*pBolt, pDestPlate->m_xBoltInfoList.GetCursorKey());
 		}
 	}
 	model.DisplayProcess(100,"批量优化螺栓顺序完成");
@@ -379,54 +408,28 @@ void CPPEView::OnUpdateBatchSortHole(CCmdUI *pCmdUI)
 {
 	BOOL bEnable=FALSE;
 #ifdef __PNC_
-	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER)&&
+		g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC)
 		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 }
+//手动调整螺栓孔排序
 void CPPEView::OnAdjustHoleOrder()
 {
 #ifdef __PNC_
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	if(m_pProcessPart==NULL || !m_pProcessPart->IsPlate())
-		return;
-	CProcessPlate* pPlate=(CProcessPlate*)m_pProcessPart;
-	//进行调整操作
-	CHashList<BOLT_INFO> boltHashList;
-	BOLT_INFO* pBolt=NULL,*pNewBolt=NULL;
-	for(pBolt=pPlate->m_xBoltInfoList.GetFirst();pBolt;pBolt=pPlate->m_xBoltInfoList.GetNext())
-	{
-		pNewBolt=boltHashList.Add(pBolt->keyId);
-		pNewBolt->CloneBolt(pBolt);
-	}
-	CAdjustOrderDlg dlg;
-	dlg.pPlate=pPlate;
-	if(dlg.DoModal()!=IDOK)
-		return;
-	//重新写入螺栓
-	pPlate->m_xBoltInfoList.Empty();
-	for(int i=0;i<dlg.keyList.GetNodeNum();i++)
-	{
-		DWORD key=dlg.keyList[i];
-		pBolt=boltHashList.GetValue(key);
-		if(pBolt)
-		{
-			pNewBolt=pPlate->m_xBoltInfoList.Add(0);
-			pNewBolt->CloneBolt(pBolt);
-		}
-	}
-	//刷新界面，并将修改信息保存到相应文件中
-	UpdateCurWorkPartByPartNo(m_pProcessPart->GetPartNo());
-	SyncPartInfo(false,true);
+	AdjustHoleOrder();
 #endif
 }
 void CPPEView::OnUpdateAdjustHoleOrder(CCmdUI *pCmdUI)
 {
 	BOOL bEnable=FALSE;
 #ifdef __PNC_
-	if(VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		bEnable=(g_pPartEditor->GetDrawMode()==IPEC::DRAW_MODE_NC)&&(m_pProcessPart&&m_pProcessPart->m_cPartType==CProcessPart::TYPE_PLATE);
+	if (VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER) &&
+		g_pPartEditor->GetDrawMode() == IPEC::DRAW_MODE_NC)
+		bEnable = TRUE;
 #endif
 	pCmdUI->Enable(bEnable);
 }

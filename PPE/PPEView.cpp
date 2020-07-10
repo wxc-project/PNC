@@ -678,21 +678,22 @@ void CPPEView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			m_xSelectEntity.Empty();
 			if (m_pProcessPart)
 				g_p2dDraw->RenderDrawing();
+			UpdatePropertyPage();
 		}
 		else if (m_pProcessPart)
-		{	//取消选中构件
-			CPartTreeDlg *pPartTreeDlg = ((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
-			pPartTreeDlg->CancelSelTreeItem();
+		{	//切换到系统属性栏
+			DisplaySysSettingProperty();
 		}
 		else
 		{
 			CPartTreeDlg *pPartTreeDlg=((CMainFrame*)AfxGetMainWnd())->GetPartTreePage();
 			pPartTreeDlg->GetTreeCtrl()->SelectItem(NULL);
 			Refresh();
+			UpdatePropertyPage();
 		}
 		if(g_pPromptMsg)
 			g_pPromptMsg->Destroy();
-		UpdatePropertyPage();
+		
 	}
 	else if(nChar==VK_DELETE)		//删除操作
 	{

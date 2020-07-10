@@ -1017,7 +1017,6 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertButtonPropItem(pParentItem, "FileFormat");
 	oper.InsertCmbListPropItem(pParentItem, "nc.m_iDxfMode");
 	oper.InsertButtonPropItem(pParentItem, "nc.m_iNcMode");
-	oper.InsertCmbListPropItem(pParentItem, "nc.m_ciDisplayType");
 	//»ðÑæÇÐ¸î
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bFlameCut");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::FLAME_MODE);

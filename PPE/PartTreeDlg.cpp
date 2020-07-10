@@ -126,7 +126,8 @@ BOOL CPartTreeDlg::PreTranslateMessage(MSG* pMsg)
 	{
 		if (pMsg->wParam == VK_ESCAPE)
 		{
-			CancelSelTreeItem();
+			CPPEView* pView = (CPPEView*)theApp.GetView();
+			pView->DisplaySysSettingProperty();
 			return TRUE;
 		}
 		if (pMsg->wParam == VK_LEFT || pMsg->wParam == VK_RIGHT || pMsg->wParam== VK_NEXT)
@@ -200,8 +201,6 @@ void CPartTreeDlg::OnTvnKeydownTreeCtrl(NMHDR *pNMHDR, LRESULT *pResult)
 	LPNMTVKEYDOWN pTVKeyDown = reinterpret_cast<LPNMTVKEYDOWN>(pNMHDR);
 	if (pTVKeyDown->wVKey == VK_DELETE)
 		OnDeleteItem();
-	else if (pTVKeyDown->wVKey == VK_ESCAPE)
-		CancelSelTreeItem();
 	*pResult = 0;
 }
 //
@@ -255,53 +254,13 @@ void CPartTreeDlg::OnDeleteItem()
 	pView->Refresh();
 }
 //对螺栓孔进行智能排序
-void CPartTreeDlg::SmartSortBolts(BYTE ciAlgType)
-{
-#ifdef __PNC_ 
-	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
-		return;
-	HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
-	if (hItem == NULL)
-		return;
-	TREEITEM_INFO *pInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
-	if (pInfo == NULL || (pInfo->itemType != TREEITEM_INFO::INFO_ANGLE&&pInfo->itemType != TREEITEM_INFO::INFO_PLATE))
-		return;
-	CProcessPart *pPart = (CProcessPart*)pInfo->dwRefData;
-	if (pPart == NULL || !pPart->IsPlate())
-		return;
-	CWaitCursor waitCursor;
-	CProcessPlate* pPlate = NULL;
-	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), CNCPart::PUNCH_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::PUNCH_MODE, ciAlgType);
-	}
-	else if (g_sysPara.IsValidDisplayFlag(CNCPart::DRILL_MODE))
-	{
-		pPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), CNCPart::DRILL_MODE);
-		CNCPart::RefreshPlateHoles(pPlate, CNCPart::DRILL_MODE, ciAlgType);
-	}
-	else
-		return;
-	if (g_sysPara.nc.m_ciDisplayType != CNCPart::DRILL_MODE && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
-	{
-		CProcessPlate* pCompPlate = (CProcessPlate*)model.FromPartNo(pPart->GetPartNo(), g_sysPara.nc.m_ciDisplayType);
-		pCompPlate->m_xBoltInfoList.Empty();
-		for (BOLT_INFO* pBolt = pPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pPlate->m_xBoltInfoList.GetNext())
-			pCompPlate->m_xBoltInfoList.Append(*pBolt, pPlate->m_xBoltInfoList.GetCursorKey());
-	}
-	//
-	CPPEView* pView = (CPPEView*)theApp.GetView();
-	pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());
-	pView->Refresh();
-#endif
-}
 void CPartTreeDlg::OnSmartSortBolts1()
 {
 #ifdef __PNC_ 
 	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	SmartSortBolts(CNCPart::ALG_GREEDY);
+	CPPEView* pView = (CPPEView*)theApp.GetView();
+	pView->SmartSortBolts(CNCPart::ALG_GREEDY);
 #endif
 }
 void CPartTreeDlg::OnSmartSortBolts2()
@@ -309,7 +268,8 @@ void CPartTreeDlg::OnSmartSortBolts2()
 #ifdef __PNC_ 
 	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	SmartSortBolts(CNCPart::ALG_BACKTRACK);
+	CPPEView* pView = (CPPEView*)theApp.GetView();
+	pView->SmartSortBolts(CNCPart::ALG_BACKTRACK);
 #endif
 }
 void CPartTreeDlg::OnSmartSortBolts3()
@@ -317,7 +277,8 @@ void CPartTreeDlg::OnSmartSortBolts3()
 #ifdef __PNC_ 
 	if (!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	SmartSortBolts(CNCPart::ALG_ANNEAL);
+	CPPEView* pView = (CPPEView*)theApp.GetView();
+	pView->SmartSortBolts(CNCPart::ALG_ANNEAL);
 #endif
 }
 //手动调整螺栓孔顺序
@@ -326,44 +287,8 @@ void CPartTreeDlg::OnAdjustHoleOrder()
 #ifdef __PNC_ 
 	if(!VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_HOLE_ROUTER))
 		return;
-	HTREEITEM hItem = m_treeCtrl.GetSelectedItem();
-	if(hItem==NULL)
-		return;
-	TREEITEM_INFO *pInfo=(TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem);
-	if(pInfo==NULL||(pInfo->itemType!=TREEITEM_INFO::INFO_ANGLE&&pInfo->itemType!=TREEITEM_INFO::INFO_PLATE))
-		return;
-	CProcessPart *pPart=(CProcessPart*)pInfo->dwRefData;
-	if(pPart==NULL || !pPart->IsPlate())
-		return;
-	CProcessPlate* pPlate=(CProcessPlate*)pPart;
-	//进行调整操作
-	CHashList<BOLT_INFO> boltHashList;
-	BOLT_INFO* pBolt=NULL,*pNewBolt=NULL;
-	for(pBolt=pPlate->m_xBoltInfoList.GetFirst();pBolt;pBolt=pPlate->m_xBoltInfoList.GetNext())
-	{
-		pNewBolt=boltHashList.Add(pBolt->keyId);
-		pNewBolt->CloneBolt(pBolt);
-	}
-	CAdjustOrderDlg dlg;
-	dlg.pPlate=pPlate;
-	if(dlg.DoModal()!=IDOK)
-		return;
-	//重新写入螺栓
-	pPlate->m_xBoltInfoList.Empty();
-	for(int i=0;i<dlg.keyList.GetNodeNum();i++)
-	{
-		DWORD key=dlg.keyList[i];
-		pBolt=boltHashList.GetValue(key);
-		if(pBolt)
-		{
-			pNewBolt=pPlate->m_xBoltInfoList.Add(0);
-			pNewBolt->CloneBolt(pBolt);
-		}
-	}
-	//刷新界面，并将修改信息保存到相应文件中
-	CPPEView* pView=(CPPEView*)theApp.GetView();
-	pView->UpdateCurWorkPartByPartNo(pPart->GetPartNo());
-	pView->SyncPartInfo(false,true);
+	CPPEView* pView = (CPPEView*)theApp.GetView();
+	pView->AdjustHoleOrder();
 #endif
 }
 void CPartTreeDlg::OnSortByPartNo()
