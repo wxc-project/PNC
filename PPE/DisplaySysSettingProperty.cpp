@@ -493,7 +493,7 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.nc.m_xFlamePara.m_wEnlargedSpace = atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("flameCut.m_wEnlargedSpace");
 	}
-	else if (CSysPara::GetPropID("nc.FlamePara.m_bCutSpecialHole") == pItem->m_idProp)
+	else if (CSysPara::GetPropID("flameCut.m_bCutSpecialHole") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("是") == 0)
 			g_sysPara.nc.m_xFlamePara.m_bCutSpecialHole = TRUE;
@@ -506,7 +506,7 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.nc.m_xPlasmaPara.m_wEnlargedSpace = atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
 	}
-	else if (CSysPara::GetPropID("nc.PlasmaPara.m_bCutSpecialHole") == pItem->m_idProp)
+	else if (CSysPara::GetPropID("plasmaCut.m_bCutSpecialHole") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("是") == 0)
 			g_sysPara.nc.m_xPlasmaPara.m_bCutSpecialHole = TRUE;
@@ -1021,7 +1021,6 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bFlameCut");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::FLAME_MODE);
 	oper.InsertEditPropItem(pGroupItem, "nc.FlamePara.m_wEnlargedSpace");
-	oper.InsertCmbListPropItem(pGroupItem,"nc.FlamePara.m_bCutSpecialHole");
 	oper.InsertButtonPropItem(pGroupItem, "nc.FlamePara.m_xHoleIncrement");
 	oper.InsertEditPropItem(pGroupItem, "nc.FlamePara.m_sThick");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.FlamePara.m_dwFileFlag");
@@ -1030,11 +1029,11 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pPropItem, "flameCut.m_bInitPosFarOrg");
 	oper.InsertCmbEditPropItem(pPropItem, "flameCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem, "flameCut.m_sOutLineLen");
+	oper.InsertCmbListPropItem(pPropItem, "flameCut.m_bCutSpecialHole");
 	//等离子切割
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bPlasmaCut");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::PLASMA_MODE);
 	oper.InsertEditPropItem(pGroupItem, "nc.PlasmaPara.m_wEnlargedSpace");
-	oper.InsertCmbListPropItem(pGroupItem, "nc.PlasmaPara.m_bCutSpecialHole");
 	oper.InsertButtonPropItem(pGroupItem, "nc.PlasmaPara.m_xHoleIncrement");
 	oper.InsertEditPropItem(pGroupItem, "nc.PlasmaPara.m_sThick");
 	oper.InsertCmbListPropItem(pGroupItem, "nc.PlasmaPara.m_dwFileFlag");
@@ -1043,6 +1042,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbListPropItem(pPropItem, "plasmaCut.m_bInitPosFarOrg");
 	oper.InsertCmbEditPropItem(pPropItem, "plasmaCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem, "plasmaCut.m_sOutLineLen");
+	oper.InsertCmbListPropItem(pPropItem, "plasmaCut.m_bCutSpecialHole");
 	//冲床加工
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bPunchPress");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::PUNCH_MODE);

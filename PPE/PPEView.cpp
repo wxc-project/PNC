@@ -1448,7 +1448,8 @@ bool CPPEView::SavePartInfoToFile()
 {
 	if(m_pProcessPart==NULL)
 		return false;
-	return model.SavePartToFile(m_pProcessPart);
+	CProcessPart* pSrcPart = model.FromPartNo(m_pProcessPart->GetPartNo());
+	return model.SavePartToFile(pSrcPart);
 }
 bool CPPEView::SyncPartInfo(bool bToPEC,bool bReDraw/*=true*/)
 {
@@ -1478,7 +1479,7 @@ bool CPPEView::SyncPartInfo(bool bToPEC,bool bReDraw/*=true*/)
 			Refresh();
 	}
 	//存在对应文件时保存PPI文件
-	//SavePartInfoToFile();
+	SavePartInfoToFile();
 	return true;
 }
 void CPPEView::UpdateSelectEnt()

@@ -1821,7 +1821,7 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 			circle.norm.Set(0, 0, 1);
 			circle.centre.Set(pVertex->vertex.x, pVertex->vertex.y, 0);
 			circle.radius = 3;
-			AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, hiberId, PS_SOLID, RGB(255, 0, 0), 2);
+			AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, hiberId, PS_SOLID, RGB(255, 0, 0), 4);
 			int n = pPlate->vertex_list.GetNodeNum();
 			long prev_index = (pPlate->m_xCutPt.hEntId == n) ? 1 : pPlate->m_xCutPt.hEntId + 1;
 			long next_index = (pPlate->m_xCutPt.hEntId == 1) ? n : pPlate->m_xCutPt.hEntId - 1;

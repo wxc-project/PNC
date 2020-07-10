@@ -176,6 +176,7 @@ BOOL CPPEView::DisplayCutPointProperty()
 	oper.InsertEditPropItem(pPropItem,"cOutLineLen");
 	oper.InsertEditPropItem(pPropItem,"fOutAngle");
 #endif
+	pPropList->Redraw();
 	return TRUE;
 }
 
