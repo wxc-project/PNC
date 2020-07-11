@@ -79,7 +79,6 @@ public:
 	bool SyncPartInfo(bool bToPEC,bool bReDraw=true);
 	void UpdateSelectEnt();
 	void SetCurTast(int iCurTask){m_cCurTask=iCurTask;}
-	bool SavePartInfoToFile();
 	void AmendHoleIncrement();
 	void FilterPlateMK();
 	void SmartSortBolts(BYTE ciAlgType);

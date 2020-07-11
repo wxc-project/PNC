@@ -319,14 +319,14 @@ void CPPEModel::ModifyPartNo(const char* sOldPartNo,const char* sNewPartNo)
 }
 void CPPEModel::SyncRelaPlateInfo(CProcessPlate* pWorkPlate)
 {
-#ifdef __PNC_
 	if (pWorkPlate == NULL || !pWorkPlate->IsPlate())
 		return;
 	CProcessPlate* pSrcPlate = (CProcessPlate*)m_hashPartByPartNo.GetValue(pWorkPlate->GetPartNo());
 	pSrcPlate->mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
 	pSrcPlate->mkpos = pWorkPlate->mkpos;
 	pSrcPlate->mkVec = pWorkPlate->mkVec;
-	//
+	SavePartToFile(pSrcPlate);
+#ifdef __PNC_
 	RELA_PLATE* pRelaPlate = m_hashRelaPlateByPartNo.GetValue(pWorkPlate->GetPartNo());
 	if (pRelaPlate)
 	{

@@ -291,6 +291,10 @@ void CPPEDoc::OpenFolder(const char* sFolderPath)
 	if (pPPEView)
 	{	//将当前构件设置为空，避免连续打开多个文件夹导致死机
 		pPPEView->SetCurProcessPart(NULL);
+		//打开文件夹之后，根据配置初始化孔径增大值 wht 19-04-09
+		pPPEView->AmendHoleIncrement();
+		//根据用户定制，去除钢印号 wxc 20-07-10
+		pPPEView->FilterPlateMK();
 	}
 }
 void CPPEDoc::OnFileOpen() 

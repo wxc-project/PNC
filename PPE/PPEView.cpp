@@ -1452,13 +1452,6 @@ void CPPEView::UpdateCurWorkPartByPartNo(const char *part_no)
 		}
 	}
 }
-bool CPPEView::SavePartInfoToFile()
-{
-	if(m_pProcessPart==NULL)
-		return false;
-	CProcessPart* pSrcPart = model.FromPartNo(m_pProcessPart->GetPartNo());
-	return model.SavePartToFile(pSrcPart);
-}
 bool CPPEView::SyncPartInfo(bool bToPEC,bool bReDraw/*=true*/)
 {
 	if(m_pProcessPart==NULL)
@@ -1486,8 +1479,6 @@ bool CPPEView::SyncPartInfo(bool bToPEC,bool bReDraw/*=true*/)
 		if (bReDraw)
 			Refresh();
 	}
-	//存在对应文件时保存PPI文件
-	SavePartInfoToFile();
 	return true;
 }
 void CPPEView::UpdateSelectEnt()
