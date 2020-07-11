@@ -33,6 +33,7 @@ void CDrawDamBoard::DrawDamBoard(CPlateProcessInfo *pPlate)
 	f2dRect rect=GetCadEntRect(entIdList);
 	f2dPoint leftBtm(rect.topLeft.x,rect.bottomRight.y);
 	const int ARROW_LEN=20;
+	CLockDocumentLife lock;
 	CBlockTableRecordLife rec(GetBlockTableRecord());
 	fPtList vertexList;
 	vertexList.append(leftBtm.x,leftBtm.y,0);
@@ -83,6 +84,7 @@ void CDrawDamBoard::DrawSteelSealRect(CPlateProcessInfo *pPlate)
 	m_pPlate=pPlate;
 	if(m_pPlate==NULL)
 		return;
+	CLockDocumentLife lock;
 	CBlockTableRecordLife rec(GetBlockTableRecord());
 	double fHalfL=g_pncSysPara.m_nMkRectLen*0.5,fHalfW=g_pncSysPara.m_nMkRectWidth*0.5;
 	AcDbEntity* pEnt = NULL;

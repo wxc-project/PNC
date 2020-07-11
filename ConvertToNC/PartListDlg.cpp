@@ -424,6 +424,39 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	UpdatePartList();
 }
 
+BOOL CPartListDlg::PreTranslateMessage(MSG* pMsg)
+{
+	if (pMsg->message == WM_KEYDOWN)
+	{
+		int iCurSel = -1;
+		POSITION pos = m_partList.GetFirstSelectedItemPosition();
+		if (pos != NULL)
+			iCurSel = m_partList.GetNextSelectedItem(pos);
+		if (iCurSel >= 0)
+		{
+			if (pMsg->wParam == VK_LEFT)
+			{
+				OnBnClickedBtnAnticlockwiseRotation();
+				return TRUE;
+			}	
+			if (pMsg->wParam == VK_RIGHT)
+			{
+				OnBnClickedBtnClockwiseRotation();
+				return TRUE;
+			}	
+			if (pMsg->wParam == VK_NEXT)
+			{
+				OnBnClickedBtnMirror();
+				return TRUE;
+			}
+		}
+	}
+#ifdef __SUPPORT_DOCK_UI_
+	return CAcUiDialog::PreTranslateMessage(pMsg);
+#else
+	return CDialog::PreTranslateMessage(pMsg);
+#endif
+}
 void CPartListDlg::OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult) 
 {
 	LV_KEYDOWN* pLVKeyDow = (LV_KEYDOWN*)pNMHDR;
@@ -447,12 +480,6 @@ void CPartListDlg::OnKeydownListPart(NMHDR* pNMHDR, LRESULT* pResult)
 			if (iCurSel >= 0)
 				SelectPart(iCurSel);
 		}
-		else if (pLVKeyDow->wVKey == VK_LEFT)
-			OnBnClickedBtnAnticlockwiseRotation();
-		else if (pLVKeyDow->wVKey == VK_RIGHT)
-			OnBnClickedBtnClockwiseRotation();
-		else if (pLVKeyDow->wVKey == VK_NEXT)
-			OnBnClickedBtnMirror();
 	}
 	*pResult = 0;
 }

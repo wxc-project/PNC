@@ -38,6 +38,7 @@ protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV Ö§³Ö
 	virtual BOOL OnInitDialog();
 	virtual void PreSubclassWindow();
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 #if defined (_ARX_2007) && defined (__SUPPORT_DOCK_UI_) && !defined _UNICODE
 	virtual BOOL    FindContextHelpFullPath(LPCWSTR fileName, CString& fullPath) { return FALSE; }
 	virtual LPCTSTR AppRootKey() { return ""; }

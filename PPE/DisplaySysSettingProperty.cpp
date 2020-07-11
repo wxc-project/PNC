@@ -14,6 +14,7 @@
 #include "folder_dialog.h"
 #include "SelPlateNcModeDlg.h"
 #include "SelDisplayNcDlg.h"
+#include "FilterMkDlg.h"
 
 void UpdateHoleIncrementProperty(CPropertyList *pPropList,CPropTreeItem *pParentItem)
 {
@@ -920,6 +921,15 @@ BOOL SyssettingButtonClick(CPropertyList* pPropList,CPropTreeItem* pItem)
 			oper.UpdatePropItemValue("nc.m_iNcMode");
 		}
 	}
+	else if (CSysPara::GetPropID("FileterMkSet")==pItem->m_idProp)
+	{
+		CFilterMkDlg dlg;
+		if (dlg.DoModal() == IDOK)
+		{
+			CPPEView *pView = (CPPEView*)theApp.GetView();
+			pView->FilterPlateMK();
+		}
+	}
 	else 
 		return FALSE;
 	return TRUE;
@@ -979,6 +989,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 		oper.InsertEditPropItem(pGroupItem,"nc.m_fMKRectL");
 		oper.InsertEditPropItem(pGroupItem,"nc.m_fMKRectW");
 	}
+	oper.InsertButtonPropItem(pParentItem, "FileterMkSet");
 	pGroupItem = oper.InsertEditPropItem(pParentItem,"nc.m_fLimitSH");
 	if (g_sysPara.nc.m_fLimitSH > 0)
 	{

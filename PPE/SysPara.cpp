@@ -2,12 +2,66 @@
 #include "SysPara.h"
 #include "Expression.h"
 #include "NcPart.h"
+#include "ParseAdaptNo.h"
 #ifndef _LEGACY_LICENSE
 #include "XhLdsLm.h"
 #else
 #include "Lic.h"
 #endif
 
+//////////////////////////////////////////////////////////////////////////
+//FILTER_MK_PARA
+FILTER_MK_PARA::FILTER_MK_PARA()
+{
+	m_bFileterS = FALSE;
+	m_bFileterH = FALSE;
+	m_bFileterh = FALSE;
+	m_bFileterG = FALSE;
+	m_bFileterP = FALSE;
+	m_bFileterT = FALSE;
+}
+CString FILTER_MK_PARA::GetParaDesc()
+{
+	CString sDesc = m_sThickRange;
+	sDesc += ";";
+	sDesc += m_bFileterS ? "1" : "0";
+	sDesc += ";";
+	sDesc += m_bFileterH ? "1" : "0";
+	sDesc += ";";
+	sDesc += m_bFileterh ? "1" : "0";
+	sDesc += ";";
+	sDesc += m_bFileterG ? "1" : "0";
+	sDesc += ";";
+	sDesc += m_bFileterP ? "1" : "0";
+	sDesc += ";";
+	sDesc += m_bFileterT ? "1" : "0";
+	return sDesc;
+}
+void FILTER_MK_PARA::ParseParaDesc(CString sDesc)
+{
+	CXhChar100 sTxt(sDesc);
+	char *skey = strtok((char*)sTxt, ";");
+	m_sThickRange = skey;
+	m_sThickRange.Replace(" ", "");
+	skey = strtok(NULL, ";");
+	if (skey)
+		m_bFileterS = atoi(skey);
+	skey = strtok(NULL, ";");
+	if (skey)
+		m_bFileterH = atoi(skey);
+	skey = strtok(NULL, ";");
+	if (skey)
+		m_bFileterh = atoi(skey);
+	skey = strtok(NULL, ";");
+	if (skey)
+		m_bFileterG = atoi(skey);
+	skey = strtok(NULL, ";");
+	if (skey)
+		m_bFileterP = atoi(skey);
+	skey = strtok(NULL, ";");
+	if (skey)
+		m_bFileterT = atoi(skey);
+}
 //////////////////////////////////////////////////////////////////////////
 //FILE_INFO_PARA
 NC_INFO_PARA::NC_INFO_PARA()
@@ -69,6 +123,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("ProLimitSH", PROPLIST_ITEM(id++, "板床式特殊孔(小孔)", "通过板床工艺进行加工的特殊孔"));
 	AddPropItem("nc.m_sNcDriverPath",PROPLIST_ITEM(id++,"角钢NC驱动"));
 	AddPropItem("nc.m_ciDisplayType", PROPLIST_ITEM(id++, "当前显示模式", "当前显示的加工模式", "原始|火焰|等离子|冲床|钻床|激光|复合模式"));
+	AddPropItem("FileterMkSet", PROPLIST_ITEM(id++, "钢印过滤设置"));
 	//文件设置
 	AddPropItem("FileSet", PROPLIST_ITEM(id++, "文件设置"));
 	AddPropItem("FileFormat", PROPLIST_ITEM(id++, "输出文件格式"));
@@ -230,6 +285,8 @@ CSysPara::CSysPara(void)
 	nc.m_sNcDriverPath.Empty();
 	nc.m_ciDisplayType=CNCPart::PUNCH_MODE;
 	//
+	filterMKParaList.Empty();
+	//
 	pbj.m_bAutoSplitFile=FALSE;
 	pbj.m_bIncVertex=TRUE;
 	pbj.m_bMergeHole = FALSE;
@@ -321,7 +378,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.8");
+	CString version("2.9");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -460,6 +517,10 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar << model.file_format.m_sKeyMarkArr.size();
 	for (size_t i = 0; i < model.file_format.m_sKeyMarkArr.size(); i++)
 		ar << CString(model.file_format.m_sKeyMarkArr[i]);
+	//钢印过滤条件
+	ar << filterMKParaList.GetNodeNum();
+	for (FILTER_MK_PARA* pPara = filterMKParaList.GetFirst(); pPara; pPara = filterMKParaList.GetNext())
+		ar << pPara->GetParaDesc();
 	//更新注册表内容 wxc 16-11-21
 	WriteSysParaToReg("MKRectL");
 	WriteSysParaToReg("MKRectW");
@@ -741,6 +802,19 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		{
 			ar >> sValue;
 			model.file_format.m_sKeyMarkArr.push_back(CXhChar16(sValue));
+		}
+	}
+	if (compareVersion(version, "2.9") >= 0)
+	{
+		//钢印过滤条件
+		int nSize = 0;
+		ar >> nSize;
+		CString sValue;
+		for (int i = 0; i < nSize; i++)
+		{
+			ar >> sValue;
+			FILTER_MK_PARA* pPara = filterMKParaList.append();
+			pPara->ParseParaDesc(sValue);
 		}
 	}
 	//获取注册表内容
@@ -1078,6 +1152,33 @@ void CSysPara::UpdateHoleIncrement(double fHoleInc)
 	if (fabs(holeIncrement.m_fProSH-holeIncrement.m_fDatum) <= EPS)
 		holeIncrement.m_fProSH=fHoleInc;
 	holeIncrement.m_fDatum=fHoleInc;
+}
+BOOL CSysPara::IsFilterMK(int nThick, char cMat)
+{
+	FILTER_MK_PARA* pPara = NULL;
+	for (pPara = filterMKParaList.GetFirst(); pPara; pPara = filterMKParaList.GetNext())
+	{
+		CHashList<SEGI> thickHash;
+		GetSegNoHashTblBySegStr(pPara->m_sThickRange, thickHash);
+		if (thickHash.GetValue(nThick))
+			break;
+	}
+	if (pPara)
+	{
+		if (cMat == 'S')
+			return pPara->m_bFileterS;
+		else if (cMat == 'H')
+			return pPara->m_bFileterH;
+		else if (cMat == 'h')
+			return pPara->m_bFileterh;
+		else if (cMat == 'G')
+			return pPara->m_bFileterG;
+		else if (cMat == 'P')
+			return pPara->m_bFileterP;
+		else if (cMat == 'T')
+			return pPara->m_bFileterT;
+	}
+	return FALSE;
 }
 int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/)
 {
@@ -1819,4 +1920,22 @@ void CSysPara::AngleDrawingParaToBuffer(CBuffer &buffer)
 	buffer.WriteInteger(jgDrawing.bDimKaiheSegLen);
 	buffer.WriteInteger(jgDrawing.bDimKaiheScopeMap);
 }
+//////////////////////////////////////////////////////////////////////////
+//PPE_LOCALE
+//////////////////////////////////////////////////////////////////////////
+PPE_LOCALE::PPE_LOCALE()
+{
+
+}
+void PPE_LOCALE::InitCustomerSerial(UINT uiCustomizeSerial)
+{
+	XHLOCALE::InitCustomerSerial(uiCustomizeSerial);
+	if (uiCustomizeSerial == XHLOCALE::CID_QingDao_HuiJinTong)
+	{
+		//过滤钢板的钢印信息
+		AddLocaleItemBool("FilterPlateMK", true);
+	}
+}
+
+PPE_LOCALE gxLocalizer;
 CSysPara g_sysPara;

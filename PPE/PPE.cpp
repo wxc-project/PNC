@@ -18,6 +18,7 @@
 #include "PPEModel.h"
 #include "ProcBarDlg.h"
 #include "PlankConfigDlg.h"
+#include "LocalFeatureDef.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -402,8 +403,10 @@ BOOL CPPEApp::InitInstance()
 	strcpy(separator,CXhChar16("%d.fac",DogSerialNo()));
 	int retcode=ImportLocalFeatureAccessControlFile(lic_file);
 	//初始化企业定制配置信息
-	//InitCustomizeConfiguration(ValidateLocalizeFeature(FEATURE::LOCALIZE_CUSTOMIZE_CLIENT));
+	UINT uiCustomizeSerial = ValidateLocalizeFeature(FEATURE::LOCALIZE_CUSTOMIZE_CLIENT);
+	gxLocalizer.InitCustomerSerial(uiCustomizeSerial);
 
+	//读取配置文件
 	sprintf(lic_file,"%sPPE.cfg",APP_PATH);
 	g_sysPara.Read(lic_file);
 	InitPPEModel();

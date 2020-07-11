@@ -199,6 +199,21 @@
     <ClCompile Include="SelDisplayNcDlg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\XhLocale.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\ClientId.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="FilterMkDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\supergridctrl.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\SuperEdit.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h">
@@ -392,6 +407,21 @@
     </ClInclude>
     <ClInclude Include="SelDisplayNcDlg.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\XhLocale.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\ClientId.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="FilterMkDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\supergridctrl.h">
+      <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\SuperEdit.h">
+      <Filter>ToolCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

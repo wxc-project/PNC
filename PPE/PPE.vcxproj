@@ -401,6 +401,7 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\BCMenu.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\Buffer.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\BufferStack.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\ClientId.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\DialogPanel.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\DistFillet.cpp" />
@@ -414,10 +415,13 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\SolidBodyBuffer.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\SortFunc.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\SortHeaderCtrl.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\SuperEdit.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\supergridctrl.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\TSPAlgorithm.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\Variant.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhCharString.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhListCtrl.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\XhLocale.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhTreeCtrl.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\ComparePartNoString.cpp" />
@@ -438,6 +442,7 @@
     <ClCompile Include="DisplayPlateProperty.cpp" />
     <ClCompile Include="DisplaySysSettingProperty.cpp" />
     <ClCompile Include="FileFormatSetDlg.cpp" />
+    <ClCompile Include="FilterMkDlg.cpp" />
     <ClCompile Include="HoleIncrementSetDlg.cpp" />
     <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="KaiHeLineAngleDlg.cpp" />
@@ -663,6 +668,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\ToolKits\ToolCode\BCMenu.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\Buffer.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\ClientId.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\DialogPanel.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\DistFillet.h" />
@@ -676,10 +682,13 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\SolidBody.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SolidBodyBuffer.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SortHeaderCtrl.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\SuperEdit.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\supergridctrl.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\TSPAlgorithm.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\Variant.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhCharString.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhListCtrl.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\XhLocale.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhTreeCtrl.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\ComparePartNoString.h" />
@@ -697,6 +706,7 @@
     <ClInclude Include="BendPlankStyleDlg.h" />
     <ClInclude Include="CutWingAngleDlg.h" />
     <ClInclude Include="FileFormatSetDlg.h" />
+    <ClInclude Include="FilterMkDlg.h" />
     <ClInclude Include="HoleIncrementSetDlg.h" />
     <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="KaiHeLineAngleDlg.h" />

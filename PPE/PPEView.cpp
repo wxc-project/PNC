@@ -336,6 +336,8 @@ int CPPEView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		ReceiveFromParentProcess();
 		//打开文件夹之后，根据配置初始化孔径增大值 wht 19-04-09
 		AmendHoleIncrement();
+		//根据用户定制，去除钢印号 wxc 20-07-10
+		FilterPlateMK();
 	}
 	return 0;
 }
@@ -721,7 +723,7 @@ void CPPEView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		}
 		else if (m_xSelectEntity.IsSelectMK(m_pProcessPart))		//删除号位孔
 		{
-			m_pProcessPart->mkpos.Set(1000000, 0, 0);
+			m_pProcessPart->mkpos.z = 1000000;
 			model.SyncRelaPlateInfo((CProcessPlate*)m_pProcessPart);
 		}
 		g_pSolidDraw->ReleaseSnapStatus();
@@ -1687,6 +1689,29 @@ void CPPEView::AmendHoleIncrement()
 			}
 		}
 
+	}
+#endif
+	UpdateCurWorkPartByPartNo(sCurPartNo);
+	Refresh();
+}
+//过滤钢印号
+void CPPEView::FilterPlateMK()
+{
+	CXhChar16 sCurPartNo;
+	if (m_pProcessPart)
+		sCurPartNo = m_pProcessPart->GetPartNo();
+#ifdef __PNC_
+	CWaitCursor waitCursor;
+	for (CProcessPart* pProcessPart = model.EnumPartFirst(); pProcessPart; pProcessPart = model.EnumPartNext())
+	{
+		if (!pProcessPart->IsPlate() || pProcessPart->m_xBoltInfoList.GetNodeNum() <= 0)
+			continue;
+		CProcessPlate* pSrcPlate = (CProcessPlate*)pProcessPart;
+		if (g_sysPara.IsFilterMK(pSrcPlate->GetThick(),pSrcPlate->cMaterial))
+			pSrcPlate->mkpos.z = 1000000;
+		else
+			pSrcPlate->mkpos.z = 0;
+		model.SyncRelaPlateInfo(pSrcPlate);
 	}
 #endif
 	UpdateCurWorkPartByPartNo(sCurPartNo);

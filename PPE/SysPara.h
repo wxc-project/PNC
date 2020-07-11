@@ -2,6 +2,7 @@
 #include "XhCharString.h"
 #include "PropListItem.h"
 #include "PPEModel.h"
+#include "XhLocale.h"
 
 //孔径增大值
 struct HOLE_INCREMENT {
@@ -12,6 +13,21 @@ struct HOLE_INCREMENT {
 	double m_fM24;		//M24
 	double m_fCutSH;	//切割式特殊孔径增大值
 	double m_fProSH;	//板床式特殊孔径增大值
+};
+struct FILTER_MK_PARA
+{
+	CXhChar50 m_sThickRange;
+	BOOL m_bFileterS;	//Q235
+	BOOL m_bFileterH;	//Q345
+	BOOL m_bFileterh;	//Q355
+	BOOL m_bFileterG;	//Q390
+	BOOL m_bFileterP;	//Q420
+	BOOL m_bFileterT;	//Q460
+	//
+	FILTER_MK_PARA();
+	//
+	CString GetParaDesc();
+	void ParseParaDesc(CString sDesc);
 };
 struct NC_INFO_PARA
 {
@@ -50,6 +66,8 @@ public:
 	}dock;
 	//
 	HOLE_INCREMENT holeIncrement;
+	//钢印过滤参数
+	ATOM_LIST<FILTER_MK_PARA> filterMKParaList;
 	//NC数据参数
 	struct NC_PARA{
 		//钢板NC设置
@@ -161,6 +179,7 @@ public:
 	void WriteSysParaToReg(LPCTSTR lpszEntry);	//保存共用参数至注册表
 	void ReadSysParaFromReg(LPCTSTR lpszEntry);	//提取共用参数从注册表
 	void UpdateHoleIncrement(double fHoleInc);
+	BOOL IsFilterMK(int nThick, char cMat);
 	//
 	void AngleDrawingParaToBuffer(CBuffer &buffer);
 	//钢板NC模式设置
@@ -190,4 +209,13 @@ public:
 	DECLARE_PROP_FUNC(CSysPara);
 	int GetPropValueStr(long id, char *valueStr, UINT nMaxStrBufLen = 100);
 };
+//
+struct PPE_LOCALE : public XHLOCALE
+{
+	PPE_LOCALE();
+public:
+	virtual void InitCustomerSerial(UINT uiSerial);
+};
+
+extern PPE_LOCALE gxLocalizer;
 extern CSysPara g_sysPara;
