@@ -209,6 +209,15 @@ BEGIN
     COMBOBOX        IDC_CMB_OTHER_CLR,64,85,90,105,CBS_DROPDOWNLIST | CBS_OWNERDRAWVARIABLE | CBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
 END
 
+IDD_INPUT_AN_STRING_VAL_DLG DIALOGEX 0, 0, 179, 30
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "输入"
+FONT 10, "宋体", 400, 0, 0x0
+BEGIN
+    DEFPUSHBUTTON   "确定",IDOK,133,7,40,14
+    EDITTEXT        IDC_E_VAL,6,7,126,15,ES_AUTOHSCROLL
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -274,6 +283,14 @@ BEGIN
         TOPMARGIN, 7
         BOTTOMMARGIN, 117
     END
+
+    IDD_INPUT_AN_STRING_VAL_DLG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 172
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 23
+    END
 END
 #endif    // APSTUDIO_INVOKED
 
@@ -288,20 +305,6 @@ BEGIN
     POPUP "_CMD_POPUP"
     BEGIN
         MENUITEM "属性",                          32845
-    END
-END
-
-IDR_MENU_ADDORDEL MENU
-BEGIN
-    POPUP "菜单编辑"
-    BEGIN
-        MENUITEM "添加",                          ID_MENU_PNCSYS_ADD
-        MENUITEM "删除",                          ID_MENU_PNCSYS_DEL
-    END
-    POPUP "螺栓分组设置"
-    BEGIN
-        MENUITEM "添加分组",                        ID_MENU_BOLT_ADD
-        MENUITEM "删除分组",                        ID_MENU_BOLT_DEL
     END
 END
 

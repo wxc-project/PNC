@@ -351,6 +351,9 @@
     <ClCompile Include="SelColorDlg.cpp">
       <Filter>PNC</Filter>
     </ClCompile>
+    <ClCompile Include="InputAnValDlg.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -630,6 +633,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SelColorDlg.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="InputAnValDlg.h">
       <Filter>PNC</Filter>
     </ClInclude>
   </ItemGroup>

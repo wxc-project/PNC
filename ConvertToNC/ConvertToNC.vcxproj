@@ -2976,6 +2976,7 @@
     <ClCompile Include="DwgFile.cpp" />
     <ClCompile Include="ExplodeTxtDlg.cpp" />
     <ClCompile Include="FilterLayerDlg.cpp" />
+    <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="InputMKRectDlg.cpp" />
     <ClCompile Include="MonoImage.cpp" />
     <ClCompile Include="OptimalSortDlg.cpp" />
@@ -3224,6 +3225,7 @@
     <ClInclude Include="ExplodeTxtDlg.h" />
     <ClInclude Include="FilterLayerDlg.h" />
     <ClInclude Include="IExtractor.h" />
+    <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="InputMKRectDlg.h" />
     <ClInclude Include="MonoImage.h" />
     <ClInclude Include="OptimalSortDlg.h" />
