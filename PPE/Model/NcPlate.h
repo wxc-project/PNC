@@ -62,6 +62,7 @@ public:
 	void InitPlateNcInfo();
 	bool CreatePlateTxtFile(const char* file_path);
 	bool CreatePlateNcFile(const char* file_path);
+	GECS GetMCS();
 public:
 	static bool InitVertextListByNcFile(CProcessPlate *pPlate,const char* file_path);
 };
