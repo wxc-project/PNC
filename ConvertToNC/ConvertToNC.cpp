@@ -35,6 +35,7 @@
 #include "MsgBox.h"
 #include "SteelSealReactor.h"
 #include "DockBarManager.h"
+#include "BomExport.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -382,6 +383,19 @@ void InitApplication()
 	RegisterServerComponents();
 	//读取配置文件
 	PNCSysSetImportDefault();
+	separator = SearchChar(lic_file, '.', true);
+	//读取本地化特征功能配置文件
+	strcpy(separator, CXhChar16("%d.fac", DogSerialNo()));
+	int nFacFileRetcode = ImportLocalFeatureAccessControlFile(lic_file);
+	//logerr.Log("license fac '%s' imported code %d!",lic_file,retcode);
+	if (nFacFileRetcode != -1 && nFacFileRetcode < 0)
+	{
+#ifdef AFX_TARG_ENU_ENGLISH
+		AfxMessageBox(CXhChar100("FAC file init fail!%d# %s", nFacFileRetcode, lic_file));
+#else
+		AfxMessageBox(CXhChar100("FAC文件初始化失败!%d# %s", nFacFileRetcode, lic_file));
+#endif
+	}
 	//显示对话框
 #ifndef __UBOM_ONLY_
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
@@ -393,6 +407,7 @@ void InitApplication()
 	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)
 		sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');
 	::SetWindowText(adsw_acadMainWnd(), sWndText);
+	g_xBomExport.Init();
 	if(g_xUbomModel.m_bExeRppWhenArxLoad)
 		RevisionPartProcess	();
 #endif

@@ -12,6 +12,7 @@
 #include "ComparePartNoString.h"
 #include "OptimalSortDlg.h"
 #include "PNCSysPara.h"
+#include "BomExport.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -180,6 +181,7 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_NEW_ITEM,OnNewItem)
 	ON_COMMAND(ID_LOAD_PROJECT,OnLoadProjFile)
 	ON_COMMAND(ID_EXPORT_PROJECT,OnExportProjFile)
+	ON_COMMAND(ID_EXPORT_XLS_FILE, OnExportXLSFile)
 	ON_COMMAND(ID_IMPORT_BOM_FILE,OnImportBomFile)
 	ON_COMMAND(ID_IMPORT_ANGLE_DWG,OnImportAngleDwg)
 	ON_COMMAND(ID_IMPORT_PLATE_DWG,OnImportPlateDwg)
@@ -743,6 +745,11 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 	else if (pItemInfo->itemType == PROJECT_ITEM)
 	{
 		pMenu->AppendMenu(MF_STRING, ID_EXPORT_PROJECT, "生成工程文件");
+		if (g_xBomExport.IsVaild())
+		{
+			pMenu->AppendMenu(MF_SEPARATOR);
+			pMenu->AppendMenu(MF_STRING, ID_EXPORT_XLS_FILE, "导出ERP接口数据");
+		}
 	}
 	else if (pItemInfo->itemType == BOM_GROUP)
 	{
@@ -942,6 +949,19 @@ void CRevisionDlg::OnExportProjFile()
 	if(dlg.DoModal()==IDOK)
 		pProject->WriteProjectFile(dlg.GetPathName());	
 }
+
+void CRevisionDlg::OnExportXLSFile()
+{
+	CXhTreeCtrl *pTreeCtrl = GetTreeCtrl();
+	if (pTreeCtrl == NULL)
+		return;
+	HTREEITEM hSelectedItem = pTreeCtrl->GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)pTreeCtrl->GetItemData(hSelectedItem);
+	if (pItemInfo == NULL || pItemInfo->itemType != PROJECT_ITEM)
+		return;
+	CProjectTowerType* pPrjTowerType = (CProjectTowerType*)pItemInfo->dwRefData;
+	g_xBomExport.ExportExcelFile(pPrjTowerType);
+}
 //导入料单文件(放样料单和生计料单)
 void CRevisionDlg::OnImportBomFile()
 {
@@ -961,7 +981,9 @@ void CRevisionDlg::OnImportBomFile()
 		dlg.m_ofn.lpstrTitle = "选择单个物料清单";
 	if(dlg.DoModal()!=IDOK)
 		return;
+#ifndef _ARX_2007
 	CWaitCursor waitCursor;
+#endif
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
 	if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_COMPARE))
 	{	//导入料表组
@@ -1296,7 +1318,9 @@ void CRevisionDlg::OnRetrievedAngles()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo==NULL || !pDwgInfo->IsJgDwgInfo())
 		return;
-	CWaitCursor wait;
+#ifndef _ARX_2007
+	CWaitCursor waitCursor;
+#endif
 	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, TRUE);
 	RefreshListCtrl(hSelItem);
 }
@@ -1311,7 +1335,9 @@ void CRevisionDlg::OnRetrievedPlates()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL || pDwgInfo->IsJgDwgInfo())
 		return;
-	CWaitCursor wait;
+#ifndef _ARX_2007
+	CWaitCursor waitCursor;
+#endif
 	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE);
 	RefreshListCtrl(hSelItem);
 }

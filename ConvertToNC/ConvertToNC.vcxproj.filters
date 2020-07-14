@@ -312,9 +312,6 @@
     <ClCompile Include="MonoImage.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BOM.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
@@ -350,6 +347,15 @@
     </ClCompile>
     <ClCompile Include="SelColorDlg.cpp">
       <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="BomExport.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LDS\LDS\BOM\BOM.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp">
+      <Filter>TowerCad</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -587,9 +593,6 @@
     <ClInclude Include="MonoImage.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BOM.h">
-      <Filter>UBOM</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
@@ -631,6 +634,15 @@
     </ClInclude>
     <ClInclude Include="SelColorDlg.h">
       <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="BomExport.h">
+      <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\LDS\LDS\BOM\BOM.h">
+      <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h">
+      <Filter>TowerCad</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

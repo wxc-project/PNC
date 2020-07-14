@@ -68,6 +68,7 @@ protected:
 	afx_msg void OnNewItem();
 	afx_msg void OnLoadProjFile();
 	afx_msg void OnExportProjFile();
+	afx_msg void OnExportXLSFile();
 	afx_msg void OnImportBomFile();
 	afx_msg void OnImportAngleDwg();
 	afx_msg void OnImportPlateDwg();

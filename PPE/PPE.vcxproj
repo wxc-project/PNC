@@ -430,6 +430,7 @@
     <ClCompile Include="..\..\ToolKits\TowerCad\DxfFile.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\JgNcDataManager.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\LicFuncDef.cpp" />
+    <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\NcJg.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp" />
@@ -446,7 +447,6 @@
     <ClCompile Include="HoleIncrementSetDlg.cpp" />
     <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="KaiHeLineAngleDlg.cpp" />
-    <ClCompile Include="LocalFeatureDef.cpp" />
     <ClCompile Include="MainFrm.cpp">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Disabled</Optimization>
       <Optimization Condition="'$(Configuration)|$(Platform)'=='DebugForTMA|Win32'">Disabled</Optimization>
@@ -697,6 +697,7 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\DxfFile.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\JgNcDataManager.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\LicFuncDef.h" />
+    <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\NcJg.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h" />
@@ -711,7 +712,6 @@
     <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="KaiHeLineAngleDlg.h" />
     <ClInclude Include="LeftTreeView.h" />
-    <ClInclude Include="LocalFeatureDef.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="Model\NcPart.h" />
     <ClInclude Include="Model\NcPlate.h" />

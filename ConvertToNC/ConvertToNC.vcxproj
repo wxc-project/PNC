@@ -2704,10 +2704,12 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\LDS\LDS\BOM\BOM.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\ExcelOper.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\TimerCount.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp" />
+    <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp" />
     <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -2964,7 +2966,7 @@
     </ClCompile>
     <ClCompile Include="AdjustPlateMCS.cpp" />
     <ClCompile Include="BatchPrint.cpp" />
-    <ClCompile Include="BOM.cpp" />
+    <ClCompile Include="BomExport.cpp" />
     <ClCompile Include="BomModel.cpp" />
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
@@ -3041,11 +3043,13 @@
     <ClCompile Include="XeroExtractor.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\LDS\LDS\BOM\BOM.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadColorTbl.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\TimerCount.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
+    <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h" />
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -3080,7 +3084,7 @@
     <ClInclude Include="..\..\ToolKits\TowerCad\DimStyle.h" />
     <ClInclude Include="AdjustPlateMCS.h" />
     <ClInclude Include="BatchPrint.h" />
-    <ClInclude Include="BOM.h" />
+    <ClInclude Include="BomExport.h" />
     <ClInclude Include="BomModel.h" />
     <ClInclude Include="CADCallBackDlg.h" />
     <ClInclude Include="CadHighlightEntManager.h" />

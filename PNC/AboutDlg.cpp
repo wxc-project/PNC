@@ -84,7 +84,10 @@ BOOL CAboutDlg::OnInitDialog()
 	CString sSerialStr, sVersion,sReleaseDateTime;
 	sSerialStr.Format("授权号:%d", DogSerialNo());
 	GetProductVersion(__argv[0],sVersion, sReleaseDateTime);
-#if defined(__PNC_)
+#ifdef __UBOM_ONLY_
+	SetWindowText("关于 UBOM");
+	GetDlgItem(IDC_S_VERSION)->SetWindowText("UBOM " + sVersion);
+#elif defined(__PNC_)
 	SetWindowText("关于 PNC");
 	GetDlgItem(IDC_S_VERSION)->SetWindowText("PNC " + sVersion);
 #elif defined(__CNC_)
@@ -102,7 +105,7 @@ BOOL CAboutDlg::OnInitDialog()
 	str_arr.SetSize(3);
 	int nModelCount = 4;
 #ifdef __UBOM_ONLY_
-	CXhChar50 sModuleArr[4] = { "PNC05.arx","PNC07.arx","PNC10.arx","PNC19.zrx"};
+	CXhChar50 sModuleArr[4] = { "UBOM05.arx","UBOM05-Dock.arx","UBOM07.arx","UBOM10.arx"};
 	str_arr[0] = "UBOM.exe";
 #else
 	nModelCount = 5;

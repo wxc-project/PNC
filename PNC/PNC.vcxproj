@@ -256,7 +256,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>__WXPAY_RENTAL_ONLINE_;WIN32;_WINDOWS;NDEBUG;__PNC_;__UBOM_ONLY_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__UBOM_ONLY_;__WXPAY_RENTAL_ONLINE_;WIN32;_WINDOWS;NDEBUG;__PNC_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
       <AdditionalIncludeDirectories>..\..\ToolKits\ToolCode;..\..\XhLmd\XhLicAgent;..\..\ToolKits\TowerCad;..\..\XhLmd;..\..\XhLmd\XhLmd;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>

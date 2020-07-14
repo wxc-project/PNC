@@ -163,9 +163,6 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\ListViewComparer.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="LocalFeatureDef.cpp">
-      <Filter>ToolCode</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\LogFile.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
@@ -213,6 +210,9 @@
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\SuperEdit.cpp">
       <Filter>ToolCode</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp">
+      <Filter>TowerCad</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -390,9 +390,6 @@
     <ClInclude Include="PlankConfigDlg.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="LocalFeatureDef.h">
-      <Filter>ToolCode</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h">
       <Filter>TowerCad</Filter>
     </ClInclude>
@@ -422,6 +419,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\SuperEdit.h">
       <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h">
+      <Filter>TowerCad</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

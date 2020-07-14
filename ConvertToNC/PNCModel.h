@@ -7,7 +7,7 @@
 #include "ArrayList.h"
 #include "CadToolFunc.h"
 #include "XhMath.h"
-#include "BOM.h"
+#include "..\..\LDS\LDS\BOM\BOM.h"
 #include "DocManagerReactor.h"
 #include <vector>
 

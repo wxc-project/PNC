@@ -1,7 +1,7 @@
 #pragma once
 #include "HashTable.h"
 #include "XhCharString.h"
-#include "BOM.h"
+#include "..\..\LDS\LDS\BOM\BOM.h"
 #include "Variant.h"
 #include "LogFile.h"
 #include "FileIO.h"

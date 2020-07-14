@@ -285,7 +285,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 		pPlateInfo->xBomPlate.cQualityLevel = pPlateInfo->xPlate.cQuality;
 		pPlateInfo->xBomPlate.thick = pPlateInfo->xPlate.m_fThick;
 		pPlateInfo->xBomPlate.feature1 = pPlateInfo->xPlate.m_nProcessNum;	//加工数
-		pPlateInfo->xBomPlate.SetPartNum(pPlateInfo->xPlate.m_nSingleNum);	//单基数
+		pPlateInfo->xBomPlate.AddPart(pPlateInfo->xPlate.m_nSingleNum);		//单基数
 		if (pPlateInfo->xBomPlate.thick <= 0)
 			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xBomPlate.sPartNo);
 		else
