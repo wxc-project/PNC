@@ -2110,15 +2110,51 @@ static void DrawNcBackGraphic(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet
 }
 void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 {
-	//0.初始化加工坐标系
-	InitNcDrawMode();
-	//1.将构件转换到加工坐标系下
+	if (m_pPart == NULL || m_pPart->m_cPartType != CProcessPart::TYPE_PLATE)
+		return;
+	CXhChar100 sValue;
+	//初始化切入点
+	CProcessPlate *pPlate = (CProcessPlate*)m_pPart;
+	if (pPlate->mkVec.IsZero())
+		InitMkRect();
+	int nInLineLen = 0, nOutLineLen = 0;
+	BOOL bCutPosInInitPos = FALSE, bInitFarOrg = FALSE;
+	GetCutParamFromReg(-1, pPlate->m_fThick, &nInLineLen, &nOutLineLen, NULL, &bInitFarOrg, &bCutPosInInitPos);
+	if (bCutPosInInitPos)
+		pPlate->m_xCutPt.hEntId = 0;
+	pPlate->InitCutPt(bInitFarOrg == TRUE);
+	pPlate->m_xCutPt.cInLineLen = (BYTE)nInLineLen;
+	pPlate->m_xCutPt.cOutLineLen = (BYTE)nOutLineLen;
+	//将构件转换到加工坐标系下
 	CProcessPlate tempPlate;
 	m_pPart->ClonePart(&tempPlate);
+	tempPlate.GetMCS(mcs);
 	tempPlate.SetKey(m_pPart->GetKey());
+#ifdef __PNC_
+	//PNC模式下，考虑轮廓边增大值
+	BYTE ciDisplayNcMode = (CPEC::GetSysParaFromReg("m_ciDisplayType", sValue)) ? atoi(sValue) : 0;
+	double fShapeAddDist = 0;
+	if ((ciDisplayNcMode&0X01) && CPEC::GetSysParaFromReg("flameCut.m_wEnlargedSpace", sValue))
+		fShapeAddDist = atof(sValue);
+	if ((ciDisplayNcMode&0X02) && CPEC::GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
+		fShapeAddDist = atof(sValue);
+	if (ciDisplayNcMode==0X10 && CPEC::GetSysParaFromReg("laserPara.m_wEnlargedSpace", sValue))
+		fShapeAddDist = atof(sValue);
+	if (fShapeAddDist > 0)
+	{
+		ATOM_LIST<PROFILE_VER> xDestList;
+		tempPlate.CalEquidistantShape(fShapeAddDist, &xDestList);
+		tempPlate.vertex_list.Empty();
+		for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
+			tempPlate.vertex_list.Append(*pVertex);
+		//调整坐标系原点
+		SCOPE_STRU scope = tempPlate.GetVertexsScope(&mcs);
+		mcs.origin += scope.fMinX*mcs.axis_x;
+		mcs.origin += scope.fMinY*mcs.axis_y;
+	}
+#endif
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
 	//2.绘制坐标系及挡板高度
-	CXhChar100 sValue;
 	COLORREF color=RGB(0,0,0);
 	if(IsMainPartDraw())
 	{
@@ -2353,31 +2389,6 @@ void CProcessPlateDraw::InitMkRect()
 	pPlate->mkVec=vec;
 }
 //NC模式需要的函数
-void CProcessPlateDraw::InitNcDrawMode()
-{	//初始化加工坐标系
-	if(m_pBelongEditor==NULL||m_pBelongEditor->GetDrawMode()!=IPEC::DRAW_MODE_NC)
-		return;
-	if(m_pPart==NULL||m_pPart->m_cPartType!=CProcessPart::TYPE_PLATE)
-		return;
-	CProcessPlate *pPlate=(CProcessPlate*)m_pPart;
-	int iOldBottomEdge=pPlate->mcsFlg.ciBottomEdge;
-	pPlate->GetMCS(mcs);
-	//2.初始化打号位置
-	if(pPlate->mcsFlg.ciBottomEdge!=iOldBottomEdge)
-		pPlate->mkpos.Set(20,20);
-	if(pPlate->mkVec.IsZero())
-		InitMkRect();
-	//3.初始化切入点
-	int nInLineLen = 0, nOutLineLen = 0;
-	BOOL bCutPosInInitPos = FALSE, bInitFarOrg = FALSE;
-	GetCutParamFromReg(-1, pPlate->m_fThick, &nInLineLen, &nOutLineLen, NULL, &bInitFarOrg, &bCutPosInInitPos);
-	if(bCutPosInInitPos)
-		pPlate->m_xCutPt.hEntId=0;
-	pPlate->InitCutPt(bInitFarOrg==TRUE);
-	pPlate->m_xCutPt.cInLineLen = (BYTE)nInLineLen;
-	pPlate->m_xCutPt.cOutLineLen = (BYTE)nOutLineLen;
-}
-
 void CProcessPlateDraw::RotateAntiClockwise() 
 {
 	if(m_pPart==NULL||m_pPart->m_cPartType!=CProcessPart::TYPE_PLATE)

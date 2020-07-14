@@ -70,7 +70,6 @@ public:
 	~CProcessPlateDraw();
 	static char m_sPlateProcessCardPath[MAX_PATH];	//钢板工艺卡路径
 	//NC模式需要的函数
-	void InitNcDrawMode();
 	void RotateAntiClockwise();
 	void RotateClockwise();
 	void OverturnPart();

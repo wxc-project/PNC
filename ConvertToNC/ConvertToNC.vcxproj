@@ -1249,7 +1249,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;__SUPPORT_DOCK_UI_1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(IntDir)UBOM.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -1263,7 +1263,7 @@
       <ProgramDatabaseFile>$(OutDir)UBOM.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)UBOM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\..\ARXSDK\ObjectARX 2007\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\..\ARXSDK\ObjectARX 2007\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb17.lib;acge17.lib;achapi17.lib;acISMobj17.lib;adui17.lib;acui17.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_alg_fun.lib;f_ent.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\UBOM.def</ModuleDefinitionFile>
     </Link>
@@ -2739,6 +2739,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -2978,6 +2979,7 @@
     <ClCompile Include="DwgFile.cpp" />
     <ClCompile Include="ExplodeTxtDlg.cpp" />
     <ClCompile Include="FilterLayerDlg.cpp" />
+    <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="InputMKRectDlg.cpp" />
     <ClCompile Include="MonoImage.cpp" />
     <ClCompile Include="OptimalSortDlg.cpp" />
@@ -3055,6 +3057,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
@@ -3228,6 +3231,7 @@
     <ClInclude Include="ExplodeTxtDlg.h" />
     <ClInclude Include="FilterLayerDlg.h" />
     <ClInclude Include="IExtractor.h" />
+    <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="InputMKRectDlg.h" />
     <ClInclude Include="MonoImage.h" />
     <ClInclude Include="OptimalSortDlg.h" />

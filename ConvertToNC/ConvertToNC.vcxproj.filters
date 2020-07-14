@@ -348,6 +348,9 @@
     <ClCompile Include="SelColorDlg.cpp">
       <Filter>PNC</Filter>
     </ClCompile>
+    <ClCompile Include="InputAnValDlg.cpp">
+      <Filter>PNC</Filter>
+    </ClCompile>
     <ClCompile Include="BomExport.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
@@ -633,6 +636,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="SelColorDlg.h">
+      <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="InputAnValDlg.h">
       <Filter>PNC</Filter>
     </ClInclude>
     <ClInclude Include="BomExport.h">

@@ -89,20 +89,38 @@ GEPOINT CNCPlate::ProcessPoint(const double* coord)
 	return vertex;
 }
 //
+GECS CNCPlate::GetMCS()
+{
+	GECS mcs;
+	CProcessPlate tempPlate;
+	m_pPlate->ClonePart(&tempPlate);
+	tempPlate.GetMCS(mcs);
+	if (m_nEnlargedSpace > 0)
+	{
+		ATOM_LIST<PROFILE_VER> xDestList;
+		tempPlate.CalEquidistantShape(m_nEnlargedSpace, &xDestList, 1);
+		tempPlate.vertex_list.Empty();
+		for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
+			tempPlate.vertex_list.Append(*pVertex);
+		//调整坐标系原点
+		SCOPE_STRU scope = tempPlate.GetVertexsScope(&mcs);
+		mcs.origin += scope.fMinX*mcs.axis_x;
+		mcs.origin += scope.fMinY*mcs.axis_y;
+	}
+	return mcs;
+}
+//
 void CNCPlate::InitPlateNcInfo()
 {
 	if (m_pPlate == NULL || !VerifyValidFunction(PNC_LICFUNC::FUNC_IDENTITY_CUT_FILE))
 		return;
 	m_xCutHole.Empty();
 	m_xCutEdge.cutPtArr.Empty();
-
-	CLogErrorLife logErrLife;
 	//初始化钢板加工坐标系
 	BOOL bInvertedTraverse = m_bClockwise ? TRUE : FALSE;
 	if (m_pPlate->mcsFlg.ciOverturn)
 		bInvertedTraverse = !bInvertedTraverse;
-	GECS mcs;
-	m_pPlate->GetMCS(mcs);
+	GECS mcs = GetMCS();
 	CProcessPlate tempPlate;
 	m_pPlate->ClonePart(&tempPlate);
 	CProcessPlate::TransPlateToMCS(&tempPlate, mcs);

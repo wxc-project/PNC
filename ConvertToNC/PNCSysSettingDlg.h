@@ -31,6 +31,7 @@ public:
 	void UpdateUbomSettingProp();
 	void UpdateLayoutProperty(CPropTreeItem* pParentItem);
 	void RefreshCtrlState();
+	void RefreshListItem();
 #ifdef __PNC_
 	void SelectEntObj(int nResultEnt=1);	//选择对象节点或线
 	void FinishSelectObjOper();				//完成选择对象的后续操作
@@ -47,6 +48,4 @@ public:
 	afx_msg void OnSelchangeTabGroup(NMHDR* pNMHDR, LRESULT* pResult);
 	afx_msg void OnPNCSysDel();
 	afx_msg void OnPNCSysAdd();
-	afx_msg void OnPNCSysGroupDel();
-	afx_msg void OnPNCSysGroupAdd();
 };

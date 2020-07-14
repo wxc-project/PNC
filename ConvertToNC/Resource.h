@@ -3,7 +3,6 @@
 // π© ConvertToNC.rc  π”√
 //
 #define ID_BTN_DEFAULT                  3
-#define IDR_MENU_ADDORDEL               4
 #define IDS_PROJNAME                    100
 #define IDC_LIST_BOX                    100
 #define IDD_SYSTEM_SETTING_DLG          101
@@ -55,6 +54,7 @@
 #define IDC_TREE_CONTRL                 141
 #define IDC_E_FILE_NAME                 142
 #define IDC_E_NUM                       143
+#define IDD_INPUT_AN_STRING_VAL_DLG     143
 #define IDC_BTN_EXTRACT                 144
 #define IDC_CMB_EDGE_CLR                145
 #define IDC_CMB_M12_CLR                 146
@@ -64,6 +64,7 @@
 #define IDC_CMB_OTHER_CLR               150
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
+#define IDC_E_VAL                       1093
 #define IDC_JG_LIST                     6000
 #define IDC_CHE_JG                      6001
 #define IDC_CHE_YG                      6002
@@ -94,16 +95,12 @@
 #define ID_LOAD_PROJECT                 32770
 #define ID_IMPORT_TMA_FILE              32771
 #define ID_IMPORT_ERP_FILE              32772
-#define ID_MENU_PNCSYS_ADD              32772
 #define ID_IMPORT_ANGLE_DWG             32773
-#define ID_MENU_PNCSYS_DEL              32773
 #define ID_IMPORT_PLATE_DWG             32774
 #define ID_PROJECT_PROPERTY             32775
 #define ID_IMPORT_BOM_FILE              32776
 #define ID_COMPARE_DATA                 32777
-#define ID_MENU_BOLT_ADD                32777
 #define ID_EXPORT_COMPARE_RESULT        32778
-#define ID_MENU_BOLT_DEL                32778
 #define ID_REFRESH_PART_NUM             32779
 #define ID_EXPORT_PROJECT               32780
 #define ID_REFRESH_WEIGHT               32781
@@ -118,14 +115,15 @@
 #define ID_CLOSE_ITEM                   32790
 #define ID_REFRESH_SINGLE_NUM           32791
 #define ID_BATCH_PRINT_PART             32792
-#define ID_EXPORT_XLS_FILE				32793
+#define ID_ADD_ITEM                     32793
+#define ID_EXPORT_XLS_FILE				32794
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        130
-#define _APS_NEXT_COMMAND_VALUE         32794
+#define _APS_NEXT_COMMAND_VALUE         32795
 #define _APS_NEXT_CONTROL_VALUE         146
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
