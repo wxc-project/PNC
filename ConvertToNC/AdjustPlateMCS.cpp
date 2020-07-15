@@ -31,7 +31,7 @@ CAdjustPlateMCS::~CAdjustPlateMCS(void)
 
 void CAdjustPlateMCS::UpdateCloneEdgePos()
 {
-	for (ACAD_LINEID *pLineId = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetFirst(); pLineId;
+	for (CAD_LINE *pLineId = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetFirst(); pLineId;
 		pLineId = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetNext())
 		pLineId->UpdatePos();
 }
@@ -65,8 +65,8 @@ bool CAdjustPlateMCS::Rotation()
 		next_edge = next_edge % n;
 		i++;
 	}
-	ACAD_LINEID *pLineS = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetValue(cur_edge + 1);
-	ACAD_LINEID *pLineE = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetValue(next_edge + 1);
+	CAD_LINE *pLineS = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetValue(cur_edge + 1);
+	CAD_LINE *pLineE = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetValue(next_edge + 1);
 	if (pLineS == NULL || pLineE == NULL)
 		return false;
 	CLockDocumentLife lockLife;

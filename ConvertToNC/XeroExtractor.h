@@ -42,8 +42,44 @@ struct CAD_ENTITY {
 	char sText[100];	//ciEntType==TYPE_TEXT时记录文本内容 wht 18-12-30
 	GEPOINT pos;
 	double m_fSize;
-	CAD_ENTITY(long idEnt = 0) { idCadEnt = idEnt; ciEntType = TYPE_OTHER; strcpy(sText, ""); m_fSize = 0; }
+	//
+	CAD_ENTITY(ULONG idEnt = 0);
+	bool IsInScope(GEPOINT &pt);
 };
+struct CAD_LINE : public CAD_ENTITY
+{
+	BYTE m_ciSerial;
+	GEPOINT m_ptStart, m_ptEnd;
+	GEPOINT vertex;
+	BOOL m_bReverse;
+	BOOL m_bMatch;
+public:
+	CAD_LINE(ULONG lineId = 0);
+	CAD_LINE(AcDbObjectId id, double len);
+	CAD_LINE(AcDbObjectId id, GEPOINT &start, GEPOINT &end) { Init(id, start, end); }
+	void Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end);
+	BOOL UpdatePos();
+	//
+	static int compare_func(const CAD_LINE& obj1, const CAD_LINE& obj2)
+	{
+		if (obj1.m_bMatch && !obj2.m_bMatch)
+			return -1;
+		else if (!obj1.m_bMatch && obj2.m_bMatch)
+			return 1;
+		else
+		{
+			if (obj1.m_ciSerial > obj2.m_ciSerial)
+				return 1;
+			else if (obj1.m_ciSerial < obj2.m_ciSerial)
+				return -1;
+			else
+				return 0;
+		}
+	}
+};
+//////////////////////////////////////////////////////////////////////////
+//开放给用户的钢板识别定制化接口函数
+//CPlateObject
 class CPlateObject
 {
 	POLYGON region;
