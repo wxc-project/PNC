@@ -14,62 +14,6 @@
 using std::vector;
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
-struct VERTEX_TAG{
-	long nDist; 
-	long nLsNum;
-	VERTEX_TAG(){nDist=0;nLsNum=0;}
-};
-struct ACAD_LINEID {
-	BYTE m_ciSerial;
-	long m_lineId;
-	double m_fLen;
-	GEPOINT m_ptStart, m_ptEnd;
-	GEPOINT vertex;
-	BOOL m_bReverse;
-	BOOL m_bMatch;
-public:
-	ACAD_LINEID(long lineId = 0);
-	ACAD_LINEID(AcDbObjectId id, double len);
-	ACAD_LINEID(AcDbObjectId id, GEPOINT &start, GEPOINT &end) { Init(id, start, end); }
-	void Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end);
-	BOOL UpdatePos();
-	//
-	static int compare_func(const ACAD_LINEID& obj1, const ACAD_LINEID& obj2)
-	{
-		if (obj1.m_bMatch && !obj2.m_bMatch)
-			return -1;
-		else if (!obj1.m_bMatch && obj2.m_bMatch)
-			return 1;
-		else
-		{
-			if (obj1.m_ciSerial > obj2.m_ciSerial)
-				return 1;
-			else if (obj1.m_ciSerial < obj2.m_ciSerial)
-				return -1;
-			else
-				return 0;
-		}
-	}
-};
-struct ACAD_CIRCLE{
-	AcDbObjectId cirEntId;
-	GEPOINT center;
-	double radius;
-	ACAD_CIRCLE(){radius=0;cirEntId=0;}
-	ACAD_CIRCLE(AcDbObjectId &objId,double r,GEPOINT &center_pt){
-		cirEntId=objId;
-		radius=r;
-		center=center_pt;
-	}
-	bool IsInCircle(GEPOINT &pos){
-		double dist=DISTANCE(pos,center);
-		if(dist<radius)
-			return true;
-		else
-			return false;
-	}
-};
-
 class CPlateProcessInfo : public CPlateObject
 {
 	struct LAYOUT_VERTEX{
@@ -95,8 +39,6 @@ public:
 	AcDbObjectId plateInfoBlockRefId;
 	BOOL m_bIslandDetection;	//是否开启孤岛检测 wht 19-01-03
 	GEPOINT dim_pos,dim_vec;
-	BOOL m_bHasInnerDimPos;
-	GEPOINT inner_dim_pos;		//根据件号位置找到的最近的螺栓孔位置，用于螺栓垫板提取 wht 19-02-01
 	CXhChar100 m_sRelatePartNo;
 	BASIC_INFO m_xBaseInfo;
 	CHashSet<AcDbObjectId> pnTxtIdList;
@@ -104,7 +46,7 @@ public:
 	//钢板关联实体
 	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;	
 	CHashSet<CAD_ENTITY*> m_xHashInvalidBoltCir;		//记录无效的圆圈，方便后期输出对比
-	CHashList<ACAD_LINEID> m_hashCloneEdgeEntIdByIndex;
+	CHashList<CAD_LINE> m_hashCloneEdgeEntIdByIndex;
 	CHashList<ULONG> m_hashColneEntIdBySrcId;
 	ARRAY_LIST<ULONG> m_cloneEntIdList;
 	ARRAY_LIST<ULONG> m_newAddEntIdList;
@@ -129,8 +71,8 @@ public:
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
 	BOOL InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle);
 	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);
-	BOOL InitProfileByAcdbLineList(ARRAY_LIST<ACAD_LINEID>& xLineArr);
-	BOOL InitProfileByAcdbLineList(ACAD_LINEID& startLine, ARRAY_LIST<ACAD_LINEID>& xLineArr);
+	BOOL InitProfileByAcdbLineList(ARRAY_LIST<CAD_LINE>& xLineArr);
+	BOOL InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr);
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	void ExtractPlateRelaEnts();

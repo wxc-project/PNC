@@ -55,6 +55,92 @@ bool CSymbolRecoginzer::IsHuoquLine(GELINE* pCurveLine,DWORD cbFilterFlag/*=0*/)
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////
+//CAD_ENTITY
+CAD_ENTITY::CAD_ENTITY(ULONG idEnt /*= 0*/)
+{
+	idCadEnt = idEnt;
+	ciEntType = TYPE_OTHER;
+	strcpy(sText, "");
+	m_fSize = 0;
+}
+bool CAD_ENTITY::IsInScope(GEPOINT &pt) 
+{
+	double dist = DISTANCE(pt, pos);
+	if (dist < m_fSize)
+		return true;
+	else
+		return false;
+}
+//////////////////////////////////////////////////////////////////////////
+//CAD_LINE
+CAD_LINE::CAD_LINE(ULONG lineId /*= 0*/):
+	CAD_ENTITY(lineId)
+{
+	ciEntType = TYPE_LINE;
+	m_ciSerial = 0;
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+CAD_LINE::CAD_LINE(AcDbObjectId id, double len):
+	CAD_ENTITY(id.asOldId())
+{
+	m_ciSerial = 0;
+	m_fSize = len;
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+void CAD_LINE::Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end)
+{
+	m_ciSerial = 0;
+	idCadEnt = id.asOldId();
+	m_ptStart = start;
+	m_ptEnd = end;
+	m_fSize = DISTANCE(m_ptStart, m_ptEnd);
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+BOOL CAD_LINE::UpdatePos()
+{
+	AcDbEntity *pEnt = NULL;
+	acdbOpenAcDbEntity(pEnt, MkCadObjId(idCadEnt), AcDb::kForRead);
+	CAcDbObjLife life(pEnt);
+	if (pEnt == NULL)
+		return FALSE;
+	if (pEnt->isKindOf(AcDbLine::desc()))
+	{
+		AcDbLine *pLine = (AcDbLine*)pEnt;
+		m_ptStart.Set(pLine->startPoint().x, pLine->startPoint().y, 0);
+		m_ptEnd.Set(pLine->endPoint().x, pLine->endPoint().y, 0);
+	}
+	else if (pEnt->isKindOf(AcDbArc::desc()))
+	{
+		AcDbArc* pArc = (AcDbArc*)pEnt;
+		AcGePoint3d startPt, endPt;
+		pArc->getStartPoint(startPt);
+		pArc->getEndPoint(endPt);
+		m_ptStart.Set(startPt.x, startPt.y, 0);
+		m_ptEnd.Set(endPt.x, endPt.y, 0);
+	}
+	else if (pEnt->isKindOf(AcDbEllipse::desc()))
+	{
+		AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+		AcGePoint3d startPt, endPt;
+		pEllipse->getStartPoint(startPt);
+		pEllipse->getEndPoint(endPt);
+		m_ptStart.Set(startPt.x, startPt.y, 0);
+		m_ptEnd.Set(endPt.x, endPt.y, 0);
+	}
+	else
+		return FALSE;
+	if (m_bReverse)
+	{
+		GEPOINT temp = m_ptStart;
+		m_ptStart = m_ptEnd;
+		m_ptEnd = temp;
+	}
+	return TRUE;
+}
+//////////////////////////////////////////////////////////////////////////
 //CPlateObject
 CPlateObject::CPlateObject()
 {
@@ -269,9 +355,9 @@ BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
 	GEPOINT tagPT=vertexList.GetFirst()->pos;
 	for(int index=0;index<vertexList.GetNodeNum();index++)
 	{
-		if (vertexList[index].tag.lParam <= 0)
-			return FALSE;
-		CAcDbObjLife objLife(MkCadObjId(vertexList[index].tag.lParam));
+		if (vertexList[index].tag.lParam == 0 || vertexList[index].tag.lParam == -1)
+			continue;
+		CAcDbObjLife objLife(MkCadObjId(vertexList[index].tag.dwParam));
 		AcDbEntity *pEnt = objLife.GetEnt();
 		if (pEnt == NULL)
 			return FALSE;
@@ -898,7 +984,7 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 	}
 	//从字符串中解析钢板信息
 	CXhChar500 sText;
-	ATOM_LIST<CXhChar200> lineList;
+	vector<CString> lineList;
 	if(pEnt->isKindOf(AcDbText::desc()))
 	{
 		AcDbText* pText=(AcDbText*)pEnt;
@@ -916,12 +1002,11 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 #else
 		sText.Copy(pMText->contents());
 #endif
-		lineList.Empty();
 		for (char* sKey = strtok(sText, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
 		{
-			CXhChar200 sTemp(sKey);
+			CString sTemp = sKey;
 			sTemp.Replace("\\P", "");
-			lineList.append(sTemp);
+			lineList.push_back(sTemp);
 		}
 	}
 	else if(pEnt->isKindOf(AcDbAttribute::desc()))
@@ -934,11 +1019,11 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 #endif
 	}
 	BOOL bRet = FALSE;
-	if (lineList.GetNodeNum() > 0)
+	if (lineList.size()>0)
 	{
-		for (CXhChar200 *pLineText = lineList.GetFirst(); pLineText; pLineText = lineList.GetNext())
+		for(size_t i=0;i<lineList.size();i++)
 		{
-			CXhChar200 sTemp(*pLineText);
+			CString sTemp = lineList.at(i);
 			if (IsMatchThickRule(sTemp))
 			{
 				ParseThickText(sTemp, basicInfo.m_nThick);
@@ -961,12 +1046,12 @@ BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
 				ParsePartNoText(sTemp, basicInfo.m_sPartNo);
 				bRet = TRUE;
 			}
-			if (strstr(sText, "塔型"))
+			if (strstr(sTemp, "塔型"))
 			{
-				sText.Replace("塔型", "");
-				sText.Replace(":", "");
-				sText.Replace("：", "");
-				basicInfo.m_sTaType.Copy(sText);
+				sTemp.Replace("塔型", "");
+				sTemp.Replace(":", "");
+				sTemp.Replace("：", "");
+				basicInfo.m_sTaType.Copy(sTemp);
 			}
 		}
 	}
@@ -1059,7 +1144,7 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 {
 	if (pAcadText == NULL)
 		return FALSE;
-	CXhChar100 sText;
+	CXhChar500 sText;
 	if (pAcadText->isKindOf(AcDbText::desc()))
 		sText = GetCadTextContent(pAcadText);
 	else if (pAcadText->isKindOf(AcDbMText::desc()))
@@ -1068,7 +1153,7 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 		if (sText.GetLength() <= 0)
 			return FALSE;
 		//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
-		CXhChar100 sNewText;
+		CXhChar200 sNewText;
 		char cPreChar = sText.At(0);
 		sNewText.Append(cPreChar);
 		for (int i = 1; i < sText.GetLength(); i++)
@@ -1082,20 +1167,21 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 		}
 		sText.Copy(sNewText);
 		//
-		ATOM_LIST<CXhChar50> lineTextList;
+		vector<CString> lineTextArr;
 		for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
 		{
-			CXhChar50 sTemp(sKey);
+			CString sTemp(sKey);
 			sTemp.Replace("\\W", "");
-			lineTextList.append(sTemp);
+			lineTextArr.push_back(sTemp);
 		}
-		if (lineTextList.GetNodeNum() > 0)
+		if (lineTextArr.size() > 0)
 		{
-			for (CXhChar50 *pLineText = lineTextList.GetFirst(); pLineText; pLineText = lineTextList.GetNext())
+			for(size_t i=0;i<lineTextArr.size();i++)
 			{
-				if (IsMatchPNRule(*pLineText))
+				CString ss = lineTextArr.at(i);
+				if (IsMatchPNRule(ss))
 				{
-					sText.Copy(*pLineText);
+					sText.Copy(ss);
 					break;
 				}
 			}

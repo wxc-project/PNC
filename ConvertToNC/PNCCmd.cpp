@@ -230,7 +230,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	if (CPNCModel::m_bSendCommand == FALSE)
 	{
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg != NULL)
+		if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd()!=NULL)
 		{
 			pPartListDlg->RefreshCtrlState();
 			pPartListDlg->RelayoutWnd();
@@ -571,7 +571,7 @@ void DrawPlates()
 	model.DrawPlates();
 	//更新构件列表
 	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-	if (pPartListDlg != NULL)
+	if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd() != NULL)
 	{
 		pPartListDlg->RefreshCtrlState();
 		pPartListDlg->RelayoutWnd();
@@ -751,7 +751,7 @@ bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& 
 			center.x = prevPt.x + i;
 			center.y = prevPt.y + j;
 			//查找前一个顶点
-			for (int index = 0; index < vertexArr.size(); index++)
+			for (size_t index = 0; index < vertexArr.size(); index++)
 			{
 				if (vertexArr.at(index).pos.IsEqual(prevPt, EPS2)&&
 					vertexArr.at(index).ciEdgeType == 1)

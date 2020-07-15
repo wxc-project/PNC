@@ -611,7 +611,7 @@ void CPartListDlg::OnBnClickedBtnMove()
 	{	//更新构件规格位置
 		m_xDamBoardManager.EraseDamBoard(pPlateInfo);
 		m_xDamBoardManager.DrawDamBoard(pPlateInfo);
-		for(ACAD_LINEID *pLineId=pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetFirst();pLineId;pLineId=pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetNext())
+		for(CAD_LINE *pLineId=pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetFirst();pLineId;pLineId=pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetNext())
 			pLineId->UpdatePos();
 		//更新字盒位置
 		CLockDocumentLife lockLife;

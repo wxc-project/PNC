@@ -117,7 +117,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		pSysSettingDlg->UpdateLayoutProperty(pItem);
 #ifndef __UBOM_ONLY_
 		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg != NULL)
+		if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd() != NULL)
 		{
 			pPartListDlg->RefreshCtrlState();
 			pPartListDlg->RelayoutWnd();
