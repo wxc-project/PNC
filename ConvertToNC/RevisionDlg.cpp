@@ -1491,105 +1491,24 @@ void CRevisionDlg::OnBatchPrintPart()
 	CAcModuleResourceOverride resOverride;
 	COptimalSortDlg dlg;
 	dlg.Init(pDwgInfo);
+	if (g_xUbomModel.m_sJGPrintSheetName.GetLength() > 0 &&
+		g_xUbomModel.m_xJgPrintCfg.m_sColIndexArr.GetLength() > 0&&
+		AfxMessageBox("是否导入角钢打印清单？", MB_YESNO) == IDYES)
+	{
+		CFileDialog file_dlg(TRUE, "xls", "角钢打印清单.xls",
+			OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ALLOWMULTISELECT,
+			"BOM文件|*.xls;*.xlsx|Excel(*.xls)|*.xls|Excel(*.xlsx)|*.xlsx|所有文件(*.*)|*.*||");
+		if (file_dlg.DoModal() == IDOK)
+		{
+			POSITION pos = file_dlg.GetStartPosition();
+			CString sFilePath = file_dlg.GetNextPathName(pos);
+			dlg.InitPrintBom(sFilePath);
+		}
+	}
 	if (dlg.DoModal() == IDOK)
 	{
 		CBatchPrint batchPrint(&dlg.m_xPrintScopyList,TRUE,dlg.m_iPrintType);
 		batchPrint.Print();
 	}
-	/*
-	{	//判断打印机是否合理
-		AcApLayoutManager *pLayMan = NULL;
-		pLayMan = (AcApLayoutManager *)acdbHostApplicationServices()->layoutManager();
-		AcDbLayout *pLayout = pLayMan->findLayoutNamed(pLayMan->findActiveLayout(TRUE), TRUE);
-		if (pLayout == NULL)
-			return;
-		pLayout->close();
-		AcDbPlotSettings* pPlotSetting = (AcDbPlotSettings*)pLayout;
-		CXhChar500 sPlotCfgName;
-		Acad::ErrorStatus retCode;
-#ifdef _ARX_2007
-		const ACHAR* sValue;
-		retCode = pPlotSetting->getPlotCfgName(sValue);
-		sPlotCfgName.Copy((char*)_bstr_t(sValue));
-#else
-		char *sValue;
-		retCode = pPlotSetting->getPlotCfgName(sValue);
-		sPlotCfgName.Copy(sValue);
-#endif
-		if (retCode != Acad::eOk || stricmp(sPlotCfgName, "无") == 0)
-		{//获取输出设备名称
-#ifdef _ARX_2007
-			acutPrintf(L"\n当前激活打印设备不可用,请优先进行页面设置!\n");
-#else
-			acutPrintf("\n当前激活打印设备不可用,请优先进行页面设置!\n");
-#endif
-			return;
-		}
-		//进行批量打印
-		BOOL bSendCmd = TRUE;
-		for (SCOPE_STRU* pScopy = dlg.m_xPrintScopyList.GetFirst(); pScopy; pScopy = dlg.m_xPrintScopyList.GetNext())
-		{
-			ads_point L_T, R_B;
-			L_T[0] = pScopy->fMinX;
-			L_T[1] = pScopy->fMaxY;
-			L_T[2] = 0;
-			R_B[0] = pScopy->fMaxX;
-			R_B[1] = pScopy->fMinY;
-			R_B[2] = 0;
-#ifdef _ARX_2007
-			acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-			acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, L"",							//布局名
-				RTSTR, L"",							//输出设备的名称
-				RTSTR, L"",							//图纸尺寸:<A4>
-				RTSTR, L"",							//图纸单位:<毫米>
-				RTSTR, L"",							//图形方向:<横向|纵向>
-				RTSTR, L"",							//是否反向打印
-				RTSTR, L"w",							//打印区域:<指定窗口>
-				RTPOINT, L_T, RTPOINT, R_B,			//左上角、右下角
-				RTSTR, L"",							//打印比例:<布满>
-				RTSTR, L"",							//打印偏移：<居中>
-				RTSTR, L"",							//是否按样式打印
-				RTSTR, L"",							//打印样式名称
-				RTSTR, L"",							//打印线宽
-				RTSTR, L"",							//着色打印设置
-				RTSTR, L"",							//打印到文件
-				RTSTR, L"",							//是否保存页面设置更改
-				RTSTR, L"",							//是否继续打印
-				RTNONE);
-#else
-			if (bSendCmd)
-			{
-				SendCommandToCad("CMDECHO 0\n");		//设置命令行是否产生回显
-				CXhChar500 sCmd("-plot y\n\n\n\n\n\n w %s %s\n\n\n\n\n\n\n\n\n\n", (char*)CXhChar16("%.1f,%.1f", L_T[0], L_T[1]), (char*)CXhChar16("%.1f,%.1f", R_B[0], R_B[1]));
-				SendCommandToCad(sCmd);
-			}
-			else
-			{
-				acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-				acedCommand(RTSTR, "-plot", RTSTR, "y",	//是否需要详细打印配置[是(Y)/否(N)]
-					RTSTR, "",							//布局名
-					RTSTR, "",							//输出设备的名称
-					RTSTR, "",							//图纸尺寸:<A4>
-					RTSTR, "",							//图纸单位:<毫米>
-					RTSTR, "",							//图形方向:<横向|纵向>
-					RTSTR, "",							//是否反向打印
-					RTSTR, "w",							//打印区域:<指定窗口>
-					RTPOINT, L_T, RTPOINT, R_B,			//左上角、右下角
-					RTSTR, "",							//打印比例:<布满>
-					RTSTR, "",							//打印偏移：<居中>
-					RTSTR, "",							//是否按样式打印
-					RTSTR, "",							//打印样式名称
-					RTSTR, "",							//打印线宽
-					RTSTR, "",							//着色打印设置
-					RTSTR, "",							//打印到文件
-					RTSTR, "",							//是否保存页面设置更改
-					RTSTR, "",							//是否继续打印
-					RTNONE);
-			}
-#endif
-		}
-	}
-	*/
 }
 #endif

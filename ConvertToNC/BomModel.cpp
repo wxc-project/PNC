@@ -1798,6 +1798,23 @@ void CBomModel::InitBomTblCfg()
 					m_xErpTblCfg.m_nStartRow = atoi(skey);
 			}
 		}
+		else if (_stricmp(key_word, "JG_BOM") == 0)
+		{
+			skey = strtok(NULL, ";");
+			if (skey != NULL && strlen(skey) > 0)
+			{
+				m_xJgPrintCfg.m_sColIndexArr.Copy(skey);
+				m_xJgPrintCfg.m_sColIndexArr.Replace(" ", "");
+				//读取列数
+				skey = strtok(NULL, ";");
+				if (skey != NULL)
+					m_xJgPrintCfg.m_nColCount = atoi(skey);
+				//内容起始行
+				skey = strtok(NULL, ";");
+				if (skey != NULL)
+					m_xJgPrintCfg.m_nStartRow = atoi(skey);
+			}
+		}
 		else if (_stricmp(key_word, "ExeRppWhenArxLoad") == 0)
 		{
 			skey = strtok(NULL, "=,;");
@@ -1838,6 +1855,15 @@ void CBomModel::InitBomTblCfg()
 			{
 				m_sERPBomSheetName.Copy(skey);
 				m_sERPBomSheetName.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "JGPrintSheetName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sJGPrintSheetName.Copy(skey);
+				m_sJGPrintSheetName.Remove(' ');
 			}
 		}
 		else if (_stricmp(key_word, "ANGLE_ITEM") == 0)

@@ -242,7 +242,7 @@ public:
 	};
 	vector<BOM_TITLE> m_xBomTitleArr;
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
-	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg;
+	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg, m_xJgPrintCfg;
 	CXhChar500 m_sAngleCompareItemArr;	//角钢校审项
 	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
 	CHashStrList<BOOL> hashCompareItemOfAngle;
@@ -287,6 +287,7 @@ public:
 	CXhChar200 m_sERPBomFileKeyStr;
 	CXhChar200 m_sTMABomSheetName;	//支持指定导入的Excel文件中的Sheet名称 wht 20-04-29
 	CXhChar200 m_sERPBomSheetName;
+	CXhChar200 m_sJGPrintSheetName;	//
 	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };

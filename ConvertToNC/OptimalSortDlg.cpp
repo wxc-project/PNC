@@ -8,11 +8,26 @@
 #include "ComparePartNoString.h"
 #include "ParseAdaptNo.h"
 #include "BatchPrint.h"
+#include "ExcelOper.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 
 typedef CAngleProcessInfo* AngleInfoPtr;
 typedef BOMPART* PART_PTR;
+static CXhChar100 VariantToString(VARIANT value)
+{
+	CXhChar100 sValue;
+	if (value.vt == VT_BSTR)
+		return sValue.Copy(CString(value.bstrVal));
+	else if (value.vt == VT_R8)
+		return sValue.Copy(CXhChar100(value.dblVal));
+	else if (value.vt == VT_R4)
+		return sValue.Copy(CXhChar100(value.fltVal));
+	else if (value.vt == VT_INT)
+		return sValue.Copy(CXhChar100(value.intVal));
+	else
+		return sValue;
+}
 static int CompareBomPartPtrFunc(const PART_PTR& partPtr1, const PART_PTR& partPtr2, BOOL bAscending)
 {
 	int nRetCode = 0;
@@ -417,11 +432,42 @@ static bool IsCommonAngle(CAngleProcessInfo *pJgInfo)
 
 void COptimalSortDlg::UpdatePartList()
 {
+	CLogErrorLife logErrLife;
 	m_xJgList.Empty();
 	m_xPlateList.Empty();
 	m_nRecord=0;
 	if (m_pDwgFile == NULL)
 		return;
+	int nToPrintBom = m_hashPrintBom.GetNodeNum();
+	if (nToPrintBom > 0)
+	{	//用户提供了打印清单，不需要进行排序
+		for(BOMPART* pBom=m_hashPrintBom.GetFirst();pBom;pBom=m_hashPrintBom.GetNext())
+		{
+			if (pBom->cPartType == BOMPART::ANGLE)
+			{
+				CAngleProcessInfo* pJgInfo = m_pDwgFile->FindAngleByPartNo(pBom->sPartNo);
+				if (pJgInfo)
+				{
+					m_nRecord++;
+					m_xJgList.append(pJgInfo);
+				}
+				else
+					logerr.Log("没有找到件号为{%s}的角钢", (char*)pBom->sPartNo);
+			}
+			else if (pBom->cPartType == BOMPART::PLATE)
+			{
+				CPlateProcessInfo* pPlateInfo = m_pDwgFile->FindPlateByPartNo(pBom->sPartNo);
+				if (pPlateInfo)
+				{
+					m_nRecord++;
+					m_xPlateList.append(pPlateInfo);
+				}
+				else
+					logerr.Log("没有找到件号为{%s}的钢板", (char*)pBom->sPartNo);
+			}
+		}
+		return;
+	}
 	for(CAngleProcessInfo* pJgInfo= m_pDwgFile->EnumFirstJg();pJgInfo;pJgInfo= m_pDwgFile->EnumNextJg())
 	{
 		if(!m_bSelJg && pJgInfo->m_ciType==CAngleProcessInfo::TYPE_JG)
@@ -662,5 +708,111 @@ void COptimalSortDlg::Init(CDwgFileInfo *pDwgFile)
 				m_nQ460Count++;
 		}
 	}
+}
+void COptimalSortDlg::InitPrintBom(const char* sFileName)
+{
+	m_xPrintScopyList.Empty();
+	CExcelOperObject excelobj;
+	if (!excelobj.OpenExcelFile(sFileName))
+		return;
+	//获取定制列信息
+	CHashStrList<DWORD> hashColIndexByColTitle;
+	g_xUbomModel.m_xJgPrintCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
+	int iStartRow = g_xUbomModel.m_xJgPrintCfg.m_nStartRow - 1;
+	//解析数据
+	int nSheetNum = excelobj.GetWorkSheetCount();
+	int nValidSheetCount = 0, iValidSheet = (nSheetNum == 1) ? 1 : 0;
+	BOOL bRetCode = FALSE;
+	int iCfgSheetIndex = 0;
+	if (g_xUbomModel.m_sJGPrintSheetName.GetLength() > 0)	
+	{	//根据配置文件中指定的sheet加载表单
+		iCfgSheetIndex = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sJGPrintSheetName);
+		if (iCfgSheetIndex > 0)
+			iValidSheet = iCfgSheetIndex;
+	}
+	if (iValidSheet > 0)
+	{	//优先读取指定sheet
+		CVariant2dArray sheetContentMap(1, 1);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet);
+		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
+			nValidSheetCount++;
+	}
+	if (nValidSheetCount == 0)
+		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
+}
+//解析BOMSHEET内容
+BOOL COptimalSortDlg::ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow)
+{
+	if (sheetContentMap.RowsCount() < 1)
+		return FALSE;
+	CLogErrorLife logLife;
+	CStringArray repeatPartLabelArr;
+	int nRowCount = sheetContentMap.RowsCount();
+	for (int i = iStartRow; i <= nRowCount; i++)
+	{
+		VARIANT value;
+		//件号
+		DWORD *pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_PART_NO);
+		sheetContentMap.GetValueAt(i, *pColIndex, value);
+		if (value.vt == VT_EMPTY)
+			continue;
+		CXhChar100 sPartNo = VariantToString(value);
+		if (sPartNo.GetLength() < 2 || strstr(sPartNo, "编号"))
+			continue;
+		//材质
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_METERIAL);
+		sheetContentMap.GetValueAt(i, *pColIndex, value);
+		CXhChar100 sMaterial = VariantToString(value);
+		//规格
+		int cls_id = 0;
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_SPEC);
+		sheetContentMap.GetValueAt(i, *pColIndex, value);
+		CXhChar100 sSpec = VariantToString(value);
+		if (strstr(sSpec, "L") || strstr(sSpec, "∠"))
+		{
+			cls_id = BOMPART::ANGLE;
+			if (strstr(sSpec, "∠"))
+				sSpec.Replace("∠", "L");
+			if (strstr(sSpec, "×"))
+				sSpec.Replace("×", "*");
+			if (strstr(sSpec, "x"))
+				sSpec.Replace("x", "*");
+			if (strstr(sSpec, "X"))
+				sSpec.Replace("X", "*");
+		}
+		else if (strstr(sSpec, "-"))
+		{
+			cls_id = BOMPART::PLATE;
+			if (strstr(sSpec, "x") || strstr(sSpec, "X"))
+			{
+				char *skey = strtok((char*)sSpec, "x,X");
+				sSpec.Copy(skey);
+			}
+		}
+		else //if(strstr(sSpec,"φ"))
+			cls_id = BOMPART::TUBE;
+		//长度
+		float fLength = 0;
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_LEN);
+		if (pColIndex)
+		{
+			sheetContentMap.GetValueAt(i, *pColIndex, value);
+			fLength = (float)atof(VariantToString(value));
+		}
+		if (sMaterial.GetLength() <= 0 && sSpec.GetLength() <= 0)
+			continue;	//异常数据
+		BOMPART* pBomPart = pBomPart = m_hashPrintBom.GetValue(sPartNo);
+		if (pBomPart == NULL)
+		{
+			pBomPart = m_hashPrintBom.Add(sPartNo);
+			pBomPart->cPartType = cls_id;
+			pBomPart->sPartNo.Copy(sPartNo);
+			pBomPart->sSpec.Copy(sSpec);
+			pBomPart->sMaterial = sMaterial;
+			pBomPart->cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
+			pBomPart->length = fLength;
+		}
+	}
+	return TRUE;
 }
 #endif

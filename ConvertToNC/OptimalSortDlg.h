@@ -20,6 +20,11 @@ class COptimalSortDlg : public CDialog
 	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle;
 	int m_iPrintType;
 public:
+	//用户提供的打印料单
+	CHashStrList<BOMPART> m_hashPrintBom;
+	//
+	void InitPrintBom(const char* sFileName);
+	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
 public:
 	COptimalSortDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COptimalSortDlg();
@@ -64,9 +69,7 @@ protected:
 	afx_msg void OnEnChangeEWidth();
 	afx_msg void OnEnChangeEThick();
 	afx_msg void OnBnClickedBtnJgCard();
-public:
 	afx_msg void OnBnClickedOk();
-	
 	afx_msg void OnBnClickedBtnPdf();
 	afx_msg void OnBnClickedBtnPng();
 };
