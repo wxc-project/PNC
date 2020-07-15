@@ -270,9 +270,6 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\ExcelOper.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
-      <Filter>XhLicAgent\Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\nettime.cpp">
       <Filter>XhLicAgent\Source Files</Filter>
     </ClCompile>
@@ -359,6 +356,9 @@
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp">
       <Filter>TowerCad</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
+      <Filter>ToolCode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -486,9 +486,6 @@
       <Filter>XhLicAgent\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\LicBuffer.h">
-      <Filter>XhLicAgent\Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H">
       <Filter>XhLicAgent\Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ProductFeature.h">
@@ -649,6 +646,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h">
       <Filter>TowerCad</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H">
+      <Filter>ToolCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
