@@ -316,7 +316,7 @@ BOOL COptimalSortDlg::OnInitDialog()
 	m_xListCtrl.AddColumnHeader("件号",65);
 	m_xListCtrl.AddColumnHeader("加工数",60);
 	m_xListCtrl.InitListCtrl(NULL,FALSE);
-	m_xListCtrl.EnableSortItems(true);
+	m_xListCtrl.EnableSortItems(m_hashPrintBom.GetNodeNum() <= 0);
 	m_xListCtrl.SetItemChangedFunc(FireItemChanged);
 	m_xListCtrl.SetCompareItemFunc(FireCompareItem);
 	//初始化控件状态
@@ -416,25 +416,19 @@ bool COptimalSortDlg::IsFillTheFilter(CAngleProcessInfo* pJgInfo)
 		return false;
 	if (!m_bSelQ460 && pJgInfo->m_xAngle.cMaterial == 'T')
 		return false;
-	if (!m_bCutAngle && pJgInfo->m_xAngle.bCutAngle)
-		return false;
-	if (!m_bCutBer && pJgInfo->m_xAngle.bCutBer)
-		return false;
-	if (!m_bCutRoot && pJgInfo->m_xAngle.bCutRoot)
-		return false;
-	if (!m_bKaiHe && (pJgInfo->m_xAngle.bKaiJiao || pJgInfo->m_xAngle.bHeJiao))
-		return false;
-	if (!m_bPushFlat && pJgInfo->m_xAngle.nPushFlat > 0)
-		return false;
-	if (!m_bBend && pJgInfo->m_xAngle.GetHuoquLineCount() > 0)
-		return false;
-	if (!m_bCommonAngle && IsCommonAngle(pJgInfo))
-		return false;
 	if (m_thickHashTbl.GetNodeNum() > 0 && m_thickHashTbl.GetValue((int)pJgInfo->m_xAngle.thick) == NULL)
 		return false;
 	if (m_widthHashTbl.GetNodeNum() > 0 && m_widthHashTbl.GetValue((int)pJgInfo->m_xAngle.wide) == NULL)
 		return false;
-	return true;
+	if ((m_bCutAngle && pJgInfo->m_xAngle.bCutAngle) ||
+		(m_bCutBer && pJgInfo->m_xAngle.bCutBer) ||
+		(m_bCutRoot && pJgInfo->m_xAngle.bCutRoot) ||
+		(m_bKaiHe && (pJgInfo->m_xAngle.bKaiJiao || pJgInfo->m_xAngle.bHeJiao)) ||
+		(m_bPushFlat && pJgInfo->m_xAngle.nPushFlat > 0) ||
+		(m_bBend && pJgInfo->m_xAngle.GetHuoquLineCount() > 0)||
+		(m_bCommonAngle && IsCommonAngle(pJgInfo)))
+		return true;
+	return false;
 }
 bool COptimalSortDlg::IsFillTheFilter(CPlateProcessInfo* pPlateInfo)
 {
@@ -745,12 +739,12 @@ void COptimalSortDlg::InitCtrlState()
 	m_bBend = m_nBend > 0;
 	m_bCommonAngle = m_nCommonAngle > 0;
 }
-void COptimalSortDlg::InitPrintBom(const char* sFileName)
+bool COptimalSortDlg::InitPrintBom(const char* sFileName)
 {
 	m_xPrintScopyList.Empty();
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(sFileName))
-		return;
+		return false;
 	//获取定制列信息
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	g_xUbomModel.m_xJgPrintCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
@@ -769,12 +763,13 @@ void COptimalSortDlg::InitPrintBom(const char* sFileName)
 	if (iValidSheet > 0)
 	{	//优先读取指定sheet
 		CVariant2dArray sheetContentMap(1, 1);
-		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 100);
 		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
 			nValidSheetCount++;
 	}
 	if (nValidSheetCount == 0)
-		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
+		return false;
+	return true;
 }
 //解析BOMSHEET内容
 BOOL COptimalSortDlg::ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow)

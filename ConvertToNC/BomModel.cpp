@@ -492,7 +492,7 @@ BOOL CBomFile::ImportTmaExcelFile()
 	if (iValidSheet > 0)
 	{	//优先读取指定sheet
 		CVariant2dArray sheetContentMap(1, 1);
-		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 52);
 		if (ParseSheetContent(sheetContentMap,hashColIndexByColTitle,iStartRow))
 		{
 			nValidSheetCount++;
@@ -504,7 +504,7 @@ BOOL CBomFile::ImportTmaExcelFile()
 		for (int iSheet = 1; iSheet <= nSheetNum; iSheet++)
 		{	//2、解析数据
 			CVariant2dArray sheetContentMap(1, 1);
-			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet);
+			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet, 52);
 			if (ParseSheetContent(sheetContentMap,hashColIndexByColTitle,iStartRow))
 				nValidSheetCount++;
 		}
@@ -659,7 +659,7 @@ BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox 
 		CHashStrList<DWORD> hashColIndex;
 		g_xUbomModel.m_xTmaTblCfg.GetHashColIndexByColTitleTbl(hashColIndex);
 		CVariant2dArray sheetContentMap(1, 1);
-		if (!CExcelOper::GetExcelContentOfSpecifySheet(sFilePath, sheetContentMap, 1))
+		if (!CExcelOper::GetExcelContentOfSpecifySheet(sFilePath, sheetContentMap, 1, 52))
 			return FALSE;
 		BOOL bValid = FALSE;
 		for (int iCol = 0; iCol < CBomTblTitleCfg::T_COL_COUNT; iCol++)
@@ -726,7 +726,7 @@ BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox 
 		CHashStrList<DWORD> hashColIndex;
 		g_xUbomModel.m_xErpTblCfg.GetHashColIndexByColTitleTbl(hashColIndex);
 		CVariant2dArray sheetContentMap(1, 1);
-		if (!CExcelOper::GetExcelContentOfSpecifySheet(sFilePath, sheetContentMap, 1))
+		if (!CExcelOper::GetExcelContentOfSpecifySheet(sFilePath, sheetContentMap, 1, 52))
 			return FALSE;
 		BOOL bValid = FALSE;
 		for (int iCol = 0; iCol < CBomTblTitleCfg::T_COL_COUNT; iCol++)

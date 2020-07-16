@@ -1502,7 +1502,11 @@ void CRevisionDlg::OnBatchPrintPart()
 		{
 			POSITION pos = file_dlg.GetStartPosition();
 			CString sFilePath = file_dlg.GetNextPathName(pos);
-			dlg.InitPrintBom(sFilePath);
+			if (dlg.InitPrintBom(sFilePath) == false)
+			{
+				AfxMessageBox("打印清单读取失败，请重新确认配置是否正确!");
+				return;
+			}
 		}
 	}
 	if (dlg.DoModal() == IDOK)

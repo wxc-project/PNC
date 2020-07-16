@@ -35,7 +35,7 @@ public:
 	void UpdatePartList();
 	void RefeshListCtrl();
 	void InitCtrlState();
-	void InitPrintBom(const char* sFileName);
+	bool InitPrintBom(const char* sFileName);
 // 对话框数据
 	enum { IDD = IDD_OPTIMAL_SORT_DLG };
 	CSuperGridCtrl m_xListCtrl;
