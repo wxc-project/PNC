@@ -1490,7 +1490,7 @@ void CRevisionDlg::OnBatchPrintPart()
 		return;
 	CAcModuleResourceOverride resOverride;
 	COptimalSortDlg dlg;
-	dlg.Init(pDwgInfo);
+	dlg.SetDwgFile(pDwgInfo);
 	if (g_xUbomModel.m_sJGPrintSheetName.GetLength() > 0 &&
 		g_xUbomModel.m_xJgPrintCfg.m_sColIndexArr.GetLength() > 0&&
 		AfxMessageBox("是否导入角钢打印清单？", MB_YESNO) == IDYES)
