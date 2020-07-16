@@ -68,7 +68,7 @@ void CPlateProcessInfo::CheckProfileEdge()
 			f3dArcLine arcLine;
 			if (!g_pncSysPara.RecogArcEdge(pEnt, arcLine, ciEdgeType))
 				continue;
-			if ((arcLine.SectorAngle()-2*Pi)<EPS2)
+			if (fabs(arcLine.SectorAngle()-2*Pi)<EPS2)
 			{	//完整的椭圆，判断是否为法兰内圆
 				if (cir_plate_para.m_bCirclePlate && pRelaObj->pos.IsEqual(cir_plate_para.cir_center))
 				{
