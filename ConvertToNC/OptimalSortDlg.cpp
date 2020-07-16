@@ -319,51 +319,8 @@ BOOL COptimalSortDlg::OnInitDialog()
 	m_xListCtrl.EnableSortItems(true);
 	m_xListCtrl.SetItemChangedFunc(FireItemChanged);
 	m_xListCtrl.SetCompareItemFunc(FireCompareItem);
-	//
-	GetDlgItem(IDC_CHE_JG)->EnableWindow(m_nJgCount > 0);
-	GetDlgItem(IDC_CHE_PLATE)->EnableWindow(m_nPlateCount > 0);
-	GetDlgItem(IDC_CHE_TUBE)->EnableWindow(m_nTubeCount > 0);
-	GetDlgItem(IDC_CHE_YG)->EnableWindow(m_nYGCount > 0);
-	GetDlgItem(IDC_CHE_JIG)->EnableWindow(m_nJiaCount > 0);
-	GetDlgItem(IDC_CHE_FLAT)->EnableWindow(m_nFlatCount > 0);
-	GetDlgItem(IDC_CHE_GGS)->EnableWindow(m_nGgsCount > 0);
-	//
-	GetDlgItem(IDC_CHE_Q235)->EnableWindow(m_nQ235Count > 0);
-	GetDlgItem(IDC_CHE_Q345)->EnableWindow(m_nQ345Count > 0);
-	GetDlgItem(IDC_CHE_Q355)->EnableWindow(m_nQ355Count > 0);
-	GetDlgItem(IDC_CHE_Q390)->EnableWindow(m_nQ390Count > 0);
-	GetDlgItem(IDC_CHE_Q420)->EnableWindow(m_nQ420Count > 0);
-	GetDlgItem(IDC_CHE_Q460)->EnableWindow(m_nQ460Count > 0);
-
-	GetDlgItem(IDC_CHE_CUT_ANGLE)->EnableWindow(m_nCutAngle > 0);
-	GetDlgItem(IDC_CHE_KAIHE)->EnableWindow(m_nKaiHe > 0);
-	GetDlgItem(IDC_CHE_PUSH_FLAT)->EnableWindow(m_nPushFlat > 0);
-	GetDlgItem(IDC_CHE_CUT_ROOT)->EnableWindow(m_nCutRoot > 0);
-	GetDlgItem(IDC_CHE_CUT_BER)->EnableWindow(m_nCutBer > 0);
-	GetDlgItem(IDC_CHE_BEND)->EnableWindow(m_nBend > 0);
-	GetDlgItem(IDC_CHE_COMMON_ANGLE)->EnableWindow(m_bCommonAngle > 0);
-
-
-	m_bSelJg = m_nJgCount > 0;
-	m_bSelPlate = m_nPlateCount > 0;
-	m_bSelYg = m_nYGCount > 0;
-	m_bSelTube = m_nTubeCount > 0;
-	m_bSelFlat = m_nFlatCount > 0;
-	m_bSelJig = m_nJiaCount > 0;
-	m_bSelGgs = m_nGgsCount > 0;
-	m_bSelQ235 = m_nQ235Count > 0;
-	m_bSelQ345 = m_nQ345Count > 0;
-	m_bSelQ355 = m_nQ355Count > 0;
-	m_bSelQ390 = m_nQ390Count > 0;
-	m_bSelQ420 = m_nQ420Count > 0;
-	m_bSelQ460 = m_nQ460Count > 0;
-	m_bCutAngle = m_nCutAngle > 0;
-	m_bKaiHe = m_nKaiHe > 0;
-	m_bPushFlat = m_nPushFlat > 0;
-	m_bCutRoot = m_nCutRoot > 0;
-	m_bCutBer = m_nCutBer > 0;
-	m_bBend = m_nBend > 0;
-	m_bCommonAngle = m_nCommonAngle > 0;
+	//初始化控件状态
+	InitCtrlState();
 	//初始化列表框
 	UpdatePartList();
 	RefeshListCtrl();
@@ -429,7 +386,78 @@ static bool IsCommonAngle(CAngleProcessInfo *pJgInfo)
 	else
 		return true;
 }
-
+bool COptimalSortDlg::IsFillTheFilter(CAngleProcessInfo* pJgInfo)
+{
+	if (pJgInfo == NULL)
+		return false;
+	if (!m_bSelJg && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JG)
+		return false;
+	if (!m_bSelPlate && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_PLATE)
+		return false;
+	if (!m_bSelYg && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_YG)
+		return false;
+	if (!m_bSelTube && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_TUBE)
+		return false;
+	if (!m_bSelFlat&&pJgInfo->m_ciType == CAngleProcessInfo::TYPE_FLAT)
+		return false;
+	if (!m_bSelJig&&pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JIG)
+		return false;
+	if (!m_bSelGgs&&pJgInfo->m_ciType == CAngleProcessInfo::TYPE_GGS)
+		return false;
+	if (!m_bSelQ235 && pJgInfo->m_xAngle.cMaterial == 'S')
+		return false;
+	if (!m_bSelQ345 && pJgInfo->m_xAngle.cMaterial == 'H')
+		return false;
+	if (!m_bSelQ355 && pJgInfo->m_xAngle.cMaterial == 'h')
+		return false;
+	if (!m_bSelQ390 && pJgInfo->m_xAngle.cMaterial == 'G')
+		return false;
+	if (!m_bSelQ420 && pJgInfo->m_xAngle.cMaterial == 'P')
+		return false;
+	if (!m_bSelQ460 && pJgInfo->m_xAngle.cMaterial == 'T')
+		return false;
+	if (!m_bCutAngle && pJgInfo->m_xAngle.bCutAngle)
+		return false;
+	if (!m_bCutBer && pJgInfo->m_xAngle.bCutBer)
+		return false;
+	if (!m_bCutRoot && pJgInfo->m_xAngle.bCutRoot)
+		return false;
+	if (!m_bKaiHe && (pJgInfo->m_xAngle.bKaiJiao || pJgInfo->m_xAngle.bHeJiao))
+		return false;
+	if (!m_bPushFlat && pJgInfo->m_xAngle.nPushFlat > 0)
+		return false;
+	if (!m_bBend && pJgInfo->m_xAngle.GetHuoquLineCount() > 0)
+		return false;
+	if (!m_bCommonAngle && IsCommonAngle(pJgInfo))
+		return false;
+	if (m_thickHashTbl.GetNodeNum() > 0 && m_thickHashTbl.GetValue((int)pJgInfo->m_xAngle.thick) == NULL)
+		return false;
+	if (m_widthHashTbl.GetNodeNum() > 0 && m_widthHashTbl.GetValue((int)pJgInfo->m_xAngle.wide) == NULL)
+		return false;
+	return true;
+}
+bool COptimalSortDlg::IsFillTheFilter(CPlateProcessInfo* pPlateInfo)
+{
+	if (pPlateInfo == NULL || !m_bSelPlate)
+		return false;
+	if (!m_bSelQ235 && pPlateInfo->xBomPlate.cMaterial == 'S')
+		return false;
+	if (!m_bSelQ345 && pPlateInfo->xBomPlate.cMaterial == 'H')
+		return false;
+	if (!m_bSelQ355 && pPlateInfo->xBomPlate.cMaterial == 'h')
+		return false;
+	if (!m_bSelQ390 && pPlateInfo->xBomPlate.cMaterial == 'G')
+		return false;
+	if (!m_bSelQ420 && pPlateInfo->xBomPlate.cMaterial == 'P')
+		return false;
+	if (!m_bSelQ460 && pPlateInfo->xBomPlate.cMaterial == 'T')
+		return false;
+	if (!m_bBend && pPlateInfo->xBomPlate.GetHuoquLineCount() > 0)
+		return false;
+	if (m_thickHashTbl.GetNodeNum() > 0 && m_thickHashTbl.GetValue((int)pPlateInfo->xBomPlate.thick) == NULL)
+		return false;
+	return true;
+}
 void COptimalSortDlg::UpdatePartList()
 {
 	CLogErrorLife logErrLife;
@@ -438,115 +466,56 @@ void COptimalSortDlg::UpdatePartList()
 	m_nRecord=0;
 	if (m_pDwgFile == NULL)
 		return;
-	int nToPrintBom = m_hashPrintBom.GetNodeNum();
-	if (nToPrintBom > 0)
+	if (m_hashPrintBom.GetNodeNum() > 0)
 	{	//用户提供了打印清单，不需要进行排序
 		for(BOMPART* pBom=m_hashPrintBom.GetFirst();pBom;pBom=m_hashPrintBom.GetNext())
 		{
 			if (pBom->cPartType == BOMPART::ANGLE)
 			{
 				CAngleProcessInfo* pJgInfo = m_pDwgFile->FindAngleByPartNo(pBom->sPartNo);
-				if (pJgInfo)
+				if (IsFillTheFilter(pJgInfo))
 				{
 					m_nRecord++;
 					m_xJgList.append(pJgInfo);
 				}
-				else
-					logerr.Log("没有找到件号为{%s}的角钢", (char*)pBom->sPartNo);
 			}
 			else if (pBom->cPartType == BOMPART::PLATE)
 			{
 				CPlateProcessInfo* pPlateInfo = m_pDwgFile->FindPlateByPartNo(pBom->sPartNo);
-				if (pPlateInfo)
+				if (IsFillTheFilter(pPlateInfo))
 				{
 					m_nRecord++;
 					m_xPlateList.append(pPlateInfo);
 				}
-				else
-					logerr.Log("没有找到件号为{%s}的钢板", (char*)pBom->sPartNo);
 			}
 		}
-		return;
 	}
-	for(CAngleProcessInfo* pJgInfo= m_pDwgFile->EnumFirstJg();pJgInfo;pJgInfo= m_pDwgFile->EnumNextJg())
+	else
 	{
-		if(!m_bSelJg && pJgInfo->m_ciType==CAngleProcessInfo::TYPE_JG)
-			continue;
-		if(!m_bSelPlate && pJgInfo->m_ciType==CAngleProcessInfo::TYPE_PLATE)
-			continue;
-		if(!m_bSelYg && pJgInfo->m_ciType==CAngleProcessInfo::TYPE_YG)
-			continue;
-		if(!m_bSelTube && pJgInfo->m_ciType==CAngleProcessInfo::TYPE_TUBE)
-			continue;
-		if(!m_bSelFlat&&pJgInfo->m_ciType==CAngleProcessInfo::TYPE_FLAT)
-			continue;
-		if(!m_bSelJig&&pJgInfo->m_ciType==CAngleProcessInfo::TYPE_JIG)
-			continue;
-		if(!m_bSelGgs&&pJgInfo->m_ciType==CAngleProcessInfo::TYPE_GGS)
-			continue;
-		if(!m_bSelQ235 && pJgInfo->m_xAngle.cMaterial=='S')
-			continue;
-		if(!m_bSelQ345 && pJgInfo->m_xAngle.cMaterial=='H')
-			continue;
-		if(!m_bSelQ355 && pJgInfo->m_xAngle.cMaterial=='h')
-			continue;
-		if(!m_bSelQ390 && pJgInfo->m_xAngle.cMaterial=='G')
-			continue;
-		if(!m_bSelQ420 && pJgInfo->m_xAngle.cMaterial=='P')
-			continue;
-		if(!m_bSelQ460 && pJgInfo->m_xAngle.cMaterial=='T')
-			continue;
-		if (!m_bCutAngle && pJgInfo->m_xAngle.bCutAngle)
-			continue;
-		if (!m_bCutBer && pJgInfo->m_xAngle.bCutBer)
-			continue;
-		if (!m_bCutRoot && pJgInfo->m_xAngle.bCutRoot)
-			continue;
-		if (!m_bKaiHe && (pJgInfo->m_xAngle.bKaiJiao||pJgInfo->m_xAngle.bHeJiao))
-			continue;
-		if (!m_bPushFlat && pJgInfo->m_xAngle.nPushFlat>0)
-			continue;
-		if (!m_bBend && pJgInfo->m_xAngle.GetHuoquLineCount()>0)
-			continue;
-		if (!m_bCommonAngle && IsCommonAngle(pJgInfo))
-			continue;
-		if(m_thickHashTbl.GetNodeNum()>0&&m_thickHashTbl.GetValue((int)pJgInfo->m_xAngle.thick)==NULL)
-			continue;
-		if(m_widthHashTbl.GetNodeNum()>0&&m_widthHashTbl.GetValue((int)pJgInfo->m_xAngle.wide)==NULL)
-			continue;
-		m_nRecord++;
-		m_xJgList.append(pJgInfo);
-	}
-	//按照材料名称-材质-规格的顺序进行排序
-	if(m_xJgList.GetSize()>0)
-		CQuickSort<CAngleProcessInfo*>::QuickSort(m_xJgList.m_pData,m_xJgList.GetSize(),CompareJgPtrFun);
-	//
-	if (m_bSelPlate)
-	{
+		for (CAngleProcessInfo* pJgInfo = m_pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = m_pDwgFile->EnumNextJg())
+		{
+			if (IsFillTheFilter(pJgInfo))
+			{
+				m_nRecord++;
+				m_xJgList.append(pJgInfo);
+			}
+		}
+		//按照材料名称-材质-规格的顺序进行排序
+		if (m_xJgList.GetSize() > 0)
+			CQuickSort<CAngleProcessInfo*>::QuickSort(m_xJgList.m_pData, m_xJgList.GetSize(), CompareJgPtrFun);
+		//
 		for (CPlateProcessInfo* pPlateInfo = m_pDwgFile->EnumFirstPlate(); pPlateInfo; pPlateInfo = m_pDwgFile->EnumNextPlate())
 		{
-			if (!m_bSelQ235 && pPlateInfo->xBomPlate.cMaterial == 'S')
-				continue;
-			if (!m_bSelQ345 && pPlateInfo->xBomPlate.cMaterial == 'H')
-				continue;
-			if (!m_bSelQ355 && pPlateInfo->xBomPlate.cMaterial == 'h')
-				continue;
-			if (!m_bSelQ390 && pPlateInfo->xBomPlate.cMaterial == 'G')
-				continue;
-			if (!m_bSelQ420 && pPlateInfo->xBomPlate.cMaterial == 'P')
-				continue;
-			if (!m_bSelQ460 && pPlateInfo->xBomPlate.cMaterial == 'T')
-				continue;
-			if (!m_bBend && pPlateInfo->xBomPlate.GetHuoquLineCount() > 0)
-				continue;
-			if (m_thickHashTbl.GetNodeNum() > 0 && m_thickHashTbl.GetValue((int)pPlateInfo->xBomPlate.thick) == NULL)
-				continue;
-			m_nRecord++;
-			m_xPlateList.append(pPlateInfo);
+			if (IsFillTheFilter(pJgInfo))
+			{
+				m_nRecord++;
+				m_xPlateList.append(pPlateInfo);
+			}
 		}
 		//按照材料名称-材质-规格的顺序进行排序
 		if (m_xPlateList.GetSize() > 0)
 			CQuickSort<CPlateProcessInfo*>::QuickSort(m_xPlateList.m_pData, m_xPlateList.GetSize(), ComparePlatePtrFun);
+
 	}
 }
 void COptimalSortDlg::OnUpdateJgInfo()
@@ -634,80 +603,147 @@ void COptimalSortDlg::OnBnClickedBtnPng()
 	m_iPrintType = CBatchPrint::PRINT_TYPE_PNG;
 	OnOK();
 }
-
-void COptimalSortDlg::Init(CDwgFileInfo *pDwgFile)
+void COptimalSortDlg::InitByProcessAngle(CAngleProcessInfo* pJgInfo)
 {
-	m_pDwgFile = pDwgFile;
+	if (pJgInfo == NULL)
+		return;
+	if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JG)
+	{
+		m_nJgCount++;
+		if (!IsCommonAngle(pJgInfo))
+		{
+			if (pJgInfo->m_xAngle.bCutAngle)
+				m_nCutAngle++;
+			if (pJgInfo->m_xAngle.bKaiJiao || pJgInfo->m_xAngle.bHeJiao)
+				m_nKaiHe++;
+			if (pJgInfo->m_xAngle.nPushFlat > 0)
+				m_nPushFlat++;
+			if (pJgInfo->m_xAngle.bCutRoot)
+				m_nCutRoot++;
+			if (pJgInfo->m_xAngle.bCutBer)
+				m_nCutBer++;
+			if (pJgInfo->m_xAngle.GetHuoquLineCount() > 0)
+				m_nBend++;
+		}
+		else
+			m_nCommonAngle++;
+	}
+	else if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_YG)
+		m_nYGCount++;
+	if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_TUBE)
+		m_nTubeCount++;
+	if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JIG)
+		m_nJiaCount++;
+	if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_FLAT)
+		m_nFlatCount++;
+	if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_GGS)
+		m_nGgsCount++;
+	CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(&pJgInfo->m_xAngle);
+	if (strstr(sMat, "Q235") != NULL)
+		m_nQ235Count++;
+	else if (strstr(sMat, "Q345") != NULL)
+		m_nQ345Count++;
+	else if (strstr(sMat, "Q355") != NULL)
+		m_nQ355Count++;
+	else if (strstr(sMat, "Q390") != NULL)
+		m_nQ390Count++;
+	else if (strstr(sMat, "Q420") != NULL)
+		m_nQ420Count++;
+	else if (strstr(sMat, "Q460") != NULL)
+		m_nQ460Count++;
+}
+void COptimalSortDlg::InitByProcessPlate(CPlateProcessInfo* pPlateInfo)
+{
+	if (pPlateInfo == NULL)
+		return;
+	m_nPlateCount++;
+	CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(&pPlateInfo->xBomPlate);
+	if (strstr(sMat, "Q235") != NULL)
+		m_nQ235Count++;
+	else if (strstr(sMat, "Q345") != NULL)
+		m_nQ345Count++;
+	else if (strstr(sMat, "Q355") != NULL)
+		m_nQ355Count++;
+	else if (strstr(sMat, "Q390") != NULL)
+		m_nQ390Count++;
+	else if (strstr(sMat, "Q420") != NULL)
+		m_nQ420Count++;
+	else if (strstr(sMat, "Q460") != NULL)
+		m_nQ460Count++;
+}
+void COptimalSortDlg::InitCtrlState()
+{
 	m_nQ235Count = m_nQ345Count = m_nQ355Count = m_nQ390Count = m_nQ420Count = m_nQ460Count = 0;
 	m_nJgCount = m_nPlateCount = m_nYGCount = m_nTubeCount = m_nJiaCount = m_nFlatCount = m_nGgsCount = 0;
 	m_nCutAngle = m_nKaiHe = m_nPushFlat = m_nCutRoot = m_nCutBer = m_nBend = 0;
-	if (m_pDwgFile)
+	//如果有打印清单，根据打印清单更新控件状态，否则根据图纸信息进行初始化
+	if (m_hashPrintBom.GetNodeNum() > 0)
 	{
-		for (CAngleProcessInfo* pJgInfo = m_pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = m_pDwgFile->EnumNextJg())
+		for (BOMPART* pBom = m_hashPrintBom.GetFirst(); pBom; pBom = m_hashPrintBom.GetNext())
 		{
-			if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JG)
+			if (pBom->cPartType == BOMPART::ANGLE)
 			{
-				m_nJgCount++;
-				if (!IsCommonAngle(pJgInfo))
-				{
-					if (pJgInfo->m_xAngle.bCutAngle)
-						m_nCutAngle++;
-					if (pJgInfo->m_xAngle.bKaiJiao || pJgInfo->m_xAngle.bHeJiao)
-						m_nKaiHe++;
-					if (pJgInfo->m_xAngle.nPushFlat > 0)
-						m_nPushFlat++;
-					if (pJgInfo->m_xAngle.bCutRoot)
-						m_nCutRoot++;
-					if (pJgInfo->m_xAngle.bCutBer)
-						m_nCutBer++;
-					if (pJgInfo->m_xAngle.GetHuoquLineCount() > 0)
-						m_nBend++;
-				}
-				else
-					m_nCommonAngle++;
+				CAngleProcessInfo* pJgInfo = m_pDwgFile->FindAngleByPartNo(pBom->sPartNo);
+				InitByProcessAngle(pJgInfo);
 			}
-			else if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_YG)
-				m_nYGCount++;
-			if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_TUBE)
-				m_nTubeCount++;
-			if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JIG)
-				m_nJiaCount++;
-			if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_FLAT)
-				m_nFlatCount++;
-			if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_GGS)
-				m_nGgsCount++;
-			CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(&pJgInfo->m_xAngle);
-			if (strstr(sMat, "Q235") != NULL)
-				m_nQ235Count++;
-			else if (strstr(sMat, "Q345") != NULL)
-				m_nQ345Count++;
-			else if (strstr(sMat, "Q355") != NULL)
-				m_nQ355Count++;
-			else if (strstr(sMat, "Q390") != NULL)
-				m_nQ390Count++;
-			else if (strstr(sMat, "Q420") != NULL)
-				m_nQ420Count++;
-			else if (strstr(sMat, "Q460") != NULL)
-				m_nQ460Count++;
-		}
-		for (CPlateProcessInfo* pPlateInfo = m_pDwgFile->EnumFirstPlate(); pPlateInfo; pPlateInfo = m_pDwgFile->EnumNextPlate())
-		{
-			m_nPlateCount++;
-			CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(&pPlateInfo->xBomPlate);
-			if (strstr(sMat, "Q235") != NULL)
-				m_nQ235Count++;
-			else if (strstr(sMat, "Q345") != NULL)
-				m_nQ345Count++;
-			else if (strstr(sMat, "Q355") != NULL)
-				m_nQ355Count++;
-			else if (strstr(sMat, "Q390") != NULL)
-				m_nQ390Count++;
-			else if (strstr(sMat, "Q420") != NULL)
-				m_nQ420Count++;
-			else if (strstr(sMat, "Q460") != NULL)
-				m_nQ460Count++;
+			else if (pBom->cPartType == BOMPART::PLATE)
+			{
+				CPlateProcessInfo* pPlateInfo = m_pDwgFile->FindPlateByPartNo(pBom->sPartNo);
+				InitByProcessPlate(pPlateInfo);
+			}
 		}
 	}
+	else
+	{
+		for (CAngleProcessInfo* pJgInfo = m_pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = m_pDwgFile->EnumNextJg())
+			InitByProcessAngle(pJgInfo);
+		for (CPlateProcessInfo* pPlateInfo = m_pDwgFile->EnumFirstPlate(); pPlateInfo; pPlateInfo = m_pDwgFile->EnumNextPlate())
+			InitByProcessPlate(pPlateInfo);
+	}
+	//
+	GetDlgItem(IDC_CHE_JG)->EnableWindow(m_nJgCount > 0);
+	GetDlgItem(IDC_CHE_PLATE)->EnableWindow(m_nPlateCount > 0);
+	GetDlgItem(IDC_CHE_TUBE)->EnableWindow(m_nTubeCount > 0);
+	GetDlgItem(IDC_CHE_YG)->EnableWindow(m_nYGCount > 0);
+	GetDlgItem(IDC_CHE_JIG)->EnableWindow(m_nJiaCount > 0);
+	GetDlgItem(IDC_CHE_FLAT)->EnableWindow(m_nFlatCount > 0);
+	GetDlgItem(IDC_CHE_GGS)->EnableWindow(m_nGgsCount > 0);
+	//
+	GetDlgItem(IDC_CHE_Q235)->EnableWindow(m_nQ235Count > 0);
+	GetDlgItem(IDC_CHE_Q345)->EnableWindow(m_nQ345Count > 0);
+	GetDlgItem(IDC_CHE_Q355)->EnableWindow(m_nQ355Count > 0);
+	GetDlgItem(IDC_CHE_Q390)->EnableWindow(m_nQ390Count > 0);
+	GetDlgItem(IDC_CHE_Q420)->EnableWindow(m_nQ420Count > 0);
+	GetDlgItem(IDC_CHE_Q460)->EnableWindow(m_nQ460Count > 0);
+
+	GetDlgItem(IDC_CHE_CUT_ANGLE)->EnableWindow(m_nCutAngle > 0);
+	GetDlgItem(IDC_CHE_KAIHE)->EnableWindow(m_nKaiHe > 0);
+	GetDlgItem(IDC_CHE_PUSH_FLAT)->EnableWindow(m_nPushFlat > 0);
+	GetDlgItem(IDC_CHE_CUT_ROOT)->EnableWindow(m_nCutRoot > 0);
+	GetDlgItem(IDC_CHE_CUT_BER)->EnableWindow(m_nCutBer > 0);
+	GetDlgItem(IDC_CHE_BEND)->EnableWindow(m_nBend > 0);
+	GetDlgItem(IDC_CHE_COMMON_ANGLE)->EnableWindow(m_bCommonAngle > 0);
+	//
+	m_bSelJg = m_nJgCount > 0;
+	m_bSelPlate = m_nPlateCount > 0;
+	m_bSelYg = m_nYGCount > 0;
+	m_bSelTube = m_nTubeCount > 0;
+	m_bSelFlat = m_nFlatCount > 0;
+	m_bSelJig = m_nJiaCount > 0;
+	m_bSelGgs = m_nGgsCount > 0;
+	m_bSelQ235 = m_nQ235Count > 0;
+	m_bSelQ345 = m_nQ345Count > 0;
+	m_bSelQ355 = m_nQ355Count > 0;
+	m_bSelQ390 = m_nQ390Count > 0;
+	m_bSelQ420 = m_nQ420Count > 0;
+	m_bSelQ460 = m_nQ460Count > 0;
+	m_bCutAngle = m_nCutAngle > 0;
+	m_bKaiHe = m_nKaiHe > 0;
+	m_bPushFlat = m_nPushFlat > 0;
+	m_bCutRoot = m_nCutRoot > 0;
+	m_bCutBer = m_nCutBer > 0;
+	m_bBend = m_nBend > 0;
+	m_bCommonAngle = m_nCommonAngle > 0;
 }
 void COptimalSortDlg::InitPrintBom(const char* sFileName)
 {
@@ -801,6 +837,25 @@ BOOL COptimalSortDlg::ParseSheetContent(CVariant2dArray &sheetContentMap, CHashS
 		}
 		if (sMaterial.GetLength() <= 0 && sSpec.GetLength() <= 0)
 			continue;	//异常数据
+		if (cls_id == BOMPART::ANGLE)
+		{
+			CAngleProcessInfo* pJgInfo = m_pDwgFile->FindAngleByPartNo(sPartNo);
+			if (pJgInfo == NULL)
+			{
+				logerr.Log("角钢工艺卡中没有件号为{%s}的角钢", (char*)sPartNo);
+				continue;
+			}
+		}
+		else //if (cls_id == BOMPART::PLATE)
+		{
+			CPlateProcessInfo* pPlateInfo = m_pDwgFile->FindPlateByPartNo(sPartNo);
+			if (pPlateInfo == NULL)
+			{
+				logerr.Log("钢板图纸中没有找到件号为{%s}的钢板", (char*)sPartNo);
+				continue;
+			}
+		}
+		//
 		BOMPART* pBomPart = pBomPart = m_hashPrintBom.GetValue(sPartNo);
 		if (pBomPart == NULL)
 		{

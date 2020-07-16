@@ -14,24 +14,28 @@ class COptimalSortDlg : public CDialog
 	CHashList<int> m_thickHashTbl;
 	ARRAY_LIST<CAngleProcessInfo*> m_xJgList;
 	ARRAY_LIST<CPlateProcessInfo*> m_xPlateList;
+	CHashStrList<BOMPART> m_hashPrintBom;	//用户提供的打印料单
 	CDwgFileInfo *m_pDwgFile;
 	int m_nQ235Count, m_nQ345Count, m_nQ355Count, m_nQ390Count, m_nQ420Count, m_nQ460Count;
 	int m_nJgCount, m_nPlateCount, m_nYGCount, m_nTubeCount, m_nJiaCount, m_nFlatCount, m_nGgsCount;
 	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle;
 	int m_iPrintType;
-public:
-	//用户提供的打印料单
-	CHashStrList<BOMPART> m_hashPrintBom;
+protected:
+	void InitByProcessAngle(CAngleProcessInfo* pJgInfo);
+	void InitByProcessPlate(CPlateProcessInfo* pPlateInfo);
+	bool IsFillTheFilter(CAngleProcessInfo* pJgInfo);
+	bool IsFillTheFilter(CPlateProcessInfo* pPlateInfo);
 	//
-	void InitPrintBom(const char* sFileName);
 	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
 public:
 	COptimalSortDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COptimalSortDlg();
 	//
+	void SetDwgFile(CDwgFileInfo *pDwgFile) { m_pDwgFile = pDwgFile; }
 	void UpdatePartList();
 	void RefeshListCtrl();
-	void Init(CDwgFileInfo *pDwgFile);
+	void InitCtrlState();
+	void InitPrintBom(const char* sFileName);
 // 对话框数据
 	enum { IDD = IDD_OPTIMAL_SORT_DLG };
 	CSuperGridCtrl m_xListCtrl;
