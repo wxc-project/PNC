@@ -202,14 +202,7 @@ void SmartExtractPlate(CPNCModel *pModel)
 	DisplayProgress(100);
 	//将提取的钢板信息导出到中性文件中
 	CString file_path;
-#ifdef __ALFA_TEST_
-	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
-		GetCurWorkPath(file_path, TRUE, "pixel", TRUE);
-	else
-		GetCurWorkPath(file_path, TRUE, "rule", TRUE);
-#else
 	GetCurWorkPath(file_path);
-#endif
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE))
 	{	//生成PPI文件,保存到到当前工作路径下
 		if(pPlateProcess->IsValid())
