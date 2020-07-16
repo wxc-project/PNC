@@ -133,6 +133,8 @@ void CNCPlate::InitPlateNcInfo()
 		for (BOLT_INFO *pBoltInfo = tempPlate.m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = tempPlate.m_xBoltInfoList.GetNext())
 		{
 			double hole_d = pBoltInfo->bolt_d + pBoltInfo->hole_d_increment;
+			if(pBoltInfo->cFuncType==0)
+				continue;
 			if (fSpecialD >0 && hole_d < fSpecialD)
 				continue;
 			CUT_HOLE_PATH* pCutHole = m_xCutHole.append();

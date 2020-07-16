@@ -2142,15 +2142,21 @@ void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 		fShapeAddDist = atof(sValue);
 	if (fShapeAddDist > 0)
 	{
+		int iCalType = 0;
 		ATOM_LIST<PROFILE_VER> xDestList;
-		tempPlate.CalEquidistantShape(fShapeAddDist, &xDestList);
+		tempPlate.CalEquidistantShape(fShapeAddDist, &xDestList, iCalType);
 		tempPlate.vertex_list.Empty();
 		for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
 			tempPlate.vertex_list.Append(*pVertex);
 		//调整坐标系原点
-		SCOPE_STRU scope = tempPlate.GetVertexsScope(&mcs);
-		mcs.origin += scope.fMinX*mcs.axis_x;
-		mcs.origin += scope.fMinY*mcs.axis_y;
+		if(iCalType==0)
+			tempPlate.GetMCS(mcs);
+		else
+		{	//
+			SCOPE_STRU scope = tempPlate.GetVertexsScope(&mcs);
+			mcs.origin += scope.fMinX*mcs.axis_x;
+			mcs.origin += scope.fMinY*mcs.axis_y;
+		}
 	}
 #endif
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
