@@ -110,7 +110,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	CLogErrorLife logLife;
 	//1、判断列是否满足要求
 	BOOL bHasColIndex = (hashColIndex.GetNodeNum() > 2) ? TRUE : FALSE;
-	BOOL bHasPartNo = FALSE, bHasMet = FALSE, bHasSpec = FALSE, bValid = FALSE;
+	BOOL bHasPartNo = FALSE, bHasMat = FALSE, bHasSpec = FALSE, bValid = FALSE;
 	int iContentRow = 0, nColNum = sheetContentMap.ColsCount();
 	for (int iRow = 0; iRow < 10; iRow++)
 	{
@@ -129,10 +129,10 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 				if (!bHasColIndex)
 					hashColIndex.SetValue(sKey, iCol);
 			}
-			else if (CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_METERIAL, str))
+			else if (CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_MATERIAL, str))
 			{
-				bHasMet = TRUE;
-				CXhChar16 sKey(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::INDEX_METERIAL));
+				bHasMat = TRUE;
+				CXhChar16 sKey(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::INDEX_MATERIAL));
 				if (!bHasColIndex)
 					hashColIndex.SetValue(sKey, iCol);
 			}
@@ -155,7 +155,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 				if (!bHasColIndex)
 					hashColIndex.SetValue(sKey, iCol);
 			}
-			if(bHasPartNo && bHasMet && bHasSpec)
+			if(bHasPartNo && bHasMat && bHasSpec)
 			{
 				bValid = TRUE;
 				break;
@@ -193,7 +193,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		if(sPartNo.GetLength()<2)
 			continue;
 		//材质
-		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_METERIAL);
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_MATERIAL);
 		sheetContentMap.GetValueAt(i, *pColIndex, value);
 		sMaterial = VariantToString(value);
 		//规格
@@ -1982,7 +1982,7 @@ bool CBomModel::ExtractAngleCompareItems()
 		if (strstr(skey, "件号"))
 			hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_PART_NO,TRUE);
 		else if(strstr(skey,"材质"))
-			hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_METERIAL, TRUE);
+			hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_MATERIAL, TRUE);
 		else if (strstr(skey, "规格"))
 			hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_SPEC, TRUE);
 		else if (strstr(skey, "单基数"))
@@ -2024,7 +2024,7 @@ bool CBomModel::ExtractPlateCompareItems()
 		if (strstr(skey, "件号"))
 			hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_PART_NO, TRUE);
 		else if (strstr(skey, "材质"))
-			hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_METERIAL, TRUE);
+			hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_MATERIAL, TRUE);
 		else if (strstr(skey, "规格"))
 			hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_SPEC, TRUE);
 		else if (strstr(skey, "单基数"))
@@ -2080,7 +2080,7 @@ int CBomModel::InitBomTitle()
 	{	//配置中没有设置校审项，默认按照读取列进行校审
 		hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_PART_NO, TRUE);
 		hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_SPEC, TRUE);
-		hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_METERIAL, TRUE);
+		hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_MATERIAL, TRUE);
 		hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_LEN, TRUE);
 		if (hashColIndex.GetValue(CBomTblTitleCfg::T_SING_NUM))
 			hashCompareItemOfAngle.SetValue(CBomTblTitleCfg::T_SING_NUM, TRUE);
@@ -2109,7 +2109,7 @@ int CBomModel::InitBomTitle()
 	{	//配置中没有设置校审项，默认按照读取列进行校审
 		hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_PART_NO, TRUE);
 		hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_SPEC, TRUE);
-		hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_METERIAL, TRUE);
+		hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_MATERIAL, TRUE);
 		hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_LEN, TRUE);
 		if (hashColIndex.GetValue(CBomTblTitleCfg::T_SING_NUM))
 			hashCompareItemOfPlate.SetValue(CBomTblTitleCfg::T_SING_NUM, TRUE);

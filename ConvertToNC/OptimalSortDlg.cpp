@@ -760,7 +760,7 @@ BOOL COptimalSortDlg::ParseSheetContent(CVariant2dArray &sheetContentMap, CHashS
 		if (sPartNo.GetLength() < 2 || strstr(sPartNo, "±àºÅ"))
 			continue;
 		//²ÄÖÊ
-		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_METERIAL);
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_MATERIAL);
 		sheetContentMap.GetValueAt(i, *pColIndex, value);
 		CXhChar100 sMaterial = VariantToString(value);
 		//¹æ¸ñ
