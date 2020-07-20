@@ -1247,6 +1247,18 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 				scope.VerifyVertex(GEPOINT(pLine->endPoint().x, pLine->endPoint().y));
 				continue;
 			}
+			else if (pEnt->isKindOf(AcDbPolyline::desc()))
+			{
+				AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+				int nNum = pPline->numVerts();
+				for (int indx = 0; indx < nNum; indx++)
+				{
+					AcGePoint3d location;
+					pPline->getPointAt(indx, location);
+					scope.VerifyVertex(GEPOINT(location.x, location.y));
+				}
+				continue;
+			}
 			//记录工艺卡模板中的件号位置(作为工艺卡的标记点)，用于处理出图资料中角钢工艺卡打碎的情况
 			if (pEnt->isKindOf(AcDbMText::desc()) || pEnt->isKindOf(AcDbText::desc()))
 			{
