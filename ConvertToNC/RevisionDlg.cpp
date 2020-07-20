@@ -26,7 +26,7 @@ CRevisionDlg *g_pRevisionDlg;
 #ifdef __SUPPORT_DOCK_UI_
 IMPLEMENT_DYNCREATE(CRevisionDlg, CAcUiDialog)
 #else
-IMPLEMENT_DYNAMIC(CRevisionDlg, CDialog)
+IMPLEMENT_DYNCREATE(CRevisionDlg, CDialog)
 #endif
 
 //

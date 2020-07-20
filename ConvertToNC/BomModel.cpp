@@ -12,20 +12,6 @@
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 CBomModel g_xUbomModel;
 
-static CXhChar100 VariantToString(VARIANT value)
-{
-	CXhChar100 sValue;
-	if(value.vt==VT_BSTR)
-		return sValue.Copy(CString(value.bstrVal));
-	else if(value.vt==VT_R8)
-		return sValue.Copy(CXhChar100(value.dblVal));
-	else if(value.vt==VT_R4)
-		return sValue.Copy(CXhChar100(value.fltVal));
-	else if(value.vt==VT_INT)
-		return sValue.Copy(CXhChar100(value.intVal));
-	else 
-		return sValue;
-}
 //
 static BOMPART* CreateBomPart(int idClsType, const char* key, void* pContext)
 {
@@ -120,8 +106,10 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			sheetContentMap.GetValueAt(iRow, iCol, value);
 			if (value.vt == VT_EMPTY)
 				continue;
-			CString str(VariantToString(value));
+			CString str = VariantToString(value);
 			str.Remove('\n');
+			if (str.GetLength() > 99)
+				continue;	//±ÍÃ‚––
 			if (CBomTblTitleCfg::IsMatchTitle(CBomTblTitleCfg::INDEX_PART_NO, str))
 			{
 				bHasPartNo = TRUE;
