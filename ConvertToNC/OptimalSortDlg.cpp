@@ -14,20 +14,6 @@
 
 typedef CAngleProcessInfo* AngleInfoPtr;
 typedef BOMPART* PART_PTR;
-static CXhChar100 VariantToString(VARIANT value)
-{
-	CXhChar100 sValue;
-	if (value.vt == VT_BSTR)
-		return sValue.Copy(CString(value.bstrVal));
-	else if (value.vt == VT_R8)
-		return sValue.Copy(CXhChar100(value.dblVal));
-	else if (value.vt == VT_R4)
-		return sValue.Copy(CXhChar100(value.fltVal));
-	else if (value.vt == VT_INT)
-		return sValue.Copy(CXhChar100(value.intVal));
-	else
-		return sValue;
-}
 static int CompareBomPartPtrFunc(const PART_PTR& partPtr1, const PART_PTR& partPtr2, BOOL bAscending)
 {
 	int nRetCode = 0;
