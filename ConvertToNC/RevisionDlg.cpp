@@ -28,7 +28,23 @@ IMPLEMENT_DYNCREATE(CRevisionDlg, CAcUiDialog)
 #else
 IMPLEMENT_DYNAMIC(CRevisionDlg, CDialog)
 #endif
+
+class CWndShowLife
+{
+	CWnd *m_pWnd;
+public:
+	CWndShowLife(CWnd *pWnd) {
+		m_pWnd = pWnd;
+		if (m_pWnd)
+			m_pWnd->ShowWindow(SW_HIDE);
+	}
+	~CWndShowLife() {
+		if (m_pWnd)
+			m_pWnd->ShowWindow(SW_SHOW);
+	}
+};
 //
+CXhChar500 CRevisionDlg::g_sPrintDwgFileName;
 static BOOL FireItemChanged(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem* pItem,NM_LISTVIEW* pNMListView)
 {	//选中项发生变化后更新属性栏
 	if(pItem->m_idProp==NULL)
@@ -695,6 +711,7 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 	hPlateGroup=pTreeCtrl->InsertItem("钢板dwg组",PRJ_IMG_FILEGROUP,PRJ_IMG_FILEGROUP,hProjItem);
 	pItemInfo=itemInfoList.append(TREEITEM_INFO(PLATE_GROUP,NULL));
 	pTreeCtrl->SetItemData(hPlateGroup,(DWORD)pItemInfo);
+	HTREEITEM hSelectItem = NULL;
 	for(CDwgFileInfo* pDwgInfo=pProject->dwgFileList.GetFirst();pDwgInfo;pDwgInfo=pProject->dwgFileList.GetNext())
 	{
 		if(pDwgInfo->IsJgDwgInfo())
@@ -702,12 +719,16 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 			hSonItem=pTreeCtrl->InsertItem(pDwgInfo->m_sDwgName,PRJ_IMG_FILE,PRJ_IMG_FILE,hJgGroup);
 			pItemInfo=itemInfoList.append(TREEITEM_INFO(ANGLE_DWG_ITEM,(DWORD)pDwgInfo));
 			pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
+			if (g_sPrintDwgFileName.EqualNoCase(pDwgInfo->m_sDwgName))
+				hSelectItem = hSonItem;
 		}
 		else
 		{
 			hSonItem=pTreeCtrl->InsertItem(pDwgInfo->m_sDwgName,PRJ_IMG_FILE,PRJ_IMG_FILE,hPlateGroup);
 			pItemInfo=itemInfoList.append(TREEITEM_INFO(PLATE_DWG_ITEM,(DWORD)pDwgInfo));
 			pTreeCtrl->SetItemData(hSonItem,(DWORD)pItemInfo);
+			if (g_sPrintDwgFileName.EqualNoCase(pDwgInfo->m_sDwgName))
+				hSelectItem = hSonItem;
 		}
 	}
 	//
@@ -715,7 +736,10 @@ void CRevisionDlg::RefreshProjectItem(HTREEITEM hParenItem,CProjectTowerType* pP
 	pTreeCtrl->Expand(hBomGroup,TVE_EXPAND);
 	pTreeCtrl->Expand(hJgGroup,TVE_EXPAND);
 	pTreeCtrl->Expand(hPlateGroup,TVE_EXPAND);
-	pTreeCtrl->SelectItem(hProjItem);
+	if(hSelectItem)
+		pTreeCtrl->SelectItem(hSelectItem);
+	else
+		pTreeCtrl->SelectItem(hProjItem);
 }
 void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 {
@@ -972,6 +996,9 @@ void CRevisionDlg::OnImportBomFile()
 	TREEITEM_INFO* pItemInfo=(TREEITEM_INFO*)pTreeCtrl->GetItemData(hSelectedItem);
 	if(pItemInfo==NULL || pItemInfo->itemType!=BOM_GROUP)
 		return;
+#ifdef _ARX_2007
+	CWndShowLife show(this);
+#endif
 	CFileDialog dlg(TRUE,"xls","物料清单.xls",
 		OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT|OFN_ALLOWMULTISELECT,
 		"BOM文件|*.xls;*.xlsx|Excel(*.xls)|*.xls|Excel(*.xlsx)|*.xlsx|所有文件(*.*)|*.*||");
@@ -1068,6 +1095,9 @@ void CRevisionDlg::OnImportAngleDwg()
 	TREEITEM_INFO *pItemInfo=(TREEITEM_INFO*)pTreeCtrl->GetItemData(hSelectedItem);
 	if(pItemInfo==NULL || pItemInfo->itemType!=ANGLE_GROUP)
 		return;
+#ifdef _ARX_2007
+	CWndShowLife show(this);
+#endif
 	CFileDialog dlg(TRUE,"dwg","角钢加工文件.dwg",
 					OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT,//|OFN_ALLOWMULTISELECT,
 					"DWG文件(*.dwg)|*.dwg|所有文件(*.*)|*.*||");
@@ -1099,6 +1129,9 @@ void CRevisionDlg::OnImportPlateDwg()
 	TREEITEM_INFO *pItemInfo=(TREEITEM_INFO*)pTreeCtrl->GetItemData(hSelectedItem);
 	if(pItemInfo==NULL || pItemInfo->itemType!=PLATE_GROUP)
 		return;
+#ifdef _ARX_2007
+	CWndShowLife show(this);
+#endif
 	CFileDialog dlg(TRUE,"dwg","钢板加工文件.dwg",
 					OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT,//|OFN_ALLOWMULTISELECT,
 					"DWG文件(*.dwg)|*.dwg|所有文件(*.*)|*.*||");
@@ -1488,6 +1521,10 @@ void CRevisionDlg::OnBatchPrintPart()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL)
 		return;
+#ifdef _ARX_2007
+	CWndShowLife show(this);
+#endif
+	g_sPrintDwgFileName.Copy(pDwgInfo->m_sFileName);
 	CAcModuleResourceOverride resOverride;
 	COptimalSortDlg dlg;
 	dlg.SetDwgFile(pDwgInfo);

@@ -58,10 +58,15 @@
 #define IDC_BTN_EXTRACT                 144
 #define IDC_CMB_EDGE_CLR                145
 #define IDC_CMB_M12_CLR                 146
+#define IDC_S_HELP_STR                  146
 #define IDC_CMB_M16_CLR                 147
+#define IDC_CMB_PRINT_MODE              147
 #define IDC_CMB_M20_CLR                 148
+#define IDC_CMB_PRINT_TYPE              148
 #define IDC_CMB_M24_CLR                 149
+#define IDC_BTN_PRINT_SET               149
 #define IDC_CMB_OTHER_CLR               150
+#define IDC_CMB_PRINT_GROUP             150
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
 #define IDC_E_VAL                       1093
@@ -71,7 +76,9 @@
 #define IDC_CHE_TUBE                    6003
 #define IDC_CHE_FLAT                    6004
 #define IDC_CHE_JIG                     6005
+#define IDC_CHE_FUJIAN                  6005
 #define IDC_CHE_GGS                     6006
+#define IDC_CHE_OTHER_TYPE              6006
 #define IDC_CHE_Q345                    6007
 #define IDC_CHE_Q235                    6008
 #define IDC_CHE_Q390                    6009
@@ -88,6 +95,7 @@
 #define IDC_CHE_CUT_BER                 6020
 #define IDC_CHE_BEND                    6021
 #define IDC_CHE_COMMON_ANGLE            6022
+#define IDC_CHE_OTHER_NOTES             6025
 #define ID_MODIFY_TMA_FILE              32766
 #define ID_MARK_FILTER                  32767
 #define ID_CANCEL_FILTER                32768
@@ -116,15 +124,15 @@
 #define ID_REFRESH_SINGLE_NUM           32791
 #define ID_BATCH_PRINT_PART             32792
 #define ID_ADD_ITEM                     32793
-#define ID_EXPORT_XLS_FILE				32794
+#define ID_EXPORT_XLS_FILE              32794
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        130
+#define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32795
-#define _APS_NEXT_CONTROL_VALUE         146
+#define _APS_NEXT_CONTROL_VALUE         151
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

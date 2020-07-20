@@ -35,6 +35,7 @@ class CRevisionDlg : public CDialog
 	int m_iCompareMode;
 public:
 	ATOM_LIST<TREEITEM_INFO>itemInfoList;
+	static CXhChar500 g_sPrintDwgFileName;
 public:
 	CRevisionDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~CRevisionDlg();

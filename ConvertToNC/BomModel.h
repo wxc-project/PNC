@@ -38,6 +38,7 @@ public:
 	//
 	BOOL ImportTmaExcelFile();
 	BOOL ImportErpExcelFile();
+	BOOL ImportPrintExcelFile();
 	CString GetPartNumStr();
 	void UpdateProcessPart(const char* sOldKey,const char* sNewKey);
 };

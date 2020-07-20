@@ -184,6 +184,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		CXhChar100 sSingleNum, sProcessNum;
 		BOOL bCutAngle = FALSE, bCutRoot = FALSE, bCutBer = FALSE, bPushFlat = FALSE;
 		BOOL bKaiJiao = FALSE, bHeJiao = FALSE, bWeld = FALSE, bZhiWan = FALSE, bFootNail = FALSE;
+		short siSubType = 0;
 		//件号
 		DWORD *pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::T_PART_NO);
 		sheetContentMap.GetValueAt(i,*pColIndex,value);
@@ -223,7 +224,15 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			}
 		}
 		else //if(strstr(sSpec,"φ"))
+		{
 			cls_id = BOMPART::TUBE;
+			CXhChar100 sTemp(sSpec);
+			int hits = sTemp.Replace("φ", " ");
+			hits += sTemp.Replace("Φ", " ");
+			hits += sTemp.Replace("/", " ");
+			if (hits == 2)
+				siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
+		}
 		//类型
 		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_PARTTYPE);
 		if (pColIndex != NULL)
@@ -406,6 +415,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		if (pBomPart == NULL)
 		{
 			pBomPart = m_hashPartByPartNo.Add(sPartNo, cls_id);
+			pBomPart->siSubType = siSubType;
 			pBomPart->SetPartNum(nSingleNum);
 			pBomPart->feature1 = nProcessNum;
 			pBomPart->sPartNo.Copy(sPartNo);
@@ -542,6 +552,39 @@ BOOL CBomFile::ImportErpExcelFile()
 	//解析数据
 	m_hashPartByPartNo.Empty();
 	return ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow);
+}
+//导入打印清单
+BOOL CBomFile::ImportPrintExcelFile()
+{
+	CExcelOperObject excelobj;
+	if (!excelobj.OpenExcelFile(m_sFileName))
+		return FALSE;
+	//获取定制列信息
+	CHashStrList<DWORD> hashColIndexByColTitle;
+	g_xUbomModel.m_xJgPrintCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
+	int iStartRow = g_xUbomModel.m_xJgPrintCfg.m_nStartRow - 1;
+	//解析数据
+	int nSheetNum = excelobj.GetWorkSheetCount();
+	int nValidSheetCount = 0, iValidSheet = (nSheetNum == 1) ? 1 : 0;
+	BOOL bRetCode = FALSE;
+	int iCfgSheetIndex = 0;
+	if (g_xUbomModel.m_sJGPrintSheetName.GetLength() > 0)
+	{	//根据配置文件中指定的sheet加载表单
+		iCfgSheetIndex = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sJGPrintSheetName);
+		if (iCfgSheetIndex > 0)
+			iValidSheet = iCfgSheetIndex;
+	}
+	if (iValidSheet > 0)
+	{	//优先读取指定sheet
+		CVariant2dArray sheetContentMap(1, 1);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 100);
+		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
+			nValidSheetCount++;
+	}
+	if (nValidSheetCount == 0)
+		return FALSE;
+	else
+		return TRUE;
 }
 
 CString CBomFile::GetPartNumStr()

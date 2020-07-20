@@ -12,21 +12,23 @@ class COptimalSortDlg : public CDialog
 	DECLARE_DYNAMIC(COptimalSortDlg)
 	CHashList<int> m_widthHashTbl;
 	CHashList<int> m_thickHashTbl;
-	ARRAY_LIST<CAngleProcessInfo*> m_xJgList;
-	ARRAY_LIST<CPlateProcessInfo*> m_xPlateList;
-	CHashStrList<BOMPART> m_hashPrintBom;	//用户提供的打印料单
+	//ARRAY_LIST<CAngleProcessInfo*> m_xJgList;
+	//ARRAY_LIST<CPlateProcessInfo*> m_xPlateList;
+	ARRAY_LIST<BOMPART*> m_xDisplayPartList;
+	CBomFile m_xPrintBomFile;
 	CDwgFileInfo *m_pDwgFile;
 	int m_nQ235Count, m_nQ345Count, m_nQ355Count, m_nQ390Count, m_nQ420Count, m_nQ460Count;
 	int m_nJgCount, m_nPlateCount, m_nYGCount, m_nTubeCount, m_nJiaCount, m_nFlatCount, m_nGgsCount;
-	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle;
+	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle,m_nOtherNotes;
 	int m_iPrintType;
 protected:
-	void InitByProcessAngle(CAngleProcessInfo* pJgInfo);
-	void InitByProcessPlate(CPlateProcessInfo* pPlateInfo);
-	bool IsFillTheFilter(CAngleProcessInfo* pJgInfo);
-	bool IsFillTheFilter(CPlateProcessInfo* pPlateInfo);
-	//
-	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
+	void InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pPart);
+	void InitByProcessPlate(CPlateProcessInfo* pPlateInfo, BOMPART *pPart);
+	bool IsFillTheFilter(CAngleProcessInfo* pJgInfo, BOMPART *pPart);
+	bool IsFillTheFilter(CPlateProcessInfo* pPlateInfo, BOMPART *pPart);
+	void UpdateHelpStr();
+	BOOL GetPrintParaFromReg(LPCTSTR lpszSection, LPCTSTR lpszEntry);
+	void WritePrintParaToReg(LPCTSTR lpszSection, LPCTSTR lpszEntry);
 public:
 	COptimalSortDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COptimalSortDlg();
@@ -36,6 +38,7 @@ public:
 	void RefeshListCtrl();
 	void InitCtrlState();
 	bool InitPrintBom(const char* sFileName);
+	bool IsValidPrintBom();
 // 对话框数据
 	enum { IDD = IDD_OPTIMAL_SORT_DLG };
 	CSuperGridCtrl m_xListCtrl;
@@ -58,6 +61,7 @@ public:
 	BOOL m_bCutRoot;
 	BOOL m_bCutBer;
 	BOOL m_bBend;
+	BOOL m_bOtherNotes;
 	BOOL m_bCommonAngle;
 	CString m_sWidth;
 	CString m_sThick;
@@ -74,7 +78,12 @@ protected:
 	afx_msg void OnEnChangeEThick();
 	afx_msg void OnBnClickedBtnJgCard();
 	afx_msg void OnBnClickedOk();
-	afx_msg void OnBnClickedBtnPdf();
-	afx_msg void OnBnClickedBtnPng();
+public:
+	// 打印分组
+	int m_iCmbPrintGroup;
+	int m_iCmbPrintMode;
+	int m_iCmbPrintType;
+	afx_msg void OnBnClickedBtnPrintSet();
+	virtual BOOL DestroyWindow();
 };
 #endif

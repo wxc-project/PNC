@@ -2500,7 +2500,10 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 		{
 			if (pSymbols)
 				pSymbols->AppendSymbolEnt((AcDbSpline*)pEnt);
-			selectedEntIdSet.DeleteNode(objId.asOldId());
+			//确认样条曲线为火曲线标识后，再从选择集中移除，否则样条曲线椭圆弧无法识别 wht 20-07-18
+			AcDbSpline *pSpline = (AcDbSpline*)pEnt;
+			if(pSpline->numControlPoints()<=6 && pSpline->numFitPoints()<=4)
+				selectedEntIdSet.DeleteNode(objId.asOldId());
 		}
 		else if (!g_pncSysPara.IsProfileEnt(pEnt))
 			selectedEntIdSet.DeleteNode(objId.asOldId());

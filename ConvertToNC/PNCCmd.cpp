@@ -852,10 +852,12 @@ void RevisionPartProcess()
 	if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE)||
 		g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 	{	//加载角钢工艺卡
-		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "";
+		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "",sJgCardPath2[MAX_PATH]="";
 		GetAppPath(APP_PATH);
 		sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
-		if (!g_pncSysPara.InitJgCardInfo(sJgCardPath))
+		sprintf(sJgCardPath2, "%s\\角钢工艺卡\\%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
+		if (!g_pncSysPara.InitJgCardInfo(sJgCardPath) &&	//在根目录中查找工艺卡模板
+			!g_pncSysPara.InitJgCardInfo(sJgCardPath2))		//在“角钢工艺卡”子目录中查找工艺卡模板 wht 20-07-18
 		{
 			logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!", sJgCardPath));
 			return;

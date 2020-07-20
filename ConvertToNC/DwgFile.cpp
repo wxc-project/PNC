@@ -157,7 +157,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			m_ciType = TYPE_JG;
 		else if (strstr(sSpec, "-"))
 			m_ciType = TYPE_FLAT;
-		else if (strstr(sSpec, "%c"))
+		else if (strstr(sSpec, "%c") || strstr(sSpec, "%C") || strstr(sSpec, "/"))
 		{	//钢管/圆钢
 			sSpec.Replace("%c", "Φ");
 			if (strstr(sSpec, "/"))
@@ -215,6 +215,24 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		strcpy(m_xAngle.sNotes,sValue);
 		if (strstr(m_xAngle.sNotes, "带脚钉"))
 			m_xAngle.bHasFootNail = TRUE;
+		else if (strstr(m_xAngle.sNotes, "切角"))
+			m_xAngle.bCutAngle = TRUE;
+		else if (strstr(m_xAngle.sNotes, "清根") || strstr(m_xAngle.sNotes, "刨根") ||
+				 strstr(m_xAngle.sNotes, "铲芯") || strstr(m_xAngle.sNotes, "铲心"))
+			m_xAngle.bCutRoot = TRUE;
+		else if (strstr(m_xAngle.sNotes, "铲背"))
+			m_xAngle.bCutBer = TRUE;
+		else if (strstr(m_xAngle.sNotes, "开角"))
+			m_xAngle.bKaiJiao = TRUE;
+		else if (strstr(m_xAngle.sNotes, "合角"))
+			m_xAngle.bHeJiao = TRUE;
+		else if (strstr(m_xAngle.sNotes, "压扁") || strstr(m_xAngle.sNotes, "打扁"))
+			m_xAngle.nPushFlat = 0x01;
+		//else if (strstr(m_xAngle.sNotes, "制弯") || strstr(m_xAngle.sNotes, "火曲"))
+		//	m_xAngle.bHeJiao = TRUE;
+		else if (strstr(m_xAngle.sNotes, "主焊件") || strstr(m_xAngle.sNotes, "焊于") ||
+				strstr(m_xAngle.sNotes, "焊接"))
+			m_xAngle.bWeldPart = TRUE;
 		cType = ITEM_TYPE_PART_NOTES;
 	}
 	else if (PtInDataRect(ITEM_TYPE_SUM_WEIGHT, data_pos))	//总重
@@ -261,7 +279,20 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	else if (PtInDataRect(ITEM_TYPE_KAIJIAO, data_pos))
 	{
-		m_xAngle.bKaiJiao = strlen(sValue) > 0;
+		int nLen = strlen(sValue);
+		if (nLen > 1)
+		{
+			CString sKaiJiao = sValue;
+			sKaiJiao.Replace("°", "");
+			sKaiJiao.Replace("度", "");
+			double fAngle = atof(sKaiJiao);
+			if (fAngle > 90)
+				m_xAngle.bKaiJiao = TRUE;
+			else
+				m_xAngle.bKaiJiao = FALSE;
+		}
+		else
+			m_xAngle.bKaiJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_KAIJIAO;
 		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
@@ -271,7 +302,20 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	else if (PtInDataRect(ITEM_TYPE_HEJIAO, data_pos))
 	{
-		m_xAngle.bHeJiao = strlen(sValue) > 0;
+		int nLen = strlen(sValue);
+		if (nLen > 1)
+		{
+			CString sHeiao = sValue;
+			sHeiao.Replace("°", "");
+			sHeiao.Replace("度", "");
+			double fAngle = atof(sHeiao);
+			if (fAngle < 90)
+				m_xAngle.bHeJiao = TRUE;
+			else
+				m_xAngle.bHeJiao = FALSE;
+		}
+		else
+			m_xAngle.bHeJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_HEJIAO;
 		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
 		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
