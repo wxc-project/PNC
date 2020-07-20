@@ -29,20 +29,6 @@ IMPLEMENT_DYNCREATE(CRevisionDlg, CAcUiDialog)
 IMPLEMENT_DYNAMIC(CRevisionDlg, CDialog)
 #endif
 
-class CWndShowLife
-{
-	CWnd *m_pWnd;
-public:
-	CWndShowLife(CWnd *pWnd) {
-		m_pWnd = pWnd;
-		if (m_pWnd)
-			m_pWnd->ShowWindow(SW_HIDE);
-	}
-	~CWndShowLife() {
-		if (m_pWnd)
-			m_pWnd->ShowWindow(SW_SHOW);
-	}
-};
 //
 CXhChar500 CRevisionDlg::g_sPrintDwgFileName;
 static BOOL FireItemChanged(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem* pItem,NM_LISTVIEW* pNMListView)

@@ -5,6 +5,22 @@
 #include "BomModel.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
+
+class CWndShowLife
+{
+	CWnd *m_pWnd;
+public:
+	CWndShowLife(CWnd *pWnd) {
+		m_pWnd = pWnd;
+		if (m_pWnd)
+			m_pWnd->ShowWindow(SW_HIDE);
+	}
+	~CWndShowLife() {
+		if (m_pWnd)
+			m_pWnd->ShowWindow(SW_SHOW);
+	}
+};
+
 // CRevisionDlg 对话框
 enum TREEITEM_TYPE{
 	PROJECT_GROUP,		//工程塔形组

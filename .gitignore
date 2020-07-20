@@ -300,3 +300,15 @@ __pycache__/
 /PNC/Version.h
 /ConvertToNC/UBOMDebugObj7/UBOM07_manifest.rc
 /ConvertToNC/UBOMDebugDll07/UBOM_manifest.rc
+*.ppi
+*.err
+*.lsp
+*.bak
+*.dwl2
+*.twm
+*.tws
+*.dat
+*.wkf
+*.png
+*.pdf
+*.dwl

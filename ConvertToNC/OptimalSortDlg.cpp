@@ -9,6 +9,7 @@
 #include "ParseAdaptNo.h"
 #include "BatchPrint.h"
 #include "ExcelOper.h"
+#include "RevisionDlg.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 
@@ -372,6 +373,7 @@ BOOL COptimalSortDlg::OnInitDialog()
 	GetPrintParaFromReg("Settings", "PrintType");
 	GetPrintParaFromReg("Settings", "PrintMode");
 	GetPrintParaFromReg("Settings", "PrintGroup");
+	UpdateData(FALSE);
 	return TRUE;
 }
 void COptimalSortDlg::RefeshListCtrl()
@@ -396,7 +398,7 @@ void COptimalSortDlg::RefeshListCtrl()
 		if (!bHasCard)
 		{
 			for (int i = 0; i < 6; i++)
-				lpInfo->SetSubItemColor(i, RGB(255,0,0));
+				lpInfo->SetSubItemColor(i, RGB(255,102,102));
 		}
 		pItem=m_xListCtrl.InsertRootItem(lpInfo, FALSE);
 		pItem->m_idProp=(long)pPart;
@@ -712,7 +714,7 @@ void COptimalSortDlg::OnOK()
 void COptimalSortDlg::OnBnClickedOk()
 {
 	UpdateData();
-	m_iPrintType = m_iCmbPrintType;//CBatchPrint::PRINT_TYPE_PAPER;
+	m_iPrintType = m_iCmbPrintType+1;	//CBatchPrint::PRINT_TYPE_PAPER;
 	WritePrintParaToReg("Settings", "PrintType");
 	WritePrintParaToReg("Settings", "PrintMode");
 	WritePrintParaToReg("Settings", "PrintGroup");
@@ -1029,6 +1031,7 @@ void COptimalSortDlg::UpdateHelpStr()
 
 void COptimalSortDlg::OnBnClickedBtnPrintSet()
 {
+	CWndShowLife showLife(this);
 #ifdef _ARX_2007
 	SendCommandToCad(L"PLOT ");
 #else
@@ -1054,9 +1057,9 @@ BOOL COptimalSortDlg::GetPrintParaFromReg(LPCTSTR lpszSection, LPCTSTR lpszEntry
 			if (RegQueryValueEx(hKey, lpszEntry, NULL, &dwDataType, (BYTE*)&dwValue, &dwLength) == ERROR_SUCCESS)
 			{
 				if (stricmp(lpszEntry, "PrintType") == 0)
-					m_iCmbPrintType = atoi(sValue);
+					m_iCmbPrintType = (UINT)dwValue;
 				else if (stricmp(lpszEntry, "PrintMode") == 0)
-					m_iCmbPrintMode = atoi(sValue);
+					m_iCmbPrintMode = (UINT)dwValue;
 				else //if(stricmp(lpszEntry, "PrintGroup") == 0)
 					m_iCmbPrintGroup = (UINT)dwValue;
 			}

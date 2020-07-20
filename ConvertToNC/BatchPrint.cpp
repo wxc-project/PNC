@@ -524,6 +524,18 @@ CBatchPrint::CBatchPrint(ATOM_LIST<PRINT_SCOPE> *pPrintScopeList, bool bSendCmd,
 	m_ciPrintType = ciPrintType;
 	m_bEmptyFiles = bEmptyPngFiles;
 	m_bSendCmd = bSendCmd;
+	//设置打印机初始值
+	if (m_ciPrintType == PRINT_TYPE_PNG)
+	{	//
+		if (m_xPngPlotCfg.m_sDeviceName.GetLength() <= 0)
+			m_xPngPlotCfg.m_sDeviceName.Copy("PublishToWeb PNG.pc3");
+	}
+	else if (m_ciPrintType == PRINT_TYPE_PDF)
+	{
+		if (m_xPdfPlotCfg.m_sDeviceName.GetLength() <= 0)
+			m_xPdfPlotCfg.m_sDeviceName.Copy("DWG To PDF.pc3");
+	}
+	//else if (m_ciPrintType == PRINT_TYPE_PAPER)
 }
 
 bool CBatchPrint::Print()
