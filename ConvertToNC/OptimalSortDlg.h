@@ -15,12 +15,12 @@ class COptimalSortDlg : public CDialog
 	//ARRAY_LIST<CAngleProcessInfo*> m_xJgList;
 	//ARRAY_LIST<CPlateProcessInfo*> m_xPlateList;
 	ARRAY_LIST<BOMPART*> m_xDisplayPartList;
-	CBomFile m_xPrintBomFile;
 	CDwgFileInfo *m_pDwgFile;
 	int m_nQ235Count, m_nQ345Count, m_nQ355Count, m_nQ390Count, m_nQ420Count, m_nQ460Count;
 	int m_nJgCount, m_nPlateCount, m_nYGCount, m_nTubeCount, m_nJiaCount, m_nFlatCount, m_nGgsCount;
 	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle,m_nOtherNotes;
 	int m_iPrintType;
+	BOOL m_bNeedInitCtrlState;
 protected:
 	void InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pPart);
 	void InitByProcessPlate(CPlateProcessInfo* pPlateInfo, BOMPART *pPart);
@@ -33,7 +33,7 @@ public:
 	COptimalSortDlg(CWnd* pParent = NULL);   // 标准构造函数
 	virtual ~COptimalSortDlg();
 	//
-	void SetDwgFile(CDwgFileInfo *pDwgFile) { m_pDwgFile = pDwgFile; }
+	void SetDwgFile(CDwgFileInfo *pDwgFile);
 	void UpdatePartList();
 	void RefeshListCtrl();
 	void InitCtrlState();
@@ -85,5 +85,7 @@ public:
 	int m_iCmbPrintType;
 	afx_msg void OnBnClickedBtnPrintSet();
 	virtual BOOL DestroyWindow();
+	afx_msg void OnBnClickedBtnImprotPrintBom();
+	afx_msg void OnBnClickedBtnEmptyPrintBom();
 };
 #endif

@@ -444,7 +444,7 @@ bool CBatchPrint::PrintProcessCardToPaper(bool bSendCmd)
 	if (m_xPaperPlotCfg.m_sPaperSize.GetLength() > 0)
 		sPaperSize.Printf("%s\n", (char*)m_xPaperPlotCfg.m_sPaperSize);
 	//进行批量打印
-	if (m_pPrintScopeList)
+	if (m_pPrintScopeList==NULL)
 		m_pPrintScopeList = &m_xPrintScopeList;
 	for(PRINT_SCOPE *pScope= m_pPrintScopeList->GetFirst();pScope;pScope= m_pPrintScopeList->GetNext())
 	{
@@ -456,7 +456,7 @@ bool CBatchPrint::PrintProcessCardToPaper(bool bSendCmd)
 		{
 			CXhChar50 sLeftTop("%.f,%.f\n", pScope->L_T[X], pScope->L_T[Y]);
 			CXhChar50 sRightBottom("%.f,%.f\n", pScope->R_B[X], pScope->R_B[Y]);
-			CXhChar500 sCmd("-plot\ny\n\n%s%s\nL\nN\nw\n%s%s\nC\nN\n.\nY\nA\n\n\nN\nY\n",
+			CXhChar500 sCmd("-plot\ny\n\n%s%s\nL\nN\nw\n%s%s\nC\nN\n.\nY\nA\n\nN\nY\n",
 				(char*)sDevice, (char*)sPaperSize, (char*)sLeftTop, (char*)sRightBottom);
 #ifdef _ARX_2007
 			SendCommandToCad(L"CMDECHO 0\n");

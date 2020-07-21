@@ -92,6 +92,7 @@ private:
 	CProjectTowerType* m_pProject;
 	CHashList<CAngleProcessInfo> m_hashJgInfo;
 	CPNCModel m_xPncMode;
+	CBomFile m_xPrintBomFile;	//DWG文件对应的打印清单 wht 20-07-21
 public:
 	CXhChar100 m_sDwgName;
 	CXhChar500 m_sFileName;	//文件名称
@@ -125,6 +126,16 @@ public:
 	BOOL IsJgDwgInfo(){return m_bJgDwgFile;}
 	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf);
 	BOOL ExtractThePlate();
+	//打印清单
+	BOOL ImportPrintBomExcelFile(const char* sFileName) {
+		m_xPrintBomFile.Empty();
+		m_xPrintBomFile.m_sFileName.Copy(sFileName);
+		return m_xPrintBomFile.ImportPrintExcelFile();
+	}
+	void EmptyPrintBom() { m_xPrintBomFile.Empty(); }
+	int PrintBomPartCount() { return m_xPrintBomFile.GetPartNum(); }
+	BOMPART* EnumFirstPrintPart() { return m_xPrintBomFile.EnumFirstPart(); }
+	BOMPART* EnumNextPrintPart() { return m_xPrintBomFile.EnumNextPart(); }
 };
 //////////////////////////////////////////////////////////////////////////
 //CProjectTowerType

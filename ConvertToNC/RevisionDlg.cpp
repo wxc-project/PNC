@@ -1496,6 +1496,7 @@ void CRevisionDlg::OnEnChangeELenErr()
 	g_pncSysPara.m_fMaxLenErr = atof(m_sLegErr);
 	UpdateData(FALSE);
 }
+static COptimalSortDlg printDlg;
 void CRevisionDlg::OnBatchPrintPart()
 {
 	CLogErrorLife logErrLife;
@@ -1512,10 +1513,10 @@ void CRevisionDlg::OnBatchPrintPart()
 #endif
 	g_sPrintDwgFileName.Copy(pDwgInfo->m_sFileName);
 	CAcModuleResourceOverride resOverride;
-	COptimalSortDlg dlg;
-	dlg.SetDwgFile(pDwgInfo);
+	printDlg.SetDwgFile(pDwgInfo);
 	if (g_xUbomModel.m_sJGPrintSheetName.GetLength() > 0 &&
 		g_xUbomModel.m_xJgPrintCfg.m_sColIndexArr.GetLength() > 0&&
+		pDwgInfo->PrintBomPartCount()<=0 &&
 		AfxMessageBox("是否导入角钢打印清单？", MB_YESNO) == IDYES)
 	{
 		CFileDialog file_dlg(TRUE, "xls", "角钢打印清单.xls",
@@ -1525,16 +1526,16 @@ void CRevisionDlg::OnBatchPrintPart()
 		{
 			POSITION pos = file_dlg.GetStartPosition();
 			CString sFilePath = file_dlg.GetNextPathName(pos);
-			if (dlg.InitPrintBom(sFilePath) == false)
+			if (printDlg.InitPrintBom(sFilePath) == false)
 			{
 				AfxMessageBox("打印清单读取失败，请重新确认配置是否正确!");
 				return;
 			}
 		}
 	}
-	if (dlg.DoModal() == IDOK)
+	if (printDlg.DoModal() == IDOK)
 	{
-		CBatchPrint batchPrint(&dlg.m_xPrintScopyList,TRUE,dlg.m_iPrintType);
+		CBatchPrint batchPrint(&printDlg.m_xPrintScopyList,TRUE, printDlg.m_iPrintType);
 		batchPrint.Print();
 	}
 }
