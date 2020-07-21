@@ -312,3 +312,7 @@ __pycache__/
 *.png
 *.pdf
 *.dwl
+*.dxf
+*.scr
+*.rar
+*.twmx
