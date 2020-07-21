@@ -48,11 +48,11 @@ CString CPrintSet::GetMediaNameByDeviceName(const char* sDeviceName)
         for (int i = 0; i < mDeviceList.length(); i++)
         {
             CString sTemp = mDeviceList.at(i);
-            if (sTemp.CompareNoCase(sDeviceName))
-            {
-                bValidName = TRUE;
-                break;
-            }
+			if (sTemp.CompareNoCase(sDeviceName) == 0)
+			{
+				bValidName = TRUE;
+				break;
+			}
         }
         if (bValidName)
         {

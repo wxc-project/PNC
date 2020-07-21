@@ -340,8 +340,8 @@ void CNCPlate::InitPlateNcInfo()
 					pPt->vertex = ProcessPoint(inters_pt - oldPrevPt);
 					prevPt = inters_pt;
 				}
-				else
-				{
+				else if (nRetCode == -2)
+				{	//交叉点在两线段外段，添加过度线段
 					f3dArcLine arcLine;
 					PROFILE_VER featureVertex;
 					featureVertex.type = 4;
@@ -463,8 +463,8 @@ void CNCPlate::InitPlateNcInfo()
 						pPt->vertex = ProcessPoint(inters_pt - oldPrevPt);
 						prevPt = inters_pt;
 					}
-					else
-					{
+					else if(nRetCode==-2)
+					{	//交叉点在两线段外段，添加过度线段
 						f3dArcLine arcLine;
 						PROFILE_VER featureVertex;
 						featureVertex.type = 4;

@@ -2355,6 +2355,7 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 			double radius = (pPt->radius > 0) ? pPt->radius : DISTANCE(center, ptE);
 			IDbArcline *pArcLine = AppendDbArcLine(pDrawing, 0, PS_SOLID, cutLineClr, 3);
 			pArcLine->CreateMethod3(ptS, ptE, norm, radius, center);
+			AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
 		}
 		p2dDraw->RenderDrawing();
 		Sleep(ftol(interval * 1000));

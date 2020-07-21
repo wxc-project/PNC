@@ -397,7 +397,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			}
 			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, atoi(sProcessNum)));
 		}
-			//logerr.Log("存在重复件号：%s", (char*)sPartNo);
+		//logerr.Log("存在重复件号：%s", (char*)sPartNo);
 		int nWidth = 0, nThick = 0;
 		CProcessPart::RestoreSpec(sSpec, &nWidth, &nThick);
 		if (pBomPart == NULL)
@@ -466,113 +466,126 @@ BOOL CBomFile::ImportTmaExcelFile()
 {
 	if(m_sFileName.GetLength()<=0)
 		return FALSE;
+	m_hashPartByPartNo.Empty();
+	DisplayProgress(0, "读取料单信息......");
+	//1、打开指定文件
+	int iStep = 1, nStep = 5;
+	DisplayProgress(int(100 * iStep / nStep));
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
 		return FALSE;
-	//获取定制列信息
+	//2、获取定制列信息
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	g_xUbomModel.m_xTmaTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = g_xUbomModel.m_xTmaTblCfg.m_nStartRow-1;
-	//解析数据
+	//3、获取指定sheet页
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
 	int nSheetNum = excelobj.GetWorkSheetCount();
-	int nValidSheetCount = 0, iValidSheet = (nSheetNum == 1) ? 1 : 0;
-	BOOL bRetCode = FALSE;
-	m_hashPartByPartNo.Empty();
-	int iCfgSheetIndex = 0;
+	int iValidSheet = (nSheetNum == 1) ? 1 : 0;
 	if (g_xUbomModel.m_sTMABomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
-	{
-		iCfgSheetIndex = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName);
-		if (iCfgSheetIndex > 0)
-			iValidSheet = iCfgSheetIndex;
-	}
-	if (iCfgSheetIndex==0 && g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_QingDao_HaoMai)	//青岛豪迈读取放样原始材料表
-		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, "放样原始材料表");
+		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName);
+	//4、读取sheet内容，解析数据
+	BOOL bReadOK = FALSE;
 	if (iValidSheet > 0)
-	{	//优先读取指定sheet
+	{
+		iStep++;
+		DisplayProgress(int(100 * iStep / nStep));
 		CVariant2dArray sheetContentMap(1, 1);
 		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 52);
-		if (ParseSheetContent(sheetContentMap,hashColIndexByColTitle,iStartRow))
-		{
-			nValidSheetCount++;
-			bRetCode = TRUE;
-		}
+		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
+			bReadOK = TRUE;
 	}
-	if (!bRetCode)
-	{
-		for (int iSheet = 1; iSheet <= nSheetNum; iSheet++)
-		{	//2、解析数据
-			CVariant2dArray sheetContentMap(1, 1);
-			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet, 52);
-			if (ParseSheetContent(sheetContentMap,hashColIndexByColTitle,iStartRow))
-				nValidSheetCount++;
-		}
-	}
-	if (nValidSheetCount == 0)
-	{
+	DisplayProgress(100);
+	if (!bReadOK)
 		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
-		return FALSE;
-	}
-	else
-		return TRUE;
+	return bReadOK;
 }
 //导入ERP料单EXCEL文件
 BOOL CBomFile::ImportErpExcelFile()
 {
 	if (m_sFileName.GetLength() <= 0)
 		return FALSE;
+	m_hashPartByPartNo.Empty();
+	DisplayProgress(0, "读取料单信息......");
+	//1、打开指定文件
+	int iStep = 1, nStep = 5;
+	DisplayProgress(int(100 * iStep / nStep));
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
 		return FALSE;
-	//读取sheet内容
+	//2、获取定制列信息,建立列标题与列索引映射表hashColIndexByColTitle
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
+	CHashStrList<DWORD> hashColIndexByColTitle;
+	g_xUbomModel.m_xErpTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
+	int iStartRow = g_xUbomModel.m_xErpTblCfg.m_nStartRow - 1;
+	//3、获取指定sheet页
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
 	int nSheetNum = excelobj.GetWorkSheetCount();
 	int iValidSheet = (nSheetNum >= 1) ? 1 : 0;
 	if (g_xUbomModel.m_sERPBomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
 		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sERPBomSheetName);
-	//获取Excel内容存储至sheetContentMap中
-	//最大支持52行，不设置最大列数时如果整行设置背景色会导致自动获取到的列数过大，加载Excel速度慢 wht 19-12-30
-	CVariant2dArray sheetContentMap(1, 1);
-	if (!CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet,52))
-		return false;
-	//获取定制列信息,建立列标题与列索引映射表hashColIndexByColTitle
-	CHashStrList<DWORD> hashColIndexByColTitle;
-	g_xUbomModel.m_xErpTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
-	int iStartRow = g_xUbomModel.m_xErpTblCfg.m_nStartRow-1;
-	//解析数据
-	m_hashPartByPartNo.Empty();
-	return ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow);
+	//4、读取sheet内容，解析数据
+	BOOL bReadOK = FALSE;
+	if (iValidSheet > 0)
+	{	//最大支持52行，不设置最大列数时如果整行设置背景色会导致自动获取到的列数过大，加载Excel速度慢 wht 19-12-30
+		iStep++;
+		DisplayProgress(int(100 * iStep / nStep));
+		CVariant2dArray sheetContentMap(1, 1);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 52);
+		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
+			bReadOK = TRUE;
+	}
+	DisplayProgress(100);
+	if (!bReadOK)
+		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
+	return bReadOK;
 }
 //导入打印清单
 BOOL CBomFile::ImportPrintExcelFile()
 {
+	if (m_sFileName.GetLength() <= 0)
+		return FALSE;
+	m_hashPartByPartNo.Empty();
+	DisplayProgress(0, "读取打印清单信息......");
+	//1、打开指定文件
+	int iStep = 1, nStep = 5;
+	DisplayProgress(int(100 * iStep / nStep));
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
 		return FALSE;
-	//获取定制列信息
+	//2、获取定制列信息
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	g_xUbomModel.m_xJgPrintCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = g_xUbomModel.m_xJgPrintCfg.m_nStartRow - 1;
-	//解析数据
+	//3、获取指定sheet页
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
 	int nSheetNum = excelobj.GetWorkSheetCount();
-	int nValidSheetCount = 0, iValidSheet = (nSheetNum == 1) ? 1 : 0;
-	BOOL bRetCode = FALSE;
-	int iCfgSheetIndex = 0;
+	int iValidSheet = (nSheetNum >= 1) ? 1 : 0;
 	if (g_xUbomModel.m_sJGPrintSheetName.GetLength() > 0)
-	{	//根据配置文件中指定的sheet加载表单
-		iCfgSheetIndex = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sJGPrintSheetName);
-		if (iCfgSheetIndex > 0)
-			iValidSheet = iCfgSheetIndex;
-	}
+		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sJGPrintSheetName);
+	//4、读取sheet内容，解析数据
+	BOOL bReadOK = FALSE;
 	if (iValidSheet > 0)
-	{	//优先读取指定sheet
+	{
+		iStep++;
+		DisplayProgress(int(100 * iStep / nStep));
 		CVariant2dArray sheetContentMap(1, 1);
 		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 100);
 		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
-			nValidSheetCount++;
+			bReadOK = TRUE;
 	}
-	if (nValidSheetCount == 0)
-		return FALSE;
-	else
-		return TRUE;
+	DisplayProgress(100);
+	if (!bReadOK)
+		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
+	return bReadOK;
 }
 
 CString CBomFile::GetPartNumStr()
