@@ -70,6 +70,7 @@ NC_INFO_PARA::NC_INFO_PARA()
 	m_dwFileFlag = CNCPart::PLATE_DXF_FILE;
 	m_bCutSpecialHole = TRUE;
 	m_wEnlargedSpace = 0;
+	m_bGrindingArc = FALSE;
 	m_bReserveBigSH = FALSE;
 	m_bReduceSmallSH = TRUE;
 	m_ciHoldSortType = 0;
@@ -143,6 +144,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("plasmaCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点位置","初始点位置","0.靠近原点|1.远离原点"));
 	AddPropItem("plasmaCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点定位","切入点位置","0.在指定轮廓点|1.始终在初始点"));
 	AddPropItem("plasmaCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割大号孔", "", "是|否"));
+	AddPropItem("plasmaCut.m_bGrindingArc", PROPLIST_ITEM(id++, "阳角打磨圆弧", "", "是|否"));
 	//火焰切割显示
 	AddPropItem("flameCut",PROPLIST_ITEM(id++,"火焰切割设置"));
 	AddPropItem("flameCut.m_sOutLineLen",PROPLIST_ITEM(id++,"引出线长","引出线长","(1/3)*T|(1/2)*T|(2/3)*T|T"));
@@ -150,6 +152,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("flameCut.m_bInitPosFarOrg",PROPLIST_ITEM(id++,"初始点位置","初始点","0.靠近原点|1.远离原点"));
 	AddPropItem("flameCut.m_bCutPosInInitPos",PROPLIST_ITEM(id++,"切入点定位","切入点位置","0.在指定轮廓点|1.始终在初始点"));
 	AddPropItem("flameCut.m_bCutSpecialHole", PROPLIST_ITEM(id++, "切割大号孔", "输出切割数据时输出特殊孔切割路径", "是|否"));
+	AddPropItem("flameCut.m_bGrindingArc", PROPLIST_ITEM(id++, "阳角打磨圆弧", "", "是|否"));
 	//输出设置
 	AddPropItem("OutPutSet", PROPLIST_ITEM(id++, "输出设置"));
 	AddPropItem("nc.m_iDxfMode", PROPLIST_ITEM(id++, "按厚度分类", "生成DXF是否进行分类", "是|否"));
@@ -556,11 +559,13 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("flameCut.m_sOutLineLen");
 	WriteSysParaToReg("flameCut.m_wEnlargedSpace");
 	WriteSysParaToReg("flameCut.m_bCutSpecialHole");
+	WriteSysParaToReg("flameCut.m_bGrindingArc");
 	WriteSysParaToReg("plasmaCut.m_bCutPosInInitPos");
 	WriteSysParaToReg("plasmaCut.m_bInitPosFarOrg");
 	WriteSysParaToReg("plasmaCut.m_sIntoLineLen");
 	WriteSysParaToReg("plasmaCut.m_sOutLineLen");
 	WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
+	WriteSysParaToReg("plasmaCut.m_bGrindingArc");
 	WriteSysParaToReg("plasmaCut.m_bCutSpecialHole");
 	WriteSysParaToReg("laserPara.m_bOutputBendLine");
 	WriteSysParaToReg("laserPara.m_bOutputBendType");
@@ -852,12 +857,14 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("flameCut.m_sOutLineLen");
 	ReadSysParaFromReg("flameCut.m_wEnlargedSpace");
 	ReadSysParaFromReg("flameCut.m_bCutSpecialHole");
+	ReadSysParaFromReg("flameCut.m_bGrindingArc");
 	ReadSysParaFromReg("plasmaCut.m_bCutPosInInitPos");
 	ReadSysParaFromReg("plasmaCut.m_bInitPosFarOrg");
 	ReadSysParaFromReg("plasmaCut.m_sIntoLineLen");
 	ReadSysParaFromReg("plasmaCut.m_sOutLineLen");
 	ReadSysParaFromReg("plasmaCut.m_wEnlargedSpace");
 	ReadSysParaFromReg("plasmaCut.m_bCutSpecialHole");
+	ReadSysParaFromReg("plasmaCut.m_bGrindingArc");
 	ReadSysParaFromReg("laserPara.m_bOutputBendLine");
 	ReadSysParaFromReg("laserPara.m_bOutputBendType");
 	ReadSysParaFromReg("laserPara.m_wEnlargedSpace");
@@ -876,7 +883,7 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 	char sSubKey[MAX_PATH]="Software\\Xerofox\\PPE\\Settings";
 	DWORD dwLength=0;
 	HKEY hKey;
-	if(RegOpenKeyEx(HKEY_CURRENT_USER,sSubKey,0,KEY_WRITE,&hKey)==ERROR_SUCCESS&&hKey)
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, sSubKey, 0, KEY_WRITE, &hKey) == ERROR_SUCCESS && hKey)
 	{
 		if (stricmp(lpszEntry, "MKRectL") == 0)
 			sprintf(sValue, "%f", nc.m_fMKRectL);
@@ -934,7 +941,7 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "%d", nc.m_ciMkVect);
 		else if (stricmp(lpszEntry, "m_ciDisplayType") == 0)
 			sprintf(sValue, "%d", nc.m_ciDisplayType);
-		
+
 		//
 		else if (stricmp(lpszEntry, "PbjIncVertex") == 0)
 			sprintf(sValue, "%d", pbj.m_bIncVertex);
@@ -962,6 +969,8 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "%d", nc.m_xFlamePara.m_wEnlargedSpace);
 		else if (stricmp(lpszEntry, "flameCut.m_bCutSpecialHole") == 0)
 			sprintf(sValue, "%d", nc.m_xFlamePara.m_bCutSpecialHole);
+		else if (stricmp(lpszEntry, "flameCut.m_bGrindingArc") == 0)
+			sprintf(sValue, "%d", nc.m_xFlamePara.m_bGrindingArc);
 		//
 		else if (stricmp(lpszEntry, "plasmaCut.m_bCutPosInInitPos") == 0)
 			sprintf(sValue, "%d", plasmaCut.m_bCutPosInInitPos);
@@ -975,14 +984,17 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "%d", nc.m_xPlasmaPara.m_wEnlargedSpace);
 		else if (stricmp(lpszEntry, "plasmaCut.m_bCutSpecialHole") == 0)
 			sprintf(sValue, "%d", nc.m_xPlasmaPara.m_bCutSpecialHole);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bGrindingArc") == 0)
+			sprintf(sValue, "%d", nc.m_xPlasmaPara.m_bGrindingArc);
+		//
 		else if (stricmp(lpszEntry, "laserPara.m_bOutputBendLine") == 0)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendLine);
 		else if (stricmp(lpszEntry, "laserPara.m_bOutputBendType") == 0)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendType);
 		else if (stricmp(lpszEntry, "laserPara.m_wEnlargedSpace") == 0)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_wEnlargedSpace);
-		dwLength=strlen(sValue);
-		RegSetValueEx(hKey,lpszEntry,NULL,REG_SZ,(BYTE*)&sValue[0],dwLength);
+		dwLength = strlen(sValue);
+		RegSetValueEx(hKey, lpszEntry, NULL, REG_SZ, (BYTE*)&sValue[0], dwLength);
 		RegCloseKey(hKey);
 	}
 }
@@ -993,8 +1005,8 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 	char sSubKey[MAX_PATH]="Software\\Xerofox\\PPE\\Settings";
 	HKEY hKey;
 	DWORD dwDataType,dwLength=MAX_PATH;
-	if(RegOpenKeyEx(HKEY_CURRENT_USER,sSubKey,0,KEY_READ,&hKey)==ERROR_SUCCESS&&hKey &&
-		RegQueryValueEx(hKey,lpszEntry,NULL,&dwDataType,(BYTE*)&sValue[0],&dwLength)==ERROR_SUCCESS)
+	if (RegOpenKeyEx(HKEY_CURRENT_USER, sSubKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS && hKey &&
+		RegQueryValueEx(hKey, lpszEntry, NULL, &dwDataType, (BYTE*)&sValue[0], &dwLength) == ERROR_SUCCESS)
 	{
 		if (stricmp(lpszEntry, "MKRectL") == 0)
 			nc.m_fMKRectL = atof(sValue);
@@ -1050,41 +1062,41 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 		else if (stricmp(lpszEntry, "PmzCheck") == 0)
 			pmz.m_bPmzCheck = atoi(sValue);
 		//
-		else if(stricmp(lpszEntry,"M12Color")==0)
+		else if (stricmp(lpszEntry, "M12Color") == 0)
 		{
-			sprintf(tem_str,"%s",sValue);
-			memmove(tem_str, tem_str+3, 97);
-			sscanf(tem_str,"%X",&crMode.crLS12);
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crLS12);
 		}
-		else if(stricmp(lpszEntry,"M16Color")==0)
-		{	
-			sprintf(tem_str,"%s",sValue);
-			memmove(tem_str, tem_str+3, 97);
-			sscanf(tem_str,"%X",&crMode.crLS16);
-		}
-		else if(stricmp(lpszEntry,"M20Color")==0)
-		{	
-			sprintf(tem_str,"%s",sValue);
-			memmove(tem_str, tem_str+3, 97);
-			sscanf(tem_str,"%X",&crMode.crLS20);
-		}
-		else if(stricmp(lpszEntry,"M24Color")==0)
-		{	
-			sprintf(tem_str,"%s",sValue);
-			memmove(tem_str, tem_str+3, 97);
-			sscanf(tem_str,"%X",&crMode.crLS24);
-		}
-		else if(stricmp(lpszEntry,"OtherColor")==0)
-		{	
-			sprintf(tem_str,"%s",sValue);
-			memmove(tem_str, tem_str+3, 97);
-			sscanf(tem_str,"%X",&crMode.crOtherLS);
-		}
-		else if(stricmp(lpszEntry,"MarkColor")==0)
+		else if (stricmp(lpszEntry, "M16Color") == 0)
 		{
-			sprintf(tem_str,"%s",sValue);
-			memmove(tem_str, tem_str+3, 97);
-			sscanf(tem_str,"%X",&crMode.crMark);
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crLS16);
+		}
+		else if (stricmp(lpszEntry, "M20Color") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crLS20);
+		}
+		else if (stricmp(lpszEntry, "M24Color") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crLS24);
+		}
+		else if (stricmp(lpszEntry, "OtherColor") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crOtherLS);
+		}
+		else if (stricmp(lpszEntry, "MarkColor") == 0)
+		{
+			sprintf(tem_str, "%s", sValue);
+			memmove(tem_str, tem_str + 3, 97);
+			sscanf(tem_str, "%X", &crMode.crMark);
 		}
 		else if (stricmp(lpszEntry, "EdgeColor") == 0)
 		{
@@ -1104,35 +1116,39 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			memmove(tem_str, tem_str + 3, 97);
 			sscanf(tem_str, "%X", &crMode.crText);
 		}
-		else if(stricmp(lpszEntry,"flameCut.m_bInitPosFarOrg")==0)
-			flameCut.m_bInitPosFarOrg=atoi(sValue);
-		else if(stricmp(lpszEntry,"flameCut.m_bCutPosInInitPos")==0)
-			flameCut.m_bCutPosInInitPos=atoi(sValue);
-		else if(stricmp(lpszEntry,"flameCut.m_sIntoLineLen")==0)
+		else if (stricmp(lpszEntry, "flameCut.m_bInitPosFarOrg") == 0)
+			flameCut.m_bInitPosFarOrg = atoi(sValue);
+		else if (stricmp(lpszEntry, "flameCut.m_bCutPosInInitPos") == 0)
+			flameCut.m_bCutPosInInitPos = atoi(sValue);
+		else if (stricmp(lpszEntry, "flameCut.m_sIntoLineLen") == 0)
 			flameCut.m_sIntoLineLen.Copy(sValue);
-		else if(stricmp(lpszEntry,"flameCut.m_sOutLineLen")==0)
+		else if (stricmp(lpszEntry, "flameCut.m_sOutLineLen") == 0)
 			flameCut.m_sOutLineLen.Copy(sValue);
-		else if(stricmp(lpszEntry,"flameCut.m_wEnlargedSpace")==0)
-			nc.m_xFlamePara.m_wEnlargedSpace=atoi(sValue);
+		else if (stricmp(lpszEntry, "flameCut.m_wEnlargedSpace") == 0)
+			nc.m_xFlamePara.m_wEnlargedSpace = atoi(sValue);
 		else if (stricmp(lpszEntry, "flameCut.m_bCutSpecialHole") == 0)
 			nc.m_xFlamePara.m_bCutSpecialHole = atoi(sValue);
-		else if(stricmp(lpszEntry,"plasmaCut.m_bInitPosFarOrg")==0)
-			plasmaCut.m_bInitPosFarOrg=atoi(sValue);
-		else if(stricmp(lpszEntry,"plasmaCut.m_bCutPosInInitPos")==0)
-			plasmaCut.m_bCutPosInInitPos=atoi(sValue);
-		else if(stricmp(lpszEntry,"plasmaCut.m_sIntoLineLen")==0)
+		else if (stricmp(lpszEntry, "flameCut.m_bGrindingArc") == 0)
+			nc.m_xFlamePara.m_bGrindingArc = atoi(sValue);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bInitPosFarOrg") == 0)
+			plasmaCut.m_bInitPosFarOrg = atoi(sValue);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bCutPosInInitPos") == 0)
+			plasmaCut.m_bCutPosInInitPos = atoi(sValue);
+		else if (stricmp(lpszEntry, "plasmaCut.m_sIntoLineLen") == 0)
 			plasmaCut.m_sIntoLineLen.Copy(sValue);
-		else if(stricmp(lpszEntry,"plasmaCut.m_sOutLineLen")==0)
+		else if (stricmp(lpszEntry, "plasmaCut.m_sOutLineLen") == 0)
 			plasmaCut.m_sOutLineLen.Copy(sValue);
-		else if(stricmp(lpszEntry,"plasmaCut.m_wEnlargedSpace")==0)
-			nc.m_xPlasmaPara.m_wEnlargedSpace=atoi(sValue);
+		else if (stricmp(lpszEntry, "plasmaCut.m_wEnlargedSpace") == 0)
+			nc.m_xPlasmaPara.m_wEnlargedSpace = atoi(sValue);
 		else if (stricmp(lpszEntry, "plasmaCut.m_bCutSpecialHole") == 0)
 			nc.m_xPlasmaPara.m_bCutSpecialHole = atoi(sValue);
+		else if (stricmp(lpszEntry, "plasmaCut.m_bGrindingArc") == 0)
+			nc.m_xPlasmaPara.m_bGrindingArc = atoi(sValue);
 		else if (stricmp(lpszEntry, "laserPara.m_bOutputBendLine") == 0)
 			nc.m_xLaserPara.m_bOutputBendLine = atoi(sValue);
 		else if (stricmp(lpszEntry, "laserPara.m_bOutputBendType") == 0)
 			nc.m_xLaserPara.m_bOutputBendType = atoi(sValue);
-		else if(stricmp(lpszEntry, "laserPara.m_wEnlargedSpace")==0)
+		else if (stricmp(lpszEntry, "laserPara.m_wEnlargedSpace") == 0)
 			nc.m_xLaserPara.m_wEnlargedSpace = atoi(sValue);
 		RegCloseKey(hKey);
 	}
@@ -1510,6 +1526,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("nc.PlasmaPara.m_wEnlargedSpace")==id)
 		sText.Printf("%d",nc.m_xPlasmaPara.m_wEnlargedSpace);
+	else if (GetPropID("plasmaCut.m_bGrindingArc") == id)
+	{
+		if (nc.m_xPlasmaPara.m_bGrindingArc)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
+	}
 	else if (GetPropID("plasmaCut.m_bCutSpecialHole") == id)
 	{
 		if (nc.m_xPlasmaPara.m_bCutSpecialHole)
@@ -1538,6 +1561,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 	}
 	else if(GetPropID("nc.FlamePara.m_wEnlargedSpace")==id)
 		sText.Printf("%d", nc.m_xFlamePara.m_wEnlargedSpace);
+	else if (GetPropID("flameCut.m_bGrindingArc") == id)
+	{
+		if (nc.m_xFlamePara.m_bGrindingArc)
+			sText.Copy("是");
+		else
+			sText.Copy("否");
+	}
 	else if (GetPropID("flameCut.m_bCutSpecialHole") == id)
 	{
 		if(nc.m_xFlamePara.m_bCutSpecialHole)

@@ -2140,24 +2140,21 @@ void CProcessPlateDraw::NcModelDraw(IDrawing *pDrawing,ISolidSet *pSolidSet)
 		fShapeAddDist = atof(sValue);
 	if (ciDisplayNcMode==0X10 && CPEC::GetSysParaFromReg("laserPara.m_wEnlargedSpace", sValue))
 		fShapeAddDist = atof(sValue);
-	if (fShapeAddDist > 0)
-	{
-		int iCalType = 0;
-		ATOM_LIST<PROFILE_VER> xDestList;
-		tempPlate.CalEquidistantShape(fShapeAddDist, &xDestList, iCalType);
-		tempPlate.vertex_list.Empty();
-		for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
-			tempPlate.vertex_list.Append(*pVertex);
-		//调整坐标系原点
-		if(iCalType==0)
-			tempPlate.GetMCS(mcs);
-		else
-		{	//
-			SCOPE_STRU scope = tempPlate.GetVertexsScope(&mcs);
-			mcs.origin += scope.fMinX*mcs.axis_x;
-			mcs.origin += scope.fMinY*mcs.axis_y;
-		}
-	}
+	BOOL bGrindingArc = FALSE;
+	if ((ciDisplayNcMode & 0X01) && CPEC::GetSysParaFromReg("flameCut.m_bGrindingArc", sValue))
+		bGrindingArc = atoi(sValue);
+	if ((ciDisplayNcMode & 0X02) && CPEC::GetSysParaFromReg("plasmaCut.m_bGrindingArc", sValue))
+		bGrindingArc = atoi(sValue);
+	mcs = CNCPlate::GetMCS(tempPlate, fShapeAddDist, bGrindingArc);
+	//还原轮廓点
+	tempPlate.vertex_list.Empty();
+	for (PROFILE_VER* pVertex = pPlate->vertex_list.GetFirst(); pVertex; pVertex = pPlate->vertex_list.GetNext())
+		tempPlate.vertex_list.Append(*pVertex, pPlate->vertex_list.GetCursorKey());
+	ATOM_LIST<PROFILE_VER> xDestList;
+	tempPlate.CalEquidistantShape(fShapeAddDist, &xDestList);
+	tempPlate.vertex_list.Empty();
+	for (PROFILE_VER* pVertex = xDestList.GetFirst(); pVertex; pVertex = xDestList.GetNext())
+		tempPlate.vertex_list.Append(*pVertex);
 #endif
 	CProcessPlate::TransPlateToMCS(&tempPlate,mcs);
 	//2.绘制坐标系及挡板高度
@@ -2267,6 +2264,8 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 			ncPlate.m_nEnlargedSpace = atoi(sValue);
 		if (CPEC::GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
 			ncPlate.m_bCutSpecialHole = atoi(sValue);
+		if (CPEC::GetSysParaFromReg("flameCut.m_bGrindingArc", sValue))
+			ncPlate.m_bGrindingArc = atoi(sValue);
 	}
 	else if (cCutType & 0X02)
 	{	//等离子切割（顺时针）,目前生成NC数据时不考虑轮廓边增大值和特殊孔  wxc-20.05.22
@@ -2275,10 +2274,12 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 			ncPlate.m_nOutLineLen = GetLineLenFromExpression(m_pPart->m_fThick, sValue);
 		if (CPEC::GetSysParaFromReg("plasmaCut.m_sIntoLineLen", sValue))
 			ncPlate.m_nInLineLen = GetLineLenFromExpression(m_pPart->m_fThick, sValue);
-		//if (CPEC::GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
-			//ncPlate.m_nEnlargedSpace = atoi(sValue);
-		//if (CPEC::GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
-			//ncPlate.m_bCutSpecialHole = atoi(sValue);
+		if (CPEC::GetSysParaFromReg("plasmaCut.m_wEnlargedSpace", sValue))
+			ncPlate.m_nEnlargedSpace = atoi(sValue);
+		if (CPEC::GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
+			ncPlate.m_bCutSpecialHole = atoi(sValue);
+		if (CPEC::GetSysParaFromReg("plasmaCut.m_bGrindingArc", sValue))
+			ncPlate.m_bGrindingArc = atoi(sValue);
 	}
 	else
 		return;

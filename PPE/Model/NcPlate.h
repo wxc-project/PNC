@@ -51,8 +51,15 @@ public:
 	int m_nEnlargedSpace;	//ÂÖÀª±ßÔö´óÖµ
 	BOOL m_bCutSpecialHole;	//ÊÇ·ñÇÐ¸î´ó¿×
 	BOOL m_bCutFullCircle;	//ÊÇ·ñÇÐÕûÔ²
+	BOOL m_bGrindingArc;	//Ñô½Ç´òÄ¥
 	CUT_EDGE_PATH m_xCutEdge;				//ÇÐ¸îÂÖÀª±ßÂ·¾¶
 	ATOM_LIST<CUT_HOLE_PATH> m_xCutHole;	//ÇÐ¸î´ó¿×Â·¾¶
+private:
+	void AppendCutPt(GEPOINT& prePt, GEPOINT curPt);
+	void AppendCutPt(GEPOINT& prePt, GEPOINT curPt, GEPOINT center, GEPOINT norm);
+	void InitCutHoleInfo(GEPOINT& prevPt, CProcessPlate& destPlate);
+	void InitCutEdgePtInfo(GEPOINT& prevPt, CProcessPlate& destPlate);
+	void InitCutEdgePtInfoEx(GEPOINT& prevPt, CProcessPlate& destPlate);
 public:
 	CNCPlate(CProcessPlate *pPlate, int iNo = 0);
 	//
@@ -62,7 +69,8 @@ public:
 	void InitPlateNcInfo();
 	bool CreatePlateTxtFile(const char* file_path);
 	bool CreatePlateNcFile(const char* file_path);
-	GECS GetMCS();
+	//
+	static GECS GetMCS(CProcessPlate& tempPlate, double fMinDistance, BOOL bGrindingArc);
 public:
 	static bool InitVertextListByNcFile(CProcessPlate *pPlate,const char* file_path);
 };
