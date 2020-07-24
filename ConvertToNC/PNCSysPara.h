@@ -74,6 +74,7 @@ public:
 	static const BYTE RECOGN_HOLE_D_DIM = 0X02;	//识别孔径文字标注
 	static const BYTE RECOGN_LS_CIRCLE  = 0X04; //处理普通螺栓圆圈
 	BYTE m_ciBoltRecogMode;
+	double m_fPartNoCirD;
 	static const BYTE FILTER_BY_LINETYPE = 0;
 	static const BYTE FILTER_BY_LAYER	 = 1;
 	static const BYTE FILTER_BY_COLOR	 = 2;

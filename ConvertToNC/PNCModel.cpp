@@ -372,6 +372,8 @@ void CPlateProcessInfo::PreprocessorBoltEnt(int *piInvalidCirCountForText)
 				CAD_ENTITY *pCirEnt = *ppCirEnt;
 				if (pCirEnt->ciEntType == TYPE_BLOCKREF)
 					continue;	//螺栓图符内有文字时不需要过滤 wht 19-12-10
+				if(g_pncSysPara.m_fPartNoCirD>0 && pCirEnt->m_fSize!=g_pncSysPara.m_fPartNoCirD)
+					continue;	//用户指定件号圆圈孔径时，不满足孔径的不过滤 wxc-20-07-23
 				scope.ClearScope();
 				double r = pCirEnt->m_fSize*0.5;
 				scope.fMinX = pCirEnt->pos.x - r;
