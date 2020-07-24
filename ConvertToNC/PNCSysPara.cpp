@@ -73,6 +73,7 @@ void CPNCSysPara::Init()
 	m_iLayerMode = 0;
 	m_ciRecogMode = 0;
 	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
+	m_fPartNoCirD = 0;
 	m_ciProfileColorIndex = 1;		//红色
 	m_ciBendLineColorIndex = 0;		//无颜色
 	m_sProfileLineType.Copy("CONTINUOUS");
@@ -167,6 +168,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("layer_mode",PROPLIST_ITEM(id++,"图层处理方式","轮廓边图层处理方式","0.指定轮廓边图层|1.过滤默认图层"));
 	AddPropItem("m_fPixelScale", PROPLIST_ITEM(id++, "处理像素比例"));
 	AddPropItem("FilterPartNoCir", PROPLIST_ITEM(id++, "件号专属圆圈", "", "过滤|不过滤"));
+	AddPropItem("m_fPartNoCirD", PROPLIST_ITEM(id++, "件号圆圈直径", ""));
 	AddPropItem("RecogHoleDimText", PROPLIST_ITEM(id++, "孔径文字标注", "特殊孔径标注(文字说明或直径标注)", "按标注处理|不进行处理"));
 	AddPropItem("RecogLsCircle", PROPLIST_ITEM(id++, "圆孔式螺栓", "非图符块的圆圈表示的螺栓", "统一按实际孔径处理|根据标准孔进行筛选"));
 	AddPropItem("RecogLsBlock", PROPLIST_ITEM(id++, "图块式螺栓", "用螺栓图符块表示的螺栓","螺栓图块设置"));
@@ -194,7 +196,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("crMode.crLS24", PROPLIST_ITEM(id++, "M24孔径颜色"));
 	AddPropItem("crMode.crOtherLS", PROPLIST_ITEM(id++, "其他孔径颜色"));
 }
-int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100*/,CPropTreeItem *pItem/*=NULL*/)
+int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=100*/, CPropTreeItem *pItem/*=NULL*/)
 {
 	CXhChar100 sText;
 	if (GetPropID("m_bIncDeformed") == id)
@@ -241,7 +243,7 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 	{
 		if (g_pncSysPara.m_ciMKPos == 1)
 			sText.Copy("1.钢印字盒块");
-		else if(g_pncSysPara.m_ciMKPos == 2)
+		else if (g_pncSysPara.m_ciMKPos == 2)
 			sText.Copy("2.钢印号位孔");
 		else
 			sText.Copy("0.件号文字标注");
@@ -250,8 +252,8 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("%g", m_fMKHoleD);
 	else if (GetPropID("m_nMaxHoleD") == id)
 		sText.Printf("%d", g_pncSysPara.m_nMaxHoleD);
-	else if(GetPropID("m_fMapScale")==id)
-		sText.Printf("%.f",g_pncSysPara.m_fMapScale);
+	else if (GetPropID("m_fMapScale") == id)
+		sText.Printf("%.f", g_pncSysPara.m_fMapScale);
 	else if (GetPropID("m_ciLayoutMode") == id)
 	{
 		if (g_pncSysPara.m_ciLayoutMode == 1)
@@ -285,35 +287,35 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else
 			sText.Copy("0.不分组");
 	}
-	else if(GetPropID("m_nMapLength")==id)
-		sText.Printf("%d",g_pncSysPara.m_nMapLength);
-	else if(GetPropID("m_nMapWidth")==id)
-		sText.Printf("%d",g_pncSysPara.m_nMapWidth);
-	else if(GetPropID("m_nMinDistance")==id)
-		sText.Printf("%d",g_pncSysPara.m_nMinDistance);
+	else if (GetPropID("m_nMapLength") == id)
+		sText.Printf("%d", g_pncSysPara.m_nMapLength);
+	else if (GetPropID("m_nMapWidth") == id)
+		sText.Printf("%d", g_pncSysPara.m_nMapWidth);
+	else if (GetPropID("m_nMinDistance") == id)
+		sText.Printf("%d", g_pncSysPara.m_nMinDistance);
 #ifndef __UBOM_ONLY_ 
-	else if(GetPropID("CDrawDamBoard::m_bDrawAllBamBoard")==id)
+	else if (GetPropID("CDrawDamBoard::m_bDrawAllBamBoard") == id)
 	{
-		if(CDrawDamBoard::m_bDrawAllBamBoard)
+		if (CDrawDamBoard::m_bDrawAllBamBoard)
 			sText.Copy("1.显示所有档板");
-		else 
+		else
 			sText.Copy("0.仅显示选中钢板档板");
 	}
-	else if(GetPropID("CDrawDamBoard::BOARD_HEIGHT")==id)
-		sText.Printf("%d",CDrawDamBoard::BOARD_HEIGHT);
+	else if (GetPropID("CDrawDamBoard::BOARD_HEIGHT") == id)
+		sText.Printf("%d", CDrawDamBoard::BOARD_HEIGHT);
 #endif
 	else if (GetPropID("m_nMkRectWidth") == id)
 		sText.Printf("%d", g_pncSysPara.m_nMkRectWidth);
 	else if (GetPropID("m_nMkRectLen") == id)
 		sText.Printf("%d", g_pncSysPara.m_nMkRectLen);
-	else if(GetPropID("layer_mode")==id)
+	else if (GetPropID("layer_mode") == id)
 	{
-		if(m_iLayerMode==0)
+		if (m_iLayerMode == 0)
 			sText.Copy("0.指定轮廓边图层");
-		else if(m_iLayerMode==1)
+		else if (m_iLayerMode == 1)
 			sText.Copy("1.过滤默认图层");
 	}
-	else if(GetPropID("m_iRecogMode")==id)
+	else if (GetPropID("m_iRecogMode") == id)
 	{
 		if (m_ciRecogMode == FILTER_BY_LINETYPE)
 			sText.Copy("0.按线型识别");
@@ -336,6 +338,8 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else
 			sText.Copy("不过滤");
 	}
+	else if (GetPropID("m_fPartNoCirD") == id)
+		sText.Printf("%g", m_fPartNoCirD);
 	else if (GetPropID("standardM12") == id)
 		sText.Printf("%g", standard_hole.m_fLS12);
 	else if (GetPropID("standardM16") == id)
@@ -344,7 +348,7 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("%g", standard_hole.m_fLS20);
 	else if (GetPropID("standardM24") == id)
 		sText.Printf("%g", standard_hole.m_fLS24);
-	else if(GetPropID("RecogLsBlock")==id)
+	else if (GetPropID("RecogLsBlock") == id)
 		sText.Copy("根据图符设置处理");
 	else if (GetPropID("RecogHoleDimText") == id)
 	{
@@ -353,18 +357,18 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		else
 			sText.Copy("不进行处理");
 	}
-	else if(GetPropID("RecogLsCircle")==id)
+	else if (GetPropID("RecogLsCircle") == id)
 	{
 		if (IsRecogCirByBoltD())
 			sText.Copy("根据标准孔进行筛选");
 		else
 			sText.Copy("统一按特殊孔处理");
 	}
-	else if(GetPropID("m_iProfileColorIndex")==id)
-		sText.Printf("RGB%X",GetColorFromIndex(m_ciProfileColorIndex));
-	else if(GetPropID("m_iBendLineColorIndex")==id)
-		sText.Printf("RGB%X",GetColorFromIndex(m_ciBendLineColorIndex));
-	else if(GetPropID("m_iProfileLineTypeName")==id)
+	else if (GetPropID("m_iProfileColorIndex") == id)
+		sText.Printf("RGB%X", GetColorFromIndex(m_ciProfileColorIndex));
+	else if (GetPropID("m_iBendLineColorIndex") == id)
+		sText.Printf("RGB%X", GetColorFromIndex(m_ciBendLineColorIndex));
+	else if (GetPropID("m_iProfileLineTypeName") == id)
 		sText.Copy(m_sProfileLineType);
 	else if (GetPropID("crMode.crLS12") == id)
 		sText.Printf("RGB%X", crMode.crLS12);
@@ -376,8 +380,8 @@ int CPNCSysPara::GetPropValueStr(long id,char* valueStr,UINT nMaxStrBufLen/*=100
 		sText.Printf("RGB%X", crMode.crLS24);
 	else if (GetPropID("crMode.crEdge") == id)
 		sText.Printf("RGB%X", crMode.crEdge);
-	if(valueStr)
-		StrCopy(valueStr,sText,nMaxStrBufLen);
+	if (valueStr)
+		StrCopy(valueStr, sText, nMaxStrBufLen);
 	return strlen(sText);
 }
 
@@ -717,6 +721,12 @@ void PNCSysSetImportDefault()
 			sscanf(line_txt, "%s%d", key_word, &nTemp);
 			g_pncSysPara.m_ciBoltRecogMode = nTemp;
 		}
+		else if (_stricmp(key_word, "PartNoCirD") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey)
+				g_pncSysPara.m_fPartNoCirD = atof(skey);
+		}
 		else if (_stricmp(key_word, "BendLineColorIndex") == 0)
 		{
 			sscanf(line_txt, "%s%d", key_word, &nTemp);
@@ -924,6 +934,7 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "bIncFilterLayer=%d ;启用过滤默认图层\n", g_pncSysPara.m_iLayerMode);
 	fprintf(fp, "RecogMode=%d ;识别模式\n", g_pncSysPara.m_ciRecogMode);
 	fprintf(fp, "BoltRecogMode=%d ;螺栓识别模式\n", g_pncSysPara.m_ciBoltRecogMode);
+	fprintf(fp, "PartNoCirD=%.1f ;件号圆圈直径\n", g_pncSysPara.m_fPartNoCirD);
 	fprintf(fp, "ProfileColorIndex=%d ;轮廓边颜色\n", g_pncSysPara.m_ciProfileColorIndex);
 	fprintf(fp, "BendLineColorIndex=%d ;制弯线颜色\n", g_pncSysPara.m_ciBendLineColorIndex);
 	fprintf(fp, "ProfileLineType=%s ;轮廓边线型\n", (char*)g_pncSysPara.m_sProfileLineType);

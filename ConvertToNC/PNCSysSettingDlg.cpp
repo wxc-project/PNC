@@ -166,7 +166,13 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			g_pncSysPara.m_ciBoltRecogMode |= 0X01;
 		else
 			g_pncSysPara.m_ciBoltRecogMode &= 0X02;
+		//
+		pPropList->DeleteAllSonItems(pItem);
+		if (g_pncSysPara.IsFilterPartNoCir())
+			oper.InsertEditPropItem(pItem, "m_fPartNoCirD", "", "", -1, TRUE);
 	}
+	else if(pItem->m_idProp==CPNCSysPara::GetPropID("m_fPartNoCirD"))
+		g_pncSysPara.m_fPartNoCirD = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogHoleDimText"))
 	{
 		if (valueStr.CompareNoCase("按标注处理") == 0)
@@ -967,7 +973,9 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 		oper.InsertEditPropItem(pPropItem, "standardM24");
 	}
 	oper.InsertCmbListPropItem(pGroupItem, "RecogHoleDimText");
-	oper.InsertCmbListPropItem(pGroupItem, "FilterPartNoCir");
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "FilterPartNoCir");
+	if (g_pncSysPara.IsFilterPartNoCir())
+		oper.InsertEditPropItem(pPropItem, "m_fPartNoCirD");
 	//提取结果显示模式
 	pGroupItem = oper.InsertPropItem(pRootItem, "DisplayMode");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_ciLayoutMode");
