@@ -485,16 +485,19 @@ BOOL CBomFile::ImportTmaExcelFile()
 	DisplayProgress(int(100 * iStep / nStep));
 	int nSheetNum = excelobj.GetWorkSheetCount();
 	int iValidSheet = (nSheetNum == 1) ? 1 : 0;
+	ARRAY_LIST<int> sheetIndexList;
 	if (g_xUbomModel.m_sTMABomSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
-		iValidSheet = CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName);
+		CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, g_xUbomModel.m_sTMABomSheetName, sheetIndexList);
+	if (iValidSheet > 0 && sheetIndexList.GetSize()<=0)
+		sheetIndexList.append(iValidSheet);
 	//4、读取sheet内容，解析数据
 	BOOL bReadOK = FALSE;
-	if (iValidSheet > 0)
+	iStep++;
+	DisplayProgress(int(100 * iStep / nStep));
+	for(int *pSheetIndex=sheetIndexList.GetFirst();pSheetIndex;pSheetIndex=sheetIndexList.GetNext())
 	{
-		iStep++;
-		DisplayProgress(int(100 * iStep / nStep));
 		CVariant2dArray sheetContentMap(1, 1);
-		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iValidSheet, 52);
+		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, *pSheetIndex, 52);
 		if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
 			bReadOK = TRUE;
 	}
@@ -1773,6 +1776,27 @@ DWORD CBomModel::AddFuncType(int iFuncType)
 	m_dwFunctionFlag |= dwFlag;
 	return m_dwFunctionFlag;
 }
+
+static char* InitBomTblTitleCfg(char* skey, CBomTblTitleCfg *pBomTblCfg)
+{
+	if (skey == NULL)
+		return;
+	skey = strtok(NULL, ";");
+	if (skey != NULL && strlen(skey) > 0 && pBomTblCfg)
+	{
+		pBomTblCfg->m_sColIndexArr.Copy(skey);
+		pBomTblCfg->m_sColIndexArr.Replace(" ", "");
+		//读取列数
+		skey = strtok(NULL, ";");
+		if (skey != NULL)
+			pBomTblCfg->m_nColCount = atoi(skey);
+		//内容起始行
+		skey = strtok(NULL, ";");
+		if (skey != NULL)
+			pBomTblCfg->m_nStartRow = atoi(skey);
+	}
+	return skey;
+}
 void CBomModel::InitBomTblCfg()
 {
 	char file_name[MAX_PATH] = "", line_txt[MAX_PATH] = "", key_word[100] = "";
@@ -1810,6 +1834,7 @@ void CBomModel::InitBomTblCfg()
 		}
 		else if (_stricmp(key_word, "TMA_BOM") == 0)
 		{
+			//InitBomTblTitleCfg(skey,)
 			skey = strtok(NULL, ";");
 			if (skey != NULL && strlen(skey) > 0)
 			{
@@ -1842,7 +1867,7 @@ void CBomModel::InitBomTblCfg()
 					m_xErpTblCfg.m_nStartRow = atoi(skey);
 			}
 		}
-		else if (_stricmp(key_word, "JG_BOM") == 0)
+		else if (_stricmp(key_word, "JG_BOM") == 0 || _stricmp(key_word, "PRINT_BOM") == 0)
 		{
 			skey = strtok(NULL, ";");
 			if (skey != NULL && strlen(skey) > 0)

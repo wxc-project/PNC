@@ -255,6 +255,9 @@ public:
 	vector<BOM_TITLE> m_xBomTitleArr;
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg, m_xJgPrintCfg;
+	CBomTblTitleCfg m_xArrTmaTblCfg[10];	//TMA_BOM导入多个sheet且Sheet格式不同时使用，关键字 TMA_BOM_1,TMA_BOM_2... wht 20-07-22
+	CBomTblTitleCfg m_xArrErpTblCfg[10];	//ERP_BOM导入多个sheet且Sheet格式不同时使用，关键字 ERP_BOM_1,ERP_BOM_2... wht 20-07-22
+	CBomTblTitleCfg m_xArrPrintTblCfg[10];	//PRINT_BOM导入多个sheet且Sheet格式不同时使用，关键字 PRINT_BOM_1,PRINT_BOM_2... wht 20-07-22
 	CXhChar500 m_sAngleCompareItemArr;	//角钢校审项
 	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
 	CHashStrList<BOOL> hashCompareItemOfAngle;
