@@ -1360,6 +1360,8 @@ bool CNCPart::CreatePlateTxtFile(CProcessPlate *pPlate,const char* file_path)
 		ncPlate.m_nEnlargedSpace = atoi(sValue);
 	if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
 		ncPlate.m_bCutSpecialHole = atoi(sValue);
+	if (GetSysParaFromReg("flameCut.m_bGrindingArc", sValue))
+		ncPlate.m_bGrindingArc = atoi(sValue);
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
 }
@@ -1382,6 +1384,8 @@ bool CNCPart::CreatePlateNcFile(CProcessPlate *pPlate,const char* file_path)
 		ncPlate.m_nEnlargedSpace = atoi(sValue);
 	if (GetSysParaFromReg("plasmaCut.m_bCutSpecialHole", sValue))
 		ncPlate.m_bCutSpecialHole = atoi(sValue);
+	if (GetSysParaFromReg("plasmaCut.m_bGrindingArc", sValue))
+		ncPlate.m_bGrindingArc = atoi(sValue);
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateNcFile(file_path);
 }
@@ -1399,6 +1403,8 @@ bool CNCPart::CreatePlateCncFile(CProcessPlate *pPlate,const char* file_path)
 		ncPlate.m_nEnlargedSpace = atoi(sValue);
 	if (GetSysParaFromReg("flameCut.m_bCutSpecialHole", sValue))
 		ncPlate.m_bCutSpecialHole = atoi(sValue);
+	if (GetSysParaFromReg("flameCut.m_bGrindingArc", sValue))
+		ncPlate.m_bGrindingArc = atoi(sValue);
 	ncPlate.InitPlateNcInfo();
 	return ncPlate.CreatePlateTxtFile(file_path);
 }

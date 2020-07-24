@@ -40,6 +40,7 @@ struct NC_INFO_PARA
 	//切割加工参数
 	BOOL m_bCutSpecialHole;
 	WORD m_wEnlargedSpace;
+	BOOL m_bGrindingArc;	//阳角打磨处理
 	//板床加工参数
 	BOOL m_bReserveBigSH;	//输出切割孔
 	BOOL m_bReduceSmallSH;	//降级处理板床孔

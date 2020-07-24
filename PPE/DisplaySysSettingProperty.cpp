@@ -494,6 +494,14 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 		g_sysPara.nc.m_xFlamePara.m_wEnlargedSpace = atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("flameCut.m_wEnlargedSpace");
 	}
+	else if (CSysPara::GetPropID("flameCut.m_bGrindingArc") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xFlamePara.m_bGrindingArc = TRUE;
+		else
+			g_sysPara.nc.m_xFlamePara.m_bGrindingArc = FALSE;
+		g_sysPara.WriteSysParaToReg("flameCut.m_bGrindingArc");
+	}
 	else if (CSysPara::GetPropID("flameCut.m_bCutSpecialHole") == pItem->m_idProp)
 	{
 		if (valueStr.CompareNoCase("是") == 0)
@@ -506,6 +514,14 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 	{
 		g_sysPara.nc.m_xPlasmaPara.m_wEnlargedSpace = atoi(valueStr);
 		g_sysPara.WriteSysParaToReg("plasmaCut.m_wEnlargedSpace");
+	}
+	else if (CSysPara::GetPropID("plasmaCut.m_bGrindingArc") == pItem->m_idProp)
+	{
+		if (valueStr.CompareNoCase("是") == 0)
+			g_sysPara.nc.m_xPlasmaPara.m_bGrindingArc = TRUE;
+		else
+			g_sysPara.nc.m_xPlasmaPara.m_bGrindingArc = FALSE;
+		g_sysPara.WriteSysParaToReg("plasmaCut.m_bGrindingArc");
 	}
 	else if (CSysPara::GetPropID("plasmaCut.m_bCutSpecialHole") == pItem->m_idProp)
 	{
@@ -1041,6 +1057,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbEditPropItem(pPropItem, "flameCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem, "flameCut.m_sOutLineLen");
 	oper.InsertCmbListPropItem(pPropItem, "flameCut.m_bCutSpecialHole");
+	oper.InsertCmbListPropItem(pPropItem, "flameCut.m_bGrindingArc");
 	//等离子切割
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bPlasmaCut");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::PLASMA_MODE);
@@ -1054,6 +1071,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertCmbEditPropItem(pPropItem, "plasmaCut.m_sIntoLineLen");
 	oper.InsertCmbEditPropItem(pPropItem, "plasmaCut.m_sOutLineLen");
 	oper.InsertCmbListPropItem(pPropItem, "plasmaCut.m_bCutSpecialHole");
+	oper.InsertCmbListPropItem(pPropItem, "plasmaCut.m_bGrindingArc");
 	//冲床加工
 	pGroupItem = oper.InsertCmbListPropItem(pParentItem, "nc.bPunchPress");
 	pGroupItem->m_bHideChildren = !g_sysPara.IsValidNcFlag(CNCPart::PUNCH_MODE);
