@@ -515,6 +515,12 @@ BOOL CDwgFileInfo::ExtractThePlate()
 	ManualExtractPlate(&m_xPncMode);
 	return TRUE;
 }
+BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
+{
+	m_xPrintBomFile.Empty();
+	m_xPrintBomFile.m_sFileName.Copy(sFileName);
+	return m_xPrintBomFile.ImportExcelFile(&g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg);
+}
 //////////////////////////////////////////////////////////////////////////
 //¸Ö°åDWG²Ù×÷
 //////////////////////////////////////////////////////////////////////////

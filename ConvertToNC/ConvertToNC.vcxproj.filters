@@ -360,6 +360,9 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
       <Filter>ToolCode</Filter>
     </ClCompile>
+    <ClCompile Include="BomFile.cpp">
+      <Filter>UBOM</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -649,6 +652,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H">
       <Filter>ToolCode</Filter>
+    </ClInclude>
+    <ClInclude Include="BomFile.h">
+      <Filter>UBOM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

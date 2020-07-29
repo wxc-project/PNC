@@ -8,40 +8,10 @@
 #include "BomTblTitleCfg.h"
 #include "..\ConvertToNC\PNCModel.h"
 #include <vector>
+#include "BomFile.h"
 
 using std::vector;
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
-class CProjectTowerType;
-class CBomFile
-{
-	CProjectTowerType* m_pProject;
-	CSuperHashStrList<BOMPART> m_hashPartByPartNo;
-public:
-	CXhChar500 m_sFileName;		//文件名称
-	CXhChar100 m_sBomName;
-protected:
-	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
-public:
-	CBomFile();
-	~CBomFile();
-	//
-	void Empty(){
-		m_hashPartByPartNo.Empty();
-		m_sFileName.Empty();
-	}
-	void SetBelongModel(CProjectTowerType *pProject) {m_pProject = pProject; }
-	CProjectTowerType* BelongModel() const { return m_pProject; }
-	int GetPartNum() { return m_hashPartByPartNo.GetNodeNum(); }
-	BOMPART* EnumFirstPart(){return m_hashPartByPartNo.GetFirst();}
-	BOMPART* EnumNextPart(){return m_hashPartByPartNo.GetNext();}
-	BOMPART* FindPart(const char* sKey){return m_hashPartByPartNo.GetValue(sKey);}
-	//
-	BOOL ImportTmaExcelFile();
-	BOOL ImportErpExcelFile();
-	BOOL ImportPrintExcelFile();
-	CString GetPartNumStr();
-	void UpdateProcessPart(const char* sOldKey,const char* sNewKey);
-};
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
 class CAngleProcessInfo
@@ -85,6 +55,7 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 //
+class CProjectTowerType;
 class CDwgFileInfo 
 {
 private:
@@ -127,11 +98,7 @@ public:
 	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf);
 	BOOL ExtractThePlate();
 	//打印清单
-	BOOL ImportPrintBomExcelFile(const char* sFileName) {
-		m_xPrintBomFile.Empty();
-		m_xPrintBomFile.m_sFileName.Copy(sFileName);
-		return m_xPrintBomFile.ImportPrintExcelFile();
-	}
+	BOOL ImportPrintBomExcelFile(const char* sFileName);
 	void EmptyPrintBom() { m_xPrintBomFile.Empty(); }
 	int PrintBomPartCount() { return m_xPrintBomFile.GetPartNum(); }
 	BOMPART* EnumFirstPrintPart() { return m_xPrintBomFile.EnumFirstPart(); }
@@ -201,24 +168,6 @@ public:
 class CBomModel
 {
 public:
-	const static char* KEY_PN;			//= "PartNo";
-	const static char* KEY_MAT;			//= "Material";
-	const static char* KEY_SPEC;		//= "Spec";
-	const static char* KEY_LEN;			//= "Length";
-	const static char* KEY_WIDE;		//= "Width";
-	const static char* KEY_SING_N;		//= "SingNum";
-	const static char* KEY_MANU_N;		//= "ManuNum"
-	const static char* KEY_MANU_W;		//= "SumWeight"
-	const static char* KEY_WELD;		//= "Weld"
-	const static char* KEY_ZHI_WAN;		//= "ZhiWan"
-	const static char* KEY_CUT_ANGLE;	//= "CutAngle"
-	const static char* KEY_CUT_ROOT;	//= "CutRoot"
-	const static char* KEY_CUT_BER;		//= "CutBer"
-	const static char* KEY_PUSH_FLAT;	//= "PushFlat"
-	const static char* KEY_KAI_JIAO;	//= "KaiJiao"
-	const static char* KEY_HE_JIAO;		//= "HeJiao"
-	const static char* KEY_FOO_NAIL;	//= "FootNail"
-	const static char* KEY_NOTES;		//= "NOTE"
 	//功能模块
 	static const BYTE FUNC_BOM_COMPARE		 = 1;	//0X01料单校审
 	static const BYTE FUNC_BOM_AMEND		 = 2;	//0X02修正料单
@@ -228,40 +177,10 @@ public:
 	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
 	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x40批量打印 wht 20-05-26
 	DWORD m_dwFunctionFlag;
-	//工艺描述
-	const static BYTE TYPE_ZHI_WAN		= 0;
-	const static BYTE TYPE_CUT_ANGLE	= 1;
-	const static BYTE TYPE_CUT_ROOT		= 2;
-	const static BYTE TYPE_CUT_BER		= 3;
-	const static BYTE TYPE_PUSH_FLAT	= 4;
-	const static BYTE TYPE_KAI_JIAO		= 5;
-	const static BYTE TYPE_HE_JIAO		= 6;
-	const static BYTE TYPE_FOO_NAIL		= 7;
-	CXhChar100 m_sProcessDescArr[8];
-	//
-	struct BOM_TITLE
-	{
-		CXhChar16 m_sKey;
-		CXhChar16 m_sTitle;
-		int m_nWidth;	//标题宽度
-		//
-		BOM_TITLE(const char* sKey, const char* sTile, int nWidth)
-		{
-			m_sKey.Copy(sKey);
-			m_sTitle.Copy(sTile);
-			m_nWidth = nWidth;
-		}
-	};
-	vector<BOM_TITLE> m_xBomTitleArr;
+	
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
-	CBomTblTitleCfg m_xTmaTblCfg, m_xErpTblCfg, m_xJgPrintCfg;
-	CBomTblTitleCfg m_xArrTmaTblCfg[10];	//TMA_BOM导入多个sheet且Sheet格式不同时使用，关键字 TMA_BOM_1,TMA_BOM_2... wht 20-07-22
-	CBomTblTitleCfg m_xArrErpTblCfg[10];	//ERP_BOM导入多个sheet且Sheet格式不同时使用，关键字 ERP_BOM_1,ERP_BOM_2... wht 20-07-22
-	CBomTblTitleCfg m_xArrPrintTblCfg[10];	//PRINT_BOM导入多个sheet且Sheet格式不同时使用，关键字 PRINT_BOM_1,PRINT_BOM_2... wht 20-07-22
-	CXhChar500 m_sAngleCompareItemArr;	//角钢校审项
-	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
-	CHashStrList<BOOL> hashCompareItemOfAngle;
-	CHashStrList<BOOL> hashCompareItemOfPlate;
+	CBomImportCfg m_xBomImoprtCfg;
+	CXhChar500 m_sNotPrintFilter;		//支持设置批量打印时不需要打印的构件 wht 20-07-27
 public:
 	CBomModel(void);
 	~CBomModel(void);
@@ -271,18 +190,16 @@ public:
 	CDwgFileInfo *FindDwgFile(const char* file_path);
 	bool IsValidFunc(int iFuncType);
 	DWORD AddFuncType(int iFuncType);
-	bool ExtractAngleCompareItems();
-	bool ExtractPlateCompareItems();
 	//
 	BOOL IsHasTheProcess(const char* sText, BYTE ciType);
-	BOOL IsZhiWan(const char* sText) { return IsHasTheProcess(sText, TYPE_ZHI_WAN); }
-	BOOL IsPushFlat(const char* sText) { return IsHasTheProcess(sText, TYPE_PUSH_FLAT); }
-	BOOL IsCutAngle(const char* sText) { return IsHasTheProcess(sText, TYPE_CUT_ANGLE); }
-	BOOL IsCutRoot(const char* sText) { return IsHasTheProcess(sText, TYPE_CUT_ROOT); }
-	BOOL IsCutBer(const char* sText) { return IsHasTheProcess(sText, TYPE_CUT_BER); }
-	BOOL IsKaiJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_KAI_JIAO); }
-	BOOL IsHeJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_HE_JIAO); }
-	BOOL IsFootNail(const char* sText) { return IsHasTheProcess(sText, TYPE_FOO_NAIL); }
+	BOOL IsZhiWan(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_ZHI_WAN); }
+	BOOL IsPushFlat(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_PUSH_FLAT); }
+	BOOL IsCutAngle(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_ANGLE); }
+	BOOL IsCutRoot(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_ROOT); }
+	BOOL IsCutBer(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_BER); }
+	BOOL IsKaiJiao(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_KAI_JIAO); }
+	BOOL IsHeJiao(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_HE_JIAO); }
+	BOOL IsFootNail(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_FOO_NAIL); }
 public:
 	//客户ID
 	static const BYTE ID_AnHui_HongYuan		= 1;	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
@@ -298,12 +215,17 @@ public:
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
 	BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
-	CXhChar200 m_sTMABomFileKeyStr;	//支持指定TMA Bom文件名关键字，TMA与ERP Excel文件格式一样时可通过关键字进行区分 wht 20-04-29
-	CXhChar200 m_sERPBomFileKeyStr;
-	CXhChar200 m_sTMABomSheetName;	//支持指定导入的Excel文件中的Sheet名称 wht 20-04-29
-	CXhChar200 m_sERPBomSheetName;
-	CXhChar200 m_sJGPrintSheetName;	//
 	//
+	BOOL IsAngleCompareItem(const char* title) { return m_xBomImoprtCfg.IsAngleCompareItem(title); }
+	BOOL IsPlateCompareItem(const char* title) { return m_xBomImoprtCfg.IsPlateCompareItem(title); }
+	size_t GetBomTitleCount() { return m_xBomImoprtCfg.GetBomTitleCount(); }
+	BOOL IsTitleCol(int index, const char*title_key) { return m_xBomImoprtCfg.IsTitleCol(index,title_key); }
+	CXhChar16 GetTitleKey(int index);
+	CXhChar16 GetTitleName(int index);
+	int GetTitleWidth(int index);
+	BOOL IsValidTmaBomCfg() { return m_xBomImoprtCfg.m_xTmaTblCfg.m_xTblCfg.IsValid(); }
+	BOOL IsValidErpBomCfg() { return m_xBomImoprtCfg.m_xErpTblCfg.m_xTblCfg.IsValid(); }
+	BOOL IsValidPrintBomCfg() { return m_xBomImoprtCfg.m_xPrintTblCfg.m_xTblCfg.IsValid(); }
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };
 extern CBomModel g_xUbomModel;

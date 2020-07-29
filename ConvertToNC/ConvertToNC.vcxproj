@@ -3106,6 +3106,7 @@
     <ClCompile Include="AdjustPlateMCS.cpp" />
     <ClCompile Include="BatchPrint.cpp" />
     <ClCompile Include="BomExport.cpp" />
+    <ClCompile Include="BomFile.cpp" />
     <ClCompile Include="BomModel.cpp" />
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
@@ -3229,6 +3230,7 @@
     <ClInclude Include="AdjustPlateMCS.h" />
     <ClInclude Include="BatchPrint.h" />
     <ClInclude Include="BomExport.h" />
+    <ClInclude Include="BomFile.h" />
     <ClInclude Include="BomModel.h" />
     <ClInclude Include="CADCallBackDlg.h" />
     <ClInclude Include="CadHighlightEntManager.h" />
