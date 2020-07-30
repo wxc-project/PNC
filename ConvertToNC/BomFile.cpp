@@ -436,6 +436,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			if (sValue.Equal("*") || g_xBomImportCfg.IsFootNail(sValue))
 				bFootNail = TRUE;
 		}
+		sMaterial.Remove(' ');	//移除空格 wht 20-07-30
 		//材质、规格、单基数、加工数同时为空时，此行为无效行
 		if (sMaterial.GetLength() <= 0 && sSpec.GetLength() <= 0 &&
 			sSingleNum.GetLength() <= 0 && sProcessNum.GetLength() <= 0)
@@ -499,6 +500,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			{
 				PART_PLATE* pBomPlate = (PART_PLATE*)pBomPart;
 				pBomPlate->bWeldPart = bWeld;
+				//钢板规格统一用厚度表示,不包括宽度 wht 20-07-30
+				pBomPlate->sSpec.Printf("-%d", nThick);
 			}
 		}
 		else
