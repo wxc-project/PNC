@@ -363,6 +363,9 @@
     <ClCompile Include="BomFile.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\Expression.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -655,6 +658,9 @@
     </ClInclude>
     <ClInclude Include="BomFile.h">
       <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\Expression.h">
+      <Filter>ToolCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

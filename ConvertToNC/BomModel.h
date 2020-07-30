@@ -27,7 +27,7 @@ public:
 	static const BYTE TYPE_FLAT = 4;	//扁铁
 	static const BYTE TYPE_JIG = 5;		//夹具
 	static const BYTE TYPE_GGS = 6;		//钢格栅
-	static const BYTE TYPE_PLATE = 7;	//角钢
+	static const BYTE TYPE_PLATE = 7;	//钢板
 	BYTE m_ciType;				//
 	//
 	PART_ANGLE m_xAngle;
@@ -36,6 +36,11 @@ public:
 	AcDbObjectId singleNumId;	//单基数ID
 	AcDbObjectId sumWeightId;	//总重ID
 	CXhChar200 m_sTowerType;
+	//加工数、单基数、总重修改状态 wht 20-07-29
+	static const BYTE MODIFY_MANU_NUM	= 0x01;
+	static const BYTE MODIFY_SINGLE_NUM = 0x02;
+	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
+	BYTE m_ciModifyState;
 public:
 	CAngleProcessInfo();
 	~CAngleProcessInfo();
@@ -67,15 +72,16 @@ private:
 public:
 	CXhChar100 m_sDwgName;
 	CXhChar500 m_sFileName;	//文件名称
+	BOOL RetrieveAngles(BOOL bSupportSelectEnts =FALSE);
+	BOOL RetrievePlates(BOOL bSupportSelectEnts =FALSE);
 protected:
-	BOOL RetrieveAngles();
-	BOOL RetrievePlates();
 	int GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet);
 public:
 	CDwgFileInfo();
 	~CDwgFileInfo();
 	//角钢DWG操作
 	int GetJgNum(){return m_hashJgInfo.GetNodeNum();}
+	void EmptyJgList() { m_hashJgInfo.Empty(); }
 	CAngleProcessInfo* EnumFirstJg(){return m_hashJgInfo.GetFirst();}
 	CAngleProcessInfo* EnumNextJg(){return m_hashJgInfo.GetNext();}
 	CAngleProcessInfo* FindAngleByPt(f3dPoint data_pos);
@@ -85,6 +91,7 @@ public:
 	void ModifyAngleDwgSumWeight();
 	//钢板DWG操作
 	int GetPlateNum(){return m_xPncMode.GetPlateNum();}
+	void EmptyPlateList() { m_xPncMode.Empty(); }
 	CPlateProcessInfo* EnumFirstPlate(){return m_xPncMode.EnumFirstPlate(FALSE);}
 	CPlateProcessInfo* EnumNextPlate(){return m_xPncMode.EnumNextPlate(FALSE);}
 	CPlateProcessInfo* FindPlateByPt(f3dPoint text_pos);
@@ -94,8 +101,9 @@ public:
 	//
 	void SetBelongModel(CProjectTowerType *pProject){m_pProject=pProject;}
 	CProjectTowerType* BelongModel() const{return m_pProject;}
-	BOOL IsJgDwgInfo(){return m_bJgDwgFile;}
-	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf);
+	BOOL IsJgDwgInfo();
+	BOOL IsPlateDwgInfo();
+	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart);
 	BOOL ExtractThePlate();
 	//打印清单
 	BOOL ImportPrintBomExcelFile(const char* sFileName);
@@ -115,6 +123,7 @@ public:
 	static const int COMPARE_PLATE_DWG = 3;
 	static const int COMPARE_ANGLE_DWGS = 4;
 	static const int COMPARE_PLATE_DWGS = 5;
+	static const int COMPARE_PARTS_DWG = 6;	//角钢钢板在一张dwg文件中
 	//
 	struct COMPARE_PART_RESULT
 	{
@@ -148,7 +157,7 @@ public:
 	BOOL IsTmaBomFile(const char* sFileName,BOOL bDisplayMsgBox = FALSE);
 	BOOL IsErpBomFile(const char* sFileName, BOOL bDisplayMsgBox = FALSE);
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
-	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName,BOOL bJgDxf);
+	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
 	//校审操作
 	int CompareOrgAndLoftParts();
@@ -215,6 +224,8 @@ public:
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
 	BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
+	BOOL m_bExtractPltesWhenOpenFile;		//打开钢板文件后执行提取操作,默认为TRUE wht 20-07-29
+	BOOL m_bExtractAnglesWhenOpenFile;		//打开角钢文件后执行提取操作,默认为TRUE wht 20-07-29
 	//
 	BOOL IsAngleCompareItem(const char* title) { return m_xBomImoprtCfg.IsAngleCompareItem(title); }
 	BOOL IsPlateCompareItem(const char* title) { return m_xBomImoprtCfg.IsPlateCompareItem(title); }
@@ -223,9 +234,10 @@ public:
 	CXhChar16 GetTitleKey(int index);
 	CXhChar16 GetTitleName(int index);
 	int GetTitleWidth(int index);
-	BOOL IsValidTmaBomCfg() { return m_xBomImoprtCfg.m_xTmaTblCfg.m_xTblCfg.IsValid(); }
-	BOOL IsValidErpBomCfg() { return m_xBomImoprtCfg.m_xErpTblCfg.m_xTblCfg.IsValid(); }
-	BOOL IsValidPrintBomCfg() { return m_xBomImoprtCfg.m_xPrintTblCfg.m_xTblCfg.IsValid(); }
+	BOOL IsValidTmaBomCfg() { return m_xBomImoprtCfg.m_xTmaTblCfg.IsValid(); }
+	BOOL IsValidErpBomCfg() { return m_xBomImoprtCfg.m_xErpTblCfg.IsValid(); }
+	BOOL IsValidPrintBomCfg() { return m_xBomImoprtCfg.m_xPrintTblCfg.IsValid(); }
+	BOOL IsNeedPrint(BOMPART *pPart, const char* sNotes);
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };
 extern CBomModel g_xUbomModel;

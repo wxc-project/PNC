@@ -608,6 +608,8 @@ BOOL CPNCSysPara::IsPartLabelTitle(const char* sText)
 			return false;
 		if (strstr(sText, "文件") != NULL)
 			return false;	//排除"文件编号"导致的提取错误 wht 19-05-13
+		if(strstr(sText,":")!=NULL || strstr(sText, "：") != NULL)
+			return false;	//排除钢板标注中的件号，避免将钢板错误提取为角钢 wht 20-07-29
 		return true;
 	}
 }

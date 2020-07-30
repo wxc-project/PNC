@@ -14,6 +14,12 @@ CAngleProcessInfo::CAngleProcessInfo()
 {
 	keyId=NULL;
 	partNumId=NULL;
+	keyId = NULL;
+	partNumId = NULL;
+	singleNumId = NULL;
+	sumWeightId = NULL;
+	m_ciModifyState = 0;
+	m_ciType = TYPE_JG;
 }
 CAngleProcessInfo::~CAngleProcessInfo()
 {
@@ -94,6 +100,8 @@ f2dRect CAngleProcessInfo::GetAngleDataRect(BYTE data_type)
 		rect = g_pncSysPara.kai_jiao_rect;
 	else if (data_type == ITEM_TYPE_HEJIAO)
 		rect = g_pncSysPara.he_jiao_rect;
+	else if(data_type== ITEM_TYPE_CUT_ANGLE)
+		rect = g_pncSysPara.cut_angle_rect;
 	rect.topLeft.x+=orig_pt.x;
 	rect.topLeft.y+=orig_pt.y;
 	rect.bottomRight.x+=orig_pt.x;
@@ -124,6 +132,110 @@ bool CAngleProcessInfo::PtInDrawRect(f3dPoint pos)
 		return true;
 	else
 		return false;
+}
+static BYTE InitAnglePropByText(PART_ANGLE *pAngle, const char* sValue, 
+								CAngleProcessInfo *pAngleInfo=NULL, f3dPoint *pTextPos=NULL)
+{
+	if (sValue == NULL)
+		return 0;
+	const int DIST_TILE_2_PROP = 30;
+	BYTE cType = ITEM_TYPE_PART_NOTES;
+	if (strstr(sValue, "带脚钉"))
+		pAngle->bHasFootNail = TRUE;
+	if (strstr(sValue, "切角") || strstr(sValue, "切肢"))
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_CUT_ANGLE);
+			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+				pAngle->bCutAngle = TRUE;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->bCutAngle = TRUE;
+	}
+	if (strstr(sValue, "清根") || strstr(sValue, "刨根") ||
+		strstr(sValue, "铲芯") || strstr(sValue, "铲心") ||
+		strstr(sValue, "刨角"))
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_CUT_ROOT);
+			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+				pAngle->bCutRoot = TRUE;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->bCutRoot = TRUE;
+	}
+	if (strstr(sValue, "铲背"))
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_CUT_BER);
+			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+				pAngle->bCutBer = TRUE;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->bCutBer = TRUE;
+	}
+	if (strstr(sValue, "开角"))
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_KAIJIAO);
+			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+				pAngle->bKaiJiao = TRUE;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->bKaiJiao = TRUE;
+	}
+	if (strstr(sValue, "合角"))
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_HEJIAO);
+			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+				pAngle->bHeJiao = TRUE;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->bHeJiao = TRUE;
+	}
+	if (strstr(sValue, "压扁") || strstr(sValue, "打扁") || strstr(sValue, "拍扁"))
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_PUSH_FLAT);
+			if(DISTANCE(*pTextPos,data_pt)> DIST_TILE_2_PROP)
+				pAngle->nPushFlat = 0x01;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->nPushFlat = 0x01;
+	}
+	if (strstr(sValue, "制弯") || strstr(sValue, "火曲") ||
+		strstr(sValue, "外曲") || strstr(sValue, "内曲") ||
+		strstr(sValue, "正曲") || strstr(sValue, "反曲"))
+	{
+		pAngle->siZhiWan = 1;
+	}
+	if (strstr(sValue, "主焊件") || strstr(sValue, "焊于") ||
+		strstr(sValue, "焊接") || strstr(sValue, "#)"))	//"#)"表示有焊接立板 如(245#) wht 20-07-29
+	{
+		if (pAngleInfo && pTextPos)
+		{
+			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_WELD);
+			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+				pAngle->bWeldPart = TRUE;
+			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+		}
+		else
+			pAngle->bWeldPart = TRUE;
+	}
+	return cType;
 }
 //初始化角钢信息
 BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
@@ -207,32 +319,42 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	else if(PtInDataRect(ITEM_TYPE_SUM_PART_NUM,data_pos))	//加工数
 	{
-		m_xAngle.feature1=atoi(sValue);
-		cType = ITEM_TYPE_SUM_PART_NUM;
+		if (strstr(sValue, "x") || strstr(sValue, "X") || strstr(sValue, "*"))
+		{	//支持提取 1x4格式的加工数 wht 20-07-29
+			if (strstr(sValue, "加工数") || strstr(sValue, "数量"))
+				cType = 0;	//有汉字的文字不能作为加工数进行修改 wht 20-07-29
+			else
+				cType = ITEM_TYPE_SUM_PART_NUM;
+			char *skey = strtok((char*)sValue, "x,X,*");
+			if (skey != NULL)
+			{
+				int num1 = atoi(skey);
+				skey = strtok(NULL, "x, X, *");
+				int num2 = 1;
+				if (skey)
+					num2 = atoi(skey);
+				if (num1 <= 0 && num2 > 0)
+				{
+					m_xAngle.feature2 = num2;	//记录加工系数，通过修改加工数为"加工数        x3"修改加工数 wht 20-07-29
+					if (m_xAngle.feature1 > 0)
+						m_xAngle.feature1 = m_xAngle.feature1*m_xAngle.feature2;
+				}
+				else 
+					m_xAngle.feature1 = num1 * num2;
+			}
+		}
+		else
+		{
+			m_xAngle.feature1 = atoi(sValue);
+			if (m_xAngle.feature1 > 0 && m_xAngle.feature2 > 0)
+				m_xAngle.feature1 = m_xAngle.feature1*m_xAngle.feature2;
+			cType = ITEM_TYPE_SUM_PART_NUM;
+		}
 	}
 	else if (PtInDataRect(ITEM_TYPE_PART_NOTES, data_pos))	//备注
 	{
 		strcpy(m_xAngle.sNotes,sValue);
-		if (strstr(m_xAngle.sNotes, "带脚钉"))
-			m_xAngle.bHasFootNail = TRUE;
-		else if (strstr(m_xAngle.sNotes, "切角"))
-			m_xAngle.bCutAngle = TRUE;
-		else if (strstr(m_xAngle.sNotes, "清根") || strstr(m_xAngle.sNotes, "刨根") ||
-				 strstr(m_xAngle.sNotes, "铲芯") || strstr(m_xAngle.sNotes, "铲心"))
-			m_xAngle.bCutRoot = TRUE;
-		else if (strstr(m_xAngle.sNotes, "铲背"))
-			m_xAngle.bCutBer = TRUE;
-		else if (strstr(m_xAngle.sNotes, "开角"))
-			m_xAngle.bKaiJiao = TRUE;
-		else if (strstr(m_xAngle.sNotes, "合角"))
-			m_xAngle.bHeJiao = TRUE;
-		else if (strstr(m_xAngle.sNotes, "压扁") || strstr(m_xAngle.sNotes, "打扁"))
-			m_xAngle.nPushFlat = 0x01;
-		//else if (strstr(m_xAngle.sNotes, "制弯") || strstr(m_xAngle.sNotes, "火曲"))
-		//	m_xAngle.bHeJiao = TRUE;
-		else if (strstr(m_xAngle.sNotes, "主焊件") || strstr(m_xAngle.sNotes, "焊于") ||
-				strstr(m_xAngle.sNotes, "焊接"))
-			m_xAngle.bWeldPart = TRUE;
+		InitAnglePropByText(&m_xAngle, sValue);
 		cType = ITEM_TYPE_PART_NOTES;
 	}
 	else if (PtInDataRect(ITEM_TYPE_SUM_WEIGHT, data_pos))	//总重
@@ -280,16 +402,18 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	else if (PtInDataRect(ITEM_TYPE_KAIJIAO, data_pos))
 	{
 		int nLen = strlen(sValue);
-		if (nLen > 1)
+		if (nLen > 2)
 		{
 			CString sKaiJiao = sValue;
 			sKaiJiao.Replace("°", "");
 			sKaiJiao.Replace("度", "");
 			double fAngle = atof(sKaiJiao);
-			if (fAngle > 90)
+			if(fAngle==0)
 				m_xAngle.bKaiJiao = TRUE;
+			else if (fAngle > 0 && fAngle < 90)
+				m_xAngle.bHeJiao = TRUE;
 			else
-				m_xAngle.bKaiJiao = FALSE;
+				m_xAngle.bKaiJiao = TRUE;
 		}
 		else
 			m_xAngle.bKaiJiao = strlen(sValue) > 0;
@@ -303,16 +427,18 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	else if (PtInDataRect(ITEM_TYPE_HEJIAO, data_pos))
 	{
 		int nLen = strlen(sValue);
-		if (nLen > 1)
+		if (nLen > 2)
 		{
 			CString sHeiao = sValue;
 			sHeiao.Replace("°", "");
 			sHeiao.Replace("度", "");
 			double fAngle = atof(sHeiao);
-			if (fAngle < 90)
+			if(fAngle==0)
 				m_xAngle.bHeJiao = TRUE;
-			else
-				m_xAngle.bHeJiao = FALSE;
+			else if (fAngle > 90)
+				m_xAngle.bKaiJiao = TRUE;
+			else 
+				m_xAngle.bHeJiao = TRUE;
 		}
 		else
 			m_xAngle.bHeJiao = strlen(sValue) > 0;
@@ -323,28 +449,15 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 				m_xAngle.siZhiWan = 1;
 		}
 	}
+	else if (PtInDataRect(ITEM_TYPE_CUT_ANGLE, data_pos))
+	{
+		m_xAngle.bCutAngle = strlen(sValue) > 0;
+		cType = ITEM_TYPE_CUT_ANGLE;
+	}
 	else if(PtInDrawRect(data_pos))
 	{	//处理草图区域的特殊文字说明
-		if (strstr(sValue, "带脚钉"))
-		{
-			m_xAngle.bHasFootNail = TRUE;
-			cType = ITEM_TYPE_PART_NOTES;
-		}
-		else if (strstr(sValue, "焊接"))
-		{
-			m_xAngle.bWeldPart = TRUE;
-			cType = ITEM_TYPE_PART_NOTES;
-		}
-		else if (strstr(sValue, "外曲")|| strstr(sValue, "内曲"))
-		{
-			m_xAngle.siZhiWan = 1;
-			cType = ITEM_TYPE_PART_NOTES;
-		}
-		else if (strstr(sValue, "中间压扁"))
-		{
-			m_xAngle.nPushFlat = 1;
-			cType = ITEM_TYPE_PART_NOTES;
-		}
+		InitAnglePropByText(&m_xAngle, sValue, this, &data_pos);
+		cType = ITEM_TYPE_PART_NOTES;
 	}
 	return cType;
 }
@@ -371,7 +484,8 @@ void CAngleProcessInfo::RefreshAngleNum()
 			return;
 		}
 		DimText(pBlockTableRecord,data_pt,sPartNum,TextStyleTable::hzfs.textStyleId,
-			g_pncSysPara.fTextHigh,0,AcDb::kTextCenter,AcDb::kTextVertMid);
+			g_pncSysPara.fTextHigh,0,AcDb::kTextCenter,AcDb::kTextVertMid,AcDbObjectId::kNull,
+			RGB(255,0,0));
 		pBlockTableRecord->close();//关闭块表
 	}
 	else
@@ -386,6 +500,9 @@ void CAngleProcessInfo::RefreshAngleNum()
 #else
 			pText->setTextString(sPartNum);
 #endif
+			//修改加工数后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pText->setColorIndex(color_index);
 		}
 		else
 		{
@@ -395,9 +512,13 @@ void CAngleProcessInfo::RefreshAngleNum()
 #else
 			pMText->setContents(sPartNum);
 #endif
+			//修改加工数后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pMText->setColorIndex(color_index);
 		}
 		pEnt->close();
 	}
+	m_ciModifyState |= MODIFY_MANU_NUM;
 }
 //更新角钢的单基数
 void CAngleProcessInfo::RefreshAngleSingleNum()
@@ -414,7 +535,8 @@ void CAngleProcessInfo::RefreshAngleSingleNum()
 			return;
 		}
 		DimText(pBlockTableRecord, data_pt, sPartNum, TextStyleTable::hzfs.textStyleId,
-			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid,AcDbObjectId::kNull,
+			RGB(255,0,0));
 		pBlockTableRecord->close();//关闭块表
 	}
 	else
@@ -429,6 +551,9 @@ void CAngleProcessInfo::RefreshAngleSingleNum()
 #else
 			pText->setTextString(sPartNum);
 #endif
+			//修改加工数后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pText->setColorIndex(color_index);
 		}
 		else
 		{
@@ -438,9 +563,13 @@ void CAngleProcessInfo::RefreshAngleSingleNum()
 #else
 			pMText->setContents(sPartNum);
 #endif
+			//修改加工数后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pMText->setColorIndex(color_index);
 		}
 		pEnt->close();
 	}
+	m_ciModifyState |= MODIFY_SINGLE_NUM;
 }
 //
 void CAngleProcessInfo::RefreshAngleSumWeight()
@@ -457,7 +586,8 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 			return;
 		}
 		DimText(pBlockTableRecord, data_pt, sSumWeight, TextStyleTable::hzfs.textStyleId,
-			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
+			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid,AcDbObjectId::kNull,
+			RGB(255,0,0));
 		pBlockTableRecord->close();//关闭块表
 	}
 	else
@@ -472,6 +602,9 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 #else
 			pText->setTextString(sSumWeight);
 #endif
+			//修改加工数后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pText->setColorIndex(color_index);
 		}
 		else
 		{
@@ -481,9 +614,13 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 #else
 			pMText->setContents(sSumWeight);
 #endif
+			//修改加工数后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pMText->setColorIndex(color_index);
 		}
 		pEnt->close();
 	}
+	m_ciModifyState |= MODIFY_SUM_WEIGHT;
 }
 //////////////////////////////////////////////////////////////////////////
 //CDwgFileInfo
@@ -495,8 +632,16 @@ CDwgFileInfo::~CDwgFileInfo()
 {
 
 }
+BOOL CDwgFileInfo::IsJgDwgInfo()
+{ 
+	return (m_bJgDwgFile || m_hashJgInfo.GetNodeNum()>0); 
+}
+BOOL CDwgFileInfo::IsPlateDwgInfo()
+{
+	return (!m_bJgDwgFile || m_xPncMode.GetPlateNum()>0);
+}
 //初始化DWG文件信息
-BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf)
+BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart)
 {
 	if(strlen(sFileName)<=0)
 		return FALSE;
@@ -505,10 +650,15 @@ BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf)
 	m_bJgDwgFile=bJgDxf;
 	m_sFileName.Copy(sFileName);
 	m_sDwgName.Copy(sName);
-	if (m_bJgDwgFile)
-		return RetrieveAngles();
+	if (bExtractPart)
+	{
+		if (m_bJgDwgFile)
+			return RetrieveAngles();
+		else
+			return RetrievePlates();
+	}
 	else
-		return RetrievePlates();
+		return TRUE;
 }
 BOOL CDwgFileInfo::ExtractThePlate()
 {
@@ -600,10 +750,10 @@ int CDwgFileInfo::GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet)
 }
 
 //提取板的轮廓边,确定闭合区域
-BOOL CDwgFileInfo::RetrievePlates()
+BOOL CDwgFileInfo::RetrievePlates(BOOL bSupportSelectEnts /*= FALSE*/)
 {
 	CPNCModel::m_bSendCommand = TRUE;
-	SmartExtractPlate(&m_xPncMode);
+	SmartExtractPlate(&m_xPncMode, bSupportSelectEnts);
 	return TRUE;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -649,8 +799,11 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 			logerr.Log("TMA材料表中没有%s角钢",(char*)sPartNo);
 			continue;
 		}
-		pJgInfo->m_xAngle.feature1= pBomJg->feature1;	//加工数
-		pJgInfo->RefreshAngleNum();
+		if (pJgInfo->m_xAngle.feature1 != pBomJg->feature1)
+		{
+			pJgInfo->m_xAngle.feature1 = pBomJg->feature1;	//加工数
+			pJgInfo->RefreshAngleNum();
+		}
 	}
 	if(bFinish)
 		AfxMessageBox("角钢加工数修改完毕!");
@@ -703,12 +856,12 @@ void CDwgFileInfo::ModifyAngleDwgSumWeight()
 		AfxMessageBox("角钢总重修改完毕!");
 }
 //提取角钢操作
-BOOL CDwgFileInfo::RetrieveAngles()
+BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 {
 	CAcModuleResourceOverride resOverride;
 	//选择所有实体图元
 	CHashSet<AcDbObjectId> allEntIdSet;
-	SelCadEntSet(allEntIdSet, TRUE);
+	SelCadEntSet(allEntIdSet, bSupportSelectEnts ? FALSE : TRUE);
 	//根据角钢工艺卡块识别角钢
 	AcDbEntity *pEnt = NULL;
 	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext())
@@ -768,11 +921,12 @@ BOOL CDwgFileInfo::RetrieveAngles()
 				break;
 		}
 		if (pJgInfo == NULL)
+			pJgInfo = m_hashJgInfo.Add(entId.handle());
+		//更新角钢信息 wht 20-07-29
+		if(pJgInfo)
 		{	//添加角钢记录
 			//根据工艺卡模板中件号标记点计算该角钢工艺卡的原点位置
 			GEPOINT orig_pt = g_pncSysPara.GetJgCardOrigin(testPt);
-			//
-			pJgInfo = m_hashJgInfo.Add(entId.handle());
 			pJgInfo->keyId = entId;
 			pJgInfo->SetOrig(orig_pt);
 			pJgInfo->CreateRgn();

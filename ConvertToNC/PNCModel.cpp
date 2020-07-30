@@ -35,6 +35,7 @@ CPlateProcessInfo::CPlateProcessInfo()
 	partNumId=0;
 	m_bEnableReactor = TRUE;
 	m_bNeedExtract = FALSE;
+	m_ciModifyState = 0;
 }
 //检测钢板原图的轮廓状态：是否闭合
 void CPlateProcessInfo::CheckProfileEdge()
@@ -2410,6 +2411,9 @@ void CPlateProcessInfo::RefreshPlateNum()
 #else
 		pText->setTextString(sValueS);
 #endif
+		//修改加工数后设置为红色 wht 20-07-29
+		int color_index = GetNearestACI(RGB(255, 0, 0));
+		pText->setColorIndex(color_index);
 	}
 	else if (pEnt->isKindOf(AcDbMText::desc()))
 	{
@@ -2436,11 +2440,15 @@ void CPlateProcessInfo::RefreshPlateNum()
 #else
 				pMText->setContents(sText);
 #endif
+				//修改加工数后设置为红色 wht 20-07-29
+				int color_index = GetNearestACI(RGB(255, 0, 0));
+				pMText->setColorIndex(color_index);
 				break;
 			}
 			
 		}
 	}
+	m_ciModifyState |= MODIFY_MANU_NUM;
 }
 SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 {

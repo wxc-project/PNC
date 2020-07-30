@@ -4,7 +4,7 @@
 #include "PNCModel.h"
 //加工
 void SmartExtractPlate();	//智能提取板的信息
-void SmartExtractPlate(CPNCModel *pModel);
+void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts = FALSE);
 void ManualExtractPlate();	//手动提取钢板信息
 void ManualExtractPlate(CPNCModel *pModel);
 void EnvGeneralSet();		//系统设置

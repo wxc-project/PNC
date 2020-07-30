@@ -562,7 +562,10 @@ void COptimalSortDlg::RefeshListCtrl()
 		lpInfo->SetSubItemText(0,pPart->GetPartTypeName(FALSE),TRUE);
 		CXhChar16 sMat= CBomModel::QueryMatMarkIncQuality(pPart);
 		lpInfo->SetSubItemText(1,sMat,TRUE);//材质	
-		lpInfo->SetSubItemText(2,pPart->GetSpec(),TRUE);		//规格
+		if(pPart->wide==0&& pPart->thick>0)
+			lpInfo->SetSubItemText(2, CXhChar16("-%d",(int)pPart->thick), TRUE);	//规格
+		else
+			lpInfo->SetSubItemText(2,pPart->GetSpec(),TRUE);		//规格
 		lpInfo->SetSubItemText(3,pPart->GetPartNo(),TRUE);		//件号
 		lpInfo->SetSubItemText(4,CXhChar50("%d",pPart->feature1),TRUE);	//件数
 		CXhChar500 sNotes = pPart->sNotes;
@@ -575,6 +578,14 @@ void COptimalSortDlg::RefeshListCtrl()
 		{
 			for (int i = 0; i < 6; i++)
 				lpInfo->SetSubItemColor(i, RGB(255,102,102));
+		}
+		else if (m_iCmbPrintType + 1 == CBatchPrint::PRINT_TYPE_PAPER && g_xUbomModel.m_sNotPrintFilter.GetLength()>0)
+		{	//打印纸质工艺卡时如果有不需要打印的工件，需要特殊显示，方便对比校对 wht 20-07-29
+			if (!g_xUbomModel.IsNeedPrint(pPart,sNotes))
+			{
+				for (int i = 0; i < 6; i++)
+					lpInfo->SetSubItemColor(i, RGB(11, 215, 232));
+			}
 		}
 		pItem=m_xListCtrl.InsertRootItem(lpInfo, FALSE);
 		pItem->m_idProp=(long)pPart;
@@ -892,6 +903,11 @@ void COptimalSortDlg::OnOK()
 				CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pBomPart->feature2;
 				if (pSelJgInfo)
 				{
+					CXhChar500 sNotes = pBomPart->sNotes;
+					if (!IsValidPrintBom()&&sNotes.GetLength() <= 0)
+						sNotes = GetProcessNotes(pBomPart);
+					if (m_iPrintType== CBatchPrint::PRINT_TYPE_PAPER && !g_xUbomModel.IsNeedPrint(pBomPart,sNotes))
+						continue;	//打印纸质工艺卡试支持过滤不需要打印的角钢 wht 20-07-29
 					PRINT_SCOPE *pScope = m_xPrintScopyList.append();
 					pScope->Init(pSelJgInfo);
 				}

@@ -18,6 +18,12 @@ public:
 	static const int MAX_SHEET_COUNT = 10;
 	CBomTblTitleCfg m_xArrTblCfg[10];	//TMA_BOM导入多个sheet且Sheet格式不同时使用，关键字 TMA_BOM_1,TMA_BOM_2... wht 20-07-22
 	BOOL IsCurFormat(const char* file_path, BOOL bDisplayMsgBox);
+	BOOL IsValid() {
+		if (m_xTblCfg.m_sColIndexArr.GetLength() > 0)
+			return TRUE;
+		else
+			return FALSE;
+	}
 };
 class CBomFile
 {

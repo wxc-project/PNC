@@ -2817,6 +2817,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\LDS\LDS\BOM\BOM.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\ExcelOper.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\Expression.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\TimerCount.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp" />
@@ -3189,6 +3190,7 @@
     <ClInclude Include="..\..\LDS\LDS\BOM\BOM.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadColorTbl.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\DockBarTemplate.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\Expression.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\TimerCount.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />

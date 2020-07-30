@@ -44,6 +44,8 @@ BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
 		CVariant2dArray sheetContentMap(1, 1);
 		if (!CExcelOper::GetExcelContentOfSpecifySheet(file_path, sheetContentMap, 1, 52))
 			return FALSE;
+
+		VARIANT value;
 		BOOL bValid = FALSE;
 		for (int iCol = 0; iCol < CBomTblTitleCfg::T_COL_COUNT; iCol++)
 		{
@@ -54,7 +56,6 @@ BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
 			bValid = FALSE;
 			for (int iRow = 0; iRow < 10; iRow++)
 			{
-				VARIANT value;
 				sheetContentMap.GetValueAt(iRow, *pColIndex, value);
 				if (value.vt == VT_EMPTY)
 					continue;
@@ -545,7 +546,7 @@ BOOL CBomFile::ImportExcelFileCore(BOM_FILE_CFG *pTblCfg)
 		CVariant2dArray sheetContentMap(1, 1);
 		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, *pSheetIndex, 52);
 		int iCurIndex = sheetIndexList.GetCurrentIndex();
-		if (iCurIndex > 0 && iCurIndex <= 10 && pTblCfg->m_xArrTblCfg[iCurIndex - 1].IsValid())
+		if (iCurIndex > 0 && iCurIndex <= 10 && pTblCfg->m_xArrTblCfg[iCurIndex - 1].m_sColIndexArr.GetLength()>0)
 		{
 			CHashStrList<DWORD> hashTempColIndexByColTitle;
 			pTblCfg->m_xArrTblCfg[iCurIndex - 1].GetHashColIndexByColTitleTbl(hashTempColIndexByColTitle);
@@ -953,7 +954,7 @@ int CBomImportCfg::InitBomTitle()
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_ANGLE, "ÇÐ½Ç", 44));
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_PUSH_FLAT, "´ò±â", 44));
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_BER, "²ù±³", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_ROOT, "ÅÙ½Ç", 44));
+		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_ROOT, "ÅÙ¸ù", 44));
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_KAI_JIAO, "¿ª½Ç", 44));
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_HE_JIAO, "ºÏ½Ç", 44));
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_FOO_NAIL, "´ø½Å¶¤", 50));

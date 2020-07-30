@@ -128,13 +128,17 @@
 #define ID_BATCH_PRINT_PART             32792
 #define ID_ADD_ITEM                     32793
 #define ID_EXPORT_XLS_FILE              32794
+#define ID_BATCH_RETRIEVED_ANGLES		32795
+#define ID_BATCH_RETRIEVED_PLATES		32796
+#define ID_EMPTY_ANGLE_RETRIEVED_RESLUT	32797
+#define ID_EMPTY_PLATE_RETRIEVED_RESLUT	32798
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
-#define _APS_NEXT_COMMAND_VALUE         32795
+#define _APS_NEXT_COMMAND_VALUE         32799
 #define _APS_NEXT_CONTROL_VALUE         152
 #define _APS_NEXT_SYMED_VALUE           102
 #endif

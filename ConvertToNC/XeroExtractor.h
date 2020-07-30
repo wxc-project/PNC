@@ -245,6 +245,7 @@ public:
 	f2dRect weld_rect;
 	f2dRect kai_jiao_rect;
 	f2dRect he_jiao_rect;
+	f2dRect cut_angle_rect;
 	f2dRect cut_angle_SX_rect, cut_angle_EX_rect;
 	f2dRect cut_angle_SY_rect, cut_angle_EY_rect;
 	f2dRect huoqu_fst_rect, huoqu_sec_rect;

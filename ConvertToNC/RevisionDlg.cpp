@@ -70,19 +70,16 @@ static BOOL FireItemChanged(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem*
 			}
 		}
 	}
-	else if(pItemInfo->itemType==ANGLE_DWG_ITEM)
+	else if(pItemInfo->itemType==ANGLE_DWG_ITEM || pItemInfo->itemType == PLATE_DWG_ITEM)
 	{
-		CAngleProcessInfo* pJgInfo=(CAngleProcessInfo*)pItem->m_idProp;
+		CAngleProcessInfo* pJgInfo = (pItem->m_idPropType == BOMPART::ANGLE) ? (CAngleProcessInfo*)pItem->m_idProp : NULL;
+		CPlateProcessInfo* pPlateInfo = (pItem->m_idPropType == BOMPART::PLATE) ? (CPlateProcessInfo*)pItem->m_idProp : NULL;
 		if (pJgInfo)
 		{
 			scope = pJgInfo->GetCADEntScope();
 			bRetCode = TRUE;
 		}
-	}
-	else if(pItemInfo->itemType==PLATE_DWG_ITEM)
-	{
-		CPlateProcessInfo* pPlateInfo=(CPlateProcessInfo*)pItem->m_idProp;
-		if (pPlateInfo)
+		else if (pPlateInfo)
 		{
 			scope = pPlateInfo->GetCADEntScope();
 			bRetCode = TRUE;
@@ -196,6 +193,10 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_RETRIEVED_PLATES, OnRetrievedPlates)
 	ON_COMMAND(ID_REVISE_TEH_PLATE, OnRetrievedPlate)
 	ON_COMMAND(ID_BATCH_PRINT_PART, OnBatchPrintPart)
+	ON_COMMAND(ID_EMPTY_PLATE_RETRIEVED_RESLUT, OnEmptyRetrievedPlates)
+	ON_COMMAND(ID_EMPTY_ANGLE_RETRIEVED_RESLUT, OnEmptyRetrievedAngles)
+	ON_COMMAND(ID_BATCH_RETRIEVED_PLATES, OnBatchRetrievedPlates)
+	ON_COMMAND(ID_BATCH_RETRIEVED_ANGLES, OnBatchRetrievedAngles)
 	ON_COMMAND(ID_DELETE_ITEM,OnDeleteItem)
 	ON_BN_CLICKED(IDC_BTN_SEARCH, OnSearchPart)
 	ON_MESSAGE(WM_ACAD_KEEPFOCUS, OnAcadKeepFocus)
@@ -308,7 +309,7 @@ CProjectTowerType* CRevisionDlg::GetProject(HTREEITEM hItem)
 	return pProject;
 }
 static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGridCtrl::CTreeItem *pParentItem,
-	BOMPART *pPart,CHashStrList<BOOL> *pHashBoolByPropName=NULL,BOOL bUpdate=FALSE)
+	BOMPART *pPart,CHashStrList<BOOL> *pHashBoolByPropName=NULL,BOOL bUpdate=FALSE,BYTE modifyFlag=0)
 {
 	COLORREF clr=RGB(230,100,230);
 	PART_ANGLE* pBomJg = (pPart->cPartType == BOMPART::ANGLE) ? (PART_ANGLE*)pPart : NULL;
@@ -342,18 +343,25 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->GetPartNum()), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_SING_N))
 				lpInfo->SetSubItemColor(i, clr);
+			if ((modifyFlag & CAngleProcessInfo::MODIFY_SINGLE_NUM) > 0)
+				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 		}
 		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_MANU_N))
 		{	//加工数
 			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->feature1), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_MANU_N))
 				lpInfo->SetSubItemColor(i, clr);
+			if ((modifyFlag & CAngleProcessInfo::MODIFY_MANU_NUM) > 0)
+				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
+
 		}
 		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_MANU_W))
 		{	//加工重量
 			lpInfo->SetSubItemText(i, CXhChar50("%.f", pPart->fSumWeight), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_MANU_W))
 				lpInfo->SetSubItemColor(i, clr);
+			if ((modifyFlag & CAngleProcessInfo::MODIFY_SUM_WEIGHT) > 0)
+				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 		}
 		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_NOTES))
 		{	//备注
@@ -478,57 +486,70 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 			}
 			m_sCurFile.Format("%s",(char*)pBom->m_sBomName);
 			m_sRecordNum=pBom->GetPartNumStr();
+			DisplayProgress(100);
 		}
-		else if(pInfo->itemType==ANGLE_DWG_ITEM)
+		else if (pInfo->itemType == ANGLE_DWG_ITEM || pInfo->itemType == PLATE_DWG_ITEM)
 		{
-			DisplayProgress(0, "显示角钢图纸信息......");
-			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			nNum = pDwg->GetJgNum();
-			CAngleProcessInfo *pAngleInfo = NULL;
-			ARRAY_LIST<CAngleProcessInfo*> anglePartPtrArr;
-			for (pAngleInfo = pDwg->EnumFirstJg(); pAngleInfo; pAngleInfo = pDwg->EnumNextJg())
-				anglePartPtrArr.append(pAngleInfo);
-			CHeapSort<CAngleProcessInfo*>::HeapSort(anglePartPtrArr.m_pData, anglePartPtrArr.GetSize(), CompareAnglePtrByPartNo);
-			for(CAngleProcessInfo **ppAngle=anglePartPtrArr.GetFirst();ppAngle;ppAngle=anglePartPtrArr.GetNext(), index++)
+			CDwgFileInfo* pDwg = (CDwgFileInfo*)pInfo->dwRefData;
+			int nJgNum = pDwg->GetJgNum();
+			int nPlateNum = pDwg->GetPlateNum();
+			if (nJgNum>0)
 			{
-				pAngleInfo = *ppAngle;
-				if (pAngleInfo == NULL)
-					continue;
-				DisplayProgress(int(100 * index / nNum));
-				pItem=InsertPartToList(m_xListReport,NULL,&pAngleInfo->m_xAngle,NULL);
-				pItem->m_idProp=(long)pAngleInfo;
+				DisplayProgress(0, "显示角钢图纸信息......");
+				CAngleProcessInfo *pAngleInfo = NULL;
+				ARRAY_LIST<CAngleProcessInfo*> anglePartPtrArr;
+				for (pAngleInfo = pDwg->EnumFirstJg(); pAngleInfo; pAngleInfo = pDwg->EnumNextJg())
+					anglePartPtrArr.append(pAngleInfo);
+				CHeapSort<CAngleProcessInfo*>::HeapSort(anglePartPtrArr.m_pData, anglePartPtrArr.GetSize(), CompareAnglePtrByPartNo);
+				for (CAngleProcessInfo **ppAngle = anglePartPtrArr.GetFirst(); ppAngle; ppAngle = anglePartPtrArr.GetNext(), index++)
+				{
+					pAngleInfo = *ppAngle;
+					if (pAngleInfo == NULL)
+						continue;
+					DisplayProgress(int(100 * index / nJgNum));
+					pItem = InsertPartToList(m_xListReport, NULL, &pAngleInfo->m_xAngle, NULL, FALSE, pAngleInfo->m_ciModifyState);
+					pItem->m_idProp = (long)pAngleInfo;
+					pItem->m_idPropType = BOMPART::ANGLE;
+				}
+				DisplayProgress(100);
 			}
-			m_sCurFile.Format("%s",(char*)pDwg->m_sDwgName);
-			m_sRecordNum.Format("%d",pDwg->GetJgNum());
-		}
-		else if(pInfo->itemType==PLATE_DWG_ITEM)
-		{
-			DisplayProgress(0, "显示钢板图纸信息......");
-			CDwgFileInfo* pDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			nNum = pDwg->GetPlateNum();
-			CPlateProcessInfo *pPlateInfo = NULL;
-			ARRAY_LIST<CPlateProcessInfo*> platePtrArr;
-			for (pPlateInfo = pDwg->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwg->EnumNextPlate())
-				platePtrArr.append(pPlateInfo);
-			CHeapSort<CPlateProcessInfo*>::HeapSort(platePtrArr.m_pData, platePtrArr.GetSize(), ComparePlatePtrByPartNo);
-			for(CPlateProcessInfo **ppPlateInfo=platePtrArr.GetFirst();ppPlateInfo;ppPlateInfo=platePtrArr.GetNext(), index++)
+			if (nPlateNum>0)
 			{
-				pPlateInfo = *ppPlateInfo;
-				if (pPlateInfo == NULL)
-					continue;
-				DisplayProgress(int(100 * index / nNum));
-				pItem=InsertPartToList(m_xListReport,NULL,&pPlateInfo->xBomPlate,NULL);
-				pItem->m_idProp=(long)pPlateInfo;
+				DisplayProgress(0, "显示钢板图纸信息......");
+				CDwgFileInfo* pDwg = (CDwgFileInfo*)pInfo->dwRefData;
+				CPlateProcessInfo *pPlateInfo = NULL;
+				ARRAY_LIST<CPlateProcessInfo*> platePtrArr;
+				for (pPlateInfo = pDwg->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwg->EnumNextPlate())
+					platePtrArr.append(pPlateInfo);
+				CHeapSort<CPlateProcessInfo*>::HeapSort(platePtrArr.m_pData, platePtrArr.GetSize(), ComparePlatePtrByPartNo);
+				for (CPlateProcessInfo **ppPlateInfo = platePtrArr.GetFirst(); ppPlateInfo; ppPlateInfo = platePtrArr.GetNext(), index++)
+				{
+					pPlateInfo = *ppPlateInfo;
+					if (pPlateInfo == NULL)
+						continue;
+					DisplayProgress(int(100 * index / nPlateNum));
+					pItem = InsertPartToList(m_xListReport, NULL, &pPlateInfo->xBomPlate, NULL, FALSE, pPlateInfo->m_ciModifyState);
+					pItem->m_idProp = (long)pPlateInfo;
+					pItem->m_idPropType = BOMPART::PLATE;
+				}
+				DisplayProgress(100);
 			}
-			m_sCurFile.Format("%s",(char*)pDwg->m_sDwgName);
-			m_sRecordNum.Format("%d", pDwg->GetPlateNum());
+			m_sCurFile.Format("%s", (char*)pDwg->m_sDwgName);
+			CString sNum;
+			if (nPlateNum > 0 && nJgNum > 0)
+				sNum.Format("%d=%d+%d", nJgNum+nPlateNum, nJgNum, nPlateNum);
+			else if (nPlateNum > 0)
+				sNum.Format("%d=%d", nPlateNum, nPlateNum);
+			else if (nJgNum > 0)
+				sNum.Format("%d=%d", nJgNum, nJgNum);
+			else
+				sNum.Format("0");
+			m_sRecordNum = sNum;
 		}
 		m_xListReport.Redraw();
-		DisplayProgress(100);
 	}
 	else
 	{
-		DisplayProgress(0, "显示校审结果......");
 		m_xListReport.DeleteAllItems();
 		CProjectTowerType::COMPARE_PART_RESULT *pResult=NULL;
 		CProjectTowerType* pProject=GetProject(hItem);
@@ -546,6 +567,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 		//
 		if(m_iCompareMode==CProjectTowerType::COMPARE_BOM_FILE)
 		{
+			DisplayProgress(0, "显示校审结果......");
 			nNum = pProject->GetResultCount();
 			for (index = 0; index < keyStrArr.GetSize();index++)
 			{	
@@ -570,82 +592,102 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				}
 			}
 			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pProject->m_xOrigBom.m_sBomName);
+			DisplayProgress(100);
 		}
-		else if(m_iCompareMode==CProjectTowerType::COMPARE_ANGLE_DWG)
+		else if (m_iCompareMode == CProjectTowerType::COMPARE_ANGLE_DWG ||
+				 m_iCompareMode == CProjectTowerType::COMPARE_PLATE_DWG)
 		{
-			CDwgFileInfo* pJgDwg=(CDwgFileInfo*)pInfo->dwRefData;
+			CDwgFileInfo* pDwgFile = (CDwgFileInfo*)pInfo->dwRefData;
 			nNum = pProject->GetResultCount();
-			for (index = 0; index < keyStrArr.GetSize(); index++)
+			if (pDwgFile->IsJgDwgInfo())	//m_iCompareMode == CProjectTowerType::COMPARE_ANGLE_DWG
 			{
-				DisplayProgress(int(100 * index / nNum));
-				pResult = pProject->GetResult(keyStrArr[index]);
-				if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
+				DisplayProgress(0, "显示校审结果......");
+				for (index = 0; index < keyStrArr.GetSize(); index++)
 				{
-					CAngleProcessInfo *pAngleInfo=pJgDwg->FindAngleByPartNo(pResult->pOrgPart->sPartNo);
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL);
-					if(pAngleInfo)
-						pItem->m_idProp = (long)pAngleInfo;
-					if (pResult->pLoftPart == NULL)
-					{	//DWG中没有此构件
-						pItem->m_bStrikeout = TRUE;
-						pItem->SetBkColor(RGB(140, 140, 255));
-					}
-					else
+					DisplayProgress(int(100 * index / nNum));
+					pResult = pProject->GetResult(keyStrArr[index]);
+					if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
 					{
-						pItem=InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
+						CAngleProcessInfo *pAngleInfo = pDwgFile->FindAngleByPartNo(pResult->pOrgPart->sPartNo);
+						pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL);
 						if (pAngleInfo)
+						{
 							pItem->m_idProp = (long)pAngleInfo;
+							pItem->m_idPropType = BOMPART::ANGLE;
+						}
+						if (pResult->pLoftPart == NULL)
+						{	//DWG中没有此构件
+							pItem->m_bStrikeout = TRUE;
+							pItem->SetBkColor(RGB(140, 140, 255));
+						}
+						else
+						{
+							pItem = InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
+							if (pAngleInfo)
+							{
+								pItem->m_idProp = (long)pAngleInfo;
+								pItem->m_idPropType = BOMPART::ANGLE;
+							}
+						}
 					}
-				}
-				else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType == BOMPART::ANGLE)
-				{
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
-					pItem->SetBkColor(RGB(128, 128, 255));
-				}
-			}
-			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pJgDwg->m_sDwgName);
-		}
-		else if(m_iCompareMode==CProjectTowerType::COMPARE_PLATE_DWG)
-		{
-			CDwgFileInfo* pPlateDwg=(CDwgFileInfo*)pInfo->dwRefData;
-			nNum = pProject->GetResultCount();
-			for (index = 0; index < keyStrArr.GetSize(); index++)
-			{
-				DisplayProgress(int(100 * index / nNum));
-				pResult = pProject->GetResult(keyStrArr[index]);
-				if (pResult->pOrgPart && pResult->pOrgPart->cPartType==BOMPART::PLATE)
-				{
-					CPlateProcessInfo *pPlateInfo = pPlateDwg->FindPlateByPartNo(pResult->pOrgPart->sPartNo);
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL);
-					if(pPlateInfo)
-						pItem->m_idProp = (long)pPlateInfo;
-					if (pResult->pLoftPart == NULL)
-					{	//放样表中没有此构件
-						pItem->m_bStrikeout = TRUE;
-						pItem->SetBkColor(RGB(140, 140, 255));
-					}
-					else
+					else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType == BOMPART::ANGLE)
 					{
-						pItem = InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
-						if (pPlateInfo)
-							pItem->m_idProp = (long)pPlateInfo;
+						pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
+						pItem->SetBkColor(RGB(128, 128, 255));
 					}
 				}
-				else if (pResult->pOrgPart==NULL && pResult->pLoftPart &&pResult->pLoftPart->cPartType == BOMPART::PLATE)
-				{
-					pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
-					pItem->SetBkColor(RGB(128, 128, 255));
-				}
+				DisplayProgress(100);
 			}
-			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pPlateDwg->m_sDwgName);
+			if (pDwgFile->IsPlateDwgInfo())	//m_iCompareMode == CProjectTowerType::COMPARE_PLATE_DWG
+			{
+				nNum = pProject->GetResultCount();
+				DisplayProgress(0, "显示校审结果......");
+				for (index = 0; index < keyStrArr.GetSize(); index++)
+				{
+					DisplayProgress(int(100 * index / nNum));
+					pResult = pProject->GetResult(keyStrArr[index]);
+					if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::PLATE)
+					{
+						CPlateProcessInfo *pPlateInfo = pDwgFile->FindPlateByPartNo(pResult->pOrgPart->sPartNo);
+						pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL);
+						if (pPlateInfo)
+						{
+							pItem->m_idProp = (long)pPlateInfo;
+							pItem->m_idPropType = BOMPART::PLATE;
+						}
+						if (pResult->pLoftPart == NULL)
+						{	//放样表中没有此构件
+							pItem->m_bStrikeout = TRUE;
+							pItem->SetBkColor(RGB(140, 140, 255));
+						}
+						else
+						{
+							pItem = InsertPartToList(m_xListReport, pItem, pResult->pLoftPart, &pResult->hashBoolByPropName);
+							if (pPlateInfo)
+							{
+								pItem->m_idProp = (long)pPlateInfo;
+								pItem->m_idPropType = BOMPART::PLATE;
+							}
+						}
+					}
+					else if (pResult->pOrgPart==NULL && pResult->pLoftPart &&pResult->pLoftPart->cPartType == BOMPART::PLATE)
+					{
+						pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
+						pItem->SetBkColor(RGB(128, 128, 255));
+					}
+				}
+				DisplayProgress(100);
+			}
+			m_sCurFile.Format("%s和%s校审",(char*)pProject->m_xLoftBom.m_sBomName,(char*)pDwgFile->m_sDwgName);
 		}
 		else if(m_iCompareMode==CProjectTowerType::COMPARE_ANGLE_DWGS || 
-			m_iCompareMode==CProjectTowerType::COMPARE_PLATE_DWGS)
+				m_iCompareMode==CProjectTowerType::COMPARE_PLATE_DWGS)
 		{
 			if(m_iCompareMode==CProjectTowerType::COMPARE_ANGLE_DWGS)
 				m_sCurFile="已打开角钢DWG文件漏号检测";
 			else
 				m_sCurFile="已打开钢板DWG文件漏号检测";
+			DisplayProgress(0, "显示校审结果......");
 			nNum = pProject->GetResultCount();
 			for(pResult=pProject->EnumFirstResult();pResult;pResult=pProject->EnumNextResult(), index++)
 			{	//添加新行并设置背景色
@@ -655,9 +697,9 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				CSuperGridCtrl::CTreeItem* pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
 				pItem->SetBkColor(RGB(150,220,150));
 			}
+			DisplayProgress(100);
 		}
 		m_xListReport.Redraw();
-		DisplayProgress(100);
 	}
 	UpdateData(FALSE);
 }
@@ -811,7 +853,9 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		if(pMenu->GetMenuItemCount()>0)
 			pMenu->AppendMenu(MF_SEPARATOR);
 		if (pItemInfo->itemType == ANGLE_DWG_ITEM)
+		{
 			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_ANGLES, "重新提取角钢");
+		}
 		else
 		{
 			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_PLATES, "重新提取钢板");
@@ -819,6 +863,14 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		}
 		if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_PRINT_PART, "批量打印");
+		if (pMenu->GetMenuItemCount() > 0)
+			pMenu->AppendMenu(MF_SEPARATOR);
+		pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_ANGLES, "分批提取角钢");
+		pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_PLATES, "分批提取钢板");
+		if (pMenu->GetMenuItemCount() > 0)
+			pMenu->AppendMenu(MF_SEPARATOR);
+		pMenu->AppendMenu(MF_STRING, ID_EMPTY_ANGLE_RETRIEVED_RESLUT, "清空角钢提取结果");
+		pMenu->AppendMenu(MF_STRING, ID_EMPTY_PLATE_RETRIEVED_RESLUT, "清空钢板提取结果");
 		if (pMenu->GetMenuItemCount() > 0)
 			pMenu->AppendMenu(MF_SEPARATOR);
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
@@ -882,8 +934,6 @@ void CRevisionDlg::OnTvnBeginlabeleditTreeContrl(NMHDR *pNMHDR, LRESULT *pResult
 void CRevisionDlg::OnTvnEndlabeleditTreeContrl(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMTVDISPINFO pTVDispInfo = reinterpret_cast<LPNMTVDISPINFO>(pNMHDR);
-	// TODO: 在此添加控件通知处理程序代码
-
 	*pResult = 0;
 
 	TV_ITEM item;
@@ -1098,7 +1148,7 @@ void CRevisionDlg::OnImportAngleDwg()
 	if(dlg.DoModal()!=IDOK)
 		return;
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
-	CDwgFileInfo* pJgDwgInfo=pProject->AppendDwgBomInfo(dlg.GetPathName(),TRUE);
+	CDwgFileInfo* pJgDwgInfo=pProject->AppendDwgBomInfo(dlg.GetPathName(),TRUE,g_xUbomModel.m_bExtractAnglesWhenOpenFile);
 	if(pJgDwgInfo==NULL)
 		return;
 	//添加角钢DWG文件数节点
@@ -1132,7 +1182,7 @@ void CRevisionDlg::OnImportPlateDwg()
 	if(dlg.DoModal()!=IDOK)
 		return;
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
-	CDwgFileInfo* pPlateDwgInfo=pProject->AppendDwgBomInfo(dlg.GetPathName(),FALSE);
+	CDwgFileInfo* pPlateDwgInfo=pProject->AppendDwgBomInfo(dlg.GetPathName(),FALSE,g_xUbomModel.m_bExtractPltesWhenOpenFile);
 	if(pPlateDwgInfo==NULL)
 		return;
 	//添加钢板DWG文件数节点
@@ -1197,18 +1247,22 @@ void CRevisionDlg::OnCompareData()
 		AfxMessageBox("没有找到工程塔形,无法执行数据比对！");
 		return;
 	}
-	if(pItemInfo->itemType==ANGLE_DWG_ITEM)
-	{	//进行TMA料单和角钢DWG对比
-		m_iCompareMode=CProjectTowerType::COMPARE_ANGLE_DWG;
-		CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
-		if(pProject->CompareLoftAndAngleDwg(pDwgInfo->m_sFileName)!=1)
-			return;
-	}
-	else if(pItemInfo->itemType==PLATE_DWG_ITEM)
-	{	//进行TMA料单和钢板DWG对比
-		m_iCompareMode=CProjectTowerType::COMPARE_PLATE_DWG;
-		CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
-		if(pProject->CompareLoftAndPlateDwg(pDwgInfo->m_sFileName)!=1)
+	if (pItemInfo->itemType == ANGLE_DWG_ITEM || pItemInfo->itemType == PLATE_DWG_ITEM)
+	{
+		CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+		int nRetCode1 = 0, nRetCode2 = 0;
+		if (pDwgInfo->IsJgDwgInfo())	//pItemInfo->itemType == ANGLE_DWG_ITEM
+		{	//进行TMA料单和角钢DWG对比
+			m_iCompareMode=CProjectTowerType::COMPARE_ANGLE_DWG;
+			CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
+			nRetCode1 = pProject->CompareLoftAndAngleDwg(pDwgInfo->m_sFileName);
+		}
+		if (pDwgInfo->IsPlateDwgInfo())	//pItemInfo->itemType == PLATE_DWG_ITEM
+		{	//进行TMA料单和钢板DWG对比
+			m_iCompareMode=CProjectTowerType::COMPARE_PLATE_DWG;
+			nRetCode2 = pProject->CompareLoftAndPlateDwg(pDwgInfo->m_sFileName);
+		}
+		if (nRetCode1 != 1 && nRetCode2!=1)
 			return;
 	}
 	else if(pItemInfo->itemType==BOM_GROUP)
@@ -1264,7 +1318,7 @@ void CRevisionDlg::OnRefreshPartNum()
 	CDwgFileInfo* pDwgInfo=(CDwgFileInfo*)pItemInfo->dwRefData;
 	if(pDwgInfo->IsJgDwgInfo())
 		pDwgInfo->ModifyAngleDwgPartNum();
-	else
+	if (pDwgInfo->IsPlateDwgInfo())
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
 	SendCommandToCad(L"RE ");
@@ -1284,7 +1338,7 @@ void CRevisionDlg::OnRefreshSingleNum()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo->IsJgDwgInfo())
 		pDwgInfo->ModifyAngleDwgSingleNum();
-	else
+	if (pDwgInfo->IsPlateDwgInfo())
 		pDwgInfo->ModifyPlateDwgPartNum();
 #ifdef _ARX_2007
 	SendCommandToCad(L"RE ");
@@ -1348,7 +1402,7 @@ void CRevisionDlg::OnRetrievedAngles()
 #ifndef _ARX_2007
 	CWaitCursor waitCursor;
 #endif
-	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, TRUE);
+	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, TRUE, TRUE);
 	RefreshListCtrl(hSelItem);
 }
 void CRevisionDlg::OnRetrievedPlates()
@@ -1365,7 +1419,7 @@ void CRevisionDlg::OnRetrievedPlates()
 #ifndef _ARX_2007
 	CWaitCursor waitCursor;
 #endif
-	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE);
+	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE, TRUE);
 	RefreshListCtrl(hSelItem);
 }
 void CRevisionDlg::OnRetrievedPlate()
@@ -1545,5 +1599,73 @@ void CRevisionDlg::OnBatchPrintPart()
 		CBatchPrint batchPrint(&printDlg.m_xPrintScopyList,TRUE, printDlg.m_iPrintType);
 		batchPrint.Print();
 	}
+}
+void CRevisionDlg::OnBatchRetrievedPlates()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo;
+	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo == NULL)
+		return;
+#ifndef _ARX_2007
+	CWaitCursor waitCursor;
+#endif
+	pDwgInfo->RetrievePlates(TRUE);
+	RefreshListCtrl(hSelItem);
+}
+void CRevisionDlg::OnBatchRetrievedAngles()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo;
+	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo == NULL)
+		return;
+#ifndef _ARX_2007
+	CWaitCursor waitCursor;
+#endif
+	pDwgInfo->RetrieveAngles(TRUE);
+	RefreshListCtrl(hSelItem);
+}
+void CRevisionDlg::OnEmptyRetrievedPlates()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo;
+	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL || pItemInfo->itemType != ANGLE_DWG_ITEM)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo == NULL)
+		return;
+#ifndef _ARX_2007
+	CWaitCursor waitCursor;
+#endif
+	pDwgInfo->EmptyPlateList();
+	RefreshListCtrl(hSelItem);
+}
+void CRevisionDlg::OnEmptyRetrievedAngles()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo;
+	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL || pItemInfo->itemType != ANGLE_DWG_ITEM)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo == NULL)
+		return;
+#ifndef _ARX_2007
+	CWaitCursor waitCursor;
+#endif
+	pDwgInfo->EmptyJgList();
+	RefreshListCtrl(hSelItem);
 }
 #endif

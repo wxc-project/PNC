@@ -52,6 +52,11 @@ public:
 	ARRAY_LIST<ULONG> m_newAddEntIdList;
 	AcDbObjectId m_layoutBlockId;	//自动排版时添加的块引用
 	BOOL m_bNeedExtract;	//记录当前构件是否需要提取，分批多次提取时使用 wht 19-04-02
+	//加工数、单基数、总重修改状态 wht 20-07-29
+	static const BYTE MODIFY_MANU_NUM	= 0x01;
+	static const BYTE MODIFY_SINGLE_NUM = 0x02;
+	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
+	BYTE m_ciModifyState;
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();

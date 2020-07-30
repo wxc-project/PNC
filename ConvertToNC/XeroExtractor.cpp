@@ -1392,6 +1392,11 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 				he_jiao_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
 				he_jiao_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
 			}
+			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE)	//切角
+			{
+				cut_angle_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				cut_angle_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
 		}
 		pTempBlockTableRecord->close();
 		//工艺卡矩形区域

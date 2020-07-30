@@ -40,7 +40,7 @@ void SmartExtractPlate()
 	SmartExtractPlate(&model);
 }
 
-void SmartExtractPlate(CPNCModel *pModel)
+void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 {
 	if (pModel == NULL)
 		return;
@@ -72,15 +72,16 @@ void SmartExtractPlate(CPNCModel *pModel)
 	CHashSet<AcDbObjectId> selectedEntList;
 	//默认选择所有的图形，方便后期的过滤使用
 	SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
-#ifndef __UBOM_ONLY_
-	//PNC支持进行手动框选
-	if (!SelCadEntSet(selectedEntList))
-		return;	
-#else
-	//UBOM默认处理所有图元
-	for (AcDbObjectId entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
-		selectedEntList.SetValue(entId.asOldId(), entId);
-#endif
+	if (bSupportSelectEnts)
+	{	//PNC支持进行手动框选
+		if (!SelCadEntSet(selectedEntList))
+			return;
+	}
+	else
+	{	//UBOM默认处理所有图元
+		for (AcDbObjectId entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
+			selectedEntList.SetValue(entId.asOldId(), entId);
+	}
 	//从框选信息中提取中钢板的标识，统计钢板集合
 	CHashSet<AcDbObjectId> textIdHash;
 	AcDbEntity *pEnt = NULL;

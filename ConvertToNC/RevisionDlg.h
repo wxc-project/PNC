@@ -100,6 +100,10 @@ protected:
 	afx_msg void OnDeleteItem();
 	afx_msg void OnSearchPart();
 	afx_msg void OnBatchPrintPart();
+	afx_msg void OnBatchRetrievedPlates();
+	afx_msg void OnBatchRetrievedAngles();
+	afx_msg void OnEmptyRetrievedPlates();
+	afx_msg void OnEmptyRetrievedAngles();
 	afx_msg void OnBnClickedChkGrade();
 	afx_msg void OnEnChangeELenErr();
 	afx_msg void OnBnClickedChkMatH();

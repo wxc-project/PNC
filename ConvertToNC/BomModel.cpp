@@ -8,6 +8,7 @@
 #include "CadToolFunc.h"
 #include "ComparePartNoString.h"
 #include "PNCSysPara.h"
+#include "Expression.h"
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
 CBomModel g_xUbomModel;
@@ -47,7 +48,7 @@ void CProjectTowerType::ReadProjectFile(CString sFilePath)
 		int ibValue=0;
 		file.ReadString(sValue);
 		file.Read(&ibValue,sizeof(int));
-		AppendDwgBomInfo(sValue,ibValue);
+		AppendDwgBomInfo(sValue,ibValue,g_xUbomModel.m_bExtractAnglesWhenOpenFile||g_xUbomModel.m_bExtractPltesWhenOpenFile);
 	}
 }
 //导出料单工程文件
@@ -128,7 +129,7 @@ void CProjectTowerType::InitBomInfo(const char* sFileName,BOOL bLoftBom)
 	}
 }
 //添加角钢DWGBOM信息
-CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJgDxf)
+CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJgDxf, BOOL bExtractPart)
 {
 	if (strlen(sFileName) <= 0)
 		return FALSE;
@@ -162,7 +163,7 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJ
 	CDwgFileInfo* pDwgFile = FindDwgBomInfo(sFileName);
 	if (pDwgFile)
 	{
-		pDwgFile->ExtractDwgInfo(sFileName, bJgDxf);
+		pDwgFile->ExtractDwgInfo(sFileName, bJgDxf, bExtractPart);
 		return pDwgFile;
 	}
 	else
@@ -170,7 +171,7 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJ
 		pDwgFile = dwgFileList.append();
 		pDwgFile->SetBelongModel(this);
 		//读取DWG信息
-		pDwgFile->ExtractDwgInfo(sFileName, bJgDxf);
+		pDwgFile->ExtractDwgInfo(sFileName, bJgDxf, bExtractPart);
 		return pDwgFile;
 	}
 }
@@ -398,7 +399,7 @@ int CProjectTowerType::CompareLoftAndPlateDwgs()
 	CHashStrList<BOOL> hashPlateByPartNo;
 	for(CDwgFileInfo* pPlateDwg=dwgFileList.GetFirst();pPlateDwg;pPlateDwg=dwgFileList.GetNext())
 	{
-		if(pPlateDwg->IsJgDwgInfo())
+		if(!pPlateDwg->IsPlateDwgInfo())
 			continue;
 		for(CPlateProcessInfo* pPlateInfo=pPlateDwg->EnumFirstPlate();pPlateInfo;pPlateInfo=pPlateDwg->EnumNextPlate())
 			hashPlateByPartNo.SetValue(pPlateInfo->xPlate.GetPartNo(),TRUE);
@@ -679,7 +680,7 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bCutBer ? COleVariant("*") : COleVariant(""));
 					}
 					else if (g_xUbomModel.IsTitleCol(ii, CBomImportCfg::KEY_CUT_ROOT))
-					{	//刨角
+					{	//刨根
 						map.SetValueAt(iRow, iCol, pOrgJg->bCutRoot ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bCutRoot ? COleVariant("*") : COleVariant(""));
@@ -959,7 +960,7 @@ CPlateProcessInfo *CProjectTowerType::FindPlateInfoByPartNo(const char* sPartNo)
 	CPlateProcessInfo *pPlateInfo = NULL;
 	for (CDwgFileInfo *pDwgFile = dwgFileList.GetFirst(); pDwgFile; pDwgFile = dwgFileList.GetNext())
 	{
-		if (pDwgFile->IsJgDwgInfo())
+		if (!pDwgFile->IsPlateDwgInfo())
 			continue;
 		pPlateInfo=pDwgFile->FindPlateByPartNo(sPartNo);
 		if (pPlateInfo)
@@ -989,6 +990,8 @@ CBomModel::CBomModel(void)
 	m_bExeRppWhenArxLoad = TRUE;
 	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
 	pProject->m_sProjName.Copy("新建工程");
+	m_bExtractPltesWhenOpenFile = TRUE;
+	m_bExtractAnglesWhenOpenFile = TRUE;
 }
 CBomModel::~CBomModel(void)
 {
@@ -1056,10 +1059,10 @@ void CBomModel::InitBomTblCfg()
 		char sText[MAX_PATH];
 		strcpy(sText, line_txt);
 		CString sLine(line_txt);
-		sLine.Replace('=', ' ');
+		//sLine.Replace('=', ' ');
 		sLine.Replace('\n', ' ');
 		sprintf(line_txt, "%s", sLine);
-		char *skey = strtok((char*)sText, "=,;");
+		char *skey = strtok((char*)line_txt, "=,;");
 		strncpy(key_word, skey, 100);
 		if (_stricmp(key_word, "CLIENT_ID") == 0)
 		{
@@ -1081,6 +1084,23 @@ void CBomModel::InitBomTblCfg()
 			skey = strtok(NULL, "=,;");
 			if(skey!=NULL)
 				m_bExeRppWhenArxLoad = atoi(skey);
+		}
+		else if (_stricmp(key_word, "ExtractPlatesWhenOpenFile") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+				m_bExtractPltesWhenOpenFile = atoi(skey);
+		}
+		else if (_stricmp(key_word, "ExtractAnglesWhenOpenFile") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+				m_bExtractAnglesWhenOpenFile = atoi(skey);
+		}
+		else if (_stricmp(key_word, "NOT_PRINT") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			m_sNotPrintFilter.Copy(skey);
 		}
 	}
 	fclose(fp);
@@ -1132,5 +1152,34 @@ CXhChar16 CBomModel::QueryMatMarkIncQuality(BOMPART *pPart)
 			sMatMark.Append(pPart->cQualityLevel);
 	}
 	return sMatMark;
+}
+BOOL CBomModel::IsNeedPrint(BOMPART *pPart,const char* sNotes)
+{
+	if (m_sNotPrintFilter.GetLength() <= 0)
+		return TRUE;
+	CXhChar500 sFilter(m_sNotPrintFilter);
+	sFilter.Replace("&&", ",");
+	CExpression expression;
+	EXPRESSION_VAR *pVar = expression.varList.Append();
+	strcpy(pVar->variableStr, "WIDTH");
+	pVar->fValue = pPart->wide;
+	pVar = expression.varList.Append();
+	strcpy(pVar->variableStr, "NOTES");
+	if(sNotes!=NULL)
+		pVar->fValue = strlen(sNotes);
+	else
+		pVar->fValue = strlen(pPart->sNotes);
+	
+	bool bRetCode = true;
+	//1.将过滤条件拆分为多个逻辑表达式，目前只支持&&
+	for (char* sKey = strtok(sFilter, ","); sKey; sKey = strtok(NULL, ","))
+	{	//2.逐个解析表达式
+		if (!expression.SolveLogicalExpression(sKey))
+		{
+			bRetCode = false;
+			break;
+		}
+	}
+	return !bRetCode;
 }
 #endif
