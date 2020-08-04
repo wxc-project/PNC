@@ -1822,8 +1822,16 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 			{	//Ô²»¡
 				GEPOINT ptS = pCurVer->pos, ptE = pNextVer->pos, org = pCurVer->arc.center, norm = pCurVer->arc.work_norm;
 				f3dArcLine arcline;
-				arcline.CreateMethod3(ptS, ptE, norm, pCurVer->arc.radius, org);
-				entId = CreateAcadArcLine(pBlockTableRecord, arcline.Center(), arcline.Start(), arcline.SectorAngle(), arcline.WorkNorm(), 0, g_pncSysPara.crMode.crEdge);
+				if (pCurVer->ciEdgeType == 2)
+				{	//Ô²»¡
+					arcline.CreateMethod3(ptS, ptE, norm, pCurVer->arc.radius, org);
+					entId = CreateAcadArcLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
+				}
+				else
+				{	//ÍÖÔ²
+					arcline.CreateEllipse(org, ptS, ptE, pCurVer->arc.column_norm, norm, pCurVer->arc.radius);
+					entId = CreateAcadEllipseLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
+				}
 				m_newAddEntIdList.append(entId.asOldId());
 			}
 		}
