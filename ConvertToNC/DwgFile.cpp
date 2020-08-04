@@ -223,7 +223,9 @@ static BYTE InitAnglePropByText(PART_ANGLE *pAngle, const char* sValue,
 		pAngle->siZhiWan = 1;
 	}
 	if (strstr(sValue, "主焊件") || strstr(sValue, "焊于") ||
-		strstr(sValue, "焊接") || strstr(sValue, "#)"))	//"#)"表示有焊接立板 如(245#) wht 20-07-29
+		strstr(sValue, "焊接") || strstr(sValue, "#)") || 
+		(strstr(sValue, "(") && strstr(sValue, ")"))||
+		(strstr(sValue, "（") && strstr(sValue, "）")) )	//"#)","("&&")","（"&&"）"表示有焊接立板 如(245#) wht 20-07-29
 	{
 		if (pAngleInfo && pTextPos)
 		{
