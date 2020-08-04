@@ -37,7 +37,7 @@ void SmartExtractPlate()
 	CPNCModel::m_bSendCommand = FALSE;
 	model.Empty();
 	model.m_sCurWorkFile = file_name;
-	SmartExtractPlate(&model);
+	SmartExtractPlate(&model, TRUE);
 }
 
 void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)

@@ -382,7 +382,7 @@ void CPartListDlg::OnRetrievedPlate()
 	//
 	CPNCModel tempMode;
 	CPNCModel::m_bSendCommand = TRUE;
-	SmartExtractPlate(&tempMode);
+	SmartExtractPlate(&tempMode,TRUE);
 	CPlateProcessInfo* pFirstPlate = tempMode.EnumFirstPlate(FALSE);
 	if (tempMode.GetPlateNum() != 1 || 
 		!sPartNo.Equal(pFirstPlate->GetPartNo())||
@@ -404,7 +404,7 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	if (model.m_sCurWorkFile.CompareNoCase(file_name) == 0)
 	{	//同一文档（分次处理）
 		CPNCModel tempMode;
-		SmartExtractPlate(&tempMode);
+		SmartExtractPlate(&tempMode, TRUE);
 		//数据拷贝
 		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
 		for (pSrcPlate = tempMode.EnumFirstPlate(FALSE); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate(FALSE))
@@ -419,7 +419,7 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	{	//不同文档(重新处理)
 		model.Empty();
 		model.m_sCurWorkFile = file_name;
-		SmartExtractPlate(&model);
+		SmartExtractPlate(&model, TRUE);
 	}
 	UpdatePartList();
 }
