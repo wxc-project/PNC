@@ -901,23 +901,6 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		hole.posY=(float)pCircle->center().y;
 		return TRUE;
 	}
-	else if (pEnt->isKindOf(AcDbEllipse::desc()))
-	{
-		AcDbEllipse* pEllipse = (AcDbEllipse*)pEnt;
-		double radiusRatio = pEllipse->radiusRatio();
-		AcGeVector3d minorAxis = pEllipse->minorAxis();
-		hole.posX = (float)pEllipse->center().x;
-		hole.posY = (float)pEllipse->center().y;
-		GEPOINT axis(minorAxis.x, minorAxis.y, minorAxis.z);
-		hole.d = axis.mod() * 2;
-		//if (fabs(radiusRatio - 1) > EPS2)
-		//	return FALSE;
-		hole.ciSymbolType = 2;	//Ä¬ÈÏ¹ÒÏß¿×
-		if (hole.d > g_pncSysPara.m_nMaxHoleD)
-			return FALSE;
-		else
-			return TRUE;
-	}
 	return FALSE;
 }
 BOOL CPlateExtractor::RecogBasicInfo(AcDbEntity* pEnt,BASIC_INFO& basicInfo)
