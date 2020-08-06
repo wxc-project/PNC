@@ -294,7 +294,10 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		if (strstr(sSpec, "¡Ï") || strstr(sSpec, "L"))	//½Ç¸Ö
 			m_ciType = TYPE_JG;
 		else if (strstr(sSpec, "-"))
+		{
 			m_ciType = TYPE_PLATE; //m_ciType = TYPE_FLAT;
+			m_xAngle.siSubType = BOMPART::SUB_TYPE_COMMON_PLATE;
+		}
 		else if (strstr(sSpec, "%c") || strstr(sSpec, "%C") || strstr(sSpec, "/"))
 		{	//¸Ö¹Ü/Ô²¸Ö
 			sSpec.Replace("%%%%C", "¦µ");
@@ -308,8 +311,11 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 				m_ciType = TYPE_WIRE_TUBE;	//Ì×¹Ü
 				m_xAngle.siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
 			}
-			else if(bHasMultipleSign)
+			else if (bHasMultipleSign)
+			{
 				m_ciType = TYPE_TUBE;		//¸Ö¹Ü
+				m_xAngle.siSubType = BOMPART::SUB_TYPE_TUBE_MAIN;
+			}
 			else
 				m_ciType = TYPE_YG;
 			m_xAngle.sSpec.Copy(sSpec);

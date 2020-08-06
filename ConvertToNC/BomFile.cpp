@@ -620,12 +620,12 @@ CBomImportCfg::CBomImportCfg(void)
 {
 	m_sProcessDescArr[TYPE_ZHI_WAN].Copy("»ðÇú|¾í±ß|ÖÆÍä|");
 	m_sProcessDescArr[TYPE_CUT_ANGLE].Copy("ÇÐ½Ç|ÇÐÖ«|");
-	m_sProcessDescArr[TYPE_CUT_ROOT].Copy("Çå¸ù|ÅÙ¸ù|");
+	m_sProcessDescArr[TYPE_CUT_ROOT].Copy("Çå¸ù|ÅÙ¸ù|²ùÐÄ|²ùÐ¾|");
 	m_sProcessDescArr[TYPE_CUT_BER].Copy("²ù±³|");
-	m_sProcessDescArr[TYPE_PUSH_FLAT].Copy("Ñ¹±â|´ò±â|");
+	m_sProcessDescArr[TYPE_PUSH_FLAT].Copy("Ñ¹±â|´ò±â|ÅÄ±â|");
 	m_sProcessDescArr[TYPE_KAI_JIAO].Copy("¿ª½Ç");
 	m_sProcessDescArr[TYPE_HE_JIAO].Copy("ºÏ½Ç");
-	m_sProcessDescArr[TYPE_FOO_NAIL].Copy("´ø½Å¶¤");
+	m_sProcessDescArr[TYPE_FOO_NAIL].Copy("´ø½Å¶¤|½Å¶¤");
 }
 CBomImportCfg::~CBomImportCfg(void)
 {

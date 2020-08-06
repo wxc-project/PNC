@@ -194,7 +194,22 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 	CString sSpec1(pSrcPart->GetSpec()), sSpec2(pDesPart->GetSpec());
 	sSpec1 = sSpec1.Trim();
 	sSpec2 = sSpec2.Trim();
-	if(pSrcPart->cPartType!=pDesPart->cPartType||
+	BYTE cPartType1 = pSrcPart->cPartType;
+	if (pSrcPart->siSubType == BOMPART::SUB_TYPE_COMMON_PLATE)
+		cPartType1 = BOMPART::PLATE;
+	else if (pSrcPart->siSubType == BOMPART::SUB_TYPE_TUBE_WIRE ||
+			 pSrcPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN ||
+			 pSrcPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN)
+		cPartType1 = BOMPART::TUBE;
+	BYTE cPartType2 = pDesPart->cPartType;
+	if (pDesPart->siSubType == BOMPART::SUB_TYPE_COMMON_PLATE)
+		cPartType2 = BOMPART::PLATE;
+	else if (pDesPart->siSubType == BOMPART::SUB_TYPE_TUBE_WIRE ||
+			pDesPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN ||
+			pDesPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN)
+		cPartType2 = BOMPART::TUBE;
+
+	if(cPartType2!=cPartType1||
 		sSpec1.CompareNoCase(sSpec2)!=0 ) //stricmp(pSrcPart->sSpec, pDesPart->sSpec) != 0)
 		hashBoolByPropName.SetValue(CBomImportCfg::KEY_SPEC, TRUE);
 	//²ÄÖÊ
