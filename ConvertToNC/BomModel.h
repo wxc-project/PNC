@@ -28,6 +28,7 @@ public:
 	static const BYTE TYPE_JIG = 5;		//¼Ð¾ß
 	static const BYTE TYPE_GGS = 6;		//¸Ö¸ñÕ¤
 	static const BYTE TYPE_PLATE = 7;	//¸Ö°å
+	static const BYTE TYPE_WIRE_TUBE = 8;//Ì×¹Ü
 	BYTE m_ciType;				//
 	//
 	PART_ANGLE m_xAngle;

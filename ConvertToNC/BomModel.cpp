@@ -191,8 +191,11 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 {
 	hashBoolByPropName.Empty();
 	//规格
+	CString sSpec1(pSrcPart->GetSpec()), sSpec2(pDesPart->GetSpec());
+	sSpec1 = sSpec1.Trim();
+	sSpec2 = sSpec2.Trim();
 	if(pSrcPart->cPartType!=pDesPart->cPartType||
-		stricmp(pSrcPart->sSpec, pDesPart->sSpec) != 0)
+		sSpec1.CompareNoCase(sSpec2)!=0 ) //stricmp(pSrcPart->sSpec, pDesPart->sSpec) != 0)
 		hashBoolByPropName.SetValue(CBomImportCfg::KEY_SPEC, TRUE);
 	//材质
 	if(toupper(pSrcPart->cMaterial) != toupper(pDesPart->cMaterial))
@@ -443,7 +446,7 @@ int CProjectTowerType::CompareLoftAndAngleDwg(const char* sFileName)
 	CAngleProcessInfo* pJgInfo = NULL;
 	for (pJgInfo = pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = pDwgFile->EnumNextJg())
 	{
-		BOMPART *pDwgJg = &(pJgInfo->m_xAngle);
+		BOMPART *pDwgJg = &pJgInfo->m_xAngle;
 		BOMPART *pLoftJg=m_xLoftBom.FindPart(pJgInfo->m_xAngle.sPartNo);
 		if(pLoftJg==NULL)
 		{	//1、存在DWG构件，不存在放样构件

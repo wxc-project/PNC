@@ -456,8 +456,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, atoi(sProcessNum)));
 		}
 		//logerr.Log("存在重复件号：%s", (char*)sPartNo);
-		int nWidth = 0, nThick = 0;
-		CProcessPart::RestoreSpec(sSpec, &nWidth, &nThick);
+		double fWidth = 0, fThick = 0;
+		CProcessPart::RestoreSpec(sSpec, &fWidth, &fThick);
 		if (pBomPart == NULL)
 		{
 			pBomPart = m_hashPartByPartNo.Add(sPartNo, cls_id);
@@ -472,8 +472,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			pBomPart->length = fLength;
 			pBomPart->fPieceWeight = fWeight;
 			pBomPart->fSumWeight = fSumWeight;
-			pBomPart->wide = (double)nWidth;
-			pBomPart->thick = (double)nThick;
+			pBomPart->wide = fWidth;
+			pBomPart->thick = fThick;
 			strcpy(pBomPart->sNotes, sNote);
 			if (bZhiWan)
 				pBomPart->siZhiWan = 1;
@@ -501,7 +501,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 				PART_PLATE* pBomPlate = (PART_PLATE*)pBomPart;
 				pBomPlate->bWeldPart = bWeld;
 				//钢板规格统一用厚度表示,不包括宽度 wht 20-07-30
-				pBomPlate->sSpec.Printf("-%d", nThick);
+				pBomPlate->sSpec.Printf("-%.f", fThick);
 			}
 		}
 		else

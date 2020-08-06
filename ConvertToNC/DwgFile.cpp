@@ -140,8 +140,22 @@ static BYTE InitAnglePropByText(PART_ANGLE *pAngle, const char* sValue,
 		return 0;
 	const int DIST_TILE_2_PROP = 30;
 	BYTE cType = ITEM_TYPE_PART_NOTES;
+	CXhChar200 sTemp(sValue);
 	if (strstr(sValue, "带脚钉"))
+	{
 		pAngle->bHasFootNail = TRUE;
+	}
+	else if (strstr(sValue, "脚钉"))
+	{
+		for (char *skey = strtok((char*)sTemp, " ,，、"); skey; skey = strtok(NULL, " ,，、"))
+		{
+			if (stricmp(skey, "脚钉") == 0)
+			{
+				pAngle->bHasFootNail = TRUE;
+				break;
+			}
+		}
+	}
 	if (strstr(sValue, "切角") || strstr(sValue, "切肢"))
 	{
 		if (pAngleInfo && pTextPos)
@@ -255,29 +269,50 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		cType = ITEM_TYPE_DES_MAT;
 	}
 	else if(PtInDataRect(ITEM_TYPE_DES_GUIGE,data_pos))	//规格
-	{	
-		CXhChar50 sSpec(sValue);
+	{	//带%时使用CXhCharTempl类会出错 wht 20-08-05	
+		BOOL bHasMultipleSign = FALSE;
+		CString sSpec(sValue);	//CXhChar50 sSpec(sValue);
 		if(strstr(sSpec,"∠"))
 			sSpec.Replace("∠","L");
 		if (strstr(sSpec, "×"))
+		{
 			sSpec.Replace("×", "*");
+			bHasMultipleSign = TRUE;
+		}
 		if (strstr(sSpec, "x"))
+		{
 			sSpec.Replace("x", "*");
+			bHasMultipleSign = TRUE;
+		}
 		if (strstr(sSpec, "X"))
+		{
 			sSpec.Replace("X", "*");
+			bHasMultipleSign = TRUE;
+		}
 		m_xAngle.sSpec.Copy(sSpec);
 		//根据规格识别构件类型
 		if (strstr(sSpec, "∠") || strstr(sSpec, "L"))	//角钢
 			m_ciType = TYPE_JG;
 		else if (strstr(sSpec, "-"))
-			m_ciType = TYPE_FLAT;
+			m_ciType = TYPE_PLATE; //m_ciType = TYPE_FLAT;
 		else if (strstr(sSpec, "%c") || strstr(sSpec, "%C") || strstr(sSpec, "/"))
 		{	//钢管/圆钢
+			sSpec.Replace("%%%%C", "Φ");
+			sSpec.Replace("%%%%c", "Φ");
+			sSpec.Replace("%%C", "Φ");
+			sSpec.Replace("%%c", "Φ");
+			sSpec.Replace("%C", "Φ");
 			sSpec.Replace("%c", "Φ");
 			if (strstr(sSpec, "/"))
-				m_ciType = TYPE_TUBE;
+			{
+				m_ciType = TYPE_WIRE_TUBE;	//套管
+				m_xAngle.siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
+			}
+			else if(bHasMultipleSign)
+				m_ciType = TYPE_TUBE;		//钢管
 			else
 				m_ciType = TYPE_YG;
+			m_xAngle.sSpec.Copy(sSpec);
 		}
 		else if (strstr(sSpec, "C"))
 			m_ciType = TYPE_JIG;
@@ -286,22 +321,22 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		else
 		{	//默认按角钢处理(40*3)
 			m_ciType = TYPE_JG;
-			sprintf(m_xAngle.sSpec, "L%s", (char*)sSpec);
+			sprintf(m_xAngle.sSpec, "L%s", sSpec);
 			m_xAngle.sSpec.Replace(" ", "");
-			sSpec.Copy(m_xAngle.sSpec);
+			sSpec = m_xAngle.sSpec;
 		}
 		//
-		int nWidth=0,nThick=0;
+		double fWidth=0,fThick=0;
 		//从规格中提取材质 wht 19-08-05
 		CXhChar16 sMaterial;
-		CProcessPart::RestoreSpec(sSpec,&nWidth,&nThick,sMaterial);
+		CProcessPart::RestoreSpec(sSpec,&fWidth,&fThick,sMaterial);
 		if (sMaterial.GetLength() > 0)
 		{
 			m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
 			m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sMaterial);
 		}
-		m_xAngle.wide=(float)nWidth;
-		m_xAngle.thick=(float)nThick;
+		m_xAngle.wide=(float)fWidth;
+		m_xAngle.thick=(float)fThick;
 		cType = ITEM_TYPE_DES_GUIGE;
 	}
 	else if (PtInDataRect(ITEM_TYPE_LENGTH, data_pos))	//长度
@@ -463,6 +498,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	return cType;
 }
+
 //获取角钢数据点坐标
 f3dPoint CAngleProcessInfo::GetAngleDataPos(BYTE data_type)
 {
