@@ -195,7 +195,7 @@ GECS CNCPlate::GetMCS(CProcessPlate& tempPlate, double fMinDistance, BOOL bGrind
 //
 void CNCPlate::InitCutHoleInfo(GEPOINT& prevPt, CProcessPlate& tempPlate)
 {
-	if (m_bCutSpecialHole)
+	if (!m_bCutSpecialHole)
 		return;
 	CXhChar100 sValue;
 	double fSpecialD = (GetSysParaFromReg("LimitSH", sValue)) ? atof(sValue) : 0;
