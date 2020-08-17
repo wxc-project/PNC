@@ -59,8 +59,11 @@ void CProcessPartDraw::InitSolidDrawUCS(ISolidSet *pSolidSet)
 }
 void CProcessPartDraw::Draw(I2dDrawing *p2dDraw,ISolidSet *pSolidSet)
 {
-	if(m_pBelongEditor==NULL)
+	if (m_pBelongEditor == NULL)
+	{
+		//logerr.Log("Editor=NULL");
 		return;
+	}
 	InitSolidDrawUCS(pSolidSet);
 	IDrawingAssembly *pDrawAssembly=p2dDraw->GetDrawingAssembly();
 	WORD wDrawMode=m_pBelongEditor->GetDrawMode();
@@ -81,6 +84,8 @@ void CProcessPartDraw::Draw(I2dDrawing *p2dDraw,ISolidSet *pSolidSet)
 		EditorModelDraw(pDrawing,pSolidSet);
 	else if(wDrawMode==IPEC::DRAW_MODE_PROCESSCARD)
 		ProcessCardModelDraw(pDrawing,pSolidSet);
+	//else
+	//	logerr.Log("DrawMode=%d",wDrawMode);
 	XeroDimStyleTable::InitDimStyle2(pDrawing->Database());
 }
 void CProcessPartDraw::DimSize(I2dDrawing *p2dDraw,ISolidSnap* pSolidSnap)

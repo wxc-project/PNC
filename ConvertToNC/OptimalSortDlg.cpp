@@ -183,31 +183,31 @@ static int FireCompareItem(const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem1,c
 	{	//点击规格、材质列，按规格、材质、件号
 		CString sPartType1 = pItem1->m_lpNodeInfo->GetSubItemText(0);
 		CString sPartType2 = pItem2->m_lpNodeInfo->GetSubItemText(0);
-		BOMPART *pBomPart1 = NULL, *pBomPart2 = NULL;
-		if (sPartType1.CompareNoCase("钢板") == 0)
-		{
-			CPlateProcessInfo* pSelPlateInfo = (CPlateProcessInfo*)pItem1->m_idProp;
-			pBomPart1 = &pSelPlateInfo->xBomPlate;
-		}
-		else
-		{
-			CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pItem1->m_idProp;
-			pBomPart1 = &pSelJgInfo->m_xAngle;
-		}
-		if (sPartType2.CompareNoCase("钢板") == 0)
-		{
-			CPlateProcessInfo* pSelPlateInfo = (CPlateProcessInfo*)pItem2->m_idProp;
-			pBomPart2 = &pSelPlateInfo->xBomPlate;
-		}
-		else
-		{
-			CAngleProcessInfo* pSelJgInfo = (CAngleProcessInfo*)pItem2->m_idProp;
-			pBomPart2 = &pSelJgInfo->m_xAngle;
-		}
+		BOMPART *pBomPart1 = (BOMPART*)pItem1->m_idProp;
+		BOMPART *pBomPart2 = (BOMPART*)pItem2->m_idProp;
 		if (pBomPart1&&pBomPart2)
-		{
+		{	//按照材料名称-材质-规格的顺序进行排序
+			int ciPartType1 = pBomPart1->cPartType;
+			int ciPartType2 = pBomPart2->cPartType;
+			if (ciPartType1 > ciPartType2)
+				return 1;
+			else if (ciPartType1 < ciPartType2)
+				return -1;
+			else if (ciPartType1 == BOMPART::ANGLE)
+			{
+				AngleInfoPtr pAngleInfo1 = (CAngleProcessInfo*)pBomPart1->feature2;
+				AngleInfoPtr pAngleInfo2 = (CAngleProcessInfo*)pBomPart2->feature2;
+				if (pAngleInfo1&&pAngleInfo2)
+				{
+					if (pAngleInfo1->m_ciType > pAngleInfo2->m_ciType)
+						return 1;
+					else if (pAngleInfo1->m_ciType < pAngleInfo2->m_ciType)
+						return -1;
+				}
+			}
 			result = CompareBomPartPtrFunc(pBomPart1, pBomPart2, bAscending);
 		}
+		
 	}
 	else if(iSubItem==3)
 	{	//按角钢排序
@@ -1091,7 +1091,7 @@ void COptimalSortDlg::InitByProcessPlate(CPlateProcessInfo* pPlateInfo, BOMPART 
 	}
 	else
 		m_nPlateCount++;
-	CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(&pPlateInfo->xBomPlate);
+	CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(pCurPart);
 	if (strstr(sMat, "Q235") != NULL)
 		m_nQ235Count++;
 	else if (strstr(sMat, "Q345") != NULL)

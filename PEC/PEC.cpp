@@ -266,11 +266,13 @@ void CPEC::ClearProcessParts()
 
 void CPEC::Draw()
 {
+	//CLogErrorLife logLife;
 	if(m_hashPartDrawBySerial.GetNodeNum()<=0)
 	{
 		IDrawing *pDrawing=m_p2dDraw->GetActiveDrawing();
 		if(pDrawing)
 			pDrawing->EmptyDbEntities();
+		//logerr.Log("Count=0");
 		return;
 	}
 	DISPLAY_TYPE displayType;

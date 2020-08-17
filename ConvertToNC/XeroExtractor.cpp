@@ -850,7 +850,9 @@ BOOL CPlateExtractor::RecogBoltHole(AcDbEntity* pEnt,BOLT_HOLE& hole)
 		if (fIncrement > 2 || fIncrement < 0)
 		{
 			bValidLsBlock = FALSE;
-			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算的孔径不合理，请优先设置螺栓图块对应的孔径！", (char*)sName);
+			//根据图元计算得到的直径，螺栓对应的直径不符且未指定螺栓孔径时提示用户 wht 20-08-14
+			if(pBoltD->hole_d<=0 || pBoltD->hole_d<pBoltD->diameter)
+				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算的孔径{%.1f}不合理，请优先设置螺栓图块对应的孔径！", (char*)sName,fHoleD);
 		}
 		//
 		hole.posX = (float)pReference->position().x;
