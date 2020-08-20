@@ -49,7 +49,10 @@ public:
 	void CreateRgn();
 	bool PtInAngleRgn(const double* poscoord);
 	BYTE InitAngleInfo(f3dPoint data_pos,const char* sValue);
-	void SetOrig(f3dPoint pt){orig_pt=pt;}
+	void SetOrig(f3dPoint pt)
+	{
+		orig_pt=pt;
+	}
 	f2dRect GetAngleDataRect(BYTE data_type);
 	f3dPoint GetAngleDataPos(BYTE data_type);
 	bool PtInDataRect(BYTE data_type,f3dPoint pt);

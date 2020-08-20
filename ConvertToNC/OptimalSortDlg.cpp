@@ -1323,7 +1323,7 @@ void COptimalSortDlg::OnBnClickedBtnImprotPrintBom()
 		return;
 	CFileDialog file_dlg(TRUE, "xls", "角钢打印清单.xls",
 		OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT | OFN_ALLOWMULTISELECT,
-		"BOM文件|*.xls;*.xlsx|Excel(*.xls)|*.xls|Excel(*.xlsx)|*.xlsx|所有文件(*.*)|*.*||");
+		"BOM文件|*.xls;*.xlsx;*.xlsm|Excel(*.xls)|*.xls|Excel(*.xlsx)|*.xlsx|Excel(*.xlsm)|*.xlsm|所有文件(*.*)|*.*||");
 	if (file_dlg.DoModal() == IDOK)
 	{
 		POSITION pos = file_dlg.GetStartPosition();

@@ -637,8 +637,12 @@ void PNCSysSetImportAttach()
 		if (_stricmp(key_word, "PartLabelTitle") == 0)
 		{
 			skey = strtok(NULL, "=,;");
-			sprintf(g_pncSysPara.m_sPartLabelTitle, "%s", skey);
-			g_pncSysPara.m_sPartLabelTitle.Replace(" ", "");
+			CXhChar16 sPartLabelTitle;
+			sprintf(sPartLabelTitle, "%s", skey);
+			sPartLabelTitle.Replace(" ", "");
+			sPartLabelTitle.Replace("\n", "");
+			if (sPartLabelTitle.GetLength() > 0)	//避免冲掉主设置文件中的参数 wht 20-08-19
+				g_pncSysPara.m_sPartLabelTitle.Copy(sPartLabelTitle);
 		}
 		else if (_stricmp(key_word, "MaxLenErr") == 0)
 		{
@@ -671,6 +675,7 @@ void PNCSysSetImportDefault()
 		strcpy(sText, line_txt);
 		CString sLine(line_txt);
 		sLine.Replace('=', ' ');
+		sLine.Replace('\n', ' ');
 		sprintf(line_txt, "%s", sLine);
 		char *skey = strtok((char*)sText, "=,;");
 		strncpy(key_word, skey, 100);
@@ -852,18 +857,24 @@ void PNCSysSetImportDefault()
 		else if (_stricmp(key_word, "m_nMaxHoleD") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMaxHoleD);
 		else if (_stricmp(key_word, "JG_CARD") == 0)
+		{
 			sscanf(line_txt, "%s%s", key_word, (char*)g_pncSysPara.m_sJgCadName);
+			g_pncSysPara.m_sJgCadName.Replace(" ", "");
+			g_pncSysPara.m_sJgCadName.Replace("\n", "");
+		}
 		else if (_stricmp(key_word, "PartLabelTitle") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			sprintf(g_pncSysPara.m_sPartLabelTitle, "%s", skey);
 			g_pncSysPara.m_sPartLabelTitle.Replace(" ", "");
+			g_pncSysPara.m_sPartLabelTitle.Replace("\n", "");
 		}
 		else if (_stricmp(key_word, "JgCardBlockName") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			sprintf(g_pncSysPara.m_sJgCardBlockName, "%s", skey);
 			g_pncSysPara.m_sJgCardBlockName.Replace(" ", "");
+			g_pncSysPara.m_sJgCardBlockName.Replace("\n", "");
 		}
 #ifndef __UBOM_ONLY_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)

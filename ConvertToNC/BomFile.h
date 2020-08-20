@@ -89,6 +89,7 @@ public:
 	const static BYTE TYPE_HE_JIAO		= 6;
 	const static BYTE TYPE_FOO_NAIL		= 7;
 	CXhChar100 m_sProcessDescArr[8];
+	CXhChar100 m_sProcessFlag;	//常见标识有"*、v、V、√、1",标识有该工艺 wht 20-08-17
 	//
 	struct BOM_TITLE
 	{
@@ -119,6 +120,8 @@ public:
 	void InitBomTblCfg(const char* cfg_file_path);
 	int InitBomTitle();
 	//
+	BOOL IsEqualDefaultProcessFlag(const char* sValue);
+	BOOL IsEqualProcessFlag(const char* sValue);
 	BOOL IsHasTheProcess(const char* sText, BYTE ciType);
 	BOOL IsZhiWan(const char* sText) { return IsHasTheProcess(sText, TYPE_ZHI_WAN); }
 	BOOL IsPushFlat(const char* sText) { return IsHasTheProcess(sText, TYPE_PUSH_FLAT); }

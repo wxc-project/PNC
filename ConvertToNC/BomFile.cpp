@@ -361,7 +361,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || strstr(sValue, "º¸"))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				strstr(sValue, "º¸"))
 				bWeld = TRUE;
 		}
 		//ÖÆÍä
@@ -370,7 +372,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsZhiWan(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsZhiWan(sValue))
 				bZhiWan = TRUE;
 		}
 		//ÇÐ½Ç
@@ -379,7 +383,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsCutAngle(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsCutAngle(sValue))
 				bCutAngle = TRUE;
 		}
 		//Ñ¹±â
@@ -388,7 +394,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsPushFlat(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsPushFlat(sValue))
 				bPushFlat = TRUE;
 		}
 		//ÅÙ¸ù
@@ -397,7 +405,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsCutRoot(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsCutRoot(sValue))
 				bCutRoot = TRUE;
 		}
 		//²ù±³
@@ -406,7 +416,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsCutBer(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsCutBer(sValue))
 				bCutBer = TRUE;
 		}
 		//¿ª½Ç
@@ -415,7 +427,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsKaiJiao(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsKaiJiao(sValue))
 				bKaiJiao = TRUE;
 		}
 		//ºÏ½Ç
@@ -424,7 +438,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsHeJiao(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsHeJiao(sValue))
 				bHeJiao = TRUE;
 		}
 		//´ø½Å¶¤
@@ -433,7 +449,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (sValue.Equal("*") || g_xBomImportCfg.IsFootNail(sValue))
+			if (g_xBomImportCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomImportCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomImportCfg.IsFootNail(sValue))
 				bFootNail = TRUE;
 		}
 		sMaterial.Remove(' ');	//ÒÆ³ý¿Õ¸ñ wht 20-07-30
@@ -630,6 +648,27 @@ CBomImportCfg::CBomImportCfg(void)
 CBomImportCfg::~CBomImportCfg(void)
 {
 	
+}
+
+BOOL CBomImportCfg::IsEqualDefaultProcessFlag(const char* sValue)
+{
+	if (sValue == NULL || strlen(sValue) <= 0)
+		return FALSE;
+	else if (stricmp(sValue, "*") == 0 || stricmp(sValue, "v") == 0 || stricmp(sValue, "V") == 0 ||
+			 stricmp(sValue, "¡Ì") == 0 || stricmp(sValue, "1") == 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
+BOOL CBomImportCfg::IsEqualProcessFlag(const char* sValue)
+{
+	if (sValue == NULL || strlen(sValue) <= 0 || m_sProcessFlag.GetLength() <= 0)
+		return FALSE;
+	else if (m_sProcessFlag.EqualNoCase(sValue))
+		return TRUE;
+	else
+		return FALSE;
 }
 BOOL CBomImportCfg::IsHasTheProcess(const char* sValue, BYTE ciType)
 {
@@ -841,6 +880,15 @@ void CBomImportCfg::InitBomTblCfg(const char* cfg_file_path)
 			{
 				m_sProcessDescArr[TYPE_FOO_NAIL].Copy(skey);
 				m_sProcessDescArr[TYPE_FOO_NAIL].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ProcessFlag") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				m_sProcessFlag.Copy(skey);
+				m_sProcessFlag.Remove(' ');
 			}
 		}
 		else

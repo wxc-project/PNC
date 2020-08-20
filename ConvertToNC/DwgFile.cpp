@@ -327,6 +327,21 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		else
 		{	//默认按角钢处理(40*3)
 			m_ciType = TYPE_JG;
+			if (sSpec.GetLength() > 0 && sSpec[0] == 'Q')
+			{	//Q420B 250x20
+				char sText[MAX_PATH];
+				strcpy(sText, sSpec);
+				char *sKey = strtok(sText, " \t");
+				if (sKey != NULL)
+				{	//材质
+					CXhChar16 sMat(sKey);
+					m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sMat);
+					m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sMat);
+				}
+				sKey = strtok(NULL, " \t");
+				if(sKey)
+					sSpec = sKey;
+			}
 			sprintf(m_xAngle.sSpec, "L%s", sSpec);
 			m_xAngle.sSpec.Replace(" ", "");
 			sSpec = m_xAngle.sSpec;
@@ -340,6 +355,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		{
 			m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
 			m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sMaterial);
+			m_xAngle.sSpec.Replace(sMaterial, "");
 		}
 		m_xAngle.wide=(float)fWidth;
 		m_xAngle.thick=(float)fThick;
