@@ -107,6 +107,7 @@ protected:
 	afx_msg void OnBnClickedChkGrade();
 	afx_msg void OnEnChangeELenErr();
 	afx_msg void OnBnClickedChkMatH();
+	afx_msg void OnBnClickedSettings();
 	afx_msg LRESULT OnAcadKeepFocus(WPARAM, LPARAM);
 public:
 	CXhTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}

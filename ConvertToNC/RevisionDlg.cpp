@@ -13,6 +13,7 @@
 #include "OptimalSortDlg.h"
 #include "PNCSysPara.h"
 #include "BomExport.h"
+#include "PNCSysSettingDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -203,6 +204,7 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_GRADE, OnBnClickedChkGrade)
 	ON_EN_CHANGE(IDC_E_LEN_ERR, OnEnChangeELenErr)
 	ON_BN_CLICKED(IDC_CHK_MAT_H, &CRevisionDlg::OnBnClickedChkMatH)
+	ON_BN_CLICKED(IDC_BTN_SETTINGS, &CRevisionDlg::OnBnClickedSettings)
 END_MESSAGE_MAP()
 
 // CRevisionDlg 消息处理程序
@@ -1667,5 +1669,15 @@ void CRevisionDlg::OnEmptyRetrievedAngles()
 #endif
 	pDwgInfo->EmptyJgList();
 	RefreshListCtrl(hSelItem);
+}
+void CRevisionDlg::OnBnClickedSettings()
+{
+#ifdef _ARX_2007
+	CWndShowLife show(this);
+#endif
+	CAcModuleResourceOverride resOverride;
+	CLogErrorLife logErrLife;
+	CPNCSysSettingDlg dlg;
+	dlg.DoModal();
 }
 #endif

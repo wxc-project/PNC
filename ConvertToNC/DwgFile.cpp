@@ -466,12 +466,13 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			CString sKaiJiao = sValue;
 			sKaiJiao.Replace("°", "");
 			sKaiJiao.Replace("度", "");
+			sKaiJiao.Replace("+", "");
+			sKaiJiao.Replace("-", "");
 			double fAngle = atof(sKaiJiao);
-			if(fAngle==0)
-				m_xAngle.bKaiJiao = TRUE;
-			else if (fAngle > 0 && fAngle < 90)
-				m_xAngle.bHeJiao = TRUE;
-			else
+			//可能有两种标注方式：
+			//1. 4.5°	大于0小于45度范围内，识别为开角度数
+			//2.94.5°  大于90度小于180度，识别为第二种标注方式 wht 20-08-20
+			if((fAngle>0 && fAngle<45) || (fAngle>90 && fAngle<180))
 				m_xAngle.bKaiJiao = TRUE;
 		}
 		else
@@ -491,12 +492,13 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			CString sHeiao = sValue;
 			sHeiao.Replace("°", "");
 			sHeiao.Replace("度", "");
+			sHeiao.Replace("+", "");
+			sHeiao.Replace("-", "");
+			//可能有两种标注方式：
+			//1. 4.5°	大于0小于45度范围内，识别为开角度数
+			//2.84.5°  大于45度小于90度
 			double fAngle = atof(sHeiao);
-			if(fAngle==0)
-				m_xAngle.bHeJiao = TRUE;
-			else if (fAngle > 90)
-				m_xAngle.bKaiJiao = TRUE;
-			else 
+			if(fAngle>0 && fAngle<90)
 				m_xAngle.bHeJiao = TRUE;
 		}
 		else

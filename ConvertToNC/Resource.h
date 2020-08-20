@@ -70,6 +70,8 @@
 #define IDC_BTN_IMPROT_PRINT_BOM        151
 #define IDC_BUTTON2                     152
 #define IDC_BTN_EMPTY_PRINT_BOM         152
+#define IDC_BUTTON1                     152
+#define IDC_BTN_SETTINGS                152
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
 #define IDC_E_VAL                       1093
@@ -128,10 +130,10 @@
 #define ID_BATCH_PRINT_PART             32792
 #define ID_ADD_ITEM                     32793
 #define ID_EXPORT_XLS_FILE              32794
-#define ID_BATCH_RETRIEVED_ANGLES		32795
-#define ID_BATCH_RETRIEVED_PLATES		32796
-#define ID_EMPTY_ANGLE_RETRIEVED_RESLUT	32797
-#define ID_EMPTY_PLATE_RETRIEVED_RESLUT	32798
+#define ID_BATCH_RETRIEVED_ANGLES       32795
+#define ID_BATCH_RETRIEVED_PLATES       32796
+#define ID_EMPTY_ANGLE_RETRIEVED_RESLUT 32797
+#define ID_EMPTY_PLATE_RETRIEVED_RESLUT 32798
 
 // Next default values for new objects
 // 
@@ -139,7 +141,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32799
-#define _APS_NEXT_CONTROL_VALUE         152
+#define _APS_NEXT_CONTROL_VALUE         153
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

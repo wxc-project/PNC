@@ -197,7 +197,8 @@ CString GetProductVersion(const char* exe_path)
 }
 
 BOOL StartCadAndLoadArx(const char* productName, const char* APP_PATH, 
-						char* cad_path, CString &rxFilePath, HWND hWnd, BOOL bEnableDockWnd /*= FALSE*/)
+						char* cad_path, CString &rxFilePath, HWND hWnd, 
+						BOOL bEnableDockWnd /*= FALSE*/,BOOL bLoadx64Arx/*=FALSE*/)
 {
 	//启动CAD，并自动加载PNC.arx
 	char cadPath[MAX_PATH] = "", cadName[MAX_PATH] = "";

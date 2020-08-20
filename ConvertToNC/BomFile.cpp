@@ -505,12 +505,22 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 				pBomJg->bHeJiao = bHeJiao;
 				pBomJg->bWeldPart = bWeld;
 				pBomJg->bHasFootNail = bFootNail;
-				if (strstr(pBomPart->sNotes, "开角"))
-					pBomJg->bKaiJiao = TRUE;
-				if (strstr(pBomPart->sNotes, "合角"))
-					pBomJg->bHeJiao = TRUE;
-				if (strstr(pBomJg->sNotes, "带脚钉"))
-					pBomJg->bHasFootNail = TRUE;
+				if (!bHeJiao && !bKaiJiao)
+				{
+					if (strstr(pBomPart->sNotes, "开合角"))
+					{	//需要进一步区分是开角还是合角
+
+					}
+					else if (strstr(pBomPart->sNotes, "开角"))
+						pBomJg->bKaiJiao = TRUE;
+					else if (strstr(pBomPart->sNotes, "合角"))
+						pBomJg->bHeJiao = TRUE;
+				}
+				if (!bFootNail)
+				{
+					if (strstr(pBomJg->sNotes, "带脚钉"))
+						pBomJg->bHasFootNail = TRUE;
+				}
 				if (bPushFlat)
 					pBomJg->nPushFlat = 1;
 			}
@@ -672,7 +682,7 @@ BOOL CBomImportCfg::IsEqualProcessFlag(const char* sValue)
 }
 BOOL CBomImportCfg::IsHasTheProcess(const char* sValue, BYTE ciType)
 {
-	if (strlen(sValue) < 2)
+	if (sValue==NULL || strlen(sValue) < 2)
 		return FALSE;
 	if (ciType == TYPE_FOO_NAIL)
 	{	//
@@ -688,6 +698,41 @@ BOOL CBomImportCfg::IsHasTheProcess(const char* sValue, BYTE ciType)
 			continue;
 		if (strstr(sValue, skey))
 			return TRUE;
+	}
+	if ((ciType == TYPE_HE_JIAO || ciType == TYPE_KAI_JIAO) &&
+		(strstr(sValue, "°") || strstr(sValue, "度")))
+	{	//从备注文字中解析开合角度 wht 20-08-20
+		CXhChar500 sTempValue;	//+4.5°、-4.5°用构造函数传入会丢失°
+		sTempValue.Copy(sValue);
+		for (char *skey = strtok((char*)sTempValue, " ,，、"); skey; skey = strtok(NULL, " ,，、"))
+		{
+			if (strlen(skey) <= 0)
+				continue;
+			BOOL bHasPlus = strstr(skey, "+") != NULL;
+			BOOL bHasMinus = strstr(skey, "-") != NULL;
+			if (bHasPlus || bHasMinus)
+			{
+				if ((bHasPlus && ciType == TYPE_KAI_JIAO) ||
+					(bHasMinus && ciType == TYPE_HE_JIAO))
+					return TRUE;	//标注+4.5°、-4.5°
+				else
+					return FALSE;
+			}
+			else
+			{	//标注95° 84°,根据角度识别开角还是合角 wht 20-08-20 
+				CString sKaiHeJiao = skey;
+				sKaiHeJiao.Replace("°", "");
+				sKaiHeJiao.Replace("度", "");
+				sKaiHeJiao.Replace("+", "");
+				sKaiHeJiao.Replace("-", "");
+				double fAngle = atof(sKaiHeJiao);
+				if ((fAngle > 0 && fAngle < 90 && ciType==TYPE_HE_JIAO) ||
+					(fAngle>90 && fAngle <180 && ciType==TYPE_KAI_JIAO))
+				{
+					return TRUE;
+				}
+			}
+		}
 	}
 	return FALSE;
 }

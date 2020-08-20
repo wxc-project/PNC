@@ -712,7 +712,7 @@ static BOOL IsHasVertex(ATOM_LIST<CPlateObject::VERTEX>& tem_vertes,GEPOINT pt)
 	return FALSE;
 }
 //通过bpoly命令提取钢板轮廓点
-void CALLBACK EXPORT CloseBoundaryPopupWnd(HWND hWnd, UINT nMsg, UINT nIDEvent, DWORD dwTime)
+void CALLBACK EXPORT CloseBoundaryPopupWnd(HWND hWnd, UINT nMsg, UINT_PTR nIDEvent, DWORD dwTime)
 {
 	HWND hMainWnd = adsw_acadMainWnd();
 	HWND hPopupWnd=GetLastActivePopup(hMainWnd);
@@ -761,7 +761,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		base_pnt[X]=cur_dim_pos.x;
 		base_pnt[Y]=cur_dim_pos.y;
 		base_pnt[Z]=cur_dim_pos.z;
-		int nTimer=SetTimer(hMainWnd,1,100,CloseBoundaryPopupWnd);
+		UINT_PTR nTimer=SetTimer(hMainWnd,1,100,CloseBoundaryPopupWnd);
 		int resCode= RTNORM;
 		if (bSendCommand)
 		{
