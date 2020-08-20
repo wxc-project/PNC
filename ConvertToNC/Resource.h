@@ -70,7 +70,6 @@
 #define IDC_BTN_IMPROT_PRINT_BOM        151
 #define IDC_BUTTON2                     152
 #define IDC_BTN_EMPTY_PRINT_BOM         152
-#define IDC_BUTTON1                     152
 #define IDC_BTN_SETTINGS                152
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
