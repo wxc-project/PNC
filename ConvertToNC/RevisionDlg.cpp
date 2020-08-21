@@ -868,7 +868,7 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 		}
 		if (pMenu->GetMenuItemCount() > 0)
-			pMenu->AppendMenu(MF_SEPARATOR);
+			pMenu->AppendMenu(MF_SEPARATOR); 
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_PRINT_PART, "批量打印");
 	}
@@ -1550,8 +1550,7 @@ void CRevisionDlg::OnBatchPrintPart()
 {
 	CLogErrorLife logErrLife;
 	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
-	TREEITEM_INFO *pItemInfo;
-	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
 	if (pItemInfo == NULL || (pItemInfo->itemType != ANGLE_DWG_ITEM && pItemInfo->itemType!=PLATE_DWG_ITEM))
 		return;
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;

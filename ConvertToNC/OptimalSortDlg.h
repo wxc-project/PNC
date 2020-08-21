@@ -4,6 +4,7 @@
 #include "BomModel.h"
 #include "ArrayList.h"
 #include "BatchPrint.h"
+#include "MemberProperty.h"
 // COptimalSortDlg 对话框
 
 #if defined(__UBOM_) || defined(__UBOM_ONLY_)
@@ -12,15 +13,17 @@ class COptimalSortDlg : public CDialog
 	DECLARE_DYNAMIC(COptimalSortDlg)
 	CHashList<int> m_widthHashTbl;
 	CHashList<int> m_thickHashTbl;
-	//ARRAY_LIST<CAngleProcessInfo*> m_xJgList;
-	//ARRAY_LIST<CPlateProcessInfo*> m_xPlateList;
-	ARRAY_LIST<BOMPART*> m_xDisplayPartList;
-	CDwgFileInfo *m_pDwgFile;
 	int m_nQ235Count, m_nQ345Count, m_nQ355Count, m_nQ390Count, m_nQ420Count, m_nQ460Count;
 	int m_nJgCount, m_nPlateCount, m_nYGCount, m_nTubeCount, m_nJiaCount, m_nFlatCount, m_nGgsCount;
 	int m_nCutAngle, m_nKaiHe, m_nPushFlat, m_nCutRoot, m_nCutBer, m_nBend, m_nCommonAngle,m_nOtherNotes;
-	int m_iPrintType;
 	BOOL m_bNeedInitCtrlState;
+	CDwgFileInfo *m_pDwgFile;
+public:
+	ATOM_LIST<PRINT_SCOPE> m_xPrintScopyList;
+	ARRAY_LIST<BOMPART*> m_xDisplayPartList;
+	//
+	READONLY_PROPERTY(int, m_iPrintType);
+	GET(m_iPrintType) { return m_iCmbPrintType + 1; }
 protected:
 	void InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pPart);
 	void InitByProcessPlate(CPlateProcessInfo* pPlateInfo, BOMPART *pPart);
@@ -66,11 +69,13 @@ public:
 	CString m_sWidth;
 	CString m_sThick;
 	int m_nRecord;
-	//
-	ATOM_LIST<PRINT_SCOPE> m_xPrintScopyList;
+	int m_iCmbPrintGroup;
+	int m_iCmbPrintMode;
+	int m_iCmbPrintType;
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
+	virtual BOOL DestroyWindow();
 	virtual void OnOK();
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnUpdateJgInfo();
@@ -78,14 +83,9 @@ protected:
 	afx_msg void OnEnChangeEThick();
 	afx_msg void OnBnClickedBtnJgCard();
 	afx_msg void OnBnClickedOk();
-public:
-	// 打印分组
-	int m_iCmbPrintGroup;
-	int m_iCmbPrintMode;
-	int m_iCmbPrintType;
-	afx_msg void OnBnClickedBtnPrintSet();
-	virtual BOOL DestroyWindow();
 	afx_msg void OnBnClickedBtnImprotPrintBom();
 	afx_msg void OnBnClickedBtnEmptyPrintBom();
+	afx_msg void OnBnClickedBtnPrintSet();
+	afx_msg void OnCbnSelchangeCmbPrintType();
 };
 #endif

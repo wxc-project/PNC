@@ -221,6 +221,7 @@ static int FireColmunClick(CSuperGridCtrl* pListCtrl, int iSubItem, bool bAscend
 {
 	return 0;
 }
+//////////////////////////////////////////////////////////////////////////
 // COptimalSortDlg 对话框
 IMPLEMENT_DYNAMIC(COptimalSortDlg, CDialog)
 COptimalSortDlg::COptimalSortDlg(CWnd* pParent /*=NULL*/)
@@ -234,7 +235,7 @@ COptimalSortDlg::COptimalSortDlg(CWnd* pParent /*=NULL*/)
 	, m_bBend(FALSE)
 	, m_bCommonAngle(FALSE)
 	, m_bOtherNotes(FALSE)
-	, m_iCmbPrintGroup(3)
+	, m_iCmbPrintGroup(0)
 	, m_iCmbPrintMode(0)
 	, m_iCmbPrintType(0)
 {
@@ -265,7 +266,6 @@ COptimalSortDlg::COptimalSortDlg(CWnd* pParent /*=NULL*/)
 	m_nQ235Count = m_nQ345Count = m_nQ355Count = m_nQ390Count = m_nQ420Count = m_nQ460Count = 0;
 	m_nJgCount = m_nPlateCount = m_nYGCount = m_nTubeCount = m_nJiaCount = m_nFlatCount = m_nGgsCount = 0;
 	m_nCutAngle = m_nKaiHe = m_nPushFlat = m_nCutRoot = m_nCutBer = m_nBend = m_nCommonAngle = m_nOtherNotes = 0;
-	m_iPrintType = 0;
 	m_bNeedInitCtrlState = TRUE;
 }
 
@@ -335,6 +335,7 @@ BEGIN_MESSAGE_MAP(COptimalSortDlg, CDialog)
 	ON_BN_CLICKED(IDC_BTN_PRINT_SET, &COptimalSortDlg::OnBnClickedBtnPrintSet)
 	ON_BN_CLICKED(IDC_BTN_IMPROT_PRINT_BOM, &COptimalSortDlg::OnBnClickedBtnImprotPrintBom)
 	ON_BN_CLICKED(IDC_BTN_EMPTY_PRINT_BOM, &COptimalSortDlg::OnBnClickedBtnEmptyPrintBom)
+	ON_CBN_SELCHANGE(IDC_CMB_PRINT_TYPE, &COptimalSortDlg::OnCbnSelchangeCmbPrintType)
 END_MESSAGE_MAP()
 
 
@@ -342,6 +343,11 @@ END_MESSAGE_MAP()
 BOOL COptimalSortDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
+	//从注册表中加载打印配置
+	GetPrintParaFromReg("Settings", "PrintType");
+	GetPrintParaFromReg("Settings", "PrintMode");
+	GetPrintParaFromReg("Settings", "PrintGroup");
+	//
 	m_xListCtrl.EmptyColumnHeader();
 	m_xListCtrl.AddColumnHeader("材料名称",75);
 	m_xListCtrl.AddColumnHeader("材质",55);
@@ -353,18 +359,16 @@ BOOL COptimalSortDlg::OnInitDialog()
 	m_xListCtrl.EnableSortItems(!IsValidPrintBom());
 	m_xListCtrl.SetItemChangedFunc(FireItemChanged);
 	m_xListCtrl.SetCompareItemFunc(FireCompareItem);
-	//更新界面显示
-	GetDlgItem(IDC_BTN_EMPTY_PRINT_BOM)->EnableWindow(m_pDwgFile->PrintBomPartCount() > 0);
 	//初始化控件状态
 	if (m_bNeedInitCtrlState)
 		InitCtrlState();
+	//初始化下拉列表
+	((CComboBox*)GetDlgItem(IDC_CMB_PRINT_GROUP))->SetCurSel(m_iCmbPrintGroup);
+	((CComboBox*)GetDlgItem(IDC_CMB_PRINT_MODE))->SetCurSel(m_iCmbPrintMode);
+	((CComboBox*)GetDlgItem(IDC_CMB_PRINT_TYPE))->SetCurSel(m_iCmbPrintType);
 	//初始化列表框
 	UpdatePartList();
 	RefeshListCtrl();
-	//从注册表中加载打印配置
-	GetPrintParaFromReg("Settings", "PrintType");
-	GetPrintParaFromReg("Settings", "PrintMode");
-	GetPrintParaFromReg("Settings", "PrintGroup");
 	UpdateData(FALSE);
 	return TRUE;
 }
@@ -579,7 +583,7 @@ void COptimalSortDlg::RefeshListCtrl()
 			for (int i = 0; i < 6; i++)
 				lpInfo->SetSubItemColor(i, RGB(255,102,102));
 		}
-		else if (m_iCmbPrintType + 1 == CBatchPrint::PRINT_TYPE_PAPER && g_xUbomModel.m_sNotPrintFilter.GetLength()>0)
+		else if (m_iPrintType == CBatchPrint::PRINT_TYPE_PAPER && g_xUbomModel.m_sNotPrintFilter.GetLength()>0)
 		{	//打印纸质工艺卡时如果有不需要打印的工件，需要特殊显示，方便对比校对 wht 20-07-29
 			if (!g_xUbomModel.IsNeedPrint(pPart,sNotes))
 			{
@@ -784,7 +788,7 @@ void COptimalSortDlg::UpdatePartList()
 						m_xDisplayPartList.append(pBomPart);
 					}
 				}
-				else
+				else if(pJgInfo)
 				{
 					pBomPart->feature2 = (long)pJgInfo;
 					if (IsFillTheFilter(pJgInfo, pBomPart))
@@ -923,7 +927,6 @@ void COptimalSortDlg::OnOK()
 void COptimalSortDlg::OnBnClickedOk()
 {
 	UpdateData();
-	m_iPrintType = m_iCmbPrintType+1;	//CBatchPrint::PRINT_TYPE_PAPER;
 	WritePrintParaToReg("Settings", "PrintType");
 	WritePrintParaToReg("Settings", "PrintMode");
 	WritePrintParaToReg("Settings", "PrintGroup");
@@ -1158,7 +1161,7 @@ void COptimalSortDlg::InitCtrlState()
 	GetDlgItem(IDC_CHE_Q390)->EnableWindow(m_nQ390Count > 0);
 	GetDlgItem(IDC_CHE_Q420)->EnableWindow(m_nQ420Count > 0);
 	GetDlgItem(IDC_CHE_Q460)->EnableWindow(m_nQ460Count > 0);
-
+	//工艺
 	GetDlgItem(IDC_CHE_CUT_ANGLE)->EnableWindow(m_nCutAngle > 0);
 	GetDlgItem(IDC_CHE_KAIHE)->EnableWindow(m_nKaiHe > 0);
 	GetDlgItem(IDC_CHE_PUSH_FLAT)->EnableWindow(m_nPushFlat > 0);
@@ -1167,6 +1170,10 @@ void COptimalSortDlg::InitCtrlState()
 	GetDlgItem(IDC_CHE_BEND)->EnableWindow(m_nBend > 0);
 	GetDlgItem(IDC_CHE_COMMON_ANGLE)->EnableWindow(m_nCommonAngle > 0);
 	GetDlgItem(IDC_CHE_OTHER_NOTES)->EnableWindow(m_nOtherNotes > 0);
+	//
+	GetDlgItem(IDC_BTN_EMPTY_PRINT_BOM)->EnableWindow(m_pDwgFile->PrintBomPartCount() > 0);
+	GetDlgItem(IDC_CMB_PRINT_GROUP)->EnableWindow(FALSE);
+	GetDlgItem(IDC_CMB_PRINT_MODE)->EnableWindow(FALSE);
 	//
 	m_bSelJg = m_nJgCount > 0;
 	m_bSelPlate = m_nPlateCount > 0;
@@ -1311,6 +1318,7 @@ void COptimalSortDlg::WritePrintParaToReg(LPCTSTR lpszSection, LPCTSTR lpszEntry
 
 BOOL COptimalSortDlg::DestroyWindow()
 {
+	UpdateData();
 	WritePrintParaToReg("Settings", "PrintType");
 	WritePrintParaToReg("Settings", "PrintMode");
 	WritePrintParaToReg("Settings", "PrintGroup");
@@ -1352,6 +1360,14 @@ void COptimalSortDlg::OnBnClickedBtnEmptyPrintBom()
 	GetDlgItem(IDC_BTN_EMPTY_PRINT_BOM)->EnableWindow(m_pDwgFile->PrintBomPartCount() > 0);
 	//初始化控件状态
 	InitCtrlState();
+	//初始化列表框
+	UpdatePartList();
+	RefeshListCtrl();
+}
+void COptimalSortDlg::OnCbnSelchangeCmbPrintType()
+{
+	UpdateData();
+	m_iCmbPrintType = ((CComboBox*)GetDlgItem(IDC_CMB_PRINT_TYPE))->GetCurSel();
 	//初始化列表框
 	UpdatePartList();
 	RefeshListCtrl();
