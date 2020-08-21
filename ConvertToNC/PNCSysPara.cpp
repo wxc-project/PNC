@@ -565,7 +565,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 		{
 			AcDbCircle* pCircle = (AcDbCircle*)pEnt;
 			double fRidius = pCircle->radius();
-			if (fRidius * 2 != g_pncSysPara.m_fMKHoleD)
+			if (fabs(g_pncSysPara.m_fMKHoleD - fRidius * 2) >= EPS2)
 				return FALSE;
 			AcGePoint3d center = pCircle->center();
 			ptArr[0].Set(center.x + fRidius, center.y, 0);
