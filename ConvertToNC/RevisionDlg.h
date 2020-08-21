@@ -31,6 +31,8 @@ enum TREEITEM_TYPE{
 	ANGLE_DWG_ITEM,
 	PLATE_GROUP,
 	PLATE_DWG_ITEM,
+	PART_GROUP,
+	PART_DWG_ITEM,
 };
 struct TREEITEM_INFO{
 	TREEITEM_INFO(){;}
@@ -96,7 +98,6 @@ protected:
 	afx_msg void OnModifyErpFile();
 	afx_msg void OnRetrievedAngles();
 	afx_msg void OnRetrievedPlates();
-	afx_msg void OnRetrievedPlate();
 	afx_msg void OnDeleteItem();
 	afx_msg void OnSearchPart();
 	afx_msg void OnBatchPrintPart();

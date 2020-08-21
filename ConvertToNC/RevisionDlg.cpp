@@ -192,7 +192,6 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_MODIFY_ERP_FILE,OnModifyErpFile)
 	ON_COMMAND(ID_RETRIEVED_ANGLES, OnRetrievedAngles)
 	ON_COMMAND(ID_RETRIEVED_PLATES, OnRetrievedPlates)
-	ON_COMMAND(ID_REVISE_TEH_PLATE, OnRetrievedPlate)
 	ON_COMMAND(ID_BATCH_PRINT_PART, OnBatchPrintPart)
 	ON_COMMAND(ID_EMPTY_PLATE_RETRIEVED_RESLUT, OnEmptyRetrievedPlates)
 	ON_COMMAND(ID_EMPTY_ANGLE_RETRIEVED_RESLUT, OnEmptyRetrievedAngles)
@@ -857,25 +856,25 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		if (pItemInfo->itemType == ANGLE_DWG_ITEM)
 		{
 			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_ANGLES, "重新提取角钢");
+			pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_ANGLES, "分批提取角钢");
+			pMenu->AppendMenu(MF_STRING, ID_EMPTY_ANGLE_RETRIEVED_RESLUT, "清空角钢提取结果");
+			pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 		}
 		else
 		{
 			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_PLATES, "重新提取钢板");
-			pMenu->AppendMenu(MF_STRING, ID_REVISE_TEH_PLATE, "修正特定钢板");
+			pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_PLATES, "分批提取钢板");
+			pMenu->AppendMenu(MF_STRING, ID_EMPTY_PLATE_RETRIEVED_RESLUT, "清空钢板提取结果");
+			pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 		}
-		if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
+		if (pMenu->GetMenuItemCount() > 0)
+			pMenu->AppendMenu(MF_SEPARATOR);
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_PRINT_PART, "批量打印");
-		if (pMenu->GetMenuItemCount() > 0)
-			pMenu->AppendMenu(MF_SEPARATOR);
-		pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_ANGLES, "分批提取角钢");
-		pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_PLATES, "分批提取钢板");
-		if (pMenu->GetMenuItemCount() > 0)
-			pMenu->AppendMenu(MF_SEPARATOR);
-		pMenu->AppendMenu(MF_STRING, ID_EMPTY_ANGLE_RETRIEVED_RESLUT, "清空角钢提取结果");
-		pMenu->AppendMenu(MF_STRING, ID_EMPTY_PLATE_RETRIEVED_RESLUT, "清空钢板提取结果");
-		if (pMenu->GetMenuItemCount() > 0)
-			pMenu->AppendMenu(MF_SEPARATOR);
-		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
+	}
+	else if (pItemInfo->itemType == PART_DWG_ITEM)
+	{
+
 	}
 	pMenu->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, scr_point.x, scr_point.y, this);
 }
@@ -1422,20 +1421,6 @@ void CRevisionDlg::OnRetrievedPlates()
 	CWaitCursor waitCursor;
 #endif
 	pDwgInfo->ExtractDwgInfo(pDwgInfo->m_sFileName, FALSE, TRUE);
-	RefreshListCtrl(hSelItem);
-}
-void CRevisionDlg::OnRetrievedPlate()
-{
-	CLogErrorLife logErrLife;
-	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
-	TREEITEM_INFO *pItemInfo;
-	pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
-	if (pItemInfo == NULL || pItemInfo->itemType != PLATE_DWG_ITEM)
-		return;
-	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
-	if (pDwgInfo == NULL || pDwgInfo->IsJgDwgInfo())
-		return;
-	pDwgInfo->ExtractThePlate();
 	RefreshListCtrl(hSelItem);
 }
 void CRevisionDlg::OnDeleteItem()
