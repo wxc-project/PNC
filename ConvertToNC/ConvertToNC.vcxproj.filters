@@ -425,9 +425,6 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\Hash64Table.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
-    <ClInclude Include="IExtractor.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="XeroExtractor.h">
       <Filter>头文件</Filter>
     </ClInclude>

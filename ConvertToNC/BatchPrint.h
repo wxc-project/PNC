@@ -1,5 +1,4 @@
 #pragma once
-#include "StdAfx.h"
 #include "f_ent.h"
 #include "f_ent_list.h"
 #include "adsdef.h"

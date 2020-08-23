@@ -223,8 +223,8 @@ BOOL CRevisionDlg::OnInitDialog()
 	m_xListReport.SetCompareItemFunc(FireCompareItem);
 	m_xListReport.SetItemChangedFunc(FireItemChanged);
 	m_xListReport.EmptyColumnHeader();
-	for (size_t i = 0; i < g_xUbomModel.GetBomTitleCount(); i++)
-		m_xListReport.AddColumnHeader(g_xUbomModel.GetTitleName(i), g_xUbomModel.GetTitleWidth(i));
+	for (size_t i = 0; i < g_xBomCfg.GetBomTitleCount(); i++)
+		m_xListReport.AddColumnHeader(g_xBomCfg.GetTitleName(i), g_xBomCfg.GetTitleWidth(i));
 	m_xListReport.InitListCtrl();
 	RefreshListCtrl(NULL);
 	//初始化树列表
@@ -314,113 +314,113 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 	COLORREF clr=RGB(230,100,230);
 	PART_ANGLE* pBomJg = (pPart->cPartType == BOMPART::ANGLE) ? (PART_ANGLE*)pPart : NULL;
 	CListCtrlItemInfo *lpInfo=new CListCtrlItemInfo();
-	for (size_t i = 0; i < g_xUbomModel.GetBomTitleCount(); i++)
+	for (size_t i = 0; i < g_xBomCfg.GetBomTitleCount(); i++)
 	{
-		if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_PN))
+		if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_PN))
 		{	//件号
 			lpInfo->SetSubItemText(i, pPart->sPartNo, TRUE);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_SPEC))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_SPEC))
 		{	//规格
 			lpInfo->SetSubItemText(i, pPart->sSpec, TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_SPEC))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_SPEC))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_MAT))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MAT))
 		{	//材质
 			lpInfo->SetSubItemText(i, CBomModel::QueryMatMarkIncQuality(pPart), TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_MAT))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MAT))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_LEN))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_LEN))
 		{	//长度
 			lpInfo->SetSubItemText(i, CXhChar50("%.0f", pPart->length), TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_LEN))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_LEN))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_SING_N))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_SING_N))
 		{	//单基数
 			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->GetPartNum()), TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_SING_N))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_SING_N))
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_SINGLE_NUM) > 0)
 				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_MANU_N))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MANU_N))
 		{	//加工数
 			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->feature1), TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_MANU_N))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MANU_N))
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_MANU_NUM) > 0)
 				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_MANU_W))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MANU_W))
 		{	//加工重量
 			lpInfo->SetSubItemText(i, CXhChar50("%.f", pPart->fSumWeight), TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_MANU_W))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MANU_W))
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_SUM_WEIGHT) > 0)
 				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_NOTES))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_NOTES))
 		{	//备注
 			lpInfo->SetSubItemText(i, pPart->sNotes, TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_NOTES))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_NOTES))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_WELD))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_WELD))
 		{	//焊接
 			lpInfo->SetSubItemText(i, pPart->bWeldPart ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_WELD))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_WELD))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_ZHI_WAN))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_ZHI_WAN))
 		{	//制弯
 			lpInfo->SetSubItemText(i, (pPart->siZhiWan > 0) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_ZHI_WAN))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_ZHI_WAN))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_CUT_ANGLE))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_CUT_ANGLE))
 		{	//切角
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->bCutAngle) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_CUT_ANGLE))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_CUT_ANGLE))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_PUSH_FLAT))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_PUSH_FLAT))
 		{	//打扁
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->nPushFlat > 0) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_PUSH_FLAT))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_PUSH_FLAT))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_CUT_BER))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_CUT_BER))
 		{	//铲背
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->bCutBer) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_CUT_BER))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_CUT_BER))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_CUT_ROOT))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_CUT_ROOT))
 		{	//刨角
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->bCutRoot) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_CUT_ROOT))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_CUT_ROOT))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_KAI_JIAO))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_KAI_JIAO))
 		{	//开角
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->bKaiJiao) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_KAI_JIAO))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_KAI_JIAO))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_HE_JIAO))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_HE_JIAO))
 		{	//合角
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->bHeJiao) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_HE_JIAO))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_HE_JIAO))
 				lpInfo->SetSubItemColor(i, clr);
 		}
-		else if (g_xUbomModel.IsTitleCol(i, CBomImportCfg::KEY_FOO_NAIL))
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_FOO_NAIL))
 		{	//带脚钉
 			lpInfo->SetSubItemText(i, (pBomJg && pBomJg->bHasFootNail) ? "*" : "", TRUE);
-			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomImportCfg::KEY_FOO_NAIL))
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_FOO_NAIL))
 				lpInfo->SetSubItemColor(i, clr);
 		}
 	}
@@ -1081,9 +1081,9 @@ void CRevisionDlg::OnImportBomFile()
 		}
 		else
 		{
-			if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+			if (g_xUbomModel.m_uiCustomizeSerial == ID_AnHui_HongYuan)
 				logerr.Log("加载放样物料清单失败!");
-			else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+			else if(g_xUbomModel.m_uiCustomizeSerial == ID_JiangSu_HuaDian)
 				logerr.Log("加载放样出图构件清单失败!");
 			else
 				logerr.Log("加载物料清单失败!");
@@ -1101,9 +1101,9 @@ void CRevisionDlg::OnImportBomFile()
 		}
 		else
 		{
-			if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_AnHui_HongYuan)
+			if (g_xUbomModel.m_uiCustomizeSerial == ID_AnHui_HongYuan)
 				logerr.Log("加载ERP物料清单失败!");
-			else if(g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_JiangSu_HuaDian)
+			else if(g_xUbomModel.m_uiCustomizeSerial == ID_JiangSu_HuaDian)
 				logerr.Log("加载图纸构件清单!");
 			else
 				logerr.Log("加载物料清单失败!");
@@ -1561,7 +1561,7 @@ void CRevisionDlg::OnBatchPrintPart()
 	g_sPrintDwgFileName.Copy(pDwgInfo->m_sFileName);
 	CAcModuleResourceOverride resOverride;
 	printDlg.SetDwgFile(pDwgInfo);
-	if (g_xUbomModel.IsValidPrintBomCfg() && 
+	if (g_xBomCfg.m_xPrintTblCfg.IsValid() &&
 		pDwgInfo->PrintBomPartCount()<=0 &&
 		AfxMessageBox("是否导入角钢打印清单？", MB_YESNO) == IDYES)
 	{

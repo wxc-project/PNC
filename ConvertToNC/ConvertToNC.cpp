@@ -25,7 +25,6 @@
 #include "StdAfx.h"
 #include "resource.h"
 #include <afxdllx.h>
-
 #include "PNCCmd.h"
 #include "XhLicAgent.h"
 #include "XhLdsLm.h"
@@ -45,23 +44,6 @@ static char THIS_FILE[]=__FILE__;
 /////////////////////////////////////////////////////////////////////////////
 // ObjectARX EntryPoint
 CDockBarManager g_xDockBarManager;
-
-static char* SearchChar(char* srcStr, char ch, bool reverseOrder/*=false*/)
-{
-	if (!reverseOrder)
-		return strchr(srcStr, ch);
-	else
-	{
-		int len = strlen(srcStr);
-		for (int i = len - 1; i >= 0; i--)
-		{
-			if (srcStr[i] == ch)
-				return &srcStr[i];
-		}
-	}
-	return NULL;
-}
-
 void RegisterServerComponents ()
 {	
 #ifdef _ARX_2007

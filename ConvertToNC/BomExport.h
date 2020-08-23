@@ -1,5 +1,6 @@
 #pragma once
 
+#ifdef __UBOM_ONLY_
 //from LoadLibrary("BomExport.dll")
 class CProjectTowerType;
 class CBomExport
@@ -29,3 +30,4 @@ public:
 };
 
 extern CBomExport g_xBomExport;
+#endif

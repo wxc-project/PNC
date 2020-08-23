@@ -1,15 +1,18 @@
 #include "StdAfx.h"
 #include "BomFile.h"
 #include "ExcelOper.h"
-#include "TblDef.h"
-#include "ArrayList.h"
 #include "SortFunc.h"
 #include "ComparePartNoString.h"
 #include "ProcessPart.h"
 
+#ifdef _DEBUG
+#undef THIS_FILE
+static char THIS_FILE[] = __FILE__;
+#define new DEBUG_NEW
+#endif
 
 #ifdef __UBOM_ONLY_
-#include "BomModel.h"
+CBomConfig g_xBomCfg;
 //////////////////////////////////////////////////////////////////////////
 // BOM_FILE_CFG
 BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
@@ -363,8 +366,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
 				strstr(sValue, "焊"))
 				bWeld = TRUE;
 		}
@@ -374,9 +377,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsZhiWan(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsZhiWan(sValue))
 				bZhiWan = TRUE;
 		}
 		//切角
@@ -385,9 +388,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsCutAngle(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsCutAngle(sValue))
 				bCutAngle = TRUE;
 		}
 		//压扁
@@ -396,9 +399,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsPushFlat(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsPushFlat(sValue))
 				bPushFlat = TRUE;
 		}
 		//刨根
@@ -407,9 +410,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsCutRoot(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsCutRoot(sValue))
 				bCutRoot = TRUE;
 		}
 		//铲背
@@ -418,9 +421,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsCutBer(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsCutBer(sValue))
 				bCutBer = TRUE;
 		}
 		//开角
@@ -429,9 +432,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsKaiJiao(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsKaiJiao(sValue))
 				bKaiJiao = TRUE;
 		}
 		//合角
@@ -440,9 +443,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsHeJiao(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsHeJiao(sValue))
 				bHeJiao = TRUE;
 		}
 		//带脚钉
@@ -451,9 +454,9 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			sValue = VariantToString(value);
-			if (g_xUbomModel.m_xBomImoprtCfg.IsEqualDefaultProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsEqualProcessFlag(sValue) ||
-				g_xUbomModel.m_xBomImoprtCfg.IsFootNail(sValue))
+			if (g_xBomCfg.IsEqualDefaultProcessFlag(sValue) ||
+				g_xBomCfg.IsEqualProcessFlag(sValue) ||
+				g_xBomCfg.IsFootNail(sValue))
 				bFootNail = TRUE;
 		}
 		sMaterial.Remove(' ');	//移除空格 wht 20-07-30
@@ -549,7 +552,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	}
 	return TRUE;
 }
-BOOL CBomFile::ImportExcelFileCore(BOM_FILE_CFG *pTblCfg)
+BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 {
 	if (m_sFileName.GetLength() <= 0 || pTblCfg == NULL)
 		return FALSE;
@@ -596,12 +599,6 @@ BOOL CBomFile::ImportExcelFileCore(BOM_FILE_CFG *pTblCfg)
 		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
 	return bReadOK;
 }
-//导入料单EXCEL文件
-BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
-{
-	return ImportExcelFileCore(pTblCfg);
-}
-
 CString CBomFile::GetPartNumStr()
 {
 	int nSumNum = m_hashPartByPartNo.GetNodeNum();
@@ -628,25 +625,25 @@ CString CBomFile::GetPartNumStr()
 
 //////////////////////////////////////////////////////////////////////////
 //CBomImportCfg
-const char* CBomImportCfg::KEY_PN			= "PartNo";
-const char* CBomImportCfg::KEY_MAT			= "Material";
-const char* CBomImportCfg::KEY_SPEC			= "Spec";
-const char* CBomImportCfg::KEY_LEN			= "Length";
-const char* CBomImportCfg::KEY_WIDE			= "Width";
-const char* CBomImportCfg::KEY_SING_N		= "SingNum";
-const char* CBomImportCfg::KEY_MANU_N		= "ManuNum";
-const char* CBomImportCfg::KEY_MANU_W		= "SumWeight";
-const char* CBomImportCfg::KEY_WELD			= "Weld";
-const char* CBomImportCfg::KEY_ZHI_WAN		= "ZhiWan";
-const char* CBomImportCfg::KEY_CUT_ANGLE	= "CutAngle";
-const char* CBomImportCfg::KEY_CUT_ROOT		= "CutRoot";
-const char* CBomImportCfg::KEY_CUT_BER		= "CutBer";
-const char* CBomImportCfg::KEY_PUSH_FLAT	= "PushFlat";
-const char* CBomImportCfg::KEY_KAI_JIAO		= "KaiJiao";
-const char* CBomImportCfg::KEY_HE_JIAO		= "HeJiao";
-const char* CBomImportCfg::KEY_FOO_NAIL		= "FootNail";
-const char* CBomImportCfg::KEY_NOTES		= "Notes";
-CBomImportCfg::CBomImportCfg(void)
+const char* CBomConfig::KEY_PN			= "PartNo";
+const char* CBomConfig::KEY_MAT			= "Material";
+const char* CBomConfig::KEY_SPEC			= "Spec";
+const char* CBomConfig::KEY_LEN			= "Length";
+const char* CBomConfig::KEY_WIDE			= "Width";
+const char* CBomConfig::KEY_SING_N		= "SingNum";
+const char* CBomConfig::KEY_MANU_N		= "ManuNum";
+const char* CBomConfig::KEY_MANU_W		= "SumWeight";
+const char* CBomConfig::KEY_WELD			= "Weld";
+const char* CBomConfig::KEY_ZHI_WAN		= "ZhiWan";
+const char* CBomConfig::KEY_CUT_ANGLE	= "CutAngle";
+const char* CBomConfig::KEY_CUT_ROOT		= "CutRoot";
+const char* CBomConfig::KEY_CUT_BER		= "CutBer";
+const char* CBomConfig::KEY_PUSH_FLAT	= "PushFlat";
+const char* CBomConfig::KEY_KAI_JIAO		= "KaiJiao";
+const char* CBomConfig::KEY_HE_JIAO		= "HeJiao";
+const char* CBomConfig::KEY_FOO_NAIL		= "FootNail";
+const char* CBomConfig::KEY_NOTES		= "Notes";
+CBomConfig::CBomConfig(void)
 {
 	m_sProcessDescArr[TYPE_ZHI_WAN].Copy("火曲|卷边|制弯|");
 	m_sProcessDescArr[TYPE_CUT_ANGLE].Copy("切角|切肢|");
@@ -657,12 +654,12 @@ CBomImportCfg::CBomImportCfg(void)
 	m_sProcessDescArr[TYPE_HE_JIAO].Copy("合角");
 	m_sProcessDescArr[TYPE_FOO_NAIL].Copy("带脚钉|脚钉");
 }
-CBomImportCfg::~CBomImportCfg(void)
+CBomConfig::~CBomConfig(void)
 {
 	
 }
 
-BOOL CBomImportCfg::IsEqualDefaultProcessFlag(const char* sValue)
+BOOL CBomConfig::IsEqualDefaultProcessFlag(const char* sValue)
 {
 	if (sValue == NULL || strlen(sValue) <= 0)
 		return FALSE;
@@ -673,7 +670,7 @@ BOOL CBomImportCfg::IsEqualDefaultProcessFlag(const char* sValue)
 		return FALSE;
 }
 
-BOOL CBomImportCfg::IsEqualProcessFlag(const char* sValue)
+BOOL CBomConfig::IsEqualProcessFlag(const char* sValue)
 {
 	if (sValue == NULL || strlen(sValue) <= 0 || m_sProcessFlag.GetLength() <= 0)
 		return FALSE;
@@ -682,7 +679,7 @@ BOOL CBomImportCfg::IsEqualProcessFlag(const char* sValue)
 	else
 		return FALSE;
 }
-BOOL CBomImportCfg::IsHasTheProcess(const char* sValue, BYTE ciType)
+BOOL CBomConfig::IsHasTheProcess(const char* sValue, BYTE ciType)
 {
 	if (sValue==NULL || strlen(sValue) < 2)
 		return FALSE;
@@ -739,7 +736,7 @@ BOOL CBomImportCfg::IsHasTheProcess(const char* sValue, BYTE ciType)
 	return FALSE;
 }
 
-bool CBomImportCfg::ExtractAngleCompareItems()
+bool CBomConfig::ExtractAngleCompareItems()
 {
 	if (m_sAngleCompareItemArr.GetLength() <= 0)
 		return false;
@@ -781,7 +778,7 @@ bool CBomImportCfg::ExtractAngleCompareItems()
 	}
 	return hashCompareItemOfAngle.GetNodeNum() > 0;
 }
-bool CBomImportCfg::ExtractPlateCompareItems()
+bool CBomConfig::ExtractPlateCompareItems()
 {
 	if (m_sPlateCompareItemArr.GetLength() <= 0)
 		return false;
@@ -811,7 +808,7 @@ bool CBomImportCfg::ExtractPlateCompareItems()
 	}
 	return hashCompareItemOfPlate.GetNodeNum() > 0;
 }
-int CBomImportCfg::InitBomTitle()
+int CBomConfig::InitBomTitle()
 {
 	CHashStrList<DWORD> hashColIndex;
 	m_xTmaTblCfg.m_xTblCfg.GetHashColIndexByColTitleTbl(hashColIndex);
@@ -898,23 +895,44 @@ int CBomImportCfg::InitBomTitle()
 	return min(nInitWidth, 760);
 }
 
-BOOL CBomImportCfg::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
+BOOL CBomConfig::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
 	return m_xTmaTblCfg.IsCurFormat(sFilePath, bDisplayMsgBox);
 }
-BOOL CBomImportCfg::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
+BOOL CBomConfig::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
 	return m_xErpTblCfg.IsCurFormat(sFilePath, bDisplayMsgBox);
 }
-BOOL CBomImportCfg::IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
+BOOL CBomConfig::IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
 {
 	return m_xPrintTblCfg.IsCurFormat(sFilePath, bDisplayMsgBox);
 }
 
-BOOL CBomImportCfg::IsTitleCol(int index, const char*title_key)
+BOOL CBomConfig::IsTitleCol(int index, const char*title_key)
 {
 	if (index < 0 || index >= (int)m_xBomTitleArr.size() || title_key ==NULL)
 		return FALSE;
 	return m_xBomTitleArr[index].m_sKey.Equal(title_key);
+}
+CXhChar16 CBomConfig::GetTitleKey(int index)
+{
+	if (index < 0 || index >= (int)GetBomTitleCount())
+		return CXhChar16();
+	else
+		return m_xBomTitleArr[index].m_sKey;
+}
+CXhChar16 CBomConfig::GetTitleName(int index)
+{
+	if (index < 0 || index >= (int)GetBomTitleCount())
+		return CXhChar16();
+	else
+		return m_xBomTitleArr[index].m_sTitle;
+}
+int CBomConfig::GetTitleWidth(int index)
+{
+	if (index < 0 || index >= (int)GetBomTitleCount())
+		return 50;
+	else
+		return m_xBomTitleArr[index].m_nWidth;
 }
 #endif

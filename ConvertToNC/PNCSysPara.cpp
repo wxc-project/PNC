@@ -2,7 +2,6 @@
 #include "PNCSysPara.h"
 #include "CadToolFunc.h"
 #include "LayerTable.h"
-#include "XeroExtractor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -377,6 +376,398 @@ BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/
 	if (!bRet && m_ciBendLineColorIndex > 0 && m_ciBendLineColorIndex < 255)
 		bRet = (GetEntColorIndex(pAcDbLine) == m_ciBendLineColorIndex);
 	return bRet;
+}
+
+//螺栓图符主要有：圆形、三角形、方形
+double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord, double scale)
+{
+	if (pTempBlockTableRecord == NULL)
+		return 0;
+	double fHoleD = 0;
+	AcDbEntity *pEnt = NULL;
+	AcDbBlockTableRecordIterator *pIterator = NULL;
+	pTempBlockTableRecord->newIterator(pIterator);
+	if (pIterator)
+	{
+		SCOPE_STRU scope;
+		for (; !pIterator->done(); pIterator->step())
+		{
+			pIterator->getEntity(pEnt, AcDb::kForRead);
+			if (pEnt == NULL)
+				continue;
+			pEnt->close();
+			AcDbCircle acad_cir;
+			if (pEnt->isKindOf(AcDbCircle::desc()))
+			{
+				AcDbCircle *pCir = (AcDbCircle*)pEnt;
+				acad_cir.setCenter(pCir->center());
+				acad_cir.setNormal(pCir->normal());
+				acad_cir.setRadius(pCir->radius());
+				VerifyVertexByCADEnt(scope, &acad_cir);
+			}
+			else if (pEnt->isKindOf(AcDbPolyline::desc()))
+			{	//按照外切圆处理，多段线区域的中心为块的坐标
+				AcDbPolyline *pPolyLine = (AcDbPolyline*)pEnt;
+				if (pPolyLine->numVerts() <= 0)
+					continue;
+				AcGePoint3d point;
+				pPolyLine->getPointAt(0, point);
+				double fRadius = GEPOINT(point.x, point.y).mod();
+				acad_cir.setCenter(AcGePoint3d(0, 0, 0));
+				acad_cir.setNormal(AcGeVector3d(0, 0, 1));
+				acad_cir.setRadius(fRadius);
+				VerifyVertexByCADEnt(scope, &acad_cir);
+			}
+			else
+				continue;
+		}
+		fHoleD = max(scope.wide(), scope.high());
+		fHoleD = fabs(fHoleD*scale);
+		//对计算得到的孔径进行圆整，精确到小数点一位
+		int nValue = (int)floor(fHoleD);		//整数部分
+		double fValue = fHoleD - nValue;	//小数部分
+		if (fValue < EPS2)	//孔径为整数
+			fHoleD = nValue;
+		else if (fValue > EPS_COS2)
+			fHoleD = nValue + 1;
+		else if (fabs(fValue - 0.5) < EPS2)
+			fHoleD = nValue + 0.5;
+		else
+			fHoleD = ftoi(fHoleD);
+	}
+	return fHoleD;
+}
+
+BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole)
+{
+	if (pEnt == NULL)
+		return FALSE;
+	if (pEnt->isKindOf(AcDbBlockReference::desc()))
+	{
+		AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+		AcDbObjectId blockId = pReference->blockTableRecord();
+		AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+		acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+		if (pTempBlockTableRecord == NULL)
+			return FALSE;
+		pTempBlockTableRecord->close();
+		CXhChar50 sName;
+#ifdef _ARX_2007
+		ACHAR* sValue = new ACHAR[50];
+		pTempBlockTableRecord->getName(sValue);
+		sName.Copy((char*)_bstr_t(sValue));
+		delete[] sValue;
+#else
+		char *sValue = new char[50];
+		pTempBlockTableRecord->getName(sValue);
+		sName.Copy(sValue);
+		delete[] sValue;
+#endif
+		if (sName.GetLength() <= 0)
+			return FALSE;
+		BOLT_BLOCK* pBoltD = hashBoltDList.GetValue(sName);
+		if (pBoltD == NULL)
+		{	//只对设置未螺栓图符的块进行处理，否则可能错误识别其它块为螺栓孔 wht 20-04-28
+			return FALSE;
+		}
+		double fHoleD = 0;
+		CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+		if (pLsBlockEnt)
+			fHoleD = pLsBlockEnt->m_fSize;
+		else
+		{
+			fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
+			CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.Add(pEnt->id().asOldId());
+			pLsBlockEnt->pos.x = hole.posX;
+			pLsBlockEnt->pos.y = hole.posY;
+			pLsBlockEnt->m_fSize = fHoleD;
+		}
+		if (fHoleD <= 0)
+		{
+			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算孔径失败！", (char*)sName);
+			return FALSE;
+		}
+		BOOL bValidLsBlock = TRUE;
+		double fIncrement = (pBoltD->diameter > 0) ? fHoleD - pBoltD->diameter : 0;
+		if (fIncrement > 2 || fIncrement < 0)
+		{
+			bValidLsBlock = FALSE;
+			//根据图元计算得到的直径，螺栓对应的直径不符且未指定螺栓孔径时提示用户 wht 20-08-14
+			if (pBoltD->hole_d <= 0 || pBoltD->hole_d < pBoltD->diameter)
+				logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算的孔径{%.1f}不合理，请优先设置螺栓图块对应的孔径！", (char*)sName, fHoleD);
+		}
+		//
+		hole.posX = (float)pReference->position().x;
+		hole.posY = (float)pReference->position().y;
+		if (pBoltD->diameter > 0)
+		{	//指定螺栓块的直径，按照标准螺栓处理
+			hole.ciSymbolType = 0;
+			hole.d = pBoltD->diameter;
+			if (!bValidLsBlock && pBoltD->hole_d > pBoltD->diameter)
+				hole.increment = (float)(pBoltD->hole_d - pBoltD->diameter);
+			else
+				hole.increment = (float)(fHoleD - pBoltD->diameter);
+		}
+		else
+		{	//未指定螺栓块的直径，按特殊孔处理
+			hole.ciSymbolType = 1;	//特殊图块
+			hole.d = fHoleD;
+			hole.increment = 0;
+		}
+		return TRUE;
+	}
+	else if (pEnt->isKindOf(AcDbCircle::desc()))
+	{
+		AcDbCircle* pCircle = (AcDbCircle*)pEnt;
+		if (int(pCircle->radius()) <= 0)
+			return FALSE;	//去除点
+		double fDiameter = pCircle->radius() * 2;
+		if (g_pncSysPara.m_ciMKPos == 2 &&
+			fabs(g_pncSysPara.m_fMKHoleD - fDiameter) < EPS2)
+			return FALSE;	//去除号位孔
+		/* 特殊孔直径直接设置直径，不设孔径增大值，
+		/*否则在PPE中统一处理孔径增大值时会丢失此处提取的孔径增大值 wht 19-09-12
+		/*对孔径进行圆整，精确到小数点一位
+		*/
+		int nValue = (int)floor(fDiameter);	//整数部分
+		double fValue = fDiameter - nValue;	//小数部分
+		if (fValue < EPS2)	//孔径为整数
+			fDiameter = nValue;
+		else if (fValue > EPS_COS2)
+			fDiameter = nValue + 1;
+		else if (fabs(fValue - 0.5) < EPS2)
+			fDiameter = nValue + 0.5;
+		else
+			fDiameter = ftoi(fDiameter);
+		hole.d = fDiameter;
+		hole.increment = 0;
+		hole.ciSymbolType = 2;	//默认挂线孔
+		hole.posX = (float)pCircle->center().x;
+		hole.posY = (float)pCircle->center().y;
+		return TRUE;
+	}
+	return FALSE;
+}
+
+BOOL CPNCSysPara::RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo)
+{
+	if (pEnt == NULL)
+		return FALSE;
+	//从块中解析钢板信息
+	if (pEnt->isKindOf(AcDbBlockReference::desc()))
+	{
+		AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
+		BOOL bRetCode = false;
+		AcDbEntity *pSubEnt = NULL;
+		AcDbObjectIterator *pIter = pBlockRef->attributeIterator();
+		for (pIter->start(); !pIter->done(); pIter->step())
+		{
+			CAcDbObjLife objLife(pIter->objectId());
+			if ((pSubEnt = objLife.GetEnt()) == NULL)
+				continue;
+			if (!pSubEnt->isKindOf(AcDbAttribute::desc()))
+				continue;
+			AcDbAttribute *pAttr = (AcDbAttribute*)pSubEnt;
+			CXhChar100 sTag, sText;
+#ifdef _ARX_2007
+			sTag.Copy(_bstr_t(pAttr->tag()));
+			sText.Copy(_bstr_t(pAttr->textString()));
+#else
+			sTag.Copy(pAttr->tag());
+			sText.Copy(pAttr->textString());
+#endif
+			if (sTag.GetLength() == 0 || sText.GetLength() == 0)
+				continue;
+			if (sTag.EqualNoCase("件号&规格&材质"))
+				bRetCode = RecogBasicInfo(pAttr, basicInfo);
+			else if (sTag.EqualNoCase("数量"))
+			{
+				CXhChar50 sTemp(sText);
+				for (char* token = strtok(sTemp, "X="); token; token = strtok(NULL, "X="))
+				{
+					CXhChar16 sToken(token);
+					if (sToken.Replace("块", "") > 0)
+						basicInfo.m_nNum = atoi(sToken);
+				}
+			}
+			else if (sTag.EqualNoCase("塔型"))
+				basicInfo.m_sTaType.Copy(sText);
+			else if (sTag.EqualNoCase("钢印"))
+			{
+				sText.Replace("钢印", "");
+				sText.Replace(":", "");
+				sText.Replace("：", "");
+				basicInfo.m_sTaStampNo.Copy(sText);
+			}
+			else if (sTag.EqualNoCase("孔径"))
+				basicInfo.m_sBoltStr.Copy(sText);
+			else if (sTag.EqualNoCase("工程代码"))
+			{
+				sText.Replace("工程代码", "");
+				sText.Replace(":", "");
+				sText.Replace("：", "");
+				basicInfo.m_sPrjCode.Copy(sText);
+			}
+		}
+		return bRetCode;
+	}
+	//从字符串中解析钢板信息
+	CXhChar500 sText;
+	vector<CString> lineList;
+	if (pEnt->isKindOf(AcDbText::desc()))
+	{
+		AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+		sText.Copy(_bstr_t(pText->textString()));
+#else
+		sText.Copy(pText->textString());
+#endif
+	}
+	else if (pEnt->isKindOf(AcDbMText::desc()))
+	{
+		AcDbMText* pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+		sText.Copy(_bstr_t(pMText->contents()));
+#else
+		sText.Copy(pMText->contents());
+#endif
+		for (char* sKey = strtok(sText, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
+		{
+			CString sTemp = sKey;
+			sTemp.Replace("\\P", "");
+			lineList.push_back(sTemp);
+		}
+	}
+	else if (pEnt->isKindOf(AcDbAttribute::desc()))
+	{
+		AcDbAttribute* pText = (AcDbAttribute*)pEnt;
+#ifdef _ARX_2007
+		sText.Copy(_bstr_t(pText->textString()));
+#else
+		sText.Copy(pText->textString());
+#endif
+	}
+	BOOL bRet = FALSE;
+	if (lineList.size() > 0)
+	{
+		for (size_t i = 0; i < lineList.size(); i++)
+		{
+			CString sTemp = lineList.at(i);
+			if (IsMatchThickRule(sTemp))
+			{
+				ParseThickText(sTemp, basicInfo.m_nThick);
+				bRet = TRUE;
+			}
+			if (IsMatchMatRule(sTemp))
+			{
+				ParseMatText(sTemp, basicInfo.m_cMat, basicInfo.m_cQuality);
+				bRet = TRUE;
+			}
+			if (IsMatchNumRule(sTemp))
+			{
+				ParseNumText(sTemp, basicInfo.m_nNum);
+				//记录构件数量对应的实体Id wht 19-08-05
+				basicInfo.m_idCadEntNum = pEnt->id().asOldId();
+				bRet = TRUE;
+			}
+			if (IsMatchPNRule(sTemp))
+			{
+				ParsePartNoText(sTemp, basicInfo.m_sPartNo);
+				bRet = TRUE;
+			}
+			if (strstr(sTemp, "塔型"))
+			{
+				sTemp.Replace("塔型", "");
+				sTemp.Replace(":", "");
+				sTemp.Replace("：", "");
+				basicInfo.m_sTaType.Copy(sTemp);
+			}
+		}
+	}
+	else
+	{
+		if (IsMatchThickRule(sText))
+		{
+			ParseThickText(sText, basicInfo.m_nThick);
+			bRet = TRUE;
+		}
+		if (IsMatchMatRule(sText))
+		{
+			ParseMatText(sText, basicInfo.m_cMat, basicInfo.m_cQuality);
+			bRet = TRUE;
+		}
+		if (IsMatchNumRule(sText))
+		{
+			ParseNumText(sText, basicInfo.m_nNum);
+			//记录构件数量对应的实体Id wht 19-08-05
+			basicInfo.m_idCadEntNum = pEnt->id().asOldId();
+			bRet = TRUE;
+		}
+		if (IsMatchPNRule(sText))
+		{
+			ParsePartNoText(sText, basicInfo.m_sPartNo);
+			bRet = TRUE;
+		}
+		if (strstr(sText, "塔型"))
+		{
+			sText.Replace("塔型", "");
+			sText.Replace(":", "");
+			sText.Replace("：", "");
+			basicInfo.m_sTaType.Copy(sText);
+			bRet = TRUE;
+		}
+	}
+	return bRet;
+}
+BOOL CPNCSysPara::RecogArcEdge(AcDbEntity* pEnt, f3dArcLine& arcLine, BYTE& ciEdgeType)
+{
+	if (pEnt == NULL)
+		return FALSE;
+	if (pEnt->isKindOf(AcDbArc::desc()))
+	{
+		AcDbArc* pArc = (AcDbArc*)pEnt;
+		AcGePoint3d pt;
+		f3dPoint startPt, endPt, center, norm;
+		pArc->getStartPoint(pt);
+		Cpy_Pnt(startPt, pt);
+		pArc->getEndPoint(pt);
+		Cpy_Pnt(endPt, pt);
+		Cpy_Pnt(center, pArc->center());
+		Cpy_Pnt(norm, pArc->normal());
+		double radius = pArc->radius();
+		double angle = (pArc->endAngle() - pArc->startAngle());
+		if (radius > 0 && fabs(angle) > 0 && DISTANCE(startPt, endPt) > EPS)
+		{	//过滤错误的圆弧(例如：有时pEnt是一个点,但是属性显示为圆弧)
+			//保证startPt-endPt不重叠 wht 19-11-11
+			ciEdgeType = 2;
+			return arcLine.CreateMethod3(startPt, endPt, norm, radius, center);
+		}
+	}
+	else if (pEnt->isKindOf(AcDbEllipse::desc()))
+	{	//更新钢板顶点参数(椭圆)
+		AcDbEllipse* pEllipse = (AcDbEllipse*)pEnt;
+		AcGePoint3d pt;
+		AcGeVector3d minorAxis;
+		f3dPoint startPt, endPt, center, min_vec, maj_vec, column_norm, work_norm;
+		pEllipse->getStartPoint(pt);
+		Cpy_Pnt(startPt, pt);
+		pEllipse->getEndPoint(pt);
+		Cpy_Pnt(endPt, pt);
+		Cpy_Pnt(center, pEllipse->center());
+		Cpy_Pnt(min_vec, pEllipse->minorAxis());
+		Cpy_Pnt(maj_vec, pEllipse->majorAxis());
+		Cpy_Pnt(work_norm, pEllipse->normal());
+		double min_R = min_vec.mod();
+		double maj_R = maj_vec.mod();
+		double cosa = min_R / maj_R;
+		double sina = SQRT(1 - cosa * cosa);
+		column_norm = work_norm;
+		RotateVectorAroundVector(column_norm, sina, cosa, min_vec);
+		//
+		ciEdgeType = 3;
+		return arcLine.CreateEllipse(center, startPt, endPt, column_norm, work_norm, min_R);
+	}
+	return FALSE;
 }
 
 BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)

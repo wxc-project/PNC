@@ -1,17 +1,23 @@
-#ifndef __PNC_SYS_PARAMETER_
-#define __PNC_SYS_PARAMETER_
-#include "HashTable.h"
-#include "XhCharString.h"
+#pragma once
+#include "XeroExtractor.h"
 #include "PropertyList.h"
 #include "PropListItem.h"
 #include "ProcessPart.h"
-#include "XeroExtractor.h"
-#include "AcUiDialogPanel.h"
-#include "PartListDlg.h"
 #include "SteelSealReactor.h"
 #include "DockBarManager.h"
+
 //////////////////////////////////////////////////////////////////////////
-//
+struct BOLT_HOLE {
+	BYTE ciSymbolType;	//0.标准图块|1.特殊图块|2.圆孔
+	double d;			//螺栓名称直径如M20螺栓时d=20
+	float increment;	//螺栓孔比螺栓名义直径的增大间隙值
+	float posX, posY;	//
+	BOLT_HOLE() {
+		posX = posY = increment = ciSymbolType = 0; d = 0;
+	}
+};
+//////////////////////////////////////////////////////////////////////////
+//CPNCSysPara
 #ifndef __UBOM_ONLY_
 class CPNCSysPara : public CPlateExtractor
 #else
@@ -99,13 +105,17 @@ public:
 	LAYER_ITEM* GetEdgeLayerItem(const char* sLayer){return m_xHashEdgeKeepLayers.GetValue(sLayer);}
 	void EmptyEdgeLayerHash(){m_xHashEdgeKeepLayers.Empty();}
 	//
-	BOOL RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum);
 	BOOL IsNeedFilterLayer(const char* sLayer);
 	BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
 	BOOL IsProfileEnt(AcDbEntity* pEnt);
 	BOOL IsFilterPartNoCir() { return m_ciBoltRecogMode & FILTER_PARTNO_CIR; }
 	BOOL IsRecogHoleDimText() { return m_ciBoltRecogMode & RECOGN_HOLE_D_DIM; }
 	BOOL IsRecogCirByBoltD() { return m_ciBoltRecogMode & RECOGN_LS_CIRCLE; }
+	//
+	BOOL RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo);
+	BOOL RecogArcEdge(AcDbEntity* pEnt, f3dArcLine& arcLine, BYTE& ciEdgeType);
+	BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole);
+	BOOL RecogMkRect(AcDbEntity* pEnt, f3dPoint* ptArr, int nNum);
 	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
 	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100,CPropTreeItem *pItem=NULL);//通过属性Id获取属性值
@@ -115,4 +125,3 @@ extern CSteelSealReactor *g_pSteelSealReactor;
 //
 void PNCSysSetImportDefault();
 void PNCSysSetExportDefault();
-#endif

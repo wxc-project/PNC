@@ -1,16 +1,9 @@
 #pragma once
 #include "HashTable.h"
 #include "XhCharString.h"
-#include "..\..\LDS\LDS\BOM\BOM.h"
-#include "Variant.h"
-#include "LogFile.h"
-#include "FileIO.h"
-#include "BomTblTitleCfg.h"
-#include "..\ConvertToNC\PNCModel.h"
-#include <vector>
 #include "BomFile.h"
+#include "PNCModel.h"
 
-using std::vector;
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
@@ -177,6 +170,19 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 //CBomModel
+enum CLIENT_SERIAL {
+	ID_AnHui_HongYuan = 1,	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
+	ID_AnHui_TingYang = 2,	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
+	ID_SiChuan_ChengDu = 3,	//中电建成都铁塔(DWG校审|更新加工数)
+	ID_JiangSu_HuaDian = 4,	//江苏华电(料单校审)
+	ID_ChengDu_DongFang = 5,	//成都东方(DWG校审|更新单基数)
+	ID_QingDao_HaoMai = 6,	//青岛豪迈(DWG校审|更新加工数)
+	ID_QingDao_QLGJG = 7,	//青岛强力刚结构(DWG校审|更新加工数)
+	ID_QingDao_ZAILI = 8,	//青岛载力(DWG校审|更新加工数|更新基数|批量打印)
+	ID_WUZHOU_DINGYI = 9,	//五洲鼎益(料单校审|DWG校审)
+	ID_SHANDONG_HAUAN = 10,	//山东华安(批量打印)
+	ID_OTHER = 100,
+};
 class CBomModel
 {
 public:
@@ -189,17 +195,7 @@ public:
 	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
 	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x40批量打印 wht 20-05-26
 	DWORD m_dwFunctionFlag;
-	//客户ID
-	static const BYTE ID_AnHui_HongYuan = 1;	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
-	static const BYTE ID_AnHui_TingYang = 2;	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
-	static const BYTE ID_SiChuan_ChengDu = 3;	//中电建成都铁塔(DWG校审|更新加工数)
-	static const BYTE ID_JiangSu_HuaDian = 4;	//江苏华电(料单校审)
-	static const BYTE ID_ChengDu_DongFang = 5;	//成都东方(DWG校审|更新单基数)
-	static const BYTE ID_QingDao_HaoMai = 6;	//青岛豪迈(DWG校审|更新加工数)
-	static const BYTE ID_QingDao_QLGJG = 7;	//青岛强力刚结构(DWG校审|更新加工数)
-	static const BYTE ID_QingDao_ZAILI = 8;	//青岛载力(DWG校审|更新加工数|更新基数|批量打印)
-	static const BYTE ID_WUZHOU_DINGYI = 9;	//五洲鼎益(料单校审|DWG校审)
-	static const BYTE ID_SHANDONG_HAUAN = 10;	//山东华安(批量打印)
+	//定制客户
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
 	//配置参数
@@ -213,32 +209,11 @@ public:
 	CXhChar50 m_sJgCadPartLabel;		//角钢工艺卡中的件号标题
 	CXhChar50 m_sJgCardBlockName;		//角钢工艺卡块名称 wht 19-09-24
 	CXhChar500 m_sNotPrintFilter;		//支持设置批量打印时不需要打印的构件 wht 20-07-27
-	CBomImportCfg m_xBomImoprtCfg;
 	//数据存储
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 public:
 	CBomModel(void);
 	~CBomModel(void);
-	//BOM信息
-	int InitBomTitle(){ return m_xBomImoprtCfg.InitBomTitle(); }
-	size_t GetBomTitleCount() { return m_xBomImoprtCfg.GetBomTitleCount(); }
-	BOOL IsZhiWan(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_ZHI_WAN); }
-	BOOL IsPushFlat(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_PUSH_FLAT); }
-	BOOL IsCutAngle(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_ANGLE); }
-	BOOL IsCutRoot(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_ROOT); }
-	BOOL IsCutBer(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_BER); }
-	BOOL IsKaiJiao(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_KAI_JIAO); }
-	BOOL IsHeJiao(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_HE_JIAO); }
-	BOOL IsFootNail(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_FOO_NAIL); }
-	BOOL IsAngleCompareItem(const char* title) { return m_xBomImoprtCfg.IsAngleCompareItem(title); }
-	BOOL IsPlateCompareItem(const char* title) { return m_xBomImoprtCfg.IsPlateCompareItem(title); }
-	BOOL IsTitleCol(int index, const char*title_key) { return m_xBomImoprtCfg.IsTitleCol(index,title_key); }
-	BOOL IsValidTmaBomCfg() { return m_xBomImoprtCfg.m_xTmaTblCfg.IsValid(); }
-	BOOL IsValidErpBomCfg() { return m_xBomImoprtCfg.m_xErpTblCfg.IsValid(); }
-	BOOL IsValidPrintBomCfg() { return m_xBomImoprtCfg.m_xPrintTblCfg.IsValid(); }
-	CXhChar16 GetTitleKey(int index);
-	CXhChar16 GetTitleName(int index);
-	int GetTitleWidth(int index);
 	//
 	bool IsValidFunc(int iFuncType);
 	DWORD AddFuncType(int iFuncType);

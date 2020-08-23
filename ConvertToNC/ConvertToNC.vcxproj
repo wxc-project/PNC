@@ -3761,7 +3761,6 @@
     <ClInclude Include="DrawUnit.h" />
     <ClInclude Include="ExplodeTxtDlg.h" />
     <ClInclude Include="FilterLayerDlg.h" />
-    <ClInclude Include="IExtractor.h" />
     <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="InputMKRectDlg.h" />
     <ClInclude Include="MonoImage.h" />

@@ -790,7 +790,7 @@ void RevisionPartProcess()
 		}
 	}
 	//œ‘ æ∂‘ª∞øÚ
-	int nWidth = g_xUbomModel.InitBomTitle();
+	int nWidth = g_xBomCfg.InitBomTitle();
 	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
 }
 #endif

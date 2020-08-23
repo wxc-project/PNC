@@ -2,7 +2,6 @@
 #include "PNCModel.h"
 #include "TSPAlgorithm.h"
 #include "PNCSysPara.h"
-#include "XeroExtractor.h"
 #include "DrawUnit.h"
 #include "DragEntSet.h"
 #include "SortFunc.h"
@@ -10,6 +9,7 @@
 #include "LayerTable.h"
 #include "PolygonObject.h"
 #include "DimStyle.h"
+#include "XhMath.h"
 #ifdef __TIMER_COUNT_
 #include "TimerCount.h"
 #endif
@@ -20,12 +20,339 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+#define  LEN_SCALE		0.8
+#define  MIN_DISTANCE	25
+
 CPNCModel model;
 CExpoldeModel g_explodeModel;
 CDocManagerReactor *g_pDocManagerReactor;
 //////////////////////////////////////////////////////////////////////////
+//CAD_ENTITY
+CAD_ENTITY::CAD_ENTITY(ULONG idEnt /*= 0*/)
+{
+	idCadEnt = idEnt;
+	ciEntType = TYPE_OTHER;
+	strcpy(sText, "");
+	m_fSize = 0;
+}
+bool CAD_ENTITY::IsInScope(GEPOINT &pt)
+{
+	double dist = DISTANCE(pt, pos);
+	if (dist < m_fSize)
+		return true;
+	else
+		return false;
+}
+//////////////////////////////////////////////////////////////////////////
+//CAD_LINE
+CAD_LINE::CAD_LINE(ULONG lineId /*= 0*/) :
+	CAD_ENTITY(lineId)
+{
+	ciEntType = TYPE_LINE;
+	m_ciSerial = 0;
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+CAD_LINE::CAD_LINE(AcDbObjectId id, double len) :
+	CAD_ENTITY(id.asOldId())
+{
+	m_ciSerial = 0;
+	m_fSize = len;
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+void CAD_LINE::Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end)
+{
+	m_ciSerial = 0;
+	idCadEnt = id.asOldId();
+	m_ptStart = start;
+	m_ptEnd = end;
+	m_fSize = DISTANCE(m_ptStart, m_ptEnd);
+	m_bReverse = FALSE;
+	m_bMatch = FALSE;
+}
+BOOL CAD_LINE::UpdatePos()
+{
+	AcDbEntity *pEnt = NULL;
+	acdbOpenAcDbEntity(pEnt, MkCadObjId(idCadEnt), AcDb::kForRead);
+	CAcDbObjLife life(pEnt);
+	if (pEnt == NULL)
+		return FALSE;
+	if (pEnt->isKindOf(AcDbLine::desc()))
+	{
+		AcDbLine *pLine = (AcDbLine*)pEnt;
+		m_ptStart.Set(pLine->startPoint().x, pLine->startPoint().y, 0);
+		m_ptEnd.Set(pLine->endPoint().x, pLine->endPoint().y, 0);
+	}
+	else if (pEnt->isKindOf(AcDbArc::desc()))
+	{
+		AcDbArc* pArc = (AcDbArc*)pEnt;
+		AcGePoint3d startPt, endPt;
+		pArc->getStartPoint(startPt);
+		pArc->getEndPoint(endPt);
+		m_ptStart.Set(startPt.x, startPt.y, 0);
+		m_ptEnd.Set(endPt.x, endPt.y, 0);
+	}
+	else if (pEnt->isKindOf(AcDbEllipse::desc()))
+	{
+		AcDbEllipse *pEllipse = (AcDbEllipse*)pEnt;
+		AcGePoint3d startPt, endPt;
+		pEllipse->getStartPoint(startPt);
+		pEllipse->getEndPoint(endPt);
+		m_ptStart.Set(startPt.x, startPt.y, 0);
+		m_ptEnd.Set(endPt.x, endPt.y, 0);
+	}
+	else
+		return FALSE;
+	if (m_bReverse)
+	{
+		GEPOINT temp = m_ptStart;
+		m_ptStart = m_ptEnd;
+		m_ptEnd = temp;
+	}
+	return TRUE;
+}
+//////////////////////////////////////////////////////////////////////////
+//CPlateObject
+CPlateObject::CPlateObject()
+{
+
+}
+CPlateObject::~CPlateObject()
+{
+	vertexList.Empty();
+}
+void CPlateObject::CreateRgn()
+{
+	ARRAY_LIST<f3dPoint> vertices;
+	for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+		vertices.append(pVer->pos);
+	if (vertices.GetSize() > 0)
+		region.CreatePolygonRgn(vertices.m_pData, vertices.GetSize());
+}
+//判断坐标点是否在钢板内
+bool CPlateObject::IsInPlate(const double* poscoord)
+{
+	if (region.GetVertexCount() < 3)
+		CreateRgn();
+	if (region.GetAxisZ().IsZero())
+		return false;
+	//return region.PtInRgn(poscoord)==1;
+	int iRet = region.PtInRgn2(poscoord);
+	if (iRet == 1 || iRet == 2)
+		return true;
+	return false;
+}
+//判断直线是否在钢板内
+bool CPlateObject::IsInPlate(const double* start, const double* end)
+{
+	if (region.GetVertexCount() < 3)
+		CreateRgn();
+	if (region.GetAxisZ().IsZero())
+		return false;
+	//int iRet=region.LineInRgn(start,end);
+	int iRet = region.LineInRgn2(start, end);
+	if (iRet == 1)
+		return true;
+	else if (iRet == 2)
+	{	//部分在多边形区域内
+		f3dPoint pt, inters1, inters2;
+		for (int i = 0; i < region.GetVertexCount(); i++)
+		{
+			GEPOINT prePt = region.GetVertexAt(i);
+			GEPOINT curPt = region.GetVertexAt((i + 1) % region.GetVertexCount());
+			if (Int3dll(prePt, curPt, start, end, pt) > 0)
+			{
+				if (inters1.IsZero())
+					inters1 = pt;
+				else
+					inters2 = pt;
+			}
+		}
+		double fExternLen = 0, fSumLen = DISTANCE(GEPOINT(start), GEPOINT(end));
+		if (!inters2.IsZero())
+			fExternLen = DISTANCE(inters1, inters2);
+		else if (IsInPlate(start))
+			fExternLen = DISTANCE(GEPOINT(start), inters1);
+		else if (IsInPlate(end))
+			fExternLen = DISTANCE(GEPOINT(end), inters1);
+		if (ftoi(fExternLen) <= ftoi(fSumLen) && fExternLen / fSumLen > LEN_SCALE)
+			return true;
+		else
+			return false;
+	}
+	else
+		return false;
+}
+//判断提取成功的轮廓点是否按逆时针排序
+BOOL CPlateObject::IsValidVertexs()
+{
+	if (!IsValid())
+		return FALSE;
+	int i = 0, n = vertexList.GetNodeNum();
+	double wrap_area = 0;
+	DYN_ARRAY<GEPOINT> pnt_arr(n);
+	for (VERTEX* pVertex = vertexList.GetFirst(); pVertex; pVertex = vertexList.GetNext(), i++)
+		pnt_arr[i] = pVertex->pos;
+	for (i = 1; i < n - 1; i++)
+	{
+		double result = DistOf2dPtLine(pnt_arr[i + 1], pnt_arr[0], pnt_arr[i]);
+		if (result > 0)		// 后点在线左侧，正三角形面积
+			wrap_area += CalTriArea(pnt_arr[0].x, pnt_arr[0].y, pnt_arr[i].x, pnt_arr[i].y, pnt_arr[i + 1].x, pnt_arr[i + 1].y);
+		else if (result < 0)	// 后点在线右侧，负三角形面积
+			wrap_area -= CalTriArea(pnt_arr[0].x, pnt_arr[0].y, pnt_arr[i].x, pnt_arr[i].y, pnt_arr[i + 1].x, pnt_arr[i + 1].y);
+	}
+	if (wrap_area > 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+void CPlateObject::ReverseVertexs()
+{
+	int n = vertexList.GetNodeNum();
+	ARRAY_LIST<VERTEX> vertexArr;
+	vertexArr.SetSize(n);
+	VERTEX* pVertex = NULL;
+	int i = 0;
+	for (pVertex = vertexList.GetTail(); pVertex; pVertex = vertexList.GetPrev())
+	{
+		vertexArr[i] = *pVertex;
+		i++;
+	}
+	//
+	vertexList.Empty();
+	for (i = 0; i < n; i++)
+	{
+		pVertex = vertexList.append();
+		*pVertex = vertexArr[i];
+	}
+}
+void CPlateObject::DeleteAssisstPts()
+{	//去除辅助型顶点
+	for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+	{
+		if (pVer->tag.lParam == -1)
+			vertexList.DeleteCursor();
+	}
+	vertexList.Clean();
+}
+void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
+{
+	BOOL bFind = FALSE;
+	int i = 0, iStart = -1, iEnd = -1;
+	VERTEX* pVer = NULL;
+	//根据圆弧更新顶点信息
+	for (pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+	{
+		if (pVer->pos.IsEqual(arcLine.Start(), CPNCModel::DIST_ERROR))
+		{
+			iStart = i;
+			pVer->pos = arcLine.Start();
+		}
+		if (pVer->pos.IsEqual(arcLine.End(), CPNCModel::DIST_ERROR))
+		{
+			iEnd = i;
+			pVer->pos = arcLine.End();
+		}
+		if (iStart > -1 && iEnd > -1)
+		{
+			bFind = TRUE;
+			break;
+		}
+		i++;
+	}
+	if (bFind == FALSE)
+		return;
+	int tag = 1, nNum = vertexList.GetNodeNum();
+	if ((iStart > iEnd || (iStart == 0 && iEnd == nNum - 1)) && (iStart + 1) % nNum != iEnd)
+	{	//
+		tag *= -1;
+		int index = iEnd;
+		iEnd = iStart;
+		iStart = index;
+	}
+	pVer = vertexList.GetByIndex(iStart);
+	if (pVer)
+	{
+		pVer->ciEdgeType = type;
+		pVer->arc.fSectAngle = arcLine.SectorAngle();
+		pVer->arc.radius = arcLine.Radius();
+		pVer->arc.center = arcLine.Center();
+		pVer->arc.work_norm = arcLine.WorkNorm()*tag;
+		pVer->arc.column_norm = arcLine.ColumnNorm();
+	}
+	//删除不需要的顶点
+	if ((iStart + 1) % nNum == iEnd || (iEnd + 1) % nNum == iStart)
+		return;
+	for (int i = iStart + 1; i < iEnd; i++)
+		vertexList.DeleteAt(i);
+	vertexList.Clean();
+}
+BOOL CPlateObject::RecogWeldLine(const double* ptS, const double* ptE)
+{
+	return RecogWeldLine(f3dLine(ptS, ptE));
+}
+BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
+{
+	f3dPoint slop_vec = slop_line.endPt - slop_line.startPt;
+	normalize(slop_vec);
+	VERTEX* pPreVer = vertexList.GetTail();
+	for (VERTEX* pCurVer = vertexList.GetFirst(); pCurVer; pCurVer = vertexList.GetNext())
+	{
+		f3dPoint vec = pCurVer->pos - pPreVer->pos;
+		normalize(vec);
+		if (fabs(vec*slop_vec) < eps_cos)
+		{
+			pPreVer = pCurVer;
+			continue;
+		}
+		double fDist = 0;
+		f3dPoint inters, midPt = (pCurVer->pos + pPreVer->pos)*0.5;
+		SnapPerp(&inters, slop_line, midPt, &fDist);
+		if (fDist < MIN_DISTANCE && slop_line.PtInLine(inters) == 2)
+			break;
+		pPreVer = pCurVer;
+	}
+	if (pPreVer)
+	{
+		pPreVer->m_bWeldEdge = true;
+		return TRUE;
+	}
+	return FALSE;
+}
+BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
+{
+	if (!IsValid())
+		return FALSE;
+	GEPOINT tagPT = vertexList.GetFirst()->pos;
+	for (int index = 0; index < vertexList.GetNodeNum(); index++)
+	{
+		if (vertexList[index].tag.lParam == 0 || vertexList[index].tag.lParam == -1)
+			continue;
+		CAcDbObjLife objLife(MkCadObjId(vertexList[index].tag.dwParam));
+		AcDbEntity *pEnt = objLife.GetEnt();
+		if (pEnt == NULL)
+			return FALSE;
+		AcDbCurve* pCurve = (AcDbCurve*)pEnt;
+		AcGePoint3d acad_ptS, acad_ptE;
+		pCurve->getStartPoint(acad_ptS);
+		pCurve->getEndPoint(acad_ptE);
+		GEPOINT linePtS(acad_ptS.x, acad_ptS.y, 0), linePtE(acad_ptE.x, acad_ptE.y, 0);
+		if (linePtS.IsEqual(tagPT, EPS2))
+			tagPT = linePtE;
+		else if (linePtE.IsEqual(tagPT, EPS2))
+			tagPT = linePtS;
+		else
+		{
+			if (pIndex)
+				*pIndex = index;
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+//////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
-//AcDbObjectId MkCadObjId(unsigned long idOld){ return AcDbObjectId((AcDbStub*)idOld); }
 CPlateProcessInfo::CPlateProcessInfo()
 {
 	boltList.Empty();

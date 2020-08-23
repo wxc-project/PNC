@@ -478,7 +478,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		else
 			m_xAngle.bKaiJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_KAIJIAO;
-		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+		if (g_xUbomModel.m_uiCustomizeSerial == ID_SiChuan_ChengDu)
 		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
 			if(m_xAngle.bKaiJiao)
 				m_xAngle.siZhiWan = 1;
@@ -504,7 +504,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		else
 			m_xAngle.bHeJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_HEJIAO;
-		if (g_xUbomModel.m_uiCustomizeSerial == CBomModel::ID_SiChuan_ChengDu)
+		if (g_xUbomModel.m_uiCustomizeSerial == ID_SiChuan_ChengDu)
 		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
 			if (m_xAngle.bHeJiao)
 				m_xAngle.siZhiWan = 1;
@@ -726,7 +726,7 @@ BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
 {
 	m_xPrintBomFile.Empty();
 	m_xPrintBomFile.m_sFileName.Copy(sFileName);
-	return m_xPrintBomFile.ImportExcelFile(&g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg);
+	return m_xPrintBomFile.ImportExcelFile(&g_xBomCfg.m_xPrintTblCfg);
 }
 //////////////////////////////////////////////////////////////////////////
 //钢板DWG操作

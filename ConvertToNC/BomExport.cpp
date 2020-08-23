@@ -1,29 +1,15 @@
 #include "StdAfx.h"
 #include "BomExport.h"
-#include "XhCharString.h"
-#include "PathManager.h"
-#include "..\..\LDS\LDS\BOM\Bom.h"
 #include "BomModel.h"
+#include "PathManager.h"
 #include "MD5.H"
 #include "LocalFeatureDef.h"
 #include "PartLib.h"
 
-static char* SearchChar(char* srcStr, char ch, bool reverseOrder/*=false*/)
-{
-	if (!reverseOrder)
-		return strchr(srcStr, ch);
-	else
-	{
-		int len = strlen(srcStr);
-		for (int i = len - 1; i >= 0; i--)
-		{
-			if (srcStr[i] == ch)
-				return &srcStr[i];
-		}
-	}
-	return NULL;
-}
-
+#ifdef __UBOM_ONLY_
+//////////////////////////////////////////////////////////////////////////
+//
+CBomExport g_xBomExport;
 CBomExport::CBomExport()
 {
 
@@ -175,4 +161,4 @@ bool CBomExport::IsVaild()
 	else
 		return true;
 }
-CBomExport g_xBomExport;
+#endif

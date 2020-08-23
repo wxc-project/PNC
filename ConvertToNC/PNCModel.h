@@ -1,18 +1,143 @@
 #pragma once
-#include "f_ent_list.h"
-#include "HashTable.h"
-#include "list.h"
 #include "XeroExtractor.h"
 #include "ProcessPart.h"
 #include "ArrayList.h"
-#include "CadToolFunc.h"
-#include "XhMath.h"
-#include "..\..\LDS\LDS\BOM\BOM.h"
 #include "DocManagerReactor.h"
-#include <vector>
+#include "..\..\LDS\LDS\BOM\BOM.h"
 
-using std::vector;
 //////////////////////////////////////////////////////////////////////////
+//
+enum ENTITY_TYPE {
+	TYPE_OTHER = 0,
+	TYPE_LINE,
+	TYPE_ARC,
+	TYPE_CIRCLE,
+	TYPE_ELLIPSE,
+	TYPE_SPLINE,
+	TYPE_TEXT,
+	TYPE_MTEXT,
+	TYPE_BLOCKREF,
+	TYPE_DIM_D
+};
+struct CAD_ENTITY {
+	ENTITY_TYPE ciEntType;
+	unsigned long idCadEnt;
+	char sText[100];	//ciEntType==TYPE_TEXT时记录文本内容 wht 18-12-30
+	GEPOINT pos;
+	double m_fSize;
+	//
+	CAD_ENTITY(ULONG idEnt = 0);
+	bool IsInScope(GEPOINT &pt);
+};
+struct CAD_LINE : public CAD_ENTITY
+{
+	BYTE m_ciSerial;
+	GEPOINT m_ptStart, m_ptEnd;
+	GEPOINT vertex;
+	BOOL m_bReverse;
+	BOOL m_bMatch;
+public:
+	CAD_LINE(ULONG lineId = 0);
+	CAD_LINE(AcDbObjectId id, double len);
+	CAD_LINE(AcDbObjectId id, GEPOINT &start, GEPOINT &end) { Init(id, start, end); }
+	void Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end);
+	BOOL UpdatePos();
+	//
+	static int compare_func(const CAD_LINE& obj1, const CAD_LINE& obj2)
+	{
+		if (obj1.m_bMatch && !obj2.m_bMatch)
+			return -1;
+		else if (!obj1.m_bMatch && obj2.m_bMatch)
+			return 1;
+		else
+		{
+			if (obj1.m_ciSerial > obj2.m_ciSerial)
+				return 1;
+			else if (obj1.m_ciSerial < obj2.m_ciSerial)
+				return -1;
+			else
+				return 0;
+		}
+	}
+};
+struct BASIC_INFO {
+	char m_cMat;
+	char m_cQuality;			//质量等级
+	int m_nThick;
+	int m_nNum;
+	long m_idCadEntNum;
+	CXhChar16 m_sPartNo;
+	CXhChar100 m_sPrjCode;		//工程编号
+	CXhChar100 m_sPrjName;		//工程名称
+	CXhChar50 m_sTaType;		//塔型
+	CXhChar50 m_sTaAlias;		//代号
+	CXhChar50 m_sTaStampNo;		//钢印号
+	CXhChar200 m_sBoltStr;		//螺栓字符串
+	CXhChar100 m_sTaskNo;		//任务号
+	BASIC_INFO() { m_nThick = m_nNum = 0; m_cMat = 0; m_cQuality = 0; m_idCadEntNum = 0; }
+};
+//////////////////////////////////////////////////////////////////////////
+//CPlateObject
+class CPlateObject
+{
+	POLYGON region;
+public:
+	struct CIR_PLATE {
+		BOOL m_bCirclePlate;	//是否为圆型板
+		GEPOINT cir_center;
+		GEPOINT norm, column_norm;
+		double m_fRadius;
+		double m_fInnerR;
+		CIR_PLATE() {
+			m_bCirclePlate = FALSE;
+			m_fRadius = m_fInnerR = 0;
+			norm.Set(0, 0, 1);
+			column_norm.Set(0, 0, 1);
+		}
+	}cir_plate_para;
+	struct VERTEX {
+		GEPOINT pos;
+		char ciEdgeType;	//1:普通直边 2:圆弧 3:椭圆弧
+		bool m_bWeldEdge;
+		bool m_bRollEdge;
+		short manu_space;
+		union ATTACH_DATA {	//简单附加数
+			DWORD dwParam;
+			long  lParam;
+			void* pParam;
+		}tag;
+		struct ARC_PARAM {	//圆弧参数
+			double radius;		//指定圆弧半径(椭圆需要)
+			double fSectAngle;	//指定扇形角(圆弧需要)
+			GEPOINT center, work_norm, column_norm;
+		}arc;
+		VERTEX() {
+			ciEdgeType = 1;
+			m_bWeldEdge = m_bRollEdge = false;
+			manu_space = 0;
+			arc.radius = arc.fSectAngle = 0;
+			tag.dwParam = 0;
+		}
+	};
+	ATOM_LIST<VERTEX> vertexList;
+	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
+protected:
+	BOOL IsValidVertexs();
+	void ReverseVertexs();
+	void DeleteAssisstPts();
+	void UpdateVertexPropByArc(f3dArcLine& arcLine, int type);
+	void CreateRgn();
+public:
+	CPlateObject();
+	~CPlateObject();
+	//
+	virtual bool IsInPlate(const double* poscoord);
+	virtual bool IsInPlate(const double* start, const double* end);
+	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
+	virtual BOOL RecogWeldLine(f3dLine slop_line);
+	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 3; }
+	virtual BOOL IsClose(int* pIndex = NULL);
+};
 //CPlateProcessInfo
 class CPlateProcessInfo : public CPlateObject
 {
@@ -101,6 +226,8 @@ public:
 	//刷新钢板显示数量
 	void RefreshPlateNum();
 };
+//////////////////////////////////////////////////////////////////////////
+//
 class CPlateReactorLife
 {	//钢板反应器生命周期控制类
 	CPlateProcessInfo *m_pPlateInfo;
@@ -190,7 +317,6 @@ public:
 	}
 	void WritePrjTowerInfoToCfgFile(const char* cfg_file_path);
 };
-extern CPNCModel model;
 //////////////////////////////////////////////////////////////////////////
 //
 class CSortedModel
@@ -246,5 +372,7 @@ public:
 	CDxfFolder* EnumFirst() { return dxfFolderList.GetFirst(); }
 	CDxfFolder* EnumNext() { return dxfFolderList.GetNext(); }
 };
+//////////////////////////////////////////////////////////////////////////
+extern CPNCModel model;
 extern CExpoldeModel g_explodeModel;
 extern CDocManagerReactor *g_pDocManagerReactor;

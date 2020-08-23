@@ -1,15 +1,12 @@
 #pragma once
 #include "HashTable.h"
 #include "XhCharString.h"
-#include "..\..\LDS\LDS\BOM\BOM.h"
-#include "Variant.h"
-#include "LogFile.h"
-#include "FileIO.h"
 #include "BomTblTitleCfg.h"
+#include "..\..\LDS\LDS\BOM\BOM.h"
 #include <vector>
+using std::vector;
 
 #ifdef __UBOM_ONLY_
-using std::vector;
 struct BOM_FILE_CFG
 {
 public:
@@ -26,38 +23,8 @@ public:
 			return FALSE;
 	}
 };
-class CBomFile
-{
-	void* m_pBelongObj;
-	CSuperHashStrList<BOMPART> m_hashPartByPartNo;
-public:
-	CXhChar500 m_sFileName;		//文件名称
-	CXhChar100 m_sBomName;
-protected:
-	BOOL ImportExcelFileCore(BOM_FILE_CFG *pTblCfg);
-	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
-public:
-	CBomFile();
-	~CBomFile();
-	//
-	void Empty(){
-		m_hashPartByPartNo.Empty();
-		m_sFileName.Empty();
-	}
-	void SetBelongModel(void *pBelongObj) { m_pBelongObj = pBelongObj; }
-	void* BelongModel() const { return m_pBelongObj; }
-	int GetPartNum() { return m_hashPartByPartNo.GetNodeNum(); }
-	BOMPART* EnumFirstPart(){return m_hashPartByPartNo.GetFirst();}
-	BOMPART* EnumNextPart(){return m_hashPartByPartNo.GetNext();}
-	BOMPART* FindPart(const char* sKey){return m_hashPartByPartNo.GetValue(sKey);}
-	//
-	BOOL ImportExcelFile(BOM_FILE_CFG *pTblCfg);
-	CString GetPartNumStr();
-	void UpdateProcessPart(const char* sOldKey,const char* sNewKey);
-};
-//////////////////////////////////////////////////////////////////////////
-//CBomImportCfg
-class CBomImportCfg
+//CBomConfig
+class CBomConfig
 {
 	bool ExtractAngleCompareItems();
 	bool ExtractPlateCompareItems();
@@ -114,8 +81,8 @@ public:
 	CHashStrList<BOOL> hashCompareItemOfAngle;
 	CHashStrList<BOOL> hashCompareItemOfPlate;
 public:
-	CBomImportCfg(void);
-	~CBomImportCfg(void);
+	CBomConfig(void);
+	~CBomConfig(void);
 	//
 	int InitBomTitle();
 	//
@@ -130,10 +97,6 @@ public:
 	BOOL IsKaiJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_KAI_JIAO); }
 	BOOL IsHeJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_HE_JIAO); }
 	BOOL IsFootNail(const char* sText) { return IsHasTheProcess(sText, TYPE_FOO_NAIL); }
-	//
-	const static BYTE FORMAT_TMA_BOM	= 1;
-	const static BYTE FORMAT_ERP_BOM	= 2;
-	const static BYTE FORMAT_PRINT_BOM	= 3;
 	BOOL IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
 	BOOL IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
 	BOOL IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
@@ -141,5 +104,40 @@ public:
 	BOOL IsPlateCompareItem(const char* title) { return (hashCompareItemOfPlate.GetValue(title) != NULL); }
 	size_t GetBomTitleCount() { return m_xBomTitleArr.size(); }
 	BOOL IsTitleCol(int index, const char*title);
+	CXhChar16 GetTitleKey(int index);
+	CXhChar16 GetTitleName(int index);
+	int GetTitleWidth(int index);
 };
+//////////////////////////////////////////////////////////////////////////
+//CBomFile
+class CBomFile
+{
+	void* m_pBelongObj;
+	CSuperHashStrList<BOMPART> m_hashPartByPartNo;
+public:
+	CXhChar500 m_sFileName;		//文件名称
+	CXhChar100 m_sBomName;
+protected:
+	BOOL ParseSheetContent(CVariant2dArray &sheetContentMap, CHashStrList<DWORD>& hashColIndex, int iStartRow);
+public:
+	CBomFile();
+	~CBomFile();
+	//
+	void Empty() {
+		m_hashPartByPartNo.Empty();
+		m_sFileName.Empty();
+	}
+	void SetBelongModel(void *pBelongObj) { m_pBelongObj = pBelongObj; }
+	void* BelongModel() const { return m_pBelongObj; }
+	int GetPartNum() { return m_hashPartByPartNo.GetNodeNum(); }
+	BOMPART* EnumFirstPart() { return m_hashPartByPartNo.GetFirst(); }
+	BOMPART* EnumNextPart() { return m_hashPartByPartNo.GetNext(); }
+	BOMPART* FindPart(const char* sKey) { return m_hashPartByPartNo.GetValue(sKey); }
+	//
+	BOOL ImportExcelFile(BOM_FILE_CFG *pTblCfg);
+	CString GetPartNumStr();
+	void UpdateProcessPart(const char* sOldKey, const char* sNewKey);
+};
+
+extern CBomConfig g_xBomCfg;
 #endif
