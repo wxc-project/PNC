@@ -1,6 +1,5 @@
 // TowerInstanceDlg.cpp : 实现文件
 //
-
 #include "stdafx.h"
 #include "RevisionDlg.h"
 #include "ProcessPart.h"
@@ -21,7 +20,7 @@
 static char THIS_FILE[] = __FILE__;
 #endif
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 CRevisionDlg *g_pRevisionDlg;
 //
 #ifdef __SUPPORT_DOCK_UI_
@@ -214,9 +213,9 @@ BOOL CRevisionDlg::OnInitDialog()
 #else
 	CDialog::OnInitDialog();
 #endif
-	m_bQuality = g_pncSysPara.m_bCmpQualityLevel;
-	m_bMaterialH = g_pncSysPara.m_bEqualH_h;
-	m_sLegErr.Format("%.1f", g_pncSysPara.m_fMaxLenErr);
+	m_bQuality = g_xUbomModel.m_bCmpQualityLevel;
+	m_bMaterialH = g_xUbomModel.m_bEqualH_h;
+	m_sLegErr.Format("%.1f", g_xUbomModel.m_fMaxLenErr);
 	//初始化列表框
 	m_xListReport.EnableSortItems(true,true);
 	m_xListReport.SetGridLineColor(RGB(220, 220, 220));
@@ -1528,21 +1527,21 @@ LRESULT CRevisionDlg::OnAcadKeepFocus(WPARAM, LPARAM)
 void CRevisionDlg::OnBnClickedChkGrade()
 {
 	UpdateData();
-	g_pncSysPara.m_bCmpQualityLevel = m_bQuality;
+	g_xUbomModel.m_bCmpQualityLevel = m_bQuality;
 	UpdateData(FALSE);
 }
 
 void CRevisionDlg::OnBnClickedChkMatH()
 {
 	UpdateData();
-	g_pncSysPara.m_bEqualH_h = m_bMaterialH;
+	g_xUbomModel.m_bEqualH_h = m_bMaterialH;
 	UpdateData(FALSE);
 }
 
 void CRevisionDlg::OnEnChangeELenErr()
 {
 	UpdateData();
-	g_pncSysPara.m_fMaxLenErr = atof(m_sLegErr);
+	g_xUbomModel.m_fMaxLenErr = atof(m_sLegErr);
 	UpdateData(FALSE);
 }
 static COptimalSortDlg printDlg;

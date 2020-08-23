@@ -10,7 +10,7 @@
 #include "PNCSysPara.h"
 #include "Expression.h"
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 CBomModel g_xUbomModel;
 
 int compare_func(const CXhChar16& str1, const CXhChar16& str2)
@@ -215,12 +215,12 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 	//材质
 	if(toupper(pSrcPart->cMaterial) != toupper(pDesPart->cMaterial))
 		hashBoolByPropName.SetValue(CBomImportCfg::KEY_MAT, TRUE);
-	else if(pSrcPart->cMaterial!=pDesPart->cMaterial && !g_pncSysPara.m_bEqualH_h)
+	else if(pSrcPart->cMaterial!=pDesPart->cMaterial && !g_xUbomModel.m_bEqualH_h)
 		hashBoolByPropName.SetValue(CBomImportCfg::KEY_MAT, TRUE);
 	if (pSrcPart->cMaterial == 'A' && !pSrcPart->sMaterial.Equal(pDesPart->sMaterial))
 		hashBoolByPropName.SetValue(CBomImportCfg::KEY_MAT, TRUE);
 	//质量等级
-	if (g_pncSysPara.m_bCmpQualityLevel && pSrcPart->cQualityLevel != pDesPart->cQualityLevel)
+	if (g_xUbomModel.m_bCmpQualityLevel && pSrcPart->cQualityLevel != pDesPart->cQualityLevel)
 		hashBoolByPropName.SetValue(CBomImportCfg::KEY_MAT, TRUE);
 	//角钢定制校审项
 	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::ANGLE)
@@ -258,7 +258,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 			}
 			else
 			{	//判断数值是否相等
-				if (fabsl(pSrcPart->length - pDesPart->length) > g_pncSysPara.m_fMaxLenErr)
+				if (fabsl(pSrcPart->length - pDesPart->length) > g_xUbomModel.m_fMaxLenErr)
 					hashBoolByPropName.SetValue(CBomImportCfg::KEY_LEN, TRUE);
 			}
 		}
@@ -1006,18 +1006,21 @@ CBomModel::CBomModel(void)
 	m_dwFunctionFlag = 0;
 	m_uiCustomizeSerial = 0;
 	m_bExeRppWhenArxLoad = TRUE;
-	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
-	pProject->m_sProjName.Copy("新建工程");
 	m_bExtractPltesWhenOpenFile = TRUE;
 	m_bExtractAnglesWhenOpenFile = TRUE;
+	m_fMaxLenErr = 0.5;
+	m_bCmpQualityLevel = TRUE;
+	m_bEqualH_h = FALSE;
+	m_sJgCadName.Empty();
+	m_sJgCadPartLabel.Empty();
+	m_sJgCardBlockName.Empty();
+	//
+	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
+	pProject->m_sProjName.Copy("新建工程");
 }
 CBomModel::~CBomModel(void)
 {
 	
-}
-BOOL CBomModel::IsHasTheProcess(const char* sValue, BYTE ciType)
-{
-	return m_xBomImoprtCfg.IsHasTheProcess(sValue, ciType);
 }
 bool CBomModel::IsValidFunc(int iFuncType)
 {
@@ -1058,87 +1061,6 @@ DWORD CBomModel::AddFuncType(int iFuncType)
 	m_dwFunctionFlag |= dwFlag;
 	return m_dwFunctionFlag;
 }
-
-void CBomModel::InitBomTblCfg()
-{
-	char file_name[MAX_PATH] = "", line_txt[MAX_PATH] = "", key_word[100] = "";
-	GetAppPath(file_name);
-	strcat(file_name, "ubom.cfg");
-	//根据配置文件初始化表格配置
-	m_xBomImoprtCfg.InitBomTblCfg(file_name);
-	//
-	FILE *fp = fopen(file_name, "rt");
-	if (fp == NULL)
-		return;
-	while (!feof(fp))
-	{
-		if (fgets(line_txt, MAX_PATH, fp) == NULL)
-			break;
-		char sText[MAX_PATH];
-		strcpy(sText, line_txt);
-		CString sLine(line_txt);
-		//sLine.Replace('=', ' ');
-		sLine.Replace('\n', ' ');
-		sprintf(line_txt, "%s", sLine);
-		char *skey = strtok((char*)line_txt, "=,;");
-		strncpy(key_word, skey, 100);
-		if (_stricmp(key_word, "CLIENT_ID") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			m_uiCustomizeSerial = atoi(skey);
-		}
-		else if (_stricmp(key_word, "CLIENT_NAME") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			m_sCustomizeName.Copy(skey);
-		}
-		else if (_stricmp(key_word, "FUNC_FLAG") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			sscanf(skey, "%X", &m_dwFunctionFlag);
-		}
-		else if (_stricmp(key_word, "ExeRppWhenArxLoad") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			if(skey!=NULL)
-				m_bExeRppWhenArxLoad = atoi(skey);
-		}
-		else if (_stricmp(key_word, "ExtractPlatesWhenOpenFile") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			if (skey != NULL)
-				m_bExtractPltesWhenOpenFile = atoi(skey);
-		}
-		else if (_stricmp(key_word, "ExtractAnglesWhenOpenFile") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			if (skey != NULL)
-				m_bExtractAnglesWhenOpenFile = atoi(skey);
-		}
-		else if (_stricmp(key_word, "NOT_PRINT") == 0)
-		{
-			skey = strtok(NULL, "=,;");
-			m_sNotPrintFilter.Copy(skey);
-		}
-	}
-	fclose(fp);
-}
-CDwgFileInfo *CBomModel::FindDwgFile(const char* file_path)
-{
-	CDwgFileInfo *pDwgFile = NULL;
-	for (CProjectTowerType *pPrjTowerType = m_xPrjTowerTypeList.GetFirst(); pPrjTowerType; pPrjTowerType = m_xPrjTowerTypeList.GetNext())
-	{
-		pDwgFile = pPrjTowerType->FindDwgBomInfo(file_path);
-		if (pDwgFile)
-			break;
-	}
-	return pDwgFile;
-}
-int CBomModel::InitBomTitle()
-{
-	return m_xBomImoprtCfg.InitBomTitle();
-}
-
 CXhChar16 CBomModel::GetTitleKey(int index)
 {
 	if (index < 0 || index >= (int)m_xBomImoprtCfg.GetBomTitleCount())
@@ -1199,5 +1121,378 @@ BOOL CBomModel::IsNeedPrint(BOMPART *pPart,const char* sNotes)
 		}
 	}
 	return !bRetCode;
+}
+BOOL CBomModel::IsJgCardBlockName(const char* sBlockName)
+{
+	if (sBlockName != NULL && strcmp(sBlockName, "JgCard") == 0)
+		return TRUE;
+	else if (m_sJgCardBlockName.GetLength() > 0 && m_sJgCardBlockName.EqualNoCase(sBlockName))
+		return TRUE;
+	else
+		return false;
+}
+BOOL CBomModel::IsPartLabelTitle(const char* sText)
+{
+	if (m_sJgCadPartLabel.GetLength() > 0)
+	{
+		CString ss1(sText), ss2(m_sJgCadPartLabel);
+		ss1 = ss1.Trim();
+		ss2 = ss2.Trim();
+		ss1.Remove(' ');
+		ss2.Remove(' ');
+		if (ss2.GetLength() > 1 && ss1.CompareNoCase(ss2) == 0)
+			return true;
+		else
+			return false;
+	}
+	else
+	{
+		if (!(strstr(sText, "件") && strstr(sText, "号")) &&	//件号、零件编号
+			!(strstr(sText, "编") && strstr(sText, "号")))		//编号、构件编号
+			return false;
+		if (strstr(sText, "文件") != NULL)
+			return false;	//排除"文件编号"导致的提取错误 wht 19-05-13
+		if (strstr(sText, ":") != NULL || strstr(sText, "：") != NULL)
+			return false;	//排除钢板标注中的件号，避免将钢板错误提取为角钢 wht 20-07-29
+		return true;
+	}
+}
+//////////////////////////////////////////////////////////////////////////
+//读取UBOM配置信息
+static char* InitBomTblTitleCfg(char* skey, CBomTblTitleCfg *pBomTblCfg)
+{
+	if (skey == NULL)
+		return NULL;
+	skey = strtok(NULL, ";");
+	if (skey != NULL && strlen(skey) > 0 && pBomTblCfg)
+	{
+		pBomTblCfg->m_sColIndexArr.Copy(skey);
+		pBomTblCfg->m_sColIndexArr.Replace(" ", "");
+		//读取列数
+		skey = strtok(NULL, ";");
+		if (skey != NULL)
+			pBomTblCfg->m_nColCount = atoi(skey);
+		//内容起始行
+		skey = strtok(NULL, ";");
+		if (skey != NULL)
+			pBomTblCfg->m_nStartRow = atoi(skey);
+	}
+	return skey;
+}
+void ImportUbomConfigFile()
+{
+	char file_name[MAX_PATH] = "";
+	GetAppPath(file_name);
+	strcat(file_name, "ubom.cfg");
+	FILE *fp = fopen(file_name, "rt");
+	if (fp == NULL)
+		return;
+	char line_txt[MAX_PATH] = "", sText[MAX_PATH] = "", key_word[100] = "";
+	while (!feof(fp))
+	{
+		if (fgets(line_txt, MAX_PATH, fp) == NULL)
+			break;
+		strcpy(sText, line_txt);
+		CString sLine(line_txt);
+		sLine.Replace('=', ' ');
+		sLine.Replace('\n', ' ');
+		sprintf(line_txt, "%s", sLine);
+		char *skey = strtok((char*)sText, "=,;");
+		strncpy(key_word, skey, 100);
+		if (_stricmp(key_word, "CLIENT_ID") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_xUbomModel.m_uiCustomizeSerial = atoi(skey);
+		}
+		else if (_stricmp(key_word, "CLIENT_NAME") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_xUbomModel.m_sCustomizeName.Copy(skey);
+		}
+		else if (_stricmp(key_word, "FUNC_FLAG") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			sscanf(skey, "%X", &g_xUbomModel.m_dwFunctionFlag);
+		}
+		else if (_stricmp(key_word, "ExeRppWhenArxLoad") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+				g_xUbomModel.m_bExeRppWhenArxLoad = atoi(skey);
+		}
+		else if (_stricmp(key_word, "ExtractPlatesWhenOpenFile") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+				g_xUbomModel.m_bExtractPltesWhenOpenFile = atoi(skey);
+		}
+		else if (_stricmp(key_word, "ExtractAnglesWhenOpenFile") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+				g_xUbomModel.m_bExtractAnglesWhenOpenFile = atoi(skey);
+		}
+		else if (_stricmp(key_word, "NOT_PRINT") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if(skey!=NULL)
+				g_xUbomModel.m_sNotPrintFilter.Copy(skey);
+		}
+		else if (_stricmp(key_word, "MaxLenErr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_xUbomModel.m_fMaxLenErr = atof(skey);
+		}
+		else if (_stricmp(key_word, "JG_CARD") == 0)
+		{
+			sscanf(line_txt, "%s%s", key_word, (char*)g_xUbomModel.m_sJgCadName);
+			g_xUbomModel.m_sJgCadName.Replace(" ", "");
+			g_xUbomModel.m_sJgCadName.Replace("\n", "");
+		}
+		else if (_stricmp(key_word, "PartLabelTitle") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL && strlen(skey) > 1)
+			{
+				sprintf(g_xUbomModel.m_sJgCadPartLabel, "%s", skey);
+				g_xUbomModel.m_sJgCadPartLabel.Replace(" ", "");
+				g_xUbomModel.m_sJgCadPartLabel.Replace("\n", "");
+			}
+		}
+		else if (_stricmp(key_word, "JgCardBlockName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL && strlen(skey) > 1)
+			{
+				sprintf(g_xUbomModel.m_sJgCardBlockName, "%s", skey);
+				g_xUbomModel.m_sJgCardBlockName.Replace(" ", "");
+				g_xUbomModel.m_sJgCardBlockName.Replace("\n", "");
+			}
+		}
+		else if (_stricmp(key_word, "RecogMode") == 0)
+		{	
+			int nValue = 0;
+			sscanf(line_txt, "%s%d", key_word, &nValue);
+			g_pncSysPara.m_ciRecogMode = nValue;
+		}
+		else if (_stricmp(key_word, "m_iDimStyle") == 0)
+		{
+			skey = strtok(NULL, ",;");
+			if (strlen(skey) > 0)
+			{
+				RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
+				pSchema->m_iDimStyle = atoi(skey);
+				skey = strtok(line_txt, ";");
+				skey = strtok(NULL, ";");
+				pSchema->m_sSchemaName = skey;
+				pSchema->m_sSchemaName.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_sPnKey = skey;
+				pSchema->m_sPnKey.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_sThickKey = skey;
+				pSchema->m_sThickKey.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_sMatKey = skey;
+				pSchema->m_sMatKey.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_sPnNumKey = skey;
+				pSchema->m_sPnNumKey.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_sFrontBendKey = skey;
+				pSchema->m_sFrontBendKey.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_sReverseBendKey = skey;
+				pSchema->m_sReverseBendKey.Replace(" ", "");
+				skey = strtok(NULL, ";");
+				pSchema->m_bEditable = atoi(skey);
+				skey = strtok(NULL, ";");
+				pSchema->m_bEnable = atoi(skey);
+			}
+		}
+		else if (_stricmp(key_word, "TMA_BOM") == 0)
+			InitBomTblTitleCfg(skey, &g_xUbomModel.m_xBomImoprtCfg.m_xTmaTblCfg.m_xTblCfg);
+		else if (_stricmp(key_word, "ERP_BOM") == 0)
+			InitBomTblTitleCfg(skey, &g_xUbomModel.m_xBomImoprtCfg.m_xErpTblCfg.m_xTblCfg);
+		else if (_stricmp(key_word, "JG_BOM") == 0 || _stricmp(key_word, "PRINT_BOM") == 0)
+			InitBomTblTitleCfg(skey, &g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg.m_xTblCfg);
+		else if (_stricmp(key_word, "TMABomFileKeyStr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_xTmaTblCfg.m_sFileTypeKeyStr.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_xTmaTblCfg.m_sFileTypeKeyStr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ERPBomFileKeyStr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_xErpTblCfg.m_sFileTypeKeyStr.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_xErpTblCfg.m_sFileTypeKeyStr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "PrintBomFileKeyStr") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg.m_sFileTypeKeyStr.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg.m_sFileTypeKeyStr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "TMABomSheetName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_xTmaTblCfg.m_sBomSheetName.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_xTmaTblCfg.m_sBomSheetName.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ERPBomSheetName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_xErpTblCfg.m_sBomSheetName.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_xErpTblCfg.m_sBomSheetName.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "JGPrintSheetName") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg.m_sBomSheetName.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg.m_sBomSheetName.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ANGLE_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sAngleCompareItemArr.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sAngleCompareItemArr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "PLATE_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sPlateCompareItemArr.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sPlateCompareItemArr.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ZHIWAN_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_ZHI_WAN].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_ZHI_WAN].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "CUT_ANGLE_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_CUT_ANGLE].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_CUT_ANGLE].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "CUT_ROOT_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_CUT_ROOT].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_CUT_ROOT].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "CUT_BER_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_CUT_BER].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_CUT_BER].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "PUSH_FLAT_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_PUSH_FLAT].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_PUSH_FLAT].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "KAI_JIAO_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_KAI_JIAO].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_KAI_JIAO].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "HE_JIAO_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_HE_JIAO].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_HE_JIAO].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "FOO_NAIL_ITEM") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_FOO_NAIL].Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessDescArr[CBomImportCfg::TYPE_FOO_NAIL].Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "ProcessFlag") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey != NULL)
+			{
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessFlag.Copy(skey);
+				g_xUbomModel.m_xBomImoprtCfg.m_sProcessFlag.Remove(' ');
+			}
+		}
+		else
+		{
+			for (int i = 0; i < BOM_FILE_CFG::MAX_SHEET_COUNT; i++)
+			{
+				if (_stricmp(key_word, CXhChar16("TMA_BOM_%d", i + 1)) == 0)
+					InitBomTblTitleCfg(skey, &g_xUbomModel.m_xBomImoprtCfg.m_xTmaTblCfg.m_xArrTblCfg[i]);
+				else if (_stricmp(key_word, CXhChar16("ERP_BOM_%d", i + 1)) == 0)
+					InitBomTblTitleCfg(skey, &g_xUbomModel.m_xBomImoprtCfg.m_xErpTblCfg.m_xArrTblCfg[i]);
+				else if (_stricmp(key_word, CXhChar16("PRINT_BOM_%d", i + 1)) == 0)
+					InitBomTblTitleCfg(skey, &g_xUbomModel.m_xBomImoprtCfg.m_xPrintTblCfg.m_xArrTblCfg[i]);
+			}
+		}
+	}
+	fclose(fp);
+	//
+	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
+	{
+		if (pSchema->m_bEnable)
+		{
+			g_pncSysPara.ActiveRecogSchema(pSchema);
+			break;
+		}
+	}
+	//导出UBOM下的钢板提取规则设置
+	PNCSysSetExportDefault();
 }
 #endif

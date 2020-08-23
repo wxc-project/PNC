@@ -12,7 +12,11 @@
 #include "DockBarManager.h"
 //////////////////////////////////////////////////////////////////////////
 //
-class CPNCSysPara : public CPlateExtractor , public CJgCardExtractor
+#ifndef __UBOM_ONLY_
+class CPNCSysPara : public CPlateExtractor
+#else
+class CPNCSysPara : public CPlateExtractor, public CJgCardExtractor
+#endif
 {
 public:
 	struct LAYER_ITEM{
@@ -84,34 +88,21 @@ public:
 	BYTE m_ciBendLineColorIndex;
 	CXhChar16 m_sProfileLineType;
 	double m_fPixelScale;
-	//
-	CXhChar100 m_sJgCadName;		//角钢工艺卡
-	CXhChar16 m_sPartLabelTitle;	//件号标题
-	CXhChar50 m_sJgCardBlockName;	//角钢工艺卡块名称 wht 19-09-24
-	double m_fMaxLenErr;			//长度最大误差值
-	BOOL m_bCmpQualityLevel;		//质量等级校审
-	BOOL m_bEqualH_h;				//Q345是否等于Q355
 public:
 	CPNCSysPara();
 	~CPNCSysPara();
+	void Init();
 	//
 	LAYER_ITEM* EnumFirst();
 	LAYER_ITEM* EnumNext();
 	LAYER_ITEM* AppendSpecItem(const char* sLayer){return m_xHashEdgeKeepLayers.Add(sLayer);}
 	LAYER_ITEM* GetEdgeLayerItem(const char* sLayer){return m_xHashEdgeKeepLayers.GetValue(sLayer);}
 	void EmptyEdgeLayerHash(){m_xHashEdgeKeepLayers.Empty();}
-	void Init();
-	RECOG_SCHEMA* InsertRecogSchema(const char* name, int dimStyle, const char* partNoKey,
-		const char* matKey, const char* thickKey, const char* partCountKey = "",
-		const char* frontBendKey = "", const char* reverseBendKey = "", BOOL bEditable = FALSE);
-	void ActiveRecogSchema(RECOG_SCHEMA *pSchema);
 	//
 	BOOL RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum);
 	BOOL IsNeedFilterLayer(const char* sLayer);
 	BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
 	BOOL IsProfileEnt(AcDbEntity* pEnt);
-	BOOL IsPartLabelTitle(const char* sText);
-	BOOL IsJgCardBlockName(const char* sBlockName);
 	BOOL IsFilterPartNoCir() { return m_ciBoltRecogMode & FILTER_PARTNO_CIR; }
 	BOOL IsRecogHoleDimText() { return m_ciBoltRecogMode & RECOGN_HOLE_D_DIM; }
 	BOOL IsRecogCirByBoltD() { return m_ciBoltRecogMode & RECOGN_LS_CIRCLE; }
@@ -121,7 +112,6 @@ public:
 };
 extern CPNCSysPara g_pncSysPara;
 extern CSteelSealReactor *g_pSteelSealReactor;	
-
 //
 void PNCSysSetImportDefault();
 void PNCSysSetExportDefault();

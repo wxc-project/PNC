@@ -3,7 +3,7 @@
 #include "CadToolFunc.h"
 #include "BatchPrint.h"
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 CString CPrintSet::GetPrintDeviceCmbItemStr()
 {
     CString sDeviceStr;

@@ -11,7 +11,7 @@
 #include "ExcelOper.h"
 #include "RevisionDlg.h"
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 
 typedef CAngleProcessInfo* AngleInfoPtr;
 typedef BOMPART* PART_PTR;

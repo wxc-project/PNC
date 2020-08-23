@@ -7,7 +7,7 @@
 #include "PNCCmd.h"
 #include "PNCSysPara.h"
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
 CAngleProcessInfo::CAngleProcessInfo()
@@ -722,11 +722,6 @@ BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtrac
 	else
 		return TRUE;
 }
-BOOL CDwgFileInfo::ExtractThePlate()
-{
-	ManualExtractPlate(&m_xPncMode);
-	return TRUE;
-}
 BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
 {
 	m_xPrintBomFile.Empty();
@@ -953,7 +948,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		sName.Copy(sValue);
 		delete[] sValue;
 #endif
-		if (!g_pncSysPara.IsJgCardBlockName(sName))
+		if (!g_xUbomModel.IsJgCardBlockName(sName))
 			continue;
 		//添加角钢记录
 		CAngleProcessInfo* pJgInfo = m_hashJgInfo.Add(entId.handle());
@@ -973,7 +968,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		textIdHash.SetValue(entId.handle(), entId);	//记录角钢工艺卡的实时文本
 		//根据件号关键字识别角钢
 		CXhChar100 sText = GetCadTextContent(pEnt);
-		if (!g_pncSysPara.IsPartLabelTitle(sText))
+		if (!g_xUbomModel.IsPartLabelTitle(sText))
 			continue;	//无效的件号标题
 		GEPOINT testPt = GetCadTextDimPos(pEnt);
 		CAngleProcessInfo* pJgInfo = NULL;

@@ -11,7 +11,7 @@
 #include "BomFile.h"
 
 using std::vector;
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
 class CAngleProcessInfo
@@ -108,7 +108,6 @@ public:
 	BOOL IsJgDwgInfo();
 	BOOL IsPlateDwgInfo();
 	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart);
-	BOOL ExtractThePlate();
 	//打印清单
 	BOOL ImportPrintBomExcelFile(const char* sFileName);
 	void EmptyPrintBom() { m_xPrintBomFile.Empty(); }
@@ -190,21 +189,39 @@ public:
 	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
 	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x40批量打印 wht 20-05-26
 	DWORD m_dwFunctionFlag;
-	
-	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
-	CBomImportCfg m_xBomImoprtCfg;
+	//客户ID
+	static const BYTE ID_AnHui_HongYuan = 1;	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
+	static const BYTE ID_AnHui_TingYang = 2;	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
+	static const BYTE ID_SiChuan_ChengDu = 3;	//中电建成都铁塔(DWG校审|更新加工数)
+	static const BYTE ID_JiangSu_HuaDian = 4;	//江苏华电(料单校审)
+	static const BYTE ID_ChengDu_DongFang = 5;	//成都东方(DWG校审|更新单基数)
+	static const BYTE ID_QingDao_HaoMai = 6;	//青岛豪迈(DWG校审|更新加工数)
+	static const BYTE ID_QingDao_QLGJG = 7;	//青岛强力刚结构(DWG校审|更新加工数)
+	static const BYTE ID_QingDao_ZAILI = 8;	//青岛载力(DWG校审|更新加工数|更新基数|批量打印)
+	static const BYTE ID_WUZHOU_DINGYI = 9;	//五洲鼎益(料单校审|DWG校审)
+	static const BYTE ID_SHANDONG_HAUAN = 10;	//山东华安(批量打印)
+	UINT m_uiCustomizeSerial;
+	CXhChar50 m_sCustomizeName;
+	//配置参数
+	double m_fMaxLenErr;				//长度最大误差值
+	BOOL m_bCmpQualityLevel;			//质量等级校审
+	BOOL m_bEqualH_h;					//Q345是否等于Q355
+	BOOL m_bExeRppWhenArxLoad;			//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
+	BOOL m_bExtractPltesWhenOpenFile;	//打开钢板文件后执行提取操作,默认为TRUE wht 20-07-29
+	BOOL m_bExtractAnglesWhenOpenFile;	//打开角钢文件后执行提取操作,默认为TRUE wht 20-07-29
+	CXhChar100 m_sJgCadName;			//角钢工艺卡名称
+	CXhChar50 m_sJgCadPartLabel;		//角钢工艺卡中的件号标题
+	CXhChar50 m_sJgCardBlockName;		//角钢工艺卡块名称 wht 19-09-24
 	CXhChar500 m_sNotPrintFilter;		//支持设置批量打印时不需要打印的构件 wht 20-07-27
+	CBomImportCfg m_xBomImoprtCfg;
+	//数据存储
+	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 public:
 	CBomModel(void);
 	~CBomModel(void);
-	//
-	void InitBomTblCfg();
-	int InitBomTitle();
-	CDwgFileInfo *FindDwgFile(const char* file_path);
-	bool IsValidFunc(int iFuncType);
-	DWORD AddFuncType(int iFuncType);
-	//
-	BOOL IsHasTheProcess(const char* sText, BYTE ciType);
+	//BOM信息
+	int InitBomTitle(){ return m_xBomImoprtCfg.InitBomTitle(); }
+	size_t GetBomTitleCount() { return m_xBomImoprtCfg.GetBomTitleCount(); }
 	BOOL IsZhiWan(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_ZHI_WAN); }
 	BOOL IsPushFlat(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_PUSH_FLAT); }
 	BOOL IsCutAngle(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_CUT_ANGLE); }
@@ -213,36 +230,25 @@ public:
 	BOOL IsKaiJiao(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_KAI_JIAO); }
 	BOOL IsHeJiao(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_HE_JIAO); }
 	BOOL IsFootNail(const char* sText) { return m_xBomImoprtCfg.IsHasTheProcess(sText, CBomImportCfg::TYPE_FOO_NAIL); }
-public:
-	//客户ID
-	static const BYTE ID_AnHui_HongYuan		= 1;	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
-	static const BYTE ID_AnHui_TingYang		= 2;	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
-	static const BYTE ID_SiChuan_ChengDu	= 3;	//中电建成都铁塔(DWG校审|更新加工数)
-	static const BYTE ID_JiangSu_HuaDian	= 4;	//江苏华电(料单校审)
-	static const BYTE ID_ChengDu_DongFang	= 5;	//成都东方(DWG校审|更新单基数)
-	static const BYTE ID_QingDao_HaoMai		= 6;	//青岛豪迈(DWG校审|更新加工数)
-	static const BYTE ID_QingDao_QLGJG		= 7;	//青岛强力刚结构(DWG校审|更新加工数)
-	static const BYTE ID_QingDao_ZAILI		= 8;	//青岛载力(DWG校审|更新加工数|更新基数|批量打印)
-	static const BYTE ID_WUZHOU_DINGYI		= 9;	//五洲鼎益(料单校审|DWG校审)
-	static const BYTE ID_SHANDONG_HAUAN		= 10;	//山东华安(批量打印)
-	UINT m_uiCustomizeSerial;
-	CXhChar50 m_sCustomizeName;
-	BOOL m_bExeRppWhenArxLoad;				//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
-	BOOL m_bExtractPltesWhenOpenFile;		//打开钢板文件后执行提取操作,默认为TRUE wht 20-07-29
-	BOOL m_bExtractAnglesWhenOpenFile;		//打开角钢文件后执行提取操作,默认为TRUE wht 20-07-29
-	//
 	BOOL IsAngleCompareItem(const char* title) { return m_xBomImoprtCfg.IsAngleCompareItem(title); }
 	BOOL IsPlateCompareItem(const char* title) { return m_xBomImoprtCfg.IsPlateCompareItem(title); }
-	size_t GetBomTitleCount() { return m_xBomImoprtCfg.GetBomTitleCount(); }
 	BOOL IsTitleCol(int index, const char*title_key) { return m_xBomImoprtCfg.IsTitleCol(index,title_key); }
-	CXhChar16 GetTitleKey(int index);
-	CXhChar16 GetTitleName(int index);
-	int GetTitleWidth(int index);
 	BOOL IsValidTmaBomCfg() { return m_xBomImoprtCfg.m_xTmaTblCfg.IsValid(); }
 	BOOL IsValidErpBomCfg() { return m_xBomImoprtCfg.m_xErpTblCfg.IsValid(); }
 	BOOL IsValidPrintBomCfg() { return m_xBomImoprtCfg.m_xPrintTblCfg.IsValid(); }
+	CXhChar16 GetTitleKey(int index);
+	CXhChar16 GetTitleName(int index);
+	int GetTitleWidth(int index);
+	//
+	bool IsValidFunc(int iFuncType);
+	DWORD AddFuncType(int iFuncType);
+	BOOL IsJgCardBlockName(const char* sBlockName);
+	BOOL IsPartLabelTitle(const char* sText);
 	BOOL IsNeedPrint(BOMPART *pPart, const char* sNotes);
+	//
 	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
 };
 extern CBomModel g_xUbomModel;
+//
+void ImportUbomConfigFile();
 #endif

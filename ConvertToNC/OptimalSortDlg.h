@@ -7,7 +7,7 @@
 #include "MemberProperty.h"
 // COptimalSortDlg ¶Ô»°¿ò
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 class COptimalSortDlg : public CDialog
 {
 	DECLARE_DYNAMIC(COptimalSortDlg)

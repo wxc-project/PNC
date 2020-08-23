@@ -4,8 +4,7 @@
 #include "XhTreeCtrl.h"
 #include "BomModel.h"
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-
+#ifdef __UBOM_ONLY_
 class CWndShowLife
 {
 	CWnd *m_pWnd;

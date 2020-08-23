@@ -62,17 +62,6 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		else
 			g_pncSysPara.m_bIncDeformed = false;
 	}
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_sJgCadName"))
-	{
-		g_pncSysPara.m_sJgCadName.Copy(valueStr);
-		g_pncSysPara.InitJgCardInfo(valueStr);
-	}
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_sPartLabelTitle"))
-		g_pncSysPara.m_sPartLabelTitle = valueStr;
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_sJgCardBlockName"))
-		g_pncSysPara.m_sJgCardBlockName = valueStr;
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_fMaxLenErr"))
-		g_pncSysPara.m_fMaxLenErr = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_ciMKPos"))
 	{
 		g_pncSysPara.m_ciMKPos = valueStr[0] - '0';
@@ -635,7 +624,7 @@ BOOL CPNCSysSettingDlg::OnInitDialog()
 	m_ctrlPropGroup.DeleteAllItems();
 	m_ctrlPropGroup.InsertItem(0, "常规设置");
 	m_ctrlPropGroup.InsertItem(1, "文字识别");
-#ifndef __UBOM_ONLY_
+#ifndef __UBOM_ONLY_	
 	m_ctrlPropGroup.InsertItem(2, "螺栓图块");
 #endif
 	//
@@ -703,10 +692,16 @@ void CPNCSysSettingDlg::RefreshListItem()
 	{
 		if (g_pncSysPara.m_recogSchemaList.GetNodeNum() == 0)
 		{
-			RECOG_SCHEMA *pNewSchema = g_pncSysPara.InsertRecogSchema("",
-				g_pncSysPara.m_iDimStyle, g_pncSysPara.m_sPnKey,
-				g_pncSysPara.m_sMatKey, g_pncSysPara.m_sThickKey, g_pncSysPara.m_sPnNumKey,
-				g_pncSysPara.m_sFrontBendKey, g_pncSysPara.m_sReverseBendKey, TRUE);
+			RECOG_SCHEMA *pNewSchema = g_pncSysPara.m_recogSchemaList.append();
+			pNewSchema->m_bEditable = TRUE;
+			pNewSchema->m_bEnable = FALSE;
+			pNewSchema->m_iDimStyle = g_pncSysPara.m_iDimStyle;
+			pNewSchema->m_sPnKey.Copy(g_pncSysPara.m_sPnKey);
+			pNewSchema->m_sMatKey.Copy(g_pncSysPara.m_sMatKey);
+			pNewSchema->m_sThickKey.Copy(g_pncSysPara.m_sThickKey);
+			pNewSchema->m_sPnNumKey.Copy(g_pncSysPara.m_sPnNumKey);
+			pNewSchema->m_sFrontBendKey.Copy(g_pncSysPara.m_sFrontBendKey);
+			pNewSchema->m_sReverseBendKey.Copy(g_pncSysPara.m_sReverseBendKey);
 			InsertRecogSchemaItem(&m_listCtrlSysSetting, pNewSchema);
 		}
 		else
@@ -885,39 +880,9 @@ void CPNCSysSettingDlg::DisplaySystemSetting()
 	m_propList.SetButtonClickFunc(ButtonClickSystemSetting);
 	m_propList.SetPopMenuClickFunc(FireSystemSettingPopMenuClick);
 	m_propList.SetPickColorFunc(FirePickColor);
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	UpdateUbomSettingProp();
-#else
 	UpdatePncSettingProp();
-#endif
 	//
 	m_propList.Redraw();
-}
-void CPNCSysSettingDlg::UpdateUbomSettingProp()
-{
-	CPropertyListOper<CPNCSysPara> oper(&m_propList, &g_pncSysPara);
-	CPropTreeItem* pRootItem = m_propList.GetRootItem();
-	CPropTreeItem *pPropItem = NULL, *pGroupItem = NULL, *pItem = NULL;
-	//常规设置
-	pGroupItem = oper.InsertPropItem(pRootItem, "general_set");
-	oper.InsertEditPropItem(pGroupItem, "m_sJgCadName");
-	oper.InsertEditPropItem(pGroupItem, "m_fMaxLenErr");
-	//识别模式
-	pGroupItem = oper.InsertPropItem(pRootItem, "RecogMode");
-	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_iRecogMode");
-	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_COLOR)
-	{	//按颜色识别
-		oper.InsertCmbColorPropItem(pPropItem, "m_iProfileColorIndex");
-	}
-	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LAYER)
-	{	//按图层识别
-		pItem = oper.InsertPopMenuItem(pPropItem, "layer_mode");
-		UpdateFilterLayerProperty(&m_propList, pItem);
-	}
-	else if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
-	{	//按线型识别
-		oper.InsertCmbListPropItem(pPropItem, "m_iProfileLineTypeName");
-	}
 }
 void CPNCSysSettingDlg::UpdatePncSettingProp()
 {

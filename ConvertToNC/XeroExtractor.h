@@ -181,8 +181,11 @@ struct RECOG_SCHEMA{
 //开放给用户的识别定制化接口函数
 class CPlateExtractor
 {
+protected:
+	RECOG_SCHEMA* InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
+		char* matKey, char* thickKey, char* partCountKey = NULL,
+		char* frontBendKey = NULL, char* reverseBendKey = NULL);
 public:
-	ATOM_LIST<RECOG_SCHEMA> m_recogSchemaList;
 	int m_iDimStyle;		//0.单行标注 1.多行标注
 	CXhChar50 m_sPnKey;		//
 	CXhChar50 m_sThickKey;	//
@@ -190,17 +193,15 @@ public:
 	CXhChar50 m_sPnNumKey;	//
 	CXhChar50 m_sFrontBendKey;	//正曲
 	CXhChar50 m_sReverseBendKey;//反曲
+	ATOM_LIST<RECOG_SCHEMA> m_recogSchemaList;
 	CHashStrList<BOLT_BLOCK> hashBoltDList;
-	//特定图层
-	CXhChar16 m_sBendLineLayer;		//火曲线图层
-	CXhChar16 m_sSlopeLineLayer;	//坡口线图层
-protected:
-	int  GetPnKeyNum(const char* sText);
 public:
 	CPlateExtractor();
 	virtual ~CPlateExtractor();
 	//
-	int GetKeyMemberNum();	//标注成员数
+	void ActiveRecogSchema(RECOG_SCHEMA *pSchema);
+	int  GetPnKeyNum(const char* sText);
+	int  GetKeyMemberNum();	//标注成员数
 	BOOL IsMatchPNRule(const char* sText);
 	BOOL IsMatchThickRule(const char* sText);
 	BOOL IsMatchMatRule(const char* sText);
@@ -227,6 +228,7 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 //开放给用户的角钢识别定制化接口函数
+#ifdef __UBOM_ONLY_
 class CJgCardExtractor
 {
 public:
@@ -263,3 +265,4 @@ public:
 	BYTE InitJgCardInfo(const char* sJgCardPath);
 	f3dPoint GetJgCardOrigin(f3dPoint partNo_pt);
 };
+#endif

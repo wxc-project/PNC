@@ -8,6 +8,7 @@
 #include "BomTblTitleCfg.h"
 #include <vector>
 
+#ifdef __UBOM_ONLY_
 using std::vector;
 struct BOM_FILE_CFG
 {
@@ -108,7 +109,6 @@ public:
 	BOM_FILE_CFG m_xTmaTblCfg;
 	BOM_FILE_CFG m_xErpTblCfg;
 	BOM_FILE_CFG m_xPrintTblCfg;
-	CXhChar200 m_sCustomizeName;
 	CXhChar500 m_sAngleCompareItemArr;	//角钢校审项
 	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
 	CHashStrList<BOOL> hashCompareItemOfAngle;
@@ -117,7 +117,6 @@ public:
 	CBomImportCfg(void);
 	~CBomImportCfg(void);
 	//
-	void InitBomTblCfg(const char* cfg_file_path);
 	int InitBomTitle();
 	//
 	BOOL IsEqualDefaultProcessFlag(const char* sValue);
@@ -131,7 +130,6 @@ public:
 	BOOL IsKaiJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_KAI_JIAO); }
 	BOOL IsHeJiao(const char* sText) { return IsHasTheProcess(sText, TYPE_HE_JIAO); }
 	BOOL IsFootNail(const char* sText) { return IsHasTheProcess(sText, TYPE_FOO_NAIL); }
-
 	//
 	const static BYTE FORMAT_TMA_BOM	= 1;
 	const static BYTE FORMAT_ERP_BOM	= 2;
@@ -141,8 +139,7 @@ public:
 	BOOL IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
 	BOOL IsAngleCompareItem(const char* title) { return (hashCompareItemOfAngle.GetValue(title)!=NULL); }
 	BOOL IsPlateCompareItem(const char* title) { return (hashCompareItemOfPlate.GetValue(title) != NULL); }
-
 	size_t GetBomTitleCount() { return m_xBomTitleArr.size(); }
 	BOOL IsTitleCol(int index, const char*title);
 };
-extern CBomImportCfg g_xBomImportCfg;
+#endif

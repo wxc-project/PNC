@@ -6,7 +6,7 @@
 #include "XhCharString.h"
 #include "BomModel.h"
 
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 struct PLOT_CFG
 {
 public:

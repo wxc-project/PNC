@@ -385,12 +385,33 @@ CPlateExtractor::CPlateExtractor()
 {
 	Init();
 }
+CPlateExtractor::~CPlateExtractor()
+{
+	hashBoltDList.Empty();
+	m_recogSchemaList.Empty();
+}
 void CPlateExtractor::Init()
 {	//件号标注设置
 	m_iDimStyle=0;
 	m_sPnKey.Copy("#");
 	m_sThickKey.Copy("-");
 	m_sMatKey.Copy("Q");
+	//默认加载文字识别设置
+	m_recogSchemaList.Empty();
+	RECOG_SCHEMA *pSchema = InsertRecogSchema("单行1", 0, "#", "Q", "-");
+	if (pSchema)
+		pSchema->m_bEnable = TRUE;
+	InsertRecogSchema("单行2", 0, "#", "Q", "-", "件");
+	InsertRecogSchema("单行3", 0, "#", "Q", "-", "件", "正曲", "反曲");
+	InsertRecogSchema("单行4", 0, "#", "Q", "-", "件", "外曲", "内曲");
+	InsertRecogSchema("多行1", 1, "#", "Q", "-");
+	InsertRecogSchema("多行2", 1, "#", "Q", "-", "件");
+	InsertRecogSchema("多行3", 1, "#", "Q", "-", "件", "正曲", "反曲");
+	InsertRecogSchema("多行4", 1, "#", "Q", "-", "件", "外曲", "内曲");
+	InsertRecogSchema("多行5", 1, "件号:", "材质:", "板厚:");
+	InsertRecogSchema("多行6", 1, "件号:", "材质:", "板厚:", "件数");
+	InsertRecogSchema("多行7", 1, "件号:", "材质:", "板厚:", "件数", "正曲", "反曲");
+	InsertRecogSchema("多行8", 1, "件号:", "材质:", "板厚:", "件数", "外曲", "内曲");
 	//螺栓直径设置
 	hashBoltDList.SetValue("M24",BOLT_BLOCK("TMA","M24",24));
 	hashBoltDList.SetValue("M20",BOLT_BLOCK("TMA", "M20",20));
@@ -402,13 +423,43 @@ void CPlateExtractor::Init()
 	hashBoltDList.SetValue("板孔17.5",BOLT_BLOCK("TW", "板孔17.5",16));
 	hashBoltDList.SetValue("板孔13.5",BOLT_BLOCK("TW", "板孔13.5",12));
 	hashBoltDList.SetValue("板孔默认",BOLT_BLOCK("TW", "板孔默认",0));
-	//
-	m_sBendLineLayer="8";
-	m_sSlopeLineLayer.Empty();
 }
-CPlateExtractor::~CPlateExtractor()
+RECOG_SCHEMA* CPlateExtractor::InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
+	char* matKey, char* thickKey, char* partCountKey /*= NULL*/,
+	char* frontBendKey /*= NULL*/, char* reverseBendKey /*= NULL*/)
 {
-	hashBoltDList.Empty();
+	RECOG_SCHEMA *pSchema1 = m_recogSchemaList.append();
+	pSchema1->m_bEditable = FALSE;
+	pSchema1->m_bEnable = FALSE;
+	pSchema1->m_iDimStyle = dimStyle;
+	if (name != NULL)
+		pSchema1->m_sSchemaName.Copy(name);
+	if (partCountKey != NULL)
+		pSchema1->m_sPnKey.Copy(partNoKey);
+	if (thickKey != NULL)
+		pSchema1->m_sThickKey.Copy(thickKey);
+	if (matKey != NULL)
+		pSchema1->m_sMatKey.Copy(matKey);
+	if (partCountKey != NULL)
+		pSchema1->m_sPnNumKey.Copy(partCountKey);
+	if (frontBendKey != NULL)
+		pSchema1->m_sFrontBendKey.Copy(frontBendKey);
+	if (reverseBendKey != NULL)
+		pSchema1->m_sReverseBendKey.Copy(reverseBendKey);
+	return pSchema1;
+}
+void CPlateExtractor::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
+{
+	if (pSchema != NULL)
+	{
+		m_sPnKey.Copy(pSchema->m_sPnKey);
+		m_sMatKey.Copy(pSchema->m_sMatKey);
+		m_sThickKey.Copy(pSchema->m_sThickKey);
+		m_sPnNumKey.Copy(pSchema->m_sPnNumKey);
+		m_sFrontBendKey.Copy(pSchema->m_sFrontBendKey);
+		m_sReverseBendKey.Copy(pSchema->m_sReverseBendKey);
+		m_iDimStyle = pSchema->m_iDimStyle;
+	}
 }
 int CPlateExtractor::GetKeyMemberNum()
 {
@@ -723,17 +774,6 @@ BOOL CPlateExtractor::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogn
 	if(pRecognizer!=NULL)
 	{
 
-	}
-	if(!bRet)
-	{	//通过图层识别坡口线
-		CXhChar50 sLayerName;
-#ifdef _ARX_2007
-		sLayerName.Copy((char*)_bstr_t(pAcDbLine->layer()));
-#else
-		sLayerName.Copy(pAcDbLine->layer());
-#endif
-		if(sLayerName.Equal(m_sSlopeLineLayer))
-			bRet=TRUE;
 	}
 	return bRet;
 }
@@ -1182,6 +1222,8 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 }
 //////////////////////////////////////////////////////////////////////////
 //CJgCardExtractor
+#ifdef __UBOM_ONLY_
+#include "BomModel.h"
 CJgCardExtractor::CJgCardExtractor()
 {
 	fMaxX = 0;
@@ -1249,7 +1291,7 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 			if (pEnt->isKindOf(AcDbMText::desc()) || pEnt->isKindOf(AcDbText::desc()))
 			{
 				CXhChar100 sText=GetCadTextContent(pEnt);
-				if (g_pncSysPara.IsPartLabelTitle(sText))
+				if (g_xUbomModel.IsPartLabelTitle(sText))
 				{
 					GEPOINT pt = GetCadTextDimPos(pEnt);
 					if (fPnDistX<pt.x || fPnDistY>pt.y)
@@ -1408,3 +1450,4 @@ f3dPoint CJgCardExtractor::GetJgCardOrigin(f3dPoint partNo_pt)
 {
 	return f3dPoint(partNo_pt.x - fPnDistX, partNo_pt.y - fPnDistY, 0);
 }
+#endif

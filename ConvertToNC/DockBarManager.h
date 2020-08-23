@@ -14,9 +14,7 @@ class CDockBarManager {
 	struct ExplodeTxt_DLG_ID { static const int DLG_ID = CExplodeTxtDlg::IDD; };
 	struct ExplodeTxt_NAME_ID { static const int NAME_ID = IDS_PART_LIST; };
 	CDlgDockBar<CExplodeTxtDlg, ExplodeTxt_DLG_ID, ExplodeTxt_NAME_ID> m_xExplodeTxtDockBar;
-#endif
-//
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#else
 	struct UBOM_DLG_ID { static const int DLG_ID = CRevisionDlg::IDD; };
 	struct UBOM_NAME_ID { static const int NAME_ID = IDS_REVISION; };
 	CDlgDockBar< CRevisionDlg, UBOM_DLG_ID, UBOM_NAME_ID> m_xRevisionDockBar;
@@ -28,8 +26,7 @@ public:
 #ifndef __UBOM_ONLY_
 		m_xPartListDockBar.DestoryDockBar();
 		m_xExplodeTxtDockBar.DestoryDockBar();
-#endif
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#else
 		m_xRevisionDockBar.DestoryDockBar();
 #endif
 	}
@@ -41,9 +38,8 @@ public:
 	//
 	void DisplayExplodeTxtDockBar(int width = 200) { m_xExplodeTxtDockBar.DisplayDockBar(width); }
 	CExplodeTxtDlg* GetExplodeTxtDlgPtr() { return m_xExplodeTxtDockBar.GetDlgPtr(); }
-#endif
+#else
 	//料单校审信息显示对话框
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
 	void DisplayRevisionDockBar(int width = 200) { m_xRevisionDockBar.DisplayDockBar(width); }
 	CRevisionDlg* GetRevisionDlgPtr() { return m_xRevisionDockBar.GetDlgPtr(); }
 #endif

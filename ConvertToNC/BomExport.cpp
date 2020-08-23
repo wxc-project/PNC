@@ -117,7 +117,7 @@ void CBomExport::ExportExcelFile(CProjectTowerType *pPrjTowerType)
 	if (m_hBomExport == NULL|| CreateExcelBomFile==NULL || pPrjTowerType==NULL)
 		return;
 	CModelBOM bomModel;
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 	for (CDwgFileInfo *pDwgFile = pPrjTowerType->dwgFileList.GetFirst(); pDwgFile; pDwgFile = pPrjTowerType->dwgFileList.GetNext())
 	{
 		for (CAngleProcessInfo *pAngleInfo = pDwgFile->EnumFirstJg(); pAngleInfo; pAngleInfo = pDwgFile->EnumNextJg())

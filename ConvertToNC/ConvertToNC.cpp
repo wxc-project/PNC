@@ -71,12 +71,6 @@ void RegisterServerComponents ()
 		L"SmartExtractPlate",             // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&SmartExtractPlate);            // Function pointer
-	//手动提取钢板信息
-	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
-		L"ReviseThePlate",        // Global function name
-		L"ReviseThePlate",        // Local function name
-		ACRX_CMD_MODAL,   // Type
-		&ManualExtractPlate);            // Function pointer
 	//系统设置
 	acedRegCmds->addCommand(L"PNC-MENU",         // Group name 
 		L"EnvGeneralSet",          // Global function name
@@ -120,8 +114,7 @@ void RegisterServerComponents ()
 		L"ET",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&ExplodeText);				// Function pointer	
-#endif
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#else
 //校审构件工艺信息
 	acedRegCmds->addCommand(L"PNC-MENU",   // Group name
 		L"RPP",					// Global function name
@@ -144,12 +137,6 @@ void RegisterServerComponents ()
 		"SmartExtractPlate",        // Local function name
 		ACRX_CMD_MODAL,   // Type
 		&SmartExtractPlate);            // Function pointer
-	//手动提取钢板信息
-	acedRegCmds->addCommand( "PNC-MENU",           // Group name
-		"ReviseThePlate",        // Global function name
-		"ReviseThePlate",        // Local function name
-		ACRX_CMD_MODAL,   // Type
-		&ManualExtractPlate);            // Function pointer
 	//系统设置
 	acedRegCmds->addCommand("PNC-MENU",         // Group name 
 		"EnvGeneralSet",          // Global function name
@@ -193,8 +180,7 @@ void RegisterServerComponents ()
 		"ET",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&ExplodeText);				// Function pointer
-#endif
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#else
 	//校审构件工艺信息
 	acedRegCmds->addCommand("PNC-MENU",   // Group name
 		"RPP",					// Global function name
@@ -282,7 +268,7 @@ void InitApplication()
 	char lic_file2[MAX_PATH] = "";
 	BYTE cProductType = PRODUCT_PNC;
 	GetLicFile(lic_file);
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 	//UBOM模块授权单独安装时使用PNC.lic，与放样软件辅助使用时使用TMA.lic
 #ifndef __PNC_
 	cProductType = PRODUCT_TMA;
@@ -383,11 +369,10 @@ void InitApplication()
 	RegisterServerComponents();
 	//读取配置文件
 	PNCSysSetImportDefault();
-	separator = SearchChar(lic_file, '.', true);
 	//读取本地化特征功能配置文件
+	separator = SearchChar(lic_file, '.', true);
 	strcpy(separator, CXhChar16("%d.fac", DogSerialNo()));
 	int nFacFileRetcode = ImportLocalFeatureAccessControlFile(lic_file);
-	//logerr.Log("license fac '%s' imported code %d!",lic_file,retcode);
 	if (nFacFileRetcode != -1 && nFacFileRetcode < 0)
 	{
 #ifdef AFX_TARG_ENU_ENGLISH
@@ -400,9 +385,8 @@ void InitApplication()
 #ifndef __UBOM_ONLY_
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
 	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
-#endif
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	g_xUbomModel.InitBomTblCfg();
+#else
+	ImportUbomConfigFile();	//读取配置文件
 	CXhChar100 sWndText("UBOM");
 	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)
 		sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');

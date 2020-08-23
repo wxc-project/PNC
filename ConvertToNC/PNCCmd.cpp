@@ -287,81 +287,6 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 	}
 #endif
 }
-
-//////////////////////////////////////////////////////////////////////////
-//改正钢板的信息
-//ReviseThePlate
-//////////////////////////////////////////////////////////////////////////
-void ManualExtractPlate()
-{
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
-	CDwgFileInfo *pDwgFile = NULL;
-	AcApDocument* pDoc = acDocManager->curDocument();
-	if (pDoc != NULL)
-	{
-		CString file_path = pDoc->fileName();
-		pDwgFile = g_xUbomModel.FindDwgFile(file_path);
-	}
-	if (pDwgFile)
-		ManualExtractPlate(pDwgFile->GetPncModel());
-	else
-		ManualExtractPlate(&model);
-#else
-	ManualExtractPlate(&model);
-#endif
-}
-void ManualExtractPlate(CPNCModel *pModel)
-{
-	if (pModel == NULL)
-		return;
-	CLogErrorLife logErrLife;
-	//框选待修正钢板的轮廓边
-	CHashSet<AcDbObjectId> selectedEntList;
-	if (!SelCadEntSet(selectedEntList))
-		return;
-	//根据选择集合提取钢板的轮廓边，初始化顶点和螺栓信息
-	CPlateProcessInfo plate;
-	if(!plate.InitProfileBySelEnts(selectedEntList))
-	{
-		logerr.Log("选择的轮廓边有误，构不成有效闭合区域！");
-		return;
-	}
-	//根据轮廓闭合区域更新基本信息+螺栓信息+轮廓边信息
-	plate.ExtractPlateRelaEnts();
-	if(!plate.UpdatePlateInfo(TRUE))
-	{
-		logerr.Log("件号%s板提取有误",(char*)plate.GetPartNo());
-		return;
-	}
-	//在模型列表中添加钢板信息 wht 19-12-21
-	CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(plate.GetPartNo());
-	if (pExistPlate == NULL)
-		pExistPlate = pModel->AppendPlate(plate.GetPartNo());
-	pExistPlate->InitProfileBySelEnts(selectedEntList);
-	pExistPlate->ExtractPlateRelaEnts();
-	pExistPlate->UpdatePlateInfo(TRUE);
-#ifndef __UBOM_ONLY_
-	//生成PPI文件,保存到到当前工作路径下
-	CString file_path;
-	GetCurWorkPath(file_path);
-	if(pExistPlate->IsValid())
-		pExistPlate->CreatePPiFile(file_path);
-	//绘制提取的钢板外形--支持排版
-	pModel->DrawPlates();
-	//更新构件列表
-	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
-	if (pPartListDlg != NULL)
-		pPartListDlg->UpdatePartList();
-#else
-	pExistPlate->xBomPlate.cMaterial = pExistPlate->xPlate.cMaterial;
-	pExistPlate->xBomPlate.cQualityLevel = pExistPlate->xPlate.cQuality;
-	pExistPlate->xBomPlate.thick = pExistPlate->xPlate.m_fThick;
-	pExistPlate->xBomPlate.sSpec.Printf("-%.f", pExistPlate->xBomPlate.thick);
-	pExistPlate->xBomPlate.feature1 = pExistPlate->xPlate.m_nProcessNum;	//加工数
-	pExistPlate->xBomPlate.SetPartNum(pExistPlate->xPlate.m_nSingleNum);	//单基数
-#endif
-}
-
 #ifndef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //编辑钢板信息
@@ -846,7 +771,7 @@ void EnvGeneralSet()
 //校审构件工艺信息
 //RevisionPartProcess
 //////////////////////////////////////////////////////////////////////////
-#if defined(__UBOM_) || defined(__UBOM_ONLY_)
+#ifdef __UBOM_ONLY_
 void RevisionPartProcess()
 {
 	CLogErrorLife logErrLife;
@@ -855,8 +780,8 @@ void RevisionPartProcess()
 	{	//加载角钢工艺卡
 		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "",sJgCardPath2[MAX_PATH]="";
 		GetAppPath(APP_PATH);
-		sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
-		sprintf(sJgCardPath2, "%s\\角钢工艺卡\\%s", APP_PATH, (char*)g_pncSysPara.m_sJgCadName);
+		sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_xUbomModel.m_sJgCadName);
+		sprintf(sJgCardPath2, "%s\\角钢工艺卡\\%s", APP_PATH, (char*)g_xUbomModel.m_sJgCadName);
 		if (!g_pncSysPara.InitJgCardInfo(sJgCardPath) &&	//在根目录中查找工艺卡模板
 			!g_pncSysPara.InitJgCardInfo(sJgCardPath2))		//在“角钢工艺卡”子目录中查找工艺卡模板 wht 20-07-18
 		{
