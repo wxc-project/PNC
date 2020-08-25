@@ -68,9 +68,8 @@
 #define IDC_CMB_OTHER_CLR               150
 #define IDC_CMB_PRINT_GROUP             150
 #define IDC_BTN_IMPROT_PRINT_BOM        151
-#define IDC_BUTTON2                     152
 #define IDC_BTN_EMPTY_PRINT_BOM         152
-#define IDC_BTN_SETTINGS                152
+#define IDC_BTN_SETTINGS                153
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
 #define IDC_E_VAL                       1093
@@ -140,7 +139,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        131
 #define _APS_NEXT_COMMAND_VALUE         32799
-#define _APS_NEXT_CONTROL_VALUE         153
+#define _APS_NEXT_CONTROL_VALUE         154
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif
