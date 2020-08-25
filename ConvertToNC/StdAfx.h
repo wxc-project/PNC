@@ -29,6 +29,9 @@
 #pragma pack (push, 8)
 #pragma warning(disable: 4786 4996)
 //#pragma warning(disable: 4098)
+#ifdef __ZRX_
+#pragma comment(lib, "comsuppw.lib")
+#endif
 
 //-----------------------------------------------------------------------------
 #ifndef STRICT

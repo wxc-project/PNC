@@ -146,7 +146,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_nMkRectWidth = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("layer_mode"))
 	{
-		g_pncSysPara.m_iLayerMode = valueStr[0] - '0';
+		g_pncSysPara.m_ciLayerMode = valueStr[0] - '0';
 		UpdateFilterLayerProperty(pPropList, pItem);
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("FilterPartNoCir"))
@@ -258,7 +258,7 @@ static BOOL ButtonClickSystemSetting(CPropertyList *pPropList, CPropTreeItem* pI
 	CPropertyListOper<CPNCSysPara> oper(pPropList, &g_pncSysPara);
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("layer_mode"))
 	{
-		if (g_pncSysPara.m_iLayerMode == 0)
+		if (g_pncSysPara.m_ciLayerMode == 0)
 		{
 			CFilterLayerDlg dlg;
 			if(dlg.DoModal()!=IDOK)
@@ -295,8 +295,8 @@ BOOL FireSystemSettingPopMenuClick(CPropertyList* pPropList, CPropTreeItem* pIte
 		return FALSE;
 	if (pItem->m_idProp == CPNCSysPara::GetPropID("layer_mode"))
 	{
-		g_pncSysPara.m_iLayerMode = sMenuName[0] - '0';
-		if (g_pncSysPara.m_iLayerMode == 0)
+		g_pncSysPara.m_ciLayerMode = sMenuName[0] - '0';
+		if (g_pncSysPara.m_ciLayerMode == 0)
 		{
 			CFilterLayerDlg dlg;
 			if (dlg.DoModal() != IDOK)
@@ -941,10 +941,12 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "FilterPartNoCir");
 	if (g_pncSysPara.IsFilterPartNoCir())
 		oper.InsertEditPropItem(pPropItem, "m_fPartNoCirD");
+#ifndef __UBOM_ONLY_
 	//提取结果显示模式
 	pGroupItem = oper.InsertPropItem(pRootItem, "DisplayMode");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "m_ciLayoutMode");
 	UpdateLayoutProperty(pPropItem);
+#endif
 }
 void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 {

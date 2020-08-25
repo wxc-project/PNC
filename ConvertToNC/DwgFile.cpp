@@ -232,14 +232,15 @@ static BYTE InitAnglePropByText(PART_ANGLE *pAngle, const char* sValue,
 	}
 	if (strstr(sValue, "制弯") || strstr(sValue, "火曲") ||
 		strstr(sValue, "外曲") || strstr(sValue, "内曲") ||
-		strstr(sValue, "正曲") || strstr(sValue, "反曲"))
+		strstr(sValue, "正曲") || strstr(sValue, "反曲")||
+		strstr(sValue, "棱线夹角")|| strstr(sValue, "肢面夹角"))
 	{
 		pAngle->siZhiWan = 1;
 	}
 	if (strstr(sValue, "主焊件") || strstr(sValue, "焊于") ||
 		strstr(sValue, "焊接") || strstr(sValue, "#)") || 
-		(strstr(sValue, "(") && strstr(sValue, ")"))||
-		(strstr(sValue, "（") && strstr(sValue, "）")) )	//"#)","("&&")","（"&&"）"表示有焊接立板 如(245#) wht 20-07-29
+		(strstr(sValue, "(") && strstr(sValue, ")") && strstr(sValue, "%d")==NULL)||
+		(strstr(sValue, "（") && strstr(sValue, "）") && strstr(sValue, "%d") == NULL))	//"#)","("&&")","（"&&"）"表示有焊接立板 如(245#) wht 20-07-29
 	{
 		if (pAngleInfo && pTextPos)
 		{

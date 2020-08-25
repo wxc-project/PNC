@@ -13,6 +13,7 @@
 #include "AdjustPlateMCS.h"
 #include "AcUiDialogPanel.h"
 #include "PNCSysPara.h"
+#include "PNCSysSettingDlg.h"
 
 #ifndef __UBOM_ONLY_
 // CPartListDlg ¶Ô»°¿ò
@@ -54,6 +55,7 @@ BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_NOTIFY(NM_CLICK, IDC_PART_LIST, &CPartListDlg::OnNMClickPartList)
 	ON_NOTIFY(LVN_KEYDOWN, IDC_PART_LIST, &CPartListDlg::OnKeydownListPart)
 	ON_BN_CLICKED(IDC_BTN_EXTRACT, &CPartListDlg::OnBnClickedBtnExtract)
+	ON_BN_CLICKED(IDC_BTN_SETTINGS, &CPartListDlg::OnBnClickedSettings)
 	ON_BN_CLICKED(IDC_BTN_SEND_TO_PPE, &CPartListDlg::OnBnClickedBtnSendToPpe)
 	ON_BN_CLICKED(IDC_BTN_EXPORT_DXF, &CPartListDlg::OnBnClickedBtnExportDxf)
 	ON_BN_CLICKED(IDC_BTN_ANTICLOCKWISE_ROTATION, &CPartListDlg::OnBnClickedBtnAnticlockwiseRotation)
@@ -423,7 +425,13 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	}
 	UpdatePartList();
 }
-
+void CPartListDlg::OnBnClickedSettings()
+{
+	CAcModuleResourceOverride resOverride;
+	CLogErrorLife logErrLife;
+	CPNCSysSettingDlg dlg;
+	dlg.DoModal();
+}
 BOOL CPartListDlg::PreTranslateMessage(MSG* pMsg)
 {
 	if (pMsg->message == WM_KEYDOWN)

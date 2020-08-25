@@ -258,8 +258,8 @@ BOOL StartCadAndLoadArx(const char* productName, const char* APP_PATH,
 		else if(bZWCad)
 			fprintf(fp, "%s%s19.zrx\n", APP_PATH, productName);
 		fclose(fp);
-		//
-		BOOL bLoadMenuFile = TRUE;
+		//PNC&UBOM不自动加载菜单项，避免冲掉用户的扩展菜单项
+		BOOL bLoadMenuFile = FALSE;
 #ifdef __UBOM_ONLY_
 		bLoadMenuFile = FALSE;
 #endif

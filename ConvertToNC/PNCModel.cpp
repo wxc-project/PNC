@@ -102,6 +102,20 @@ BOOL CAD_LINE::UpdatePos()
 		m_ptStart.Set(startPt.x, startPt.y, 0);
 		m_ptEnd.Set(endPt.x, endPt.y, 0);
 	}
+	else if (pEnt->isKindOf(AcDbPolyline::desc()))
+	{
+		AcDbPolyline* pPolyLine = (AcDbPolyline*)pEnt;
+		int nVertNum = pPolyLine->numVerts();
+		for (int iVertIndex = 0; iVertIndex < nVertNum; iVertIndex++)
+		{
+			AcGePoint3d location;
+			pPolyLine->getPointAt(iVertIndex, location);
+			if (iVertIndex == 0)
+				m_ptStart.Set(location.x, location.y, 0);
+			if (iVertIndex == nVertNum - 1)
+				m_ptEnd.Set(location.x, location.y, 0);
+		}
+	}
 	else
 		return FALSE;
 	if (m_bReverse)
@@ -1361,8 +1375,10 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 	AcDbEntity *pEnt = objLife.GetEnt();
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPolyline::desc()))
 		return FALSE;
-	ATOM_LIST<VERTEX> tem_vertes;
 	AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+	if (pPline->isClosed())
+		return FALSE;	//非闭合的多段线
+	ATOM_LIST<VERTEX> tem_vertes;
 	int nVertNum = pPline->numVerts();
 	for (int iVertIndex = 0; iVertIndex < nVertNum; iVertIndex++)
 	{
@@ -1370,13 +1386,8 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 		pPline->getPointAt(iVertIndex, location);
 		if (IsHasVertex(tem_vertes, GEPOINT(location.x, location.y, location.z)))
 			continue;
-		GEPOINT ptS, ptE;
 		if (pPline->segType(iVertIndex) == AcDbPolyline::kLine)
 		{
-			AcGeLineSeg3d acgeLine;
-			pPline->getLineSegAt(iVertIndex, acgeLine);
-			Cpy_Pnt(ptS, acgeLine.startPoint());
-			Cpy_Pnt(ptE, acgeLine.endPoint());
 			VERTEX* pVer = tem_vertes.append();
 			pVer->pos.Set(location.x, location.y, location.z);
 			pVer->tag.dwParam = idAcdbPline.asOldId();
@@ -1386,8 +1397,6 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 			AcGeCircArc3d acgeArc;
 			pPline->getArcSegAt(iVertIndex, acgeArc);
 			GEPOINT center, norm;
-			Cpy_Pnt(ptS, acgeArc.startPoint());
-			Cpy_Pnt(ptE, acgeArc.endPoint());
 			Cpy_Pnt(center, acgeArc.center());
 			Cpy_Pnt(norm, acgeArc.normal());
 			VERTEX* pVer = tem_vertes.append();
@@ -1575,6 +1584,38 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 			pVer->arc.work_norm = norm;
 			pVer->arc.radius = radius;
 			pVer->arc.fSectAngle = fAngle;
+		}
+		else if (pEnt && pEnt->isKindOf(AcDbPolyline::desc()))
+		{
+			AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+			int nVertNum = pPline->numVerts();
+			for (int iVertIndex = 0; iVertIndex < nVertNum; iVertIndex++)
+			{
+				AcGePoint3d location;
+				pPline->getPointAt(iVertIndex, location);
+				VERTEX* pNewVer = NULL;
+				if (pVer->pos.IsEqual(GEPOINT(location.x, location.y, 0), CPNCModel::DIST_ERROR))
+					pNewVer = pVer;
+				else
+					pNewVer = tem_vertes.append();
+				pNewVer->pos.Set(location.x, location.y, 0);
+				pNewVer->tag.dwParam = objItem.idCadEnt;
+				if (pPline->segType(iVertIndex) == AcDbPolyline::kArc)
+				{
+					AcGeCircArc3d acgeArc;
+					pPline->getArcSegAt(iVertIndex, acgeArc);
+					GEPOINT center, norm;
+					Cpy_Pnt(center, acgeArc.center());
+					Cpy_Pnt(norm, acgeArc.normal());
+					double fAngle = fabs(acgeArc.endAng() - acgeArc.startAng());
+					fAngle = (fAngle > Pi) ? 2 * Pi - fAngle : fAngle;
+					pNewVer->ciEdgeType = 2;
+					pNewVer->arc.center = center;
+					pNewVer->arc.work_norm = norm;
+					pNewVer->arc.radius = acgeArc.radius();
+					pNewVer->arc.fSectAngle = fAngle;
+				}
+			}
 		}
 	}
 	//判断钢板是否为圆型钢板
@@ -3250,7 +3291,53 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		}
 		else if (pEnt->isKindOf(AcDbPolyline::desc()))
 		{	//多段线
-			hashScreenProfileId.SetValue(objId.asOldId(), objId);
+			AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+			if (pPline->isClosed())
+			{	//闭合的多段线，默认为完整的钢板轮廓
+				hashScreenProfileId.SetValue(objId.asOldId(), objId);
+			}
+			else
+			{	//不闭合的多段线,可能为钢板轮廓的一部分
+				m_xAllLineHash.SetValue(objId.asOldId(), objId);
+				int nVertNum = pPline->numVerts();
+				for (int iVertIndex = 0; iVertIndex < nVertNum; iVertIndex++)
+				{
+					AcGePoint3d location;
+					pPline->getPointAt(iVertIndex, location);
+					if (pPline->segType(iVertIndex) == AcDbPolyline::kLine)
+					{
+						AcGeLineSeg3d acgeLine;
+						pPline->getLineSegAt(iVertIndex, acgeLine);
+						Cpy_Pnt(ptS, acgeLine.startPoint());
+						Cpy_Pnt(ptE, acgeLine.endPoint());
+						arc_line = f3dArcLine(f3dLine(ptS, ptE));
+						arc_line.feature = objId.asOldId();
+						arrArcLine.append(arc_line);
+						scope.VerifyVertex(ptS);
+						scope.VerifyVertex(ptE);
+					}
+					else if (pPline->segType(iVertIndex) == AcDbPolyline::kArc)
+					{
+						AcGeCircArc3d acgeArc;
+						pPline->getArcSegAt(iVertIndex, acgeArc);
+						Cpy_Pnt(ptS, acgeArc.startPoint());
+						Cpy_Pnt(ptE, acgeArc.endPoint());
+						Cpy_Pnt(ptC, acgeArc.center());
+						Cpy_Pnt(norm, acgeArc.normal());
+						double radius = acgeArc.radius();
+						if (arc_line.CreateMethod3(ptS, ptE, norm, radius, ptC))
+						{
+							arc_line.feature = objId.asOldId();
+							arrArcLine.append(arc_line);
+							//
+							scope.VerityArcLine(arc_line);
+							m_xAllLineHash.SetValue(objId.asOldId(), objId);
+						}
+						else
+							logerr.Log("ArcLine error");
+					}
+				}
+			}	
 		}
 		else if (pEnt->isKindOf(AcDbRegion::desc()))
 		{	//面域

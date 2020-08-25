@@ -854,14 +854,14 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_SEPARATOR);
 		if (pItemInfo->itemType == ANGLE_DWG_ITEM)
 		{
-			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_ANGLES, "重新提取角钢");
+			//pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_ANGLES, "重新提取角钢");
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_ANGLES, "分批提取角钢");
 			pMenu->AppendMenu(MF_STRING, ID_EMPTY_ANGLE_RETRIEVED_RESLUT, "清空角钢提取结果");
 			pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 		}
 		else
 		{
-			pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_PLATES, "重新提取钢板");
+			//pMenu->AppendMenu(MF_STRING, ID_RETRIEVED_PLATES, "重新提取钢板");
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_PLATES, "分批提取钢板");
 			pMenu->AppendMenu(MF_STRING, ID_EMPTY_PLATE_RETRIEVED_RESLUT, "清空钢板提取结果");
 			pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");

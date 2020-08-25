@@ -432,7 +432,7 @@ BOOL WINAPI DllMain (HINSTANCE hInstance, DWORD dwReason, LPVOID /*lpReserved*/)
 	return (TRUE) ;
 }
 extern "C" AcRx::AppRetCode
-#ifdef _MAPTMA_ZRX
+#ifdef __ZRX_
 zcrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
 #else
 acrxEntryPoint(AcRx::AppMsgCode msg, void* pkt)
