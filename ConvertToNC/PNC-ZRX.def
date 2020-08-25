@@ -1,4 +1,4 @@
-LIBRARY      "PNC"
+LIBRARY      "PNC.zrx"
 
 EXPORTS
 	zcrxEntryPoint		PRIVATE

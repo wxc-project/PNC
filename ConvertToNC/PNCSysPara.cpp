@@ -20,32 +20,32 @@ CPNCSysPara::CPNCSysPara()
 void CPNCSysPara::Init()
 {
 	CPlateExtractor::Init();
-	m_iPPiMode = 1;
+	m_iPPiMode = 0;
 	m_bIncDeformed = true;
 	m_iAxisXCalType = 0;
 	m_bUseMaxEdge = FALSE;
 	m_nMaxEdgeLen = 2200;
 	m_nMaxHoleD = 100;
+	m_ciMKPos = 0;
+	m_fMKHoleD = 10;
+	m_fMapScale = 1;
 	//自动排版设置
 	m_ciLayoutMode = 1;
 	m_ciArrangeType = 1;
 	m_nMapWidth = 1500;
 	m_nMapLength = 0;
 	m_nMinDistance = 0;
-	m_ciMKPos = 0;
-	m_fMKHoleD = 10;
 	m_nMkRectWidth = 30;
 	m_nMkRectLen = 60;
-	//图纸比例设置
-	m_fMapScale = 1;
-	m_iLayerMode = 0;
-	m_ciRecogMode = 0;
-	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
-	m_fPartNoCirD = 0;
+	//识别设置
+	m_ciRecogMode = 3;
+	m_ciLayerMode = 0;
 	m_ciProfileColorIndex = 1;		//红色
 	m_ciBendLineColorIndex = 0;		//无颜色
 	m_sProfileLineType.Copy("CONTINUOUS");
 	m_fPixelScale = 0.6;
+	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
+	m_fPartNoCirD = 0;
 	//默认颜色设置
 	crMode.crEdge = RGB(255, 0, 0);
 	crMode.crLS12 = RGB(0, 255, 255);
@@ -78,14 +78,14 @@ CPNCSysPara::~CPNCSysPara()
 }
 CPNCSysPara::LAYER_ITEM* CPNCSysPara::EnumFirst()
 {
-	if(m_iLayerMode==1)
+	if(m_ciLayerMode==1)
 		return m_xHashDefaultFilterLayers.GetFirst();
 	else
 		return m_xHashEdgeKeepLayers.GetFirst();
 }
 CPNCSysPara::LAYER_ITEM* CPNCSysPara::EnumNext()
 {
-	if(m_iLayerMode==1)
+	if(m_ciLayerMode==1)
 		return m_xHashDefaultFilterLayers.GetNext();
 	else
 		return m_xHashEdgeKeepLayers.GetNext();
@@ -252,9 +252,9 @@ int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=1
 		sText.Printf("%d", m_nMkRectLen);
 	else if (GetPropID("layer_mode") == id)
 	{
-		if (m_iLayerMode == 0)
+		if (m_ciLayerMode == 0)
 			sText.Copy("0.指定轮廓边图层");
-		else if (m_iLayerMode == 1)
+		else if (m_ciLayerMode == 1)
 			sText.Copy("1.过滤默认图层");
 	}
 	else if (GetPropID("m_iRecogMode") == id)
@@ -331,7 +331,7 @@ BOOL CPNCSysPara::IsNeedFilterLayer(const char* sLayer)
 {
 	if(m_ciRecogMode==FILTER_BY_LAYER)
 	{
-		if(m_iLayerMode==0&&m_xHashEdgeKeepLayers.GetNodeNum()>0)
+		if(m_ciLayerMode==0&&m_xHashEdgeKeepLayers.GetNodeNum()>0)
 		{	//用户指定轮廓边所在图层
 			LAYER_ITEM* pItem=GetEdgeLayerItem(sLayer);
 			if(pItem && pItem->m_bMark)
@@ -339,7 +339,7 @@ BOOL CPNCSysPara::IsNeedFilterLayer(const char* sLayer)
 			else
 				return TRUE;
 		}
-		else if(m_iLayerMode==1&&m_xHashDefaultFilterLayers.GetValue(sLayer))
+		else if(m_ciLayerMode==1&&m_xHashDefaultFilterLayers.GetValue(sLayer))
 			return TRUE;
 	}
 	return FALSE;
@@ -946,6 +946,8 @@ void PNCSysSetImportDefault()
 			else
 				g_pncSysPara.m_bIncDeformed = false;
 		}
+		else if (_stricmp(key_word, "m_bUseMaxEdge") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_bUseMaxEdge);
 		else if (_stricmp(key_word, "m_nMaxEdgeLen") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMaxEdgeLen);
 		else if (_stricmp(key_word, "m_nMaxHoleD") == 0)
@@ -1002,7 +1004,10 @@ void PNCSysSetImportDefault()
 			g_pncSysPara.m_ciRecogMode = nValue;
 		}
 		else if (_stricmp(key_word, "bIncFilterLayer") == 0)
-			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_iLayerMode);
+		{
+			sscanf(line_txt, "%s%d", key_word, &nValue);
+			g_pncSysPara.m_ciLayerMode = nValue;
+		}
 		else if (_stricmp(key_word, "ProfileLineType") == 0)
 			sscanf(line_txt, "%s%s", key_word, &g_pncSysPara.m_sProfileLineType);
 		else if (_stricmp(key_word, "PixelScale") == 0)
@@ -1131,12 +1136,14 @@ void PNCSysSetExportDefault()
 	}
 	fprintf(fp, "基本设置\n");
 	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
+	fprintf(fp, "m_bUseMaxEdge=%d ;启用最大边长\n", g_pncSysPara.m_bUseMaxEdge);
 	fprintf(fp, "m_nMaxEdgeLen=%d ;最长边长\n", g_pncSysPara.m_nMaxEdgeLen);
 	fprintf(fp, "m_nMaxHoleD=%d ;最大螺栓孔\n", g_pncSysPara.m_nMaxHoleD);
 	fprintf(fp, "MKPos=%d ;提取钢印位置\n", g_pncSysPara.m_ciMKPos);
 	fprintf(fp, "MKHole=%g ;号位孔直径\n", g_pncSysPara.m_fMKHoleD);
 	fprintf(fp, "AxisXCalType=%d ;X轴计算方式\n", g_pncSysPara.m_iAxisXCalType);
 	fprintf(fp, "PPIMode=%d ;PPI文件模式\n", g_pncSysPara.m_iPPiMode);
+	fprintf(fp, "MapScale=%.f ;缩放比例\n", g_pncSysPara.m_fMapScale);
 	fprintf(fp, "显示设置\n");
 	fprintf(fp, "LayoutMode=%d ;显示模式\n", g_pncSysPara.m_ciLayoutMode);
 	fprintf(fp, "ArrangeType=%d ;对比布局方案\n", g_pncSysPara.m_ciArrangeType);
@@ -1152,14 +1159,13 @@ void PNCSysSetExportDefault()
 #endif
 	fprintf(fp, "识别设置\n");
 	fprintf(fp, "RecogMode=%d ;识别模式\n", g_pncSysPara.m_ciRecogMode);
-	fprintf(fp, "bIncFilterLayer=%d ;启用过滤默认图层\n", g_pncSysPara.m_iLayerMode);
+	fprintf(fp, "bIncFilterLayer=%d ;启用过滤默认图层\n", g_pncSysPara.m_ciLayerMode);
 	fprintf(fp, "ProfileLineType=%s ;轮廓边线型\n", (char*)g_pncSysPara.m_sProfileLineType);
 	fprintf(fp, "PixelScale=%.1f ;图像比例\n", g_pncSysPara.m_fPixelScale);
 	fprintf(fp, "ProfileColorIndex=%d ;轮廓边颜色\n", g_pncSysPara.m_ciProfileColorIndex);
 	fprintf(fp, "BendLineColorIndex=%d ;制弯线颜色\n", g_pncSysPara.m_ciBendLineColorIndex);
 	fprintf(fp, "BoltRecogMode=%d ;螺栓识别模式\n", g_pncSysPara.m_ciBoltRecogMode);
 	fprintf(fp, "PartNoCirD=%.1f ;件号圆圈直径\n", g_pncSysPara.m_fPartNoCirD);
-	fprintf(fp, "MapScale=%.f ;缩放比例\n", g_pncSysPara.m_fMapScale);
 	fprintf(fp, "螺栓识别设置\n");
 	for (BOLT_BLOCK *pBoltBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBoltBlock; pBoltBlock = g_pncSysPara.hashBoltDList.GetNext())
 	{

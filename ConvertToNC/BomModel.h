@@ -171,16 +171,25 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //CBomModel
 enum CLIENT_SERIAL {
-	ID_AnHui_HongYuan = 1,	//安徽宏源(料单校审|修正料单|DWG校审|更新加工数)
-	ID_AnHui_TingYang = 2,	//安徽汀阳(料单校审|DWG校审|更新加工数|更新重量)
-	ID_SiChuan_ChengDu = 3,	//中电建成都铁塔(DWG校审|更新加工数)
-	ID_JiangSu_HuaDian = 4,	//江苏华电(料单校审)
-	ID_ChengDu_DongFang = 5,	//成都东方(DWG校审|更新单基数)
-	ID_QingDao_HaoMai = 6,	//青岛豪迈(DWG校审|更新加工数)
-	ID_QingDao_QLGJG = 7,	//青岛强力刚结构(DWG校审|更新加工数)
-	ID_QingDao_ZAILI = 8,	//青岛载力(DWG校审|更新加工数|更新基数|批量打印)
-	ID_WUZHOU_DINGYI = 9,	//五洲鼎益(料单校审|DWG校审)
-	ID_SHANDONG_HAUAN = 10,	//山东华安(批量打印)
+	ID_AnHui_HongYuan = 1,		//安徽宏源0x0F
+	ID_AnHui_TingYang = 2,		//安徽汀阳0X1D
+	ID_SiChuan_ChengDu = 3,		//中电建成都铁塔0X04
+	ID_JiangSu_HuaDian = 4,		//江苏华电0x01
+	ID_ChengDu_DongFang = 5,	//成都东方0X24
+	ID_QingDao_HaoMai = 6,		//青岛豪迈0X4D
+	ID_QingDao_QLGJG = 7,		//青岛强力刚结构0x4C
+	ID_QingDao_ZAILI = 8,		//青岛载力0x4D
+	ID_WUZHOU_DINGYI = 9,		//五洲鼎益0X05
+	ID_SHANDONG_HAUAN = 10,		//山东华安0X40
+	ID_QingDao_DingXing = 11,	//青岛鼎兴0x4C
+	ID_QingDao_BaiSiTe = 12,	//青岛百斯特0x4C
+	ID_QingDao_HuiJinTong = 13,	//青岛汇金通0x4C
+	ID_LuoYang_LongYu = 14,		//洛阳龙羽0x4C
+	ID_JiangSu_DianZhuang = 15,	//江苏电装0x5F
+	ID_HeNan_YongGuang = 16,	//河南永光0x4C
+	ID_GuangDong_AnHeng = 17,	//广东安恒0x4C
+	ID_GuangDong_ChanTao = 18,	//广东禅涛0x4C
+	ID_ChongQing_JiangDian = 19,//重庆江电0x44
 	ID_OTHER = 100,
 };
 class CBomModel
@@ -226,4 +235,5 @@ public:
 extern CBomModel g_xUbomModel;
 //
 void ImportUbomConfigFile();
+void ExportUbomConfigFile();
 #endif

@@ -62,7 +62,7 @@ CPlateExtractor::~CPlateExtractor()
 }
 void CPlateExtractor::Init()
 {	//件号标注设置
-	m_iDimStyle=0;
+	m_iDimStyle = 0;
 	m_sPnKey.Copy("#");
 	m_sThickKey.Copy("-");
 	m_sMatKey.Copy("Q");
@@ -79,20 +79,28 @@ void CPlateExtractor::Init()
 	InsertRecogSchema("多行3", 1, "#", "Q", "-", "件", "正曲", "反曲");
 	InsertRecogSchema("多行4", 1, "#", "Q", "-", "件", "外曲", "内曲");
 	InsertRecogSchema("多行5", 1, "件号:", "材质:", "板厚:");
+	InsertRecogSchema("多行6", 1, "件号:", "材质:", "板厚:", "数量:");
+	InsertRecogSchema("多行7", 1, "件号:", "材质:", "板厚:", "数量:", "正曲", "反曲");
+	InsertRecogSchema("多行8", 1, "件号:", "材质:", "板厚:", "数量:", "外曲", "内曲");
 	InsertRecogSchema("多行6", 1, "件号:", "材质:", "板厚:", "件数");
 	InsertRecogSchema("多行7", 1, "件号:", "材质:", "板厚:", "件数", "正曲", "反曲");
 	InsertRecogSchema("多行8", 1, "件号:", "材质:", "板厚:", "件数", "外曲", "内曲");
 	//螺栓直径设置
-	hashBoltDList.SetValue("M24",BOLT_BLOCK("TMA","M24",24));
-	hashBoltDList.SetValue("M20",BOLT_BLOCK("TMA", "M20",20));
-	hashBoltDList.SetValue("M16",BOLT_BLOCK("TMA", "M16",16));
-	hashBoltDList.SetValue("M12",BOLT_BLOCK("TMA", "M12",12));
-	hashBoltDList.SetValue("板孔25.5",BOLT_BLOCK("TW", "板孔25.5",24));
-	hashBoltDList.SetValue("板孔21.5",BOLT_BLOCK("TW", "板孔21.5",20));
-	hashBoltDList.SetValue("板孔19.5",BOLT_BLOCK("TW", "板孔19.5",18));
-	hashBoltDList.SetValue("板孔17.5",BOLT_BLOCK("TW", "板孔17.5",16));
-	hashBoltDList.SetValue("板孔13.5",BOLT_BLOCK("TW", "板孔13.5",12));
-	hashBoltDList.SetValue("板孔默认",BOLT_BLOCK("TW", "板孔默认",0));
+	hashBoltDList.SetValue("M24", BOLT_BLOCK("TMA", "M24", 24));
+	hashBoltDList.SetValue("M20", BOLT_BLOCK("TMA", "M20", 20));
+	hashBoltDList.SetValue("M16", BOLT_BLOCK("TMA", "M16", 16));
+	hashBoltDList.SetValue("M12", BOLT_BLOCK("TMA", "M12", 12));
+	hashBoltDList.SetValue("板孔25.5", BOLT_BLOCK("TW", "板孔25.5", 24));
+	hashBoltDList.SetValue("板孔21.5", BOLT_BLOCK("TW", "板孔21.5", 20));
+	hashBoltDList.SetValue("板孔19.5", BOLT_BLOCK("TW", "板孔19.5", 18));
+	hashBoltDList.SetValue("板孔17.5", BOLT_BLOCK("TW", "板孔17.5", 16));
+	hashBoltDList.SetValue("板孔13.5", BOLT_BLOCK("TW", "板孔13.5", 12));
+	hashBoltDList.SetValue("板孔默认", BOLT_BLOCK("TW", "板孔默认", 0));
+	hashBoltDList.SetValue("板孔26.0", BOLT_BLOCK("TW", "板孔26.0", 24));
+	hashBoltDList.SetValue("板孔22.0", BOLT_BLOCK("TW", "板孔22.0", 20));
+	hashBoltDList.SetValue("板孔20.0", BOLT_BLOCK("TW", "板孔20.0", 18));
+	hashBoltDList.SetValue("板孔18.0", BOLT_BLOCK("TW", "板孔18.0", 16));
+	hashBoltDList.SetValue("板孔14.0", BOLT_BLOCK("TW", "板孔14.0", 12));
 }
 RECOG_SCHEMA* CPlateExtractor::InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
 	char* matKey, char* thickKey, char* partCountKey /*= NULL*/,

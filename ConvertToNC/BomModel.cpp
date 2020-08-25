@@ -172,9 +172,13 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJ
 	{
 		pDwgFile = dwgFileList.append();
 		pDwgFile->SetBelongModel(this);
-		//读取DWG信息
-		pDwgFile->ExtractDwgInfo(sFileName, bJgDxf, bExtractPart);
-		return pDwgFile;
+		if(pDwgFile->ExtractDwgInfo(sFileName, bJgDxf, bExtractPart))
+			return pDwgFile;
+		else
+		{
+			dwgFileList.DeleteCursor(TRUE);
+			return NULL;
+		}
 	}
 }
 //
@@ -1168,6 +1172,8 @@ void ImportUbomConfigFile()
 	FILE *fp = fopen(file_name, "rt");
 	if (fp == NULL)
 		return;
+	g_pncSysPara.hashBoltDList.Empty();
+	g_pncSysPara.m_recogSchemaList.Empty();
 	char line_txt[MAX_PATH] = "", sText[MAX_PATH] = "", key_word[100] = "";
 	while (!feof(fp))
 	{
@@ -1201,13 +1207,13 @@ void ImportUbomConfigFile()
 			if (skey != NULL)
 				g_xUbomModel.m_bExeRppWhenArxLoad = atoi(skey);
 		}
-		else if (_stricmp(key_word, "ExtractPlatesWhenOpenFile") == 0)
+		else if (_stricmp(key_word, "AutoExtractPlates") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			if (skey != NULL)
 				g_xUbomModel.m_bExtractPltesWhenOpenFile = atoi(skey);
 		}
-		else if (_stricmp(key_word, "ExtractAnglesWhenOpenFile") == 0)
+		else if (_stricmp(key_word, "AutoExtractAngles") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			if (skey != NULL)
@@ -1230,7 +1236,7 @@ void ImportUbomConfigFile()
 			g_xUbomModel.m_sJgCadName.Replace(" ", "");
 			g_xUbomModel.m_sJgCadName.Replace("\n", "");
 		}
-		else if (_stricmp(key_word, "PartLabelTitle") == 0)
+		else if (_stricmp(key_word, "JgCadPartLabel") == 0)
 		{
 			skey = strtok(NULL, "=,;");
 			if (skey != NULL && strlen(skey) > 1)
@@ -1250,13 +1256,13 @@ void ImportUbomConfigFile()
 				g_xUbomModel.m_sJgCardBlockName.Replace("\n", "");
 			}
 		}
-		else if (_stricmp(key_word, "RecogMode") == 0)
+		else if (_stricmp(key_word, "PlateRecogMode") == 0)
 		{	
 			int nValue = 0;
 			sscanf(line_txt, "%s%d", key_word, &nValue);
 			g_pncSysPara.m_ciRecogMode = nValue;
 		}
-		else if (_stricmp(key_word, "m_iDimStyle") == 0)
+		else if (_stricmp(key_word, "PlateDimStyle") == 0)
 		{
 			skey = strtok(NULL, ",;");
 			if (strlen(skey) > 0)
@@ -1295,7 +1301,7 @@ void ImportUbomConfigFile()
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xTmaTblCfg.m_xTblCfg);
 		else if (_stricmp(key_word, "ERP_BOM") == 0)
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xErpTblCfg.m_xTblCfg);
-		else if (_stricmp(key_word, "JG_BOM") == 0 || _stricmp(key_word, "PRINT_BOM") == 0)
+		else if (_stricmp(key_word, "PRINT_BOM") == 0)
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xPrintTblCfg.m_xTblCfg);
 		else if (_stricmp(key_word, "TMABomFileKeyStr") == 0)
 		{
@@ -1475,5 +1481,68 @@ void ImportUbomConfigFile()
 	}
 	//导出UBOM下的钢板提取规则设置
 	PNCSysSetExportDefault();
+}
+void ExportUbomConfigFile()
+{
+	char file_name[MAX_PATH] = "";
+	GetAppPath(file_name);
+	strcat(file_name, "ubom.cfg");
+	FILE *fp = fopen(file_name, "wt");
+	if (fp == NULL)
+	{
+		AfxMessageBox("打不开指定的配置文件!");
+		return;
+	}
+	fprintf(fp, "**基本设置\n");
+	fprintf(fp, "CLIENT_ID=%d ;\n", g_xUbomModel.m_uiCustomizeSerial);
+	fprintf(fp, "CLIENT_NAME=%s ;\n", (char*)g_xUbomModel.m_sCustomizeName);
+	fprintf(fp, "FUNC_FLAG=0x%X ;\n", g_xUbomModel.m_dwFunctionFlag);
+	fprintf(fp, "ExeRppWhenArxLoad=%d ;\n", g_xUbomModel.m_bExeRppWhenArxLoad);
+	fprintf(fp, "AutoExtractPlates=%d ;\n", g_xUbomModel.m_bExtractPltesWhenOpenFile);
+	fprintf(fp, "AutoExtractAngles=%d ;\n", g_xUbomModel.m_bExtractAnglesWhenOpenFile);
+	fprintf(fp, "MaxLenErr=%.1f ;\n", g_xUbomModel.m_fMaxLenErr);
+	fprintf(fp, "NOT_PRINT=%s ;\n", (char*)g_xUbomModel.m_sNotPrintFilter);
+	fprintf(fp, "**DWG识别设置\n");
+	fprintf(fp, "JG_CARD=%s ;\n", (char*)g_xUbomModel.m_sJgCadName);
+	fprintf(fp, "JgCadPartLabel=%s ;\n", (char*)g_xUbomModel.m_sJgCadPartLabel);
+	fprintf(fp, "JgCardBlockName=%s ;\n", (char*)g_xUbomModel.m_sJgCardBlockName);
+	fprintf(fp, "PlateRecogMode=%d ;\n", g_pncSysPara.m_ciRecogMode);
+	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
+	{
+		fprintf(fp, "PlateDimStyle=%d;", pSchema->m_iDimStyle);
+		fprintf(fp, " %s;", (char*)pSchema->m_sSchemaName);
+		fprintf(fp, " %s;", (char*)pSchema->m_sPnKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sThickKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sMatKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sPnNumKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sFrontBendKey);
+		fprintf(fp, " %s;", (char*)pSchema->m_sReverseBendKey);
+		fprintf(fp, "%d;", pSchema->m_bEditable ? 1 : 0);
+		fprintf(fp, "%d\n", pSchema->m_bEnable ? 1 : 0);
+	}
+	fprintf(fp, "**表格识别设置\n");
+	//fprintf(fp, "TMA_BOM=%s ;\n", (char*)g_pncSysPara.m_ciRecogMode);
+	fprintf(fp, "TMABomFileKeyStr=%s ;\n", (char*)g_xBomCfg.m_xTmaTblCfg.m_sFileTypeKeyStr);
+	fprintf(fp, "TMABomSheetName=%s ;\n", (char*)g_xBomCfg.m_xTmaTblCfg.m_sBomSheetName);
+	//fprintf(fp, "ERP_BOM=%s ;\n", (char*)g_pncSysPara.m_ciRecogMode);
+	fprintf(fp, "ERPBomFileKeyStr=%s ;\n", (char*)g_xBomCfg.m_xErpTblCfg.m_sFileTypeKeyStr);
+	fprintf(fp, "ERPBomSheetName=%s ;\n", (char*)g_xBomCfg.m_xErpTblCfg.m_sBomSheetName);
+	//fprintf(fp, "PRINT_BOM=%s ;\n", (char*)g_pncSysPara.m_ciRecogMode);
+	fprintf(fp, "PrintBomFileKeyStr=%s ;\n", (char*)g_xBomCfg.m_xPrintTblCfg.m_sFileTypeKeyStr);
+	fprintf(fp, "JGPrintSheetName=%s ;\n", (char*)g_xBomCfg.m_xPrintTblCfg.m_sBomSheetName);
+	fprintf(fp, "**数据校审项设置\n");
+	//fprintf(fp, "ANGLE_ITEM=%s ;\n", (char*)g_xUbomModel.m_sNotPrintFilter);
+	//fprintf(fp, "PLATE_ITEM=%s ;\n", (char*)g_xUbomModel.m_sNotPrintFilter);
+	fprintf(fp, "**工艺描述设置\n");
+	fprintf(fp, "ZHIWAN_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_ZHI_WAN]);
+	fprintf(fp, "CUT_ANGLE_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_CUT_ANGLE]);
+	fprintf(fp, "CUT_ROOT_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_CUT_ROOT]);
+	fprintf(fp, "CUT_BER_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_CUT_BER]);
+	fprintf(fp, "PUSH_FLAT_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_PUSH_FLAT]);
+	fprintf(fp, "KAI_JIAO_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_KAI_JIAO]);
+	fprintf(fp, "HE_JIAO_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_HE_JIAO]);
+	fprintf(fp, "FOO_NAIL_ITEM=%s ;\n", (char*)g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_FOO_NAIL]);
+	fprintf(fp, "ProcessFlag=%s ;\n", (char*)g_xBomCfg.m_sProcessFlag);
+	fclose(fp);
 }
 #endif
