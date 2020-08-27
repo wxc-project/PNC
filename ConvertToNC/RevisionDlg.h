@@ -88,15 +88,12 @@ protected:
 	afx_msg void OnExportProjFile();
 	afx_msg void OnExportXLSFile();
 	afx_msg void OnImportBomFile();
-	afx_msg void OnImportAngleDwg();
-	afx_msg void OnImportPlateDwg();
+	afx_msg void OnImportDwgFile();
 	afx_msg void OnCompareData();
 	afx_msg void OnExportCompResult();
 	afx_msg void OnRefreshPartNum();
 	afx_msg void OnRefreshSingleNum();
 	afx_msg void OnModifyErpFile();
-	afx_msg void OnRetrievedAngles();
-	afx_msg void OnRetrievedPlates();
 	afx_msg void OnDeleteItem();
 	afx_msg void OnSearchPart();
 	afx_msg void OnBatchPrintPart();

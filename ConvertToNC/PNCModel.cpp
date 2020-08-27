@@ -1836,6 +1836,12 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 	for (ULONG *pSrcId = pSrcPlate->m_newAddEntIdList.GetFirst(); pSrcId;
 		pSrcId = pSrcPlate->m_newAddEntIdList.GetNext())
 		m_newAddEntIdList.append(*pSrcId);
+#ifdef __UBOM_ONLY_
+	CBuffer buffer(1024);
+	pSrcPlate->xBomPlate.ToBuffer(buffer);
+	buffer.SeekToBegin();
+	xBomPlate.FromBuffer(buffer);
+#endif
 }
 //初始化钢板加工坐标系X轴所在的轮廓边
 void CPlateProcessInfo::InitBtmEdgeIndex()

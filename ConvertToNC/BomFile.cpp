@@ -556,7 +556,6 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 {
 	if (m_sFileName.GetLength() <= 0 || pTblCfg == NULL)
 		return FALSE;
-	CXhChar200 sSheetName(pTblCfg->m_sBomSheetName);
 	//1、打开指定文件
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
@@ -565,35 +564,42 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	pTblCfg->m_xTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = pTblCfg->m_xTblCfg.m_nStartRow - 1;
-	//3、获取指定sheet页
-	int nSheetNum = excelobj.GetWorkSheetCount();
-	int iValidSheet = (nSheetNum == 1) ? 1 : 0;
-	ARRAY_LIST<int> sheetIndexList;
-	if (sSheetName.GetLength() > 0)	//根据配置文件中指定的sheet加载表单
-		CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, sSheetName, sheetIndexList);
-	if (iValidSheet > 0 && sheetIndexList.GetSize() <= 0)
-		sheetIndexList.append(iValidSheet);
-	if (sheetIndexList.GetSize() <= 0 && nSheetNum >= 1)
-		sheetIndexList.append(1);	//默认取第一个sheet尝试导入 wht 20-07-28
-	//4、读取sheet内容，解析数据
+	//3、获取指定sheet页，读取sheet内容，解析数据
 	BOOL bReadOK = FALSE;
-	for (int *pSheetIndex = sheetIndexList.GetFirst(); pSheetIndex; pSheetIndex = sheetIndexList.GetNext())
-	{
-		CVariant2dArray sheetContentMap(1, 1);
-		CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, *pSheetIndex, 52);
-		int iCurIndex = sheetIndexList.GetCurrentIndex();
-		if (iCurIndex > 0 && iCurIndex <= 10 && pTblCfg->m_xArrTblCfg[iCurIndex - 1].m_sColIndexArr.GetLength()>0)
+	if (pTblCfg->m_sBomSheetName.GetLength() > 0)	
+	{	//配置文件中指定了sheet加载表单
+		ARRAY_LIST<int> sheetIndexList;
+		CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, pTblCfg->m_sBomSheetName, sheetIndexList);
+		for (int *pSheetIndex = sheetIndexList.GetFirst(); pSheetIndex; pSheetIndex = sheetIndexList.GetNext())
 		{
-			CHashStrList<DWORD> hashTempColIndexByColTitle;
-			pTblCfg->m_xArrTblCfg[iCurIndex - 1].GetHashColIndexByColTitleTbl(hashTempColIndexByColTitle);
-			if (ParseSheetContent(sheetContentMap, hashTempColIndexByColTitle, iStartRow))
-				bReadOK = TRUE;
+			CVariant2dArray sheetContentMap(1, 1);
+			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, *pSheetIndex, 52);
+			int iCurIndex = sheetIndexList.GetCurrentIndex();
+			if (iCurIndex > 0 && iCurIndex <= 10 && pTblCfg->m_xArrTblCfg[iCurIndex - 1].m_sColIndexArr.GetLength() > 0)
+			{
+				CHashStrList<DWORD> hashTempColIndexByColTitle;
+				pTblCfg->m_xArrTblCfg[iCurIndex - 1].GetHashColIndexByColTitleTbl(hashTempColIndexByColTitle);
+				if (ParseSheetContent(sheetContentMap, hashTempColIndexByColTitle, iStartRow))
+					bReadOK = TRUE;
+			}
+			else
+			{
+				if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
+					bReadOK = TRUE;
+			}
 		}
-		else
+	}
+	else
+	{	//配置文件中没有指定sheet加载表单
+		int nSheetNum = excelobj.GetWorkSheetCount(), nValidSheetCount = 0;
+		for (int iSheet = 1; iSheet <= nSheetNum; iSheet++)
 		{
+			CVariant2dArray sheetContentMap(1, 1);
+			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet);
 			if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
-				bReadOK = TRUE;
+				nValidSheetCount++;
 		}
+		bReadOK = nValidSheetCount > 0 ? TRUE : FALSE;
 	}
 	if (!bReadOK)
 		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");

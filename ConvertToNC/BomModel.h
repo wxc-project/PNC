@@ -61,7 +61,6 @@ class CProjectTowerType;
 class CDwgFileInfo 
 {
 private:
-	BOOL m_bJgDwgFile;
 	CProjectTowerType* m_pProject;
 	CHashList<CAngleProcessInfo> m_hashJgInfo;
 	CPNCModel m_xPncMode;
@@ -76,8 +75,11 @@ protected:
 public:
 	CDwgFileInfo();
 	~CDwgFileInfo();
+	//
+	void SetBelongModel(CProjectTowerType *pProject) { m_pProject = pProject; }
+	CProjectTowerType* BelongModel() const { return m_pProject; }
 	//角钢DWG操作
-	int GetJgNum(){return m_hashJgInfo.GetNodeNum();}
+	int GetAngleNum(){return m_hashJgInfo.GetNodeNum();}
 	void EmptyJgList() { m_hashJgInfo.Empty(); }
 	CAngleProcessInfo* EnumFirstJg(){return m_hashJgInfo.GetFirst();}
 	CAngleProcessInfo* EnumNextJg(){return m_hashJgInfo.GetNext();}
@@ -95,12 +97,6 @@ public:
 	CPlateProcessInfo* FindPlateByPartNo(const char* sPartNo);
 	void ModifyPlateDwgPartNum();
 	CPNCModel *GetPncModel() { return &m_xPncMode; }
-	//
-	void SetBelongModel(CProjectTowerType *pProject){m_pProject=pProject;}
-	CProjectTowerType* BelongModel() const{return m_pProject;}
-	BOOL IsJgDwgInfo();
-	BOOL IsPlateDwgInfo();
-	BOOL ExtractDwgInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart);
 	//打印清单
 	BOOL ImportPrintBomExcelFile(const char* sFileName);
 	void EmptyPrintBom() { m_xPrintBomFile.Empty(); }
@@ -115,11 +111,8 @@ class CProjectTowerType
 public:
 	//用于标记比较类型
 	static const int COMPARE_BOM_FILE = 1;
-	static const int COMPARE_ANGLE_DWG = 2;
-	static const int COMPARE_PLATE_DWG = 3;
-	static const int COMPARE_ANGLE_DWGS = 4;
-	static const int COMPARE_PLATE_DWGS = 5;
-	static const int COMPARE_PARTS_DWG = 6;	//角钢钢板在一张dwg文件中
+	static const int COMPARE_DWG_FILE = 2;
+	static const int COMPARE_ALL_DWGS = 3;
 	//
 	struct COMPARE_PART_RESULT
 	{
@@ -150,17 +143,13 @@ public:
 	CPlateProcessInfo *FindPlateInfoByPartNo(const char* sPartNo);
 	CAngleProcessInfo *FindAngleInfoByPartNo(const char* sPartNo);
 	//初始化操作
-	BOOL IsTmaBomFile(const char* sFileName,BOOL bDisplayMsgBox = FALSE);
-	BOOL IsErpBomFile(const char* sFileName, BOOL bDisplayMsgBox = FALSE);
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
-	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart);
+	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
 	//校审操作
 	int CompareOrgAndLoftParts();
-	int CompareLoftAndAngleDwgs();
-	int CompareLoftAndPlateDwgs();
-	int CompareLoftAndAngleDwg(const char* sFileName);
-	int CompareLoftAndPlateDwg(const char* sFileName);
+	int CompareLoftAndPartDwgs();
+	int CompareLoftAndPartDwg(const char* sFileName);
 	void ExportCompareResult(int iCompare);
 	//校审结果操作
 	DWORD GetResultCount(){return m_hashCompareResultByPartNo.GetNodeNum();}
@@ -218,6 +207,7 @@ public:
 	CXhChar50 m_sJgCadPartLabel;		//角钢工艺卡中的件号标题
 	CXhChar50 m_sJgCardBlockName;		//角钢工艺卡块名称 wht 19-09-24
 	CXhChar500 m_sNotPrintFilter;		//支持设置批量打印时不需要打印的构件 wht 20-07-27
+	BYTE m_ciPrintSortType;				//0.按料单排序|1.按件号排序
 	//数据存储
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 public:
