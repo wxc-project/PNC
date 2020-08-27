@@ -106,11 +106,10 @@
 #define ID_LOAD_PROJECT                 32770
 #define ID_IMPORT_TMA_FILE              32771
 #define ID_IMPORT_ERP_FILE              32772
-#define ID_IMPORT_ANGLE_DWG             32773
-#define ID_IMPORT_PLATE_DWG             32774
+#define ID_IMPORT_DWG_FILE              32773
 #define ID_PROJECT_PROPERTY             32775
 #define ID_IMPORT_BOM_FILE              32776
-#define ID_COMPARE_DATA                 32777
+#define ID_COMPARE_DATA	                32777
 #define ID_EXPORT_COMPARE_RESULT        32778
 #define ID_REFRESH_PART_NUM             32779
 #define ID_EXPORT_PROJECT               32780

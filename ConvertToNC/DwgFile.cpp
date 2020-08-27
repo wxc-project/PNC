@@ -689,39 +689,11 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 //CDwgFileInfo
 CDwgFileInfo::CDwgFileInfo()
 {
-	m_bJgDwgFile=FALSE;
+	m_pProject = NULL;
 }
 CDwgFileInfo::~CDwgFileInfo()
 {
 
-}
-BOOL CDwgFileInfo::IsJgDwgInfo()
-{ 
-	return (m_bJgDwgFile || m_hashJgInfo.GetNodeNum()>0); 
-}
-BOOL CDwgFileInfo::IsPlateDwgInfo()
-{
-	return (!m_bJgDwgFile || m_xPncMode.GetPlateNum()>0);
-}
-//初始化DWG文件信息
-BOOL CDwgFileInfo::ExtractDwgInfo(const char* sFileName,BOOL bJgDxf,BOOL bExtractPart)
-{
-	if(strlen(sFileName)<=0)
-		return FALSE;
-	CXhChar100 sName;
-	_splitpath(sFileName, NULL, NULL, sName, NULL);
-	m_bJgDwgFile=bJgDxf;
-	m_sFileName.Copy(sFileName);
-	m_sDwgName.Copy(sName);
-	if (bExtractPart)
-	{
-		if (m_bJgDwgFile)
-			return RetrieveAngles();
-		else
-			return RetrievePlates();
-	}
-	else
-		return TRUE;
 }
 BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
 {
@@ -729,9 +701,7 @@ BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
 	m_xPrintBomFile.m_sFileName.Copy(sFileName);
 	return m_xPrintBomFile.ImportExcelFile(&g_xBomCfg.m_xPrintTblCfg);
 }
-//////////////////////////////////////////////////////////////////////////
 //钢板DWG操作
-//////////////////////////////////////////////////////////////////////////
 //根据数据点坐标查找对应的钢板
 CPlateProcessInfo* CDwgFileInfo::FindPlateByPt(f3dPoint text_pos)
 {
@@ -811,12 +781,28 @@ int CDwgFileInfo::GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet)
 BOOL CDwgFileInfo::RetrievePlates(BOOL bSupportSelectEnts /*= FALSE*/)
 {
 	CPNCModel::m_bSendCommand = TRUE;
-	SmartExtractPlate(&m_xPncMode, bSupportSelectEnts);
+	if (bSupportSelectEnts)
+	{	//提取用户选择的图元
+		CPNCModel tempMode;
+		SmartExtractPlate(&tempMode, TRUE);
+		//数据拷贝
+		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
+		for (pSrcPlate = tempMode.EnumFirstPlate(FALSE); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate(FALSE))
+		{
+			pDestPlate = m_xPncMode.GetPlateInfo(pSrcPlate->GetPartNo());
+			if (pDestPlate == NULL)
+				pDestPlate = m_xPncMode.AppendPlate(pSrcPlate->GetPartNo());
+			pDestPlate->CopyAttributes(pSrcPlate);
+		}
+	}
+	else
+	{	//提取所有图元
+		m_xPncMode.Empty();
+		SmartExtractPlate(&m_xPncMode);
+	}
 	return TRUE;
 }
-//////////////////////////////////////////////////////////////////////////
 //角钢DWG文件操作
-//////////////////////////////////////////////////////////////////////////
 //根据数据点坐标查找所对应角钢
 CAngleProcessInfo* CDwgFileInfo::FindAngleByPt(f3dPoint data_pos)
 {

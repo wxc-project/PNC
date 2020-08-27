@@ -54,7 +54,7 @@ void CProjectTowerType::ReadProjectFile(CString sFilePath)
 		int ibValue=0;
 		file.ReadString(sValue);
 		file.Read(&ibValue,sizeof(int));
-		AppendDwgBomInfo(sValue,ibValue,g_xUbomModel.m_bExtractAnglesWhenOpenFile||g_xUbomModel.m_bExtractPltesWhenOpenFile);
+		AppendDwgBomInfo(sValue);
 	}
 }
 //导出料单工程文件
@@ -73,42 +73,12 @@ void CProjectTowerType::WriteProjectFile(CString sFilePath)
 	{
 		file.WriteString(pDwgInfo->m_sFileName);
 		int ibValue=0;
-		if(pDwgInfo->IsJgDwgInfo())
-			ibValue=1;
+		if (pDwgInfo->GetAngleNum() > 0 && pDwgInfo->GetPlateNum() <= 0)
+			ibValue = 1;
+		else if (pDwgInfo->GetAngleNum() > 0 && pDwgInfo->GetPlateNum() > 0)
+			ibValue = 2;
 		file.Write(&ibValue,sizeof(int));
 	}
-}
-BOOL CProjectTowerType::IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
-{
-	if (g_xBomCfg.IsTmaBomFile(sFilePath, bDisplayMsgBox))
-		return TRUE;
-	else if (g_xUbomModel.m_uiCustomizeSerial == ID_AnHui_HongYuan)
-	{	//安徽宏源料单文件中含有关键字
-		char sFileName[MAX_PATH] = "";
-		_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
-		if (strstr(sFileName, "TMA") || strstr(sFileName, "tma"))
-			return TRUE;
-		else
-			return FALSE;
-	}
-	else
-		return FALSE;
-}
-BOOL CProjectTowerType::IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= FALSE*/)
-{
-	if (g_xBomCfg.IsErpBomFile(sFilePath, bDisplayMsgBox))
-		return TRUE;
-	else if (g_xUbomModel.m_uiCustomizeSerial == ID_AnHui_HongYuan)
-	{
-		char sFileName[MAX_PATH] = "";
-		_splitpath(sFilePath, NULL, NULL, sFileName, NULL);
-		if (strstr(sFileName, "ERP") || strstr(sFileName, "erp"))
-			return TRUE;	//安徽宏源料单文件中含有关键字
-		else
-			return FALSE;
-	}
-	else
-		return FALSE;
 }
 //初始化BOM信息
 void CProjectTowerType::InitBomInfo(const char* sFileName,BOOL bLoftBom)
@@ -131,10 +101,10 @@ void CProjectTowerType::InitBomInfo(const char* sFileName,BOOL bLoftBom)
 	}
 }
 //添加角钢DWGBOM信息
-CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJgDxf, BOOL bExtractPart)
+CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName)
 {
 	if (strlen(sFileName) <= 0)
-		return FALSE;
+		return NULL;
 	//打开DWG文件
 	CXhChar500 file_path;
 	AcApDocument *pDoc = NULL;
@@ -150,36 +120,31 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName, BOOL bJ
 		if (strstr(file_path, sFileName))
 			break;
 	}
+	Acad::ErrorStatus eStatue;
 	if (strstr(file_path, sFileName))	//激活指定文件
-		acDocManager->activateDocument(pDoc);
+		eStatue = acDocManager->activateDocument(pDoc);
 	else
 	{		//打开指定文件
 #ifdef _ARX_2007
-		acDocManager->appContextOpenDocument(_bstr_t(sFileName));
+		eStatue = acDocManager->appContextOpenDocument(_bstr_t(sFileName));
 #else
-		acDocManager->appContextOpenDocument((const char*)sFileName);
+		eStatue = acDocManager->appContextOpenDocument((const char*)sFileName);
 #endif
 	}
+	if (eStatue != Acad::eOk)
+		return NULL;
 	//读取DWG文件信息
-	//CWaitCursor wait;
 	CDwgFileInfo* pDwgFile = FindDwgBomInfo(sFileName);
-	if (pDwgFile)
+	if (pDwgFile == NULL)
 	{
-		pDwgFile->ExtractDwgInfo(sFileName, bJgDxf, bExtractPart);
-		return pDwgFile;
-	}
-	else
-	{
+		CXhChar100 sName;
+		_splitpath(sFileName, NULL, NULL, sName, NULL);
 		pDwgFile = dwgFileList.append();
 		pDwgFile->SetBelongModel(this);
-		if(pDwgFile->ExtractDwgInfo(sFileName, bJgDxf, bExtractPart))
-			return pDwgFile;
-		else
-		{
-			dwgFileList.DeleteCursor(TRUE);
-			return NULL;
-		}
+		pDwgFile->m_sFileName.Copy(sFileName);
+		pDwgFile->m_sDwgName.Copy(sName);
 	}
+	return pDwgFile;
 }
 //
 CDwgFileInfo* CProjectTowerType::FindDwgBomInfo(const char* sFileName)
@@ -240,8 +205,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 		//加工数
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_MANU_NUM) &&
 			pSrcPart->feature1 != pDesPart->feature1)
-			if (g_xUbomModel.m_uiCustomizeSerial != ID_AnHui_HongYuan)
-				hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
+			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
 		//总重
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_MANU_WEIGHT) &&
 			fabs(pSrcPart->fSumWeight - pDesPart->fSumWeight) > 0)
@@ -312,10 +276,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 		//加工数
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::T_MANU_NUM) &&
 			pSrcPart->feature1 != pDesPart->feature1)
-		{	//安徽宏源不比较加工数，但需要修正加工数
-			if (g_xUbomModel.m_uiCustomizeSerial != ID_AnHui_HongYuan)
-				hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
-		}
+			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
 		//总重
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::T_MANU_WEIGHT) &&
 			fabs(pSrcPart->fSumWeight - pDesPart->fSumWeight) > 0)
@@ -386,23 +347,28 @@ int CProjectTowerType::CompareOrgAndLoftParts()
 	else
 		return 1;
 }
-//进行角钢DWG文件的漏号检测
-int CProjectTowerType::CompareLoftAndAngleDwgs()
+//进行漏号检测
+int CProjectTowerType::CompareLoftAndPartDwgs()
 {
 	m_hashCompareResultByPartNo.Empty();
-	CHashStrList<BOOL> hashAngleByPartNo;
-	for(CDwgFileInfo* pJgDwg=dwgFileList.GetFirst();pJgDwg;pJgDwg=dwgFileList.GetNext())
+	CHashStrList<BOOL> hashPartByPartNo;
+	for(CDwgFileInfo* pDwgFile =dwgFileList.GetFirst(); pDwgFile; pDwgFile =dwgFileList.GetNext())
 	{
-		if(!pJgDwg->IsJgDwgInfo())
-			continue;
-		for(CAngleProcessInfo* pJgInfo=pJgDwg->EnumFirstJg();pJgInfo;pJgInfo=pJgDwg->EnumNextJg())
-			hashAngleByPartNo.SetValue(pJgInfo->m_xAngle.sPartNo,TRUE);
+		if (pDwgFile->GetAngleNum() > 0)
+		{
+			for (CAngleProcessInfo* pJgInfo = pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = pDwgFile->EnumNextJg())
+				hashPartByPartNo.SetValue(pJgInfo->m_xAngle.sPartNo, TRUE);
+		}
+
+		if (pDwgFile->GetPlateNum() > 0)
+		{
+			for (CPlateProcessInfo* pPlateInfo = pDwgFile->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwgFile->EnumNextPlate())
+				hashPartByPartNo.SetValue(pPlateInfo->xPlate.GetPartNo(), TRUE);
+		}
 	}
-	for(BOMPART *pPart=m_xLoftBom.EnumFirstPart();pPart;pPart=m_xLoftBom.EnumNextPart())
+	for (BOMPART *pPart = m_xLoftBom.EnumFirstPart(); pPart; pPart = m_xLoftBom.EnumNextPart())
 	{
-		if(pPart->cPartType!=BOMPART::ANGLE)
-			continue;
-		if(hashAngleByPartNo.GetValue(pPart->sPartNo))
+		if (hashPartByPartNo.GetValue(pPart->sPartNo))
 			continue;
 		COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pPart->sPartNo);
 		pResult->pOrgPart=NULL;
@@ -410,44 +376,14 @@ int CProjectTowerType::CompareLoftAndAngleDwgs()
 	}
 	if(m_hashCompareResultByPartNo.GetNodeNum()==0)
 	{
-		AfxMessageBox("已打开角钢DWG文件没有漏号情况!");
-		return 0;
-	}
-	else
-		return 1;
-}
-//进行钢板DWG文件的漏号检测
-int CProjectTowerType::CompareLoftAndPlateDwgs()
-{
-	m_hashCompareResultByPartNo.Empty();
-	CHashStrList<BOOL> hashPlateByPartNo;
-	for(CDwgFileInfo* pPlateDwg=dwgFileList.GetFirst();pPlateDwg;pPlateDwg=dwgFileList.GetNext())
-	{
-		if(!pPlateDwg->IsPlateDwgInfo())
-			continue;
-		for(CPlateProcessInfo* pPlateInfo=pPlateDwg->EnumFirstPlate();pPlateInfo;pPlateInfo=pPlateDwg->EnumNextPlate())
-			hashPlateByPartNo.SetValue(pPlateInfo->xPlate.GetPartNo(),TRUE);
-	}
-	for(BOMPART *pPart=m_xLoftBom.EnumFirstPart();pPart;pPart=m_xLoftBom.EnumNextPart())
-	{
-		if(pPart->cPartType!=BOMPART::PLATE)
-			continue;
-		if(hashPlateByPartNo.GetValue(pPart->sPartNo))
-			continue;
-		COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pPart->sPartNo);
-		pResult->pOrgPart=NULL;
-		pResult->pLoftPart=pPart;
-	}
-	if(m_hashCompareResultByPartNo.GetNodeNum()==0)
-	{
-		AfxMessageBox("已打开钢板DWG文件没有漏号情况!");
+		AfxMessageBox("已打开DWG文件没有漏号情况!");
 		return 0;
 	}
 	else
 		return 1;
 }
 //
-int CProjectTowerType::CompareLoftAndAngleDwg(const char* sFileName)
+int CProjectTowerType::CompareLoftAndPartDwg(const char* sFileName)
 {
 	const double COMPARE_EPS = 0.5;
 	if (m_xLoftBom.GetPartNum() <= 0)
@@ -464,107 +400,63 @@ int CProjectTowerType::CompareLoftAndAngleDwg(const char* sFileName)
 	//进行比对
 	m_hashCompareResultByPartNo.Empty();
 	CHashStrList<BOOL> hashBoolByPropName;
-	CAngleProcessInfo* pJgInfo = NULL;
-	for (pJgInfo = pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = pDwgFile->EnumNextJg())
+	if (pDwgFile->GetAngleNum() > 0)
 	{
-		BOMPART *pDwgJg = &pJgInfo->m_xAngle;
-		BOMPART *pLoftJg=m_xLoftBom.FindPart(pJgInfo->m_xAngle.sPartNo);
-		if(pLoftJg==NULL)
-		{	//1、存在DWG构件，不存在放样构件
-			COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pJgInfo->m_xAngle.sPartNo);
-			pResult->pOrgPart = pDwgJg;
-			pResult->pLoftPart = NULL;
-		}
-		else
-		{	//2、对比同一件号构件属性
-			CompareData(pLoftJg, pDwgJg, hashBoolByPropName);
-			if(hashBoolByPropName.GetNodeNum()>0)//结点数量
-			{	
-				COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pDwgJg->sPartNo);
-				pResult->pOrgPart= pDwgJg;
-				pResult->pLoftPart=pLoftJg;
-				for(BOOL *pValue=hashBoolByPropName.GetFirst();pValue;pValue=hashBoolByPropName.GetNext())
-					pResult->hashBoolByPropName.SetValue(hashBoolByPropName.GetCursorKey(),*pValue);
+		for (CAngleProcessInfo* pJgInfo = pDwgFile->EnumFirstJg(); pJgInfo; 
+			pJgInfo = pDwgFile->EnumNextJg())
+		{
+			BOMPART *pDwgJg = &pJgInfo->m_xAngle;
+			BOMPART *pLoftJg = m_xLoftBom.FindPart(pJgInfo->m_xAngle.sPartNo);
+			if (pLoftJg == NULL)
+			{	//1、存在DWG构件，不存在放样构件
+				COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pJgInfo->m_xAngle.sPartNo);
+				pResult->pOrgPart = pDwgJg;
+				pResult->pLoftPart = NULL;
+			}
+			else
+			{	//2、对比同一件号构件属性
+				CompareData(pLoftJg, pDwgJg, hashBoolByPropName);
+				if (hashBoolByPropName.GetNodeNum() > 0)//结点数量
+				{
+					COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pDwgJg->sPartNo);
+					pResult->pOrgPart = pDwgJg;
+					pResult->pLoftPart = pLoftJg;
+					for (BOOL *pValue = hashBoolByPropName.GetFirst(); pValue; pValue = hashBoolByPropName.GetNext())
+						pResult->hashBoolByPropName.SetValue(hashBoolByPropName.GetCursorKey(), *pValue);
+				}
 			}
 		}
 	}
-	//单张DWG进行校审时，不进行漏号检测
-	//for (BOMPART *pPart = m_xLoftBom.EnumFirstPart(); pPart; pPart = m_xLoftBom.EnumNextPart())
-	//{
-	//	if (pPart->cPartType!=BOMPART::ANGLE)
-	//		continue;
-	//	if (pDwgFile->FindAngleByPartNo(pPart->sPartNo))
-	//		continue;
-	//	//3、存在BOM构件，不存在DWG构件
-	//	COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pPart->sPartNo);
-	//	pResult->pOrgPart = NULL;
-	//	pResult->pLoftPart = pPart;
-	//}
-	if(m_hashCompareResultByPartNo.GetNodeNum()==0)
+	if (pDwgFile->GetPlateNum() > 0)
+	{
+		for (CPlateProcessInfo* pPlateInfo = pDwgFile->EnumFirstPlate(); pPlateInfo; 
+			pPlateInfo = pDwgFile->EnumNextPlate())
+		{
+			PART_PLATE* pDwgPlate = &(pPlateInfo->xBomPlate);
+			BOMPART *pLoftPlate = m_xLoftBom.FindPart(pDwgPlate->sPartNo);
+			if (pLoftPlate == NULL)
+			{	//1、存在DWG构件，不存在放样构件
+				COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pDwgPlate->sPartNo);
+				pResult->pOrgPart = pDwgPlate;
+				pResult->pLoftPart = NULL;
+			}
+			else
+			{	//2、对比同一件号构件属性
+				CompareData(pLoftPlate, pDwgPlate, hashBoolByPropName);
+				if (hashBoolByPropName.GetNodeNum() > 0)//结点数量
+				{
+					COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pDwgPlate->sPartNo);
+					pResult->pOrgPart = pDwgPlate;
+					pResult->pLoftPart = pLoftPlate;
+					for (BOOL *pValue = hashBoolByPropName.GetFirst(); pValue; pValue = hashBoolByPropName.GetNext())
+						pResult->hashBoolByPropName.SetValue(hashBoolByPropName.GetCursorKey(), *pValue);
+				}
+			}
+		}
+	}
+	if (m_hashCompareResultByPartNo.GetNodeNum() == 0)
 	{
 		AfxMessageBox("BOM角钢信息和DWG角钢信息相同!");
-		return 0;
-	}
-	else
-		return 1;
-}
-//
-int CProjectTowerType::CompareLoftAndPlateDwg(const char* sFileName)
-{
-	const double COMPARE_EPS=0.5;
-	if(m_xLoftBom.GetPartNum()<=0)
-	{
-		AfxMessageBox("缺少BOM信息!");
-		return 2;
-	}
-	CDwgFileInfo* pDwgFile=FindDwgBomInfo(sFileName);
-	if(pDwgFile==NULL)
-	{
-		AfxMessageBox("未找到指定的钢板DWG文件!");
-		return 2;
-	}
-	//进行数据比对
-	m_hashCompareResultByPartNo.Empty();
-	CHashStrList<BOOL> hashBoolByPropName;
-	CPlateProcessInfo* pPlateInfo = NULL;
-	for (pPlateInfo = pDwgFile->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwgFile->EnumNextPlate())
-	{
-		PART_PLATE* pDwgPlate = &(pPlateInfo->xBomPlate);
-		BOMPART *pLoftPlate=m_xLoftBom.FindPart(pDwgPlate->sPartNo);
-		if(pLoftPlate==NULL)
-		{	//1、存在DWG构件，不存在放样构件
-			COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pDwgPlate->sPartNo);
-			pResult->pOrgPart = pDwgPlate;
-			pResult->pLoftPart = NULL;
-		}
-		else
-		{	//2、对比同一件号构件属性
-			CompareData(pLoftPlate, pDwgPlate, hashBoolByPropName);
-			if(hashBoolByPropName.GetNodeNum()>0)//结点数量
-			{	
-				COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pDwgPlate->sPartNo);
-				pResult->pOrgPart = pDwgPlate;
-				pResult->pLoftPart = pLoftPlate;
-				for(BOOL *pValue=hashBoolByPropName.GetFirst();pValue;pValue=hashBoolByPropName.GetNext())
-					pResult->hashBoolByPropName.SetValue(hashBoolByPropName.GetCursorKey(),*pValue);
-			}
-		}
-	}
-	//单张DWG进行校审时，不需要显示漏号件
-	//for (BOMPART *pPart = m_xLoftBom.EnumFirstPart(); pPart; pPart = m_xLoftBom.EnumNextPart())
-	//{
-	//	if (pPart->cPartType != BOMPART::PLATE)
-	//		continue;
-	//	if(pDwgFile->FindPlateByPartNo(pPart->sPartNo))
-	//		continue;
-	//	//3、存在BOM构件，不存在DWG构件
-	//	COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pPart->sPartNo);
-	//	pResult->pOrgPart = NULL;
-	//	pResult->pLoftPart = pPart;
-	//}
-	if(m_hashCompareResultByPartNo.GetNodeNum()==0)
-	{
-		AfxMessageBox("BOM钢板信息和DWG钢板信息相同!");
 		return 0;
 	}
 	else
@@ -595,15 +487,6 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 		{
 			if(g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_NOTES))
 				continue;	//备注不显示
-			if(iCompareType== COMPARE_PLATE_DWG &&(
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_CUT_ANGLE)||
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_PUSH_FLAT)||
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_CUT_BER)||
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_CUT_ROOT)||
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_KAI_JIAO)||
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_HE_JIAO)||
-				g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_FOO_NAIL)))
-				continue;	//钢板不显示角钢工艺
 			str_arr.Add(g_xBomCfg.GetTitleName(i));
 		}
 		str_arr.Add("数据来源");
@@ -797,10 +680,7 @@ void CProjectTowerType::AddDwgLackPartSheet(LPDISPATCH pSheet, int iCompareType)
 	_Worksheet excel_sheet;
 	excel_sheet.AttachDispatch(pSheet,FALSE);
 	excel_sheet.Select();
-	if (iCompareType == COMPARE_ANGLE_DWGS)
-		excel_sheet.SetName("角钢DWG缺少构件");
-	else
-		excel_sheet.SetName("钢板DWG缺少构件");
+	excel_sheet.SetName("DWG缺少构件");
 	//设置标题
 	CStringArray str_arr;
 	str_arr.SetSize(6);
@@ -836,9 +716,9 @@ void CProjectTowerType::AddDwgLackPartSheet(LPDISPATCH pSheet, int iCompareType)
 void CProjectTowerType::ExportCompareResult(int iCompareType)
 {
 	int nSheet = 3;
-	if (iCompareType == COMPARE_ANGLE_DWGS || iCompareType == COMPARE_PLATE_DWGS)
+	if (iCompareType == COMPARE_ALL_DWGS)
 		nSheet = 1;
-	if (iCompareType == COMPARE_ANGLE_DWG || iCompareType == COMPARE_PLATE_DWG)
+	if (iCompareType == COMPARE_DWG_FILE)
 		nSheet = 2;
 	LPDISPATCH pWorksheets=CExcelOper::CreateExcelWorksheets(nSheet);
 	ASSERT(pWorksheets!= NULL);
@@ -984,7 +864,7 @@ CPlateProcessInfo *CProjectTowerType::FindPlateInfoByPartNo(const char* sPartNo)
 	CPlateProcessInfo *pPlateInfo = NULL;
 	for (CDwgFileInfo *pDwgFile = dwgFileList.GetFirst(); pDwgFile; pDwgFile = dwgFileList.GetNext())
 	{
-		if (!pDwgFile->IsPlateDwgInfo())
+		if (pDwgFile->GetPlateNum() <= 0)
 			continue;
 		pPlateInfo=pDwgFile->FindPlateByPartNo(sPartNo);
 		if (pPlateInfo)
@@ -997,7 +877,7 @@ CAngleProcessInfo *CProjectTowerType::FindAngleInfoByPartNo(const char* sPartNo)
 	CAngleProcessInfo *pAngleInfo = NULL;
 	for (CDwgFileInfo *pDwgFile = dwgFileList.GetFirst(); pDwgFile; pDwgFile = dwgFileList.GetNext())
 	{
-		if (!pDwgFile->IsJgDwgInfo())
+		if (pDwgFile->GetAngleNum() <= 0)
 			continue;
 		pAngleInfo = pDwgFile->FindAngleByPartNo(sPartNo);
 		if (pAngleInfo)
@@ -1020,6 +900,7 @@ CBomModel::CBomModel(void)
 	m_sJgCadName.Empty();
 	m_sJgCadPartLabel.Empty();
 	m_sJgCardBlockName.Empty();
+	m_ciPrintSortType = 0;
 	//
 	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
 	pProject->m_sProjName.Copy("新建工程");
@@ -1174,102 +1055,104 @@ void ImportUbomConfigFile()
 		return;
 	g_pncSysPara.hashBoltDList.Empty();
 	g_pncSysPara.m_recogSchemaList.Empty();
-	char line_txt[MAX_PATH] = "", sText[MAX_PATH] = "", key_word[100] = "";
+	char line_txt[MAX_PATH] = "";
 	while (!feof(fp))
 	{
 		if (fgets(line_txt, MAX_PATH, fp) == NULL)
 			break;
-		strcpy(sText, line_txt);
 		CString sLine(line_txt);
-		sLine.Replace('=', ' ');
-		sLine.Replace('\n', ' ');
+		sLine.Remove('\n');
+		sLine.Remove('\t');
 		sprintf(line_txt, "%s", sLine);
-		char *skey = strtok((char*)sText, "=,;");
-		strncpy(key_word, skey, 100);
+		char *skey = strtok(line_txt, "=");
+		CString key_word(skey);
+		key_word.Remove(' ');
 		if (_stricmp(key_word, "CLIENT_ID") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			g_xUbomModel.m_uiCustomizeSerial = atoi(skey);
 		}
 		else if (_stricmp(key_word, "CLIENT_NAME") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			g_xUbomModel.m_sCustomizeName.Copy(skey);
 		}
 		else if (_stricmp(key_word, "FUNC_FLAG") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			sscanf(skey, "%X", &g_xUbomModel.m_dwFunctionFlag);
 		}
 		else if (_stricmp(key_word, "ExeRppWhenArxLoad") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 				g_xUbomModel.m_bExeRppWhenArxLoad = atoi(skey);
 		}
 		else if (_stricmp(key_word, "AutoExtractPlates") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 				g_xUbomModel.m_bExtractPltesWhenOpenFile = atoi(skey);
 		}
 		else if (_stricmp(key_word, "AutoExtractAngles") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 				g_xUbomModel.m_bExtractAnglesWhenOpenFile = atoi(skey);
 		}
 		else if (_stricmp(key_word, "NOT_PRINT") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if(skey!=NULL)
 				g_xUbomModel.m_sNotPrintFilter.Copy(skey);
 		}
+		else if (_stricmp(key_word, "PrintSortType") == 0)
+		{
+			skey = strtok(NULL, ";");
+			if (skey != NULL)
+				g_xUbomModel.m_ciPrintSortType = atoi(skey);
+		}
 		else if (_stricmp(key_word, "MaxLenErr") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			g_xUbomModel.m_fMaxLenErr = atof(skey);
 		}
 		else if (_stricmp(key_word, "JG_CARD") == 0)
 		{
-			sscanf(line_txt, "%s%s", key_word, (char*)g_xUbomModel.m_sJgCadName);
-			g_xUbomModel.m_sJgCadName.Replace(" ", "");
-			g_xUbomModel.m_sJgCadName.Replace("\n", "");
+			skey = strtok(NULL, ";");
+			g_xUbomModel.m_sJgCadName.Copy(skey);
+			g_xUbomModel.m_sJgCadName.Remove(' ');
 		}
 		else if (_stricmp(key_word, "JgCadPartLabel") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL && strlen(skey) > 1)
 			{
-				sprintf(g_xUbomModel.m_sJgCadPartLabel, "%s", skey);
-				g_xUbomModel.m_sJgCadPartLabel.Replace(" ", "");
-				g_xUbomModel.m_sJgCadPartLabel.Replace("\n", "");
+				g_xUbomModel.m_sJgCadPartLabel.Copy(skey);
+				g_xUbomModel.m_sJgCadPartLabel.Remove(' ');
 			}
 		}
 		else if (_stricmp(key_word, "JgCardBlockName") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL && strlen(skey) > 1)
 			{
-				sprintf(g_xUbomModel.m_sJgCardBlockName, "%s", skey);
-				g_xUbomModel.m_sJgCardBlockName.Replace(" ", "");
-				g_xUbomModel.m_sJgCardBlockName.Replace("\n", "");
+				g_xUbomModel.m_sJgCardBlockName.Copy(skey);
+				g_xUbomModel.m_sJgCardBlockName.Remove(' ');
 			}
 		}
 		else if (_stricmp(key_word, "PlateRecogMode") == 0)
 		{	
-			int nValue = 0;
-			sscanf(line_txt, "%s%d", key_word, &nValue);
-			g_pncSysPara.m_ciRecogMode = nValue;
+			skey = strtok(NULL, ";");
+			g_pncSysPara.m_ciRecogMode = atoi(skey);
 		}
 		else if (_stricmp(key_word, "PlateDimStyle") == 0)
 		{
-			skey = strtok(NULL, ",;");
+			skey = strtok(NULL, ";");
 			if (strlen(skey) > 0)
 			{
 				RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.append();
 				pSchema->m_iDimStyle = atoi(skey);
-				skey = strtok(line_txt, ";");
 				skey = strtok(NULL, ";");
 				pSchema->m_sSchemaName = skey;
 				pSchema->m_sSchemaName.Replace(" ", "");
@@ -1305,7 +1188,7 @@ void ImportUbomConfigFile()
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xPrintTblCfg.m_xTblCfg);
 		else if (_stricmp(key_word, "TMABomFileKeyStr") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_xTmaTblCfg.m_sFileTypeKeyStr.Copy(skey);
@@ -1314,7 +1197,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "ERPBomFileKeyStr") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_xErpTblCfg.m_sFileTypeKeyStr.Copy(skey);
@@ -1323,7 +1206,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "PrintBomFileKeyStr") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_xPrintTblCfg.m_sFileTypeKeyStr.Copy(skey);
@@ -1332,7 +1215,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "TMABomSheetName") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_xTmaTblCfg.m_sBomSheetName.Copy(skey);
@@ -1341,7 +1224,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "ERPBomSheetName") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_xErpTblCfg.m_sBomSheetName.Copy(skey);
@@ -1350,7 +1233,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "JGPrintSheetName") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_xPrintTblCfg.m_sBomSheetName.Copy(skey);
@@ -1359,7 +1242,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "ANGLE_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sAngleCompareItemArr.Copy(skey);
@@ -1368,7 +1251,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "PLATE_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sPlateCompareItemArr.Copy(skey);
@@ -1377,7 +1260,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "ZHIWAN_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_ZHI_WAN].Copy(skey);
@@ -1386,7 +1269,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "CUT_ANGLE_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_CUT_ANGLE].Copy(skey);
@@ -1395,7 +1278,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "CUT_ROOT_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_CUT_ROOT].Copy(skey);
@@ -1404,7 +1287,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "CUT_BER_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_CUT_BER].Copy(skey);
@@ -1413,7 +1296,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "PUSH_FLAT_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_PUSH_FLAT].Copy(skey);
@@ -1422,7 +1305,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "KAI_JIAO_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_KAI_JIAO].Copy(skey);
@@ -1431,7 +1314,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "HE_JIAO_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_HE_JIAO].Copy(skey);
@@ -1440,7 +1323,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "FOO_NAIL_ITEM") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessDescArr[CBomConfig::TYPE_FOO_NAIL].Copy(skey);
@@ -1449,7 +1332,7 @@ void ImportUbomConfigFile()
 		}
 		else if (_stricmp(key_word, "ProcessFlag") == 0)
 		{
-			skey = strtok(NULL, "=,;");
+			skey = strtok(NULL, ";");
 			if (skey != NULL)
 			{
 				g_xBomCfg.m_sProcessFlag.Copy(skey);
@@ -1502,6 +1385,7 @@ void ExportUbomConfigFile()
 	fprintf(fp, "AutoExtractAngles=%d ;\n", g_xUbomModel.m_bExtractAnglesWhenOpenFile);
 	fprintf(fp, "MaxLenErr=%.1f ;\n", g_xUbomModel.m_fMaxLenErr);
 	fprintf(fp, "NOT_PRINT=%s ;\n", (char*)g_xUbomModel.m_sNotPrintFilter);
+	fprintf(fp, "PrintSortType=%s ;\n", (char*)g_xUbomModel.m_ciPrintSortType);
 	fprintf(fp, "**DWG识别设置\n");
 	fprintf(fp, "JG_CARD=%s ;\n", (char*)g_xUbomModel.m_sJgCadName);
 	fprintf(fp, "JgCadPartLabel=%s ;\n", (char*)g_xUbomModel.m_sJgCadPartLabel);

@@ -15,6 +15,12 @@
 
 typedef CAngleProcessInfo* AngleInfoPtr;
 typedef BOMPART* PART_PTR;
+static int CompareBomPartPtrFuncByPartNo(const PART_PTR& partPtr1, const PART_PTR& partPtr2)
+{
+	CXhChar16 sPartNo1 = partPtr1->sPartNo;
+	CXhChar16 sPartNo2 = partPtr2->sPartNo;
+	return ComparePartNoString(sPartNo1, sPartNo2, "SHhGPT");
+}
 static int CompareBomPartPtrFunc(const PART_PTR& partPtr1, const PART_PTR& partPtr2, BOOL bAscending)
 {
 	int nRetCode = 0;
@@ -111,24 +117,6 @@ static int CompareBomPartPtrFunc3(const PART_PTR& partPtr1, const PART_PTR& part
 	}
 	return CompareBomPartPtrFunc(partPtr1, partPtr2, FALSE);
 }
-
-static int CompareJgPtrFun(const AngleInfoPtr& jginfo1, const AngleInfoPtr& jginfo2)
-{
-	//首先根据材料名称进行排序
-	if (jginfo1->m_ciType > jginfo2->m_ciType)
-		return 1;
-	else if (jginfo1->m_ciType < jginfo2->m_ciType)
-		return -1;
-	//根据规格排序(从大到小)
-	return CompareBomPartPtrFunc(&jginfo1->m_xAngle, &jginfo2->m_xAngle,FALSE);
-}
-
-typedef CPlateProcessInfo* PlateInfoPtr;
-static int ComparePlatePtrFun(const PlateInfoPtr& platePtr1, const PlateInfoPtr& platePtr2)
-{	//根据规格排序(从大到小)
-	return CompareBomPartPtrFunc(&platePtr1->xBomPlate, &platePtr2->xBomPlate,FALSE);
-}
-
 //解析宽度,厚度字符串
 DWORD GetJgInfoHashTblByStr(const char* sValueStr,CHashList<int> &infoHashTbl)
 {
@@ -169,15 +157,10 @@ static BOOL FireItemChanged(CSuperGridCtrl* pListCtrl,CSuperGridCtrl::CTreeItem*
 static int FireCompareItem(const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem1,const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem2,DWORD lPara)
 {
 	COMPARE_FUNC_EXPARA* pExPara=(COMPARE_FUNC_EXPARA*)lPara;
-	int iSubItem=0;
-	BOOL bAscending=true;
-	if(pExPara)
-	{
-		iSubItem=pExPara->iSubItem;
-		bAscending=pExPara->bAscending;
-	}
-	CString sText1=pItem1->m_lpNodeInfo->GetSubItemText(iSubItem);
-	CString sText2=pItem2->m_lpNodeInfo->GetSubItemText(iSubItem);
+	if (pExPara == NULL)
+		return 0;
+	int iSubItem = pExPara->iSubItem;
+	BOOL bAscending= pExPara->bAscending;
 	int result=0;
 	if (iSubItem == 1 || iSubItem == 2)
 	{	//点击规格、材质列，按规格、材质、件号
@@ -187,30 +170,16 @@ static int FireCompareItem(const CSuperGridCtrl::CSuperGridCtrlItemPtr& pItem1,c
 		BOMPART *pBomPart2 = (BOMPART*)pItem2->m_idProp;
 		if (pBomPart1&&pBomPart2)
 		{	//按照材料名称-材质-规格的顺序进行排序
-			int ciPartType1 = pBomPart1->cPartType;
-			int ciPartType2 = pBomPart2->cPartType;
-			if (ciPartType1 > ciPartType2)
-				return 1;
-			else if (ciPartType1 < ciPartType2)
-				return -1;
-			else if (ciPartType1 == BOMPART::ANGLE)
-			{
-				AngleInfoPtr pAngleInfo1 = (CAngleProcessInfo*)pBomPart1->feature2;
-				AngleInfoPtr pAngleInfo2 = (CAngleProcessInfo*)pBomPart2->feature2;
-				if (pAngleInfo1&&pAngleInfo2)
-				{
-					if (pAngleInfo1->m_ciType > pAngleInfo2->m_ciType)
-						return 1;
-					else if (pAngleInfo1->m_ciType < pAngleInfo2->m_ciType)
-						return -1;
-				}
-			}
-			result = CompareBomPartPtrFunc(pBomPart1, pBomPart2, bAscending);
+			result = CompareBomPartPtrFunc3(pBomPart1, pBomPart2);
+			if (bAscending)
+				result *= -1;
 		}
 		
 	}
 	else if(iSubItem==3)
 	{	//按角钢排序
+		CString sText1 = pItem1->m_lpNodeInfo->GetSubItemText(iSubItem);
+		CString sText2 = pItem2->m_lpNodeInfo->GetSubItemText(iSubItem);
 		result=ComparePartNoString(sText1,sText2,"SHhPGT");
 		if(!bAscending)
 			result*=-1;
@@ -822,8 +791,10 @@ void COptimalSortDlg::UpdatePartList()
 			}
 		}
 		//按照材料名称-材质-规格的顺序进行排序
-		if (m_xDisplayPartList.GetSize() > 0)
+		if(g_xUbomModel.m_ciPrintSortType==0)
 			CQuickSort<BOMPART*>::QuickSort(m_xDisplayPartList.m_pData, m_xDisplayPartList.GetSize(), CompareBomPartPtrFunc3);
+		else
+			CQuickSort<BOMPART*>::QuickSort(m_xDisplayPartList.m_pData, m_xDisplayPartList.GetSize(), CompareBomPartPtrFuncByPartNo);
 	}
 }
 void COptimalSortDlg::OnUpdateJgInfo()
