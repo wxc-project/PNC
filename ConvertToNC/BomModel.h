@@ -148,7 +148,7 @@ public:
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
 	//校审操作
 	int CompareOrgAndLoftParts();
-	int CompareLoftAndPartDwgs();
+	int CompareLoftAndPartDwgs(BYTE ciTypeJ0_P1_A2=2);
 	int CompareLoftAndPartDwg(const char* sFileName);
 	void ExportCompareResult(int iCompare);
 	//校审结果操作
@@ -179,6 +179,7 @@ enum CLIENT_SERIAL {
 	ID_GuangDong_AnHeng = 17,	//广东安恒0x4C
 	ID_GuangDong_ChanTao = 18,	//广东禅涛0x4C
 	ID_ChongQing_JiangDian = 19,//重庆江电0x44
+	ID_QingDao_WuXiao = 20,		//青岛武晓0x44
 	ID_OTHER = 100,
 };
 class CBomModel

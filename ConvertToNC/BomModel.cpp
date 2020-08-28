@@ -348,7 +348,7 @@ int CProjectTowerType::CompareOrgAndLoftParts()
 		return 1;
 }
 //½øÐÐÂ©ºÅ¼ì²â
-int CProjectTowerType::CompareLoftAndPartDwgs()
+int CProjectTowerType::CompareLoftAndPartDwgs(BYTE ciTypeJ0_P1_A2 /*= 2*/)
 {
 	m_hashCompareResultByPartNo.Empty();
 	CHashStrList<BOOL> hashPartByPartNo;
@@ -359,7 +359,6 @@ int CProjectTowerType::CompareLoftAndPartDwgs()
 			for (CAngleProcessInfo* pJgInfo = pDwgFile->EnumFirstJg(); pJgInfo; pJgInfo = pDwgFile->EnumNextJg())
 				hashPartByPartNo.SetValue(pJgInfo->m_xAngle.sPartNo, TRUE);
 		}
-
 		if (pDwgFile->GetPlateNum() > 0)
 		{
 			for (CPlateProcessInfo* pPlateInfo = pDwgFile->EnumFirstPlate(); pPlateInfo; pPlateInfo = pDwgFile->EnumNextPlate())
@@ -368,6 +367,10 @@ int CProjectTowerType::CompareLoftAndPartDwgs()
 	}
 	for (BOMPART *pPart = m_xLoftBom.EnumFirstPart(); pPart; pPart = m_xLoftBom.EnumNextPart())
 	{
+		if (ciTypeJ0_P1_A2 == 0 && pPart->cPartType != BOMPART::ANGLE)
+			continue;	//½Ç¸ÖÂ©ºÅ¼ì²â
+		if (ciTypeJ0_P1_A2 == 1 && pPart->cPartType != BOMPART::PLATE)
+			continue;	//¸Ö°åÂ©ºÅ¼ì²â
 		if (hashPartByPartNo.GetValue(pPart->sPartNo))
 			continue;
 		COMPARE_PART_RESULT *pResult=m_hashCompareResultByPartNo.Add(pPart->sPartNo);

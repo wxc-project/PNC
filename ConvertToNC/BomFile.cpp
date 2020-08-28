@@ -4,6 +4,7 @@
 #include "SortFunc.h"
 #include "ComparePartNoString.h"
 #include "ProcessPart.h"
+#include "CadToolFunc.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -556,11 +557,17 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 {
 	if (m_sFileName.GetLength() <= 0 || pTblCfg == NULL)
 		return FALSE;
+	DisplayProgress(0, "读取Excel表格数据.....");
 	//1、打开指定文件
+	DisplayProgress(10);
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
+	{
+		DisplayProgress(100);
 		return FALSE;
+	}
 	//2、获取定制列信息
+	DisplayProgress(30);
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	pTblCfg->m_xTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = pTblCfg->m_xTblCfg.m_nStartRow - 1;
@@ -568,10 +575,12 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 	BOOL bReadOK = FALSE;
 	if (pTblCfg->m_sBomSheetName.GetLength() > 0)	
 	{	//配置文件中指定了sheet加载表单
+		DisplayProgress(50);
 		ARRAY_LIST<int> sheetIndexList;
 		CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, pTblCfg->m_sBomSheetName, sheetIndexList);
 		for (int *pSheetIndex = sheetIndexList.GetFirst(); pSheetIndex; pSheetIndex = sheetIndexList.GetNext())
 		{
+			DisplayProgress(70 + (*pSheetIndex));
 			CVariant2dArray sheetContentMap(1, 1);
 			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, *pSheetIndex, 52);
 			int iCurIndex = sheetIndexList.GetCurrentIndex();
@@ -594,6 +603,7 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 		int nSheetNum = excelobj.GetWorkSheetCount(), nValidSheetCount = 0;
 		for (int iSheet = 1; iSheet <= nSheetNum; iSheet++)
 		{
+			DisplayProgress(70 + iSheet);
 			CVariant2dArray sheetContentMap(1, 1);
 			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet);
 			if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
@@ -601,6 +611,7 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 		}
 		bReadOK = nValidSheetCount > 0 ? TRUE : FALSE;
 	}
+	DisplayProgress(100);
 	if (!bReadOK)
 		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
 	return bReadOK;
@@ -633,21 +644,22 @@ CString CBomFile::GetPartNumStr()
 //CBomImportCfg
 const char* CBomConfig::KEY_PN			= "PartNo";
 const char* CBomConfig::KEY_MAT			= "Material";
-const char* CBomConfig::KEY_SPEC			= "Spec";
+const char* CBomConfig::KEY_SPEC		= "Spec";
 const char* CBomConfig::KEY_LEN			= "Length";
-const char* CBomConfig::KEY_WIDE			= "Width";
+const char* CBomConfig::KEY_WIDE		= "Width";
 const char* CBomConfig::KEY_SING_N		= "SingNum";
 const char* CBomConfig::KEY_MANU_N		= "ManuNum";
+const char* CBomConfig::KEY_SING_W		= "SingWeight";
 const char* CBomConfig::KEY_MANU_W		= "SumWeight";
-const char* CBomConfig::KEY_WELD			= "Weld";
+const char* CBomConfig::KEY_WELD		= "Weld";
 const char* CBomConfig::KEY_ZHI_WAN		= "ZhiWan";
 const char* CBomConfig::KEY_CUT_ANGLE	= "CutAngle";
-const char* CBomConfig::KEY_CUT_ROOT		= "CutRoot";
+const char* CBomConfig::KEY_CUT_ROOT	= "CutRoot";
 const char* CBomConfig::KEY_CUT_BER		= "CutBer";
 const char* CBomConfig::KEY_PUSH_FLAT	= "PushFlat";
-const char* CBomConfig::KEY_KAI_JIAO		= "KaiJiao";
+const char* CBomConfig::KEY_KAI_JIAO	= "KaiJiao";
 const char* CBomConfig::KEY_HE_JIAO		= "HeJiao";
-const char* CBomConfig::KEY_FOO_NAIL		= "FootNail";
+const char* CBomConfig::KEY_FOO_NAIL	= "FootNail";
 const char* CBomConfig::KEY_NOTES		= "Notes";
 CBomConfig::CBomConfig(void)
 {
@@ -828,8 +840,10 @@ int CBomConfig::InitBomTitle()
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_SING_N, "单基数", 52));
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_MANU_NUM))
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_MANU_N, "加工数", 52));
+	if (hashColIndex.GetValue(CBomTblTitleCfg::T_SING_WEIGHT))
+		m_xBomTitleArr.push_back(BOM_TITLE(KEY_SING_W, "单重", 52));
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_MANU_WEIGHT))
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_MANU_W, "加工重量", 65));
+		m_xBomTitleArr.push_back(BOM_TITLE(KEY_MANU_W, "总重", 65));
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_WELD))
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_WELD, "焊接", 44));
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_ZHI_WAN))

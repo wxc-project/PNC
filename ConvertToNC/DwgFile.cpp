@@ -830,11 +830,14 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 {
 	if(m_hashJgInfo.GetNodeNum()<=0)
 		return;
+	int index = 1, nNum = m_hashJgInfo.GetNodeNum();
+	DisplayProgress(0, "更新角钢加工数.....");
 	CAngleProcessInfo* pJgInfo=NULL;
 	BOMPART* pBomJg=NULL;
 	BOOL bFinish=TRUE;
-	for(pJgInfo=EnumFirstJg();pJgInfo;pJgInfo=EnumNextJg())
+	for(pJgInfo=EnumFirstJg();pJgInfo;pJgInfo=EnumNextJg(),index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CXhChar16 sPartNo=pJgInfo->m_xAngle.sPartNo;
 		pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if(pBomJg ==NULL)
@@ -849,6 +852,7 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 			pJgInfo->RefreshAngleNum();
 		}
 	}
+	DisplayProgress(100);
 	if(bFinish)
 		AfxMessageBox("角钢加工数修改完毕!");
 }
@@ -857,11 +861,14 @@ void CDwgFileInfo::ModifyAngleDwgSingleNum()
 {
 	if (m_hashJgInfo.GetNodeNum() <= 0)
 		return;
+	int index = 1, nNum = m_hashJgInfo.GetNodeNum();
+	DisplayProgress(0, "更新角钢单基数.....");
 	CAngleProcessInfo* pJgInfo = NULL;
 	BOMPART* pBomJg = NULL;
 	BOOL bFinish = TRUE;
-	for (pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg())
+	for (pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg(),index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CXhChar16 sPartNo = pJgInfo->m_xAngle.sPartNo;
 		pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if (pBomJg == NULL)
@@ -873,6 +880,7 @@ void CDwgFileInfo::ModifyAngleDwgSingleNum()
 		pJgInfo->m_xAngle.SetPartNum(pBomJg->GetPartNum());	//单基数
 		pJgInfo->RefreshAngleSingleNum();
 	}
+	DisplayProgress(100);
 	if (bFinish)
 		AfxMessageBox("角钢单基数修改完毕!");
 }
@@ -907,9 +915,12 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 	CHashSet<AcDbObjectId> allEntIdSet;
 	SelCadEntSet(allEntIdSet, bSupportSelectEnts ? FALSE : TRUE);
 	//根据角钢工艺卡块识别角钢
+	int index = 1, nNum = allEntIdSet.GetNodeNum()*2;
+	DisplayProgress(0, "识别角钢工艺卡.....");
 	AcDbEntity *pEnt = NULL;
-	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext())
+	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext(), index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(entId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -945,8 +956,9 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 	}
 	//处理角钢工艺卡块打碎的情况：根据"件号"标题提取角钢信息
 	CHashSet<AcDbObjectId> textIdHash;
-	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext())
+	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext(), index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(entId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -976,14 +988,19 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 			pJgInfo->CreateRgn();
 		}
 	}
+	DisplayProgress(100);
 	if(m_hashJgInfo.GetNodeNum()<=0)
 	{	
 		logerr.Log("%s文件提取角钢失败",(char*)m_sFileName);
 		return FALSE;
 	}
 	//根据角钢数据位置获取角钢信息
-	for(AcDbObjectId objId=textIdHash.GetFirst();objId;objId=textIdHash.GetNext())
+	index = 1;
+	nNum = textIdHash.GetNodeNum();
+	DisplayProgress(0, "初始化角钢信息.....");
+	for(AcDbObjectId objId=textIdHash.GetFirst();objId;objId=textIdHash.GetNext(),index++)
 	{
+		DisplayProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -1003,6 +1020,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 				pJgInfo->singleNumId = objId;
 		}
 	}
+	DisplayProgress(100);
 	//对提取的角钢信息进行合理性检查
 	CHashStrList<BOOL> hashJgByPartNo;
 	for (CAngleProcessInfo* pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())

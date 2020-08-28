@@ -356,9 +356,15 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 
 		}
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_SING_W))
+		{	//单重
+			lpInfo->SetSubItemText(i, CXhChar50("%g", pPart->fPieceWeight), TRUE);
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_SING_W))
+				lpInfo->SetSubItemColor(i, clr);
+		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MANU_W))
 		{	//加工重量
-			lpInfo->SetSubItemText(i, CXhChar50("%.f", pPart->fSumWeight), TRUE);
+			lpInfo->SetSubItemText(i, CXhChar50("%g", pPart->fSumWeight), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MANU_W))
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_SUM_WEIGHT) > 0)
@@ -1074,9 +1080,6 @@ void CRevisionDlg::OnImportBomFile()
 		dlg.m_ofn.lpstrTitle = "选择单个物料清单";
 	if(dlg.DoModal()!=IDOK)
 		return;
-#ifndef _ARX_2007
-	CWaitCursor waitCursor;
-#endif
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
 	if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_COMPARE))
 	{	//导入料表组
@@ -1229,7 +1232,14 @@ void CRevisionDlg::OnCompareData()
 		pItemInfo->itemType == PART_GROUP)
 	{
 		m_iCompareMode = CProjectTowerType::COMPARE_ALL_DWGS;
-		if (pProject->CompareLoftAndPartDwgs() != 1)
+		int iRet = 1;
+		if (pItemInfo->itemType == ANGLE_GROUP)
+			iRet = pProject->CompareLoftAndPartDwgs(0);
+		else if (pItemInfo->itemType == PLATE_GROUP)
+			iRet = pProject->CompareLoftAndPartDwgs(1);
+		else
+			iRet = pProject->CompareLoftAndPartDwgs(2);
+		if (iRet != 1)
 			return;
 	}
 	if (pItemInfo->itemType == ANGLE_DWG_ITEM ||
@@ -1523,9 +1533,6 @@ void CRevisionDlg::OnBatchRetrievedPlates()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL)
 		return;
-#ifndef _ARX_2007
-	CWaitCursor waitCursor;
-#endif
 	pDwgInfo->RetrievePlates(TRUE);
 	RefreshListCtrl(hSelItem);
 }
@@ -1540,9 +1547,6 @@ void CRevisionDlg::OnBatchRetrievedAngles()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL)
 		return;
-#ifndef _ARX_2007
-	CWaitCursor waitCursor;
-#endif
 	pDwgInfo->RetrieveAngles(TRUE);
 	RefreshListCtrl(hSelItem);
 }
@@ -1556,9 +1560,6 @@ void CRevisionDlg::OnEmptyRetrievedPlates()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL)
 		return;
-#ifndef _ARX_2007
-	CWaitCursor waitCursor;
-#endif
 	pDwgInfo->EmptyPlateList();
 	RefreshListCtrl(hSelItem);
 }
@@ -1572,9 +1573,6 @@ void CRevisionDlg::OnEmptyRetrievedAngles()
 	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
 	if (pDwgInfo == NULL)
 		return;
-#ifndef _ARX_2007
-	CWaitCursor waitCursor;
-#endif
 	pDwgInfo->EmptyJgList();
 	RefreshListCtrl(hSelItem);
 }

@@ -36,6 +36,7 @@ public:
 	const static char* KEY_WIDE;		//= "Width";
 	const static char* KEY_SING_N;		//= "SingNum";
 	const static char* KEY_MANU_N;		//= "ManuNum"
+	const static char* KEY_SING_W;		//= "SingWeight"
 	const static char* KEY_MANU_W;		//= "SumWeight"
 	const static char* KEY_WELD;		//= "Weld"
 	const static char* KEY_ZHI_WAN;		//= "ZhiWan"
