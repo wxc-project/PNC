@@ -76,6 +76,7 @@ NC_INFO_PARA::NC_INFO_PARA()
 	m_ciHoldSortType = 0;
 	m_bSortHasBigSH = FALSE;
 	m_bOutputBendLine = m_bOutputBendType = FALSE;
+	m_bExplodeText = FALSE;
 }
 DWORD NC_INFO_PARA::AddFileFlag(DWORD dwFlag)
 {
@@ -193,6 +194,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("nc.LaserPara.m_dwFileFlag", PROPLIST_ITEM(id++, "生成文件"));
 	AddPropItem("nc.LaserPara.m_bOutputBendLine", PROPLIST_ITEM(id++, "输出制弯线", "", "是|否"));
 	AddPropItem("nc.LaserPara.m_bOutputBendType", PROPLIST_ITEM(id++, "输出制弯类型", "", "是|否"));
+	AddPropItem("nc.LaserPara.m_bExplodeText", PROPLIST_ITEM(id++, "拆解文字", "", "是|否"));
 	//
 	AddPropItem("holeIncrement.m_fDatum",PROPLIST_ITEM(id++,"孔径增大值"));
 	AddPropItem("holeIncrement.m_fM12",PROPLIST_ITEM(id++,"M12标准增量"));
@@ -570,6 +572,7 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	WriteSysParaToReg("laserPara.m_bOutputBendLine");
 	WriteSysParaToReg("laserPara.m_bOutputBendType");
 	WriteSysParaToReg("laserPara.m_wEnlargedSpace");
+	WriteSysParaToReg("laserPara.m_bExplodeText");
 	WriteSysParaToReg("PbjIncVertex");
 	WriteSysParaToReg("PbjAutoSplitFile");
 	WriteSysParaToReg("PbjMergeHole");
@@ -868,6 +871,7 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 	ReadSysParaFromReg("laserPara.m_bOutputBendLine");
 	ReadSysParaFromReg("laserPara.m_bOutputBendType");
 	ReadSysParaFromReg("laserPara.m_wEnlargedSpace");
+	ReadSysParaFromReg("laserPara.m_bExplodeText");
 	ReadSysParaFromReg("PbjIncVertex");
 	ReadSysParaFromReg("PbjAutoSplitFile");
 	ReadSysParaFromReg("PbjMergeHole");
@@ -993,6 +997,8 @@ void CSysPara::WriteSysParaToReg(LPCTSTR lpszEntry)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_bOutputBendType);
 		else if (stricmp(lpszEntry, "laserPara.m_wEnlargedSpace") == 0)
 			sprintf(sValue, "%d", nc.m_xLaserPara.m_wEnlargedSpace);
+		else if(stricmp(lpszEntry, "laserPara.m_bExplodeText")==0)
+			sprintf(sValue, "%d", nc.m_xLaserPara.m_bExplodeText);
 		dwLength = strlen(sValue);
 		RegSetValueEx(hKey, lpszEntry, NULL, REG_SZ, (BYTE*)&sValue[0], dwLength);
 		RegCloseKey(hKey);
@@ -1150,6 +1156,8 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 			nc.m_xLaserPara.m_bOutputBendType = atoi(sValue);
 		else if (stricmp(lpszEntry, "laserPara.m_wEnlargedSpace") == 0)
 			nc.m_xLaserPara.m_wEnlargedSpace = atoi(sValue);
+		else if(stricmp(lpszEntry, "laserPara.m_bExplodeText")==0)
+			nc.m_xLaserPara.m_bExplodeText = atoi(sValue);
 		RegCloseKey(hKey);
 	}
 }
@@ -1432,6 +1440,13 @@ int CSysPara::GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen/*=100*/
 		if (nc.m_xLaserPara.m_bOutputBendLine)
 			sText.Copy("是");
 		else //if (nc.m_xLaserPara.m_bOutputBendLine)
+			sText.Copy("否");
+	}
+	else if (GetPropID("nc.LaserPara.m_bExplodeText") == id)
+	{
+		if (nc.m_xLaserPara.m_bExplodeText)
+			sText.Copy("是");
+		else
 			sText.Copy("否");
 	}
 	else if (GetPropID("nc.LaserPara.m_bOutputBendType") == id)

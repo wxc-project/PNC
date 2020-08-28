@@ -104,9 +104,46 @@ void DisplayProcess(int percent,char *sTitle)
 		pProcDlg->SetTitle("进度");
 	pProcDlg->Refresh(percent);
 }
+void ExplodeText(const char*sText, GEPOINT pt, double fTextH, double fRotAnge,ATOM_LIST<GELINE>& lineArr)
+{
+	CPPEView* pView = theApp.GetView();
+	if (pView == NULL)
+		return;
+	IDrawingAssembly *pDrawAssembly = g_p2dDraw->GetDrawingAssembly();
+	IDrawing *pDrawing = pDrawAssembly->EnumFirstDrawing();
+	if (pDrawing == NULL)
+		return;
+	IDbText *pText = (IDbText*)pDrawing->AppendDbEntity(IDbEntity::DbText);
+	pText->SetHeight(fTextH);
+	pText->SetAlignment(IDbText::AlignMiddleLeft);
+	pText->SetPosition(pt);
+	pText->SetRotation(fRotAnge);
+	pText->SetTextString(sText);
+	pText->SetNormal(GEPOINT(0, 0, 1));
+	if (pText->ParseTextShape())
+	{
+		UCS_STRU textCS;
+		textCS.origin = pText->GetPosition();
+		textCS.axis_x.Set(cos(fRotAnge),sin(fRotAnge),0);
+		textCS.axis_z = pText->GetNormal();
+		textCS.axis_y = textCS.axis_z^textCS.axis_x;
+		normalize(textCS.axis_y);
+		//
+		GEPOINT ptS, ptE;
+		for (bool bRet = pText->EnumFirstLine(ptS, ptE); bRet; bRet = pText->EnumNextLine(ptS, ptE))
+		{
+			coord_trans(ptS, textCS, TRUE, TRUE);
+			coord_trans(ptE, textCS, TRUE, TRUE);
+			lineArr.append(GELINE(ptS, ptE));
+		}
+	}
+	//删除文本
+	pDrawing->DeleteDbEntity(pText->GetId());
+}
 void CPPEApp::InitPPEModel()
 {
 	model.DisplayProcess=DisplayProcess;
+	model.ExplodeText = ExplodeText;
 	CPPEModel::log2file=&logerr;
 }
 char* SearchChar(char* srcStr,char ch,bool reverseOrder=false)

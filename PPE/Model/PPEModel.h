@@ -133,5 +133,6 @@ public:
 	void ReadPrjTowerInfoFromCfgFile(const char* cfg_file_path);
 	//进度显示回调函数
 	void(*DisplayProcess)(int percent, char *sTitle);
+	void(*ExplodeText)(const char*sText, GEPOINT pt, double fTextH, double fRotAnge, ATOM_LIST<GELINE>& lineArr);
 };
 extern CPPEModel model;

@@ -350,6 +350,14 @@ BOOL ModifySyssettingProperty(CPropertyList *pPropList,CPropTreeItem* pItem, CSt
 			g_sysPara.nc.m_xLaserPara.m_bOutputBendLine = FALSE;
 		g_sysPara.WriteSysParaToReg("laserPara.m_bOutputBendLine");
 	}
+	else if (CSysPara::GetPropID("nc.LaserPara.m_bExplodeText") == pItem->m_idProp)
+	{
+		if (valueStr.Compare("ÊÇ") == 0)
+			g_sysPara.nc.m_xLaserPara.m_bExplodeText = TRUE;
+		else
+			g_sysPara.nc.m_xLaserPara.m_bExplodeText = FALSE;
+		g_sysPara.WriteSysParaToReg("laserPara.m_bExplodeText");
+	}
 	else if (CSysPara::GetPropID("nc.LaserPara.m_bOutputBendType") == pItem->m_idProp)
 	{
 		if (valueStr.Compare("ÊÇ") == 0)
@@ -1100,6 +1108,7 @@ BOOL CPPEView::DisplaySysSettingProperty()
 	oper.InsertEditPropItem(pGroupItem, "nc.LaserPara.m_wEnlargedSpace");
 	oper.InsertButtonPropItem(pGroupItem, "nc.LaserPara.m_xHoleIncrement");
 	oper.InsertButtonPropItem(pGroupItem, "nc.LaserPara.Config");
+	oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_bExplodeText");
 	oper.InsertEditPropItem(pGroupItem, "nc.LaserPara.m_sThick");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "nc.LaserPara.m_dwFileFlag");
 	pPropItem->SetReadOnly(TRUE);

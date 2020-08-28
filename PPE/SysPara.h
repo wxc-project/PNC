@@ -37,6 +37,7 @@ struct NC_INFO_PARA
 	//以下参数目前只用于控制激光复合机DXF文件输出 wht 19-10-22
 	BOOL m_bOutputBendLine;
 	BOOL m_bOutputBendType;
+	BOOL m_bExplodeText;
 	//切割加工参数
 	BOOL m_bCutSpecialHole;
 	WORD m_wEnlargedSpace;

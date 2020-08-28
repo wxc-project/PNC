@@ -498,11 +498,13 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		if (dxf_mode == CNCPart::LASER_MODE)
 		{	//输出火曲线并用+、-标识正反曲 wht 19-09-26
 			double fFontH = 10;
-			BOOL bOutputBendLine = FALSE, bOutputBendType = FALSE;
+			BOOL bOutputBendLine = FALSE, bOutputBendType = FALSE, bExplodeText = FALSE;
 			if (GetSysParaFromReg("laserPara.m_bOutputBendLine", sValue))
 				bOutputBendLine = atoi(sValue);
 			if (GetSysParaFromReg("laserPara.m_bOutputBendType", sValue))
 				bOutputBendType = atoi(sValue);
+			if (GetSysParaFromReg("laserPara.m_bExplodeText", sValue))
+				bExplodeText = atoi(sValue);
 			if (GetSysParaFromReg("DxfTextSize", sValue))
 				fFontH = atof(sValue);
 			for (int i = 0; i < tempPlate.m_cFaceN-1; i++)
@@ -535,7 +537,15 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 						GEPOINT offVec(-sin(fRotAngle), cos(fRotAngle));
 						GEPOINT dimPos = 0.5*(ptS + ptE);
 						dimPos = dimPos - dimVec * fTextW*0.5 + offVec * 2;
-						file.NewText(sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, nTextClrIndex);
+						if (bExplodeText && model.ExplodeText)
+						{
+							ATOM_LIST<GELINE> lineArr;
+							model.ExplodeText(sText, dimPos, fFontH, fRotAngle, lineArr);
+							for (GELINE* pLine = lineArr.GetFirst(); pLine; pLine = lineArr.GetNext())
+								file.NewLine(pLine->start, pLine->end, nTextClrIndex);
+						}
+						else
+							file.NewText(sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, nTextClrIndex);
 					}
 				}
 			}
@@ -660,7 +670,15 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				for (int i = 0; i < sNoteArr.GetSize(); i++)
 				{
 					f3dPoint dimPos = dimPt + offsetVec * fLineH*i - dimVec * fTextW*0.5;
-					file.NewText(sNoteArr[i], dimPos, fFontH, 0, nTextClrIndex);
+					if (bExplodeText && model.ExplodeText)
+					{
+						ATOM_LIST<GELINE> lineArr;
+						model.ExplodeText(sNoteArr[i], dimPos, fFontH, 0, lineArr);
+						for (GELINE* pLine = lineArr.GetFirst(); pLine; pLine = lineArr.GetNext())
+							file.NewLine(pLine->start, pLine->end, nTextClrIndex);
+					}
+					else
+						file.NewText(sNoteArr[i], dimPos, fFontH, 0, nTextClrIndex);
 				}
 			}
 		}
