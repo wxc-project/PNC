@@ -90,12 +90,12 @@ void RegisterServerComponents ()
 		L"DrawByTxtFile",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&DrawProfileByTxtFile);				// Function pointer
-	//打碎文本
-	acedRegCmds->addCommand(L"PNC-MENU",   // Group name
-		L"ET",					// Global function name
-		L"ET",					// Local function name
-		ACRX_CMD_MODAL,							// Type
-		&ExplodeText);				// Function pointer	
+	////打碎文本
+	//acedRegCmds->addCommand(L"PNC-MENU",   // Group name
+	//	L"ET",					// Global function name
+	//	L"ET",					// Local function name
+	//	ACRX_CMD_MODAL,							// Type
+	//	&ExplodeText);				// Function pointer	
 #else
 //校审构件工艺信息
 	acedRegCmds->addCommand(L"PNC-MENU",   // Group name
@@ -156,12 +156,12 @@ void RegisterServerComponents ()
 		"TXT",					// Local function name
 		ACRX_CMD_MODAL,							// Type
 		&DrawProfileByTxtFile);				// Function pointer
-	//打碎文本
-	acedRegCmds->addCommand("PNC-MENU",   // Group name
-		"ET",					// Global function name
-		"ET",					// Local function name
-		ACRX_CMD_MODAL,							// Type
-		&ExplodeText);				// Function pointer
+	////打碎文本
+	//acedRegCmds->addCommand("PNC-MENU",   // Group name
+	//	"ET",					// Global function name
+	//	"ET",					// Local function name
+	//	ACRX_CMD_MODAL,							// Type
+	//	&ExplodeText);				// Function pointer
 #else
 	//校审构件工艺信息
 	acedRegCmds->addCommand("PNC-MENU",   // Group name
