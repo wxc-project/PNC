@@ -164,7 +164,7 @@ public:
 	AcDbObjectId plateInfoBlockRefId;
 	BOOL m_bIslandDetection;	//是否开启孤岛检测 wht 19-01-03
 	GEPOINT dim_pos,dim_vec;
-	CXhChar100 m_sRelatePartNo;
+	CXhChar200 m_sRelatePartNo;
 	BASIC_INFO m_xBaseInfo;
 	CHashSet<AcDbObjectId> pnTxtIdList;
 	ATOM_LIST<BOLT_INFO> boltList;
@@ -209,6 +209,7 @@ public:
 	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
 	void CheckProfileEdge();
 	//生成中性文件
+	void InitPPiInfo();
 	void CreatePPiFile(const char* file_path);
 	void CopyAttributes(CPlateProcessInfo* pSrcPlate);
 	//绘制钢板
@@ -275,6 +276,7 @@ public:
 	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
 	void SplitManyPartNo();
+	void CreatePlatePPiFile(const char* work_path);
 	//绘制钢板
 	void DrawPlates();
 	void DrawPlatesToLayout();

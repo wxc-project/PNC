@@ -198,19 +198,18 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 		pPlateProcess->CheckProfileEdge();
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
-		
-	}
-	DisplayProgress(100);
-	//将提取的钢板信息导出到中性文件中
-	CString file_path;
-	GetCurWorkPath(file_path);
-	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE))
-	{	//生成PPI文件,保存到到当前工作路径下
-		if(pPlateProcess->IsValid())
-			pPlateProcess->CreatePPiFile(file_path);
+		if (pPlateProcess->IsValid())
+			pPlateProcess->InitPPiInfo();
 		//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
 		pPlateProcess->m_bNeedExtract = FALSE;
 	}
+	DisplayProgress(100);
+	//将提取的钢板信息导出到中性文件中
+	if (g_pncSysPara.m_iPPiMode == 0)
+		model.SplitManyPartNo();
+	CString file_path;
+	GetCurWorkPath(file_path);
+	model.CreatePlatePPiFile(file_path);
 	//写工程塔型配置文件 wht 19-01-12
 	if (pModel->m_sTaType.GetLength() > 0)
 	{

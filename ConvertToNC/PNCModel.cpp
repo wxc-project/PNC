@@ -1696,7 +1696,7 @@ void CPlateProcessInfo::InitMkPos(GEPOINT &mk_pos,GEPOINT &mk_vec)
 	mk_vec = dim_vec;
 }
 //生成ppi中性文件
-void CPlateProcessInfo::CreatePPiFile(const char* file_path)
+void CPlateProcessInfo::InitPPiInfo()
 {
 	//计算钢板的长与宽
 	f2dRect rect=GetMinWrapRect();
@@ -1747,71 +1747,42 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 	xPlate.m_bIncDeformed=g_pncSysPara.m_bIncDeformed;
 	if(xPlate.mcsFlg.ciBottomEdge==(BYTE)-1)
 		InitBtmEdgeIndex();
-	CXhChar100 sAllRelPart(xPlate.GetPartNo());
-	if(m_sRelatePartNo.GetLength()>0)
-		sAllRelPart.Printf("%s,%s",(char*)xPlate.GetPartNo(),(char*)m_sRelatePartNo);
+}
+void CPlateProcessInfo::CreatePPiFile(const char* file_path)
+{
 	//设置当前工作路径
 	SetCurrentDirectory(file_path);
-	if(g_pncSysPara.m_iPPiMode==0)
-	{//一板一号模式：一个PPI文件包含一个件号
-		for(char* sKey=strtok(sAllRelPart,",");sKey;sKey=strtok(NULL,","))
-		{
-			if(strlen(sKey)<=0)
-				continue;
-			xPlate.SetPartNo(sKey);
-			CBuffer buffer;
-			xPlate.ToPPIBuffer(buffer);
-			CString sFilePath;
-			//使用SetCurrentDirectory设置工作路径后，使用相对路径写文件
-			//可以避免文件夹中带"."无法保存或者路径名太长无法保存的问题 wht 19-04-24
-			//sFilePath.Format("%s%s.ppi",file_path,(char*)xPlate.GetPartNo());
-			sFilePath.Format(".\\%s.ppi", (char*)xPlate.GetPartNo());	
-			FILE* fp=fopen(sFilePath,"wb");
-			if(fp)
-			{
-				long file_len=buffer.GetLength();
-				fwrite(&file_len,sizeof(long),1,fp);
-				fwrite(buffer.GetBufferPtr(),buffer.GetLength(),1,fp);
-				fclose(fp);
-			}
-			else
-			{
-				DWORD nRetCode = GetLastError();
-				logerr.Log("%s#钢板ppi文件保存失败,错误号#%d！路径：%s%s", (char*)xPlate.GetPartNo(), nRetCode, file_path,sFilePath);
-			}
-		}
+	CXhChar100 sAllRelPart(xPlate.GetPartNo());
+	if (g_pncSysPara.m_iPPiMode == 1 && m_sRelatePartNo.GetLength() > 0)
+	{	//一板多号模式：一个PPI文件包括多个件号
+		xPlate.m_sRelatePartNo.Copy(m_sRelatePartNo);
+		sAllRelPart.Printf("%s,%s", (char*)xPlate.GetPartNo(), (char*)m_sRelatePartNo);
+		sAllRelPart.Replace(",", " ");
 	}
-	else if(g_pncSysPara.m_iPPiMode==1)
-	{//一板多号模式：一个PPI文件包括多个件号
-		if(m_sRelatePartNo.GetLength()>0)
-			xPlate.m_sRelatePartNo.Copy(m_sRelatePartNo);
-		sAllRelPart.Replace(","," ");
-		CBuffer buffer;
-		xPlate.ToPPIBuffer(buffer);
-		CString sFilePath;
-		//使用SetCurrentDirectory设置工作路径后，使用相对路径写文件
-		//可以避免文件夹中带"."无法保存或者路径名太长无法保存的问题 wht 19-04-24
-		//sFilePath.Format("%s%s.ppi",file_path,(char*)sAllRelPart);
-		sFilePath.Format(".\\%s.ppi", (char*)sAllRelPart);
-		FILE* fp=fopen(sFilePath,"wb");
-		if (fp)
-		{
-			long file_len = buffer.GetLength();
-			fwrite(&file_len, sizeof(long), 1, fp);
-			fwrite(buffer.GetBufferPtr(), buffer.GetLength(), 1, fp);
-			fclose(fp);
-		}
-		else
-		{
-			DWORD nRetCode = GetLastError();
-			logerr.Log("%s#钢板ppi文件保存失败,错误号#%d！路径：%s%s", (char*)xPlate.GetPartNo(), nRetCode,file_path,sFilePath);
-		}
+	CBuffer buffer;
+	xPlate.ToPPIBuffer(buffer);
+	CString sFilePath;
+	sFilePath.Format(".\\%s.ppi", (char*)sAllRelPart);
+	FILE* fp=fopen(sFilePath,"wb");
+	if (fp)
+	{
+		long file_len = buffer.GetLength();
+		fwrite(&file_len, sizeof(long), 1, fp);
+		fwrite(buffer.GetBufferPtr(), buffer.GetLength(), 1, fp);
+		fclose(fp);
+	}
+	else
+	{
+		DWORD nRetCode = GetLastError();
+		logerr.Log("%s#钢板ppi文件保存失败,错误号#%d！路径：%s%s", (char*)xPlate.GetPartNo(), nRetCode,file_path,sFilePath);
 	}
 }
 //属性成员拷贝
 void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 {
+	CXhChar16 sDestPartNo = GetPartNo();
 	pSrcPlate->xPlate.ClonePart(&xPlate);
+	xPlate.SetPartNo(sDestPartNo);
 	//
 	dim_pos = pSrcPlate->dim_pos;
 	dim_vec = pSrcPlate->dim_vec;
@@ -1907,6 +1878,8 @@ void CPlateProcessInfo::InitBtmEdgeIndex()
 				continue;
 			edge_vec=vertex_arr[(i+1)%n]-vertex_arr[i];
 			edge_dist = edge_vec.mod();
+			if(edge_dist<EPS2)
+				continue;
 			edge_vec/=edge_dist;	//单位化边矢量
 			if(i>0&&prev_vec*edge_vec>EPS_COS)	//连续共线边轮廓
 				edge_dist+=edge_dist+prev_edge_dist;
@@ -3577,22 +3550,22 @@ void CPNCModel::SplitManyPartNo()
 			{
 				CPlateProcessInfo* pNewPlateInfo = m_hashPlateInfo.Add(sPartNo);
 				pNewPlateInfo->xPlate.SetPartNo(sPartNo);
+				pNewPlateInfo->CopyAttributes(pPlateInfo);
 				pNewPlateInfo->partNoId = objId;
 				pNewPlateInfo->partNumId = (g_pncSysPara.m_iDimStyle == 0) ? objId : pPlateInfo->partNumId;
-				pNewPlateInfo->xPlate.cMaterial = pPlateInfo->xPlate.cMaterial;
-				pNewPlateInfo->xPlate.m_fThick = pPlateInfo->xPlate.m_fThick;
-				pNewPlateInfo->xPlate.m_nProcessNum = pPlateInfo->xPlate.m_nProcessNum;
-				pNewPlateInfo->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nSingleNum;
-				//特殊工艺信息
-				pNewPlateInfo->xBomPlate.siZhiWan = pPlateInfo->xBomPlate.siZhiWan;
-				pNewPlateInfo->xBomPlate.bWeldPart = pPlateInfo->xBomPlate.bWeldPart;
-				//轮廓点
-				for(CPlateObject::VERTEX* pSrcVer=pPlateInfo->vertexList.GetFirst();pSrcVer;
-					pSrcVer=pPlateInfo->vertexList.GetNext())
-					pNewPlateInfo->vertexList.append(*pSrcVer);
 			}
 		}
 		m_hashPlateInfo.pop_stack();
+	}
+}
+//
+void CPNCModel::CreatePlatePPiFile(const char* work_path)
+{
+	for (CPlateProcessInfo* pPlateProcess = m_hashPlateInfo.GetFirst(); pPlateProcess; pPlateProcess = m_hashPlateInfo.GetNext())
+	{	
+		if (!pPlateProcess->IsValid())
+			continue;
+		pPlateProcess->CreatePPiFile(work_path);
 	}
 }
 //自动排版
