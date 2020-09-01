@@ -1326,7 +1326,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;__SUPPORT_DOCK_UI_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__PNC_;__LAYOUT_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
@@ -1492,7 +1492,7 @@
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;__TIMER_COUNT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
       <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>

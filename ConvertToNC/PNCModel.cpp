@@ -1106,9 +1106,13 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		int resCode= RTNORM;
 		if (bSendCommand)
 		{
-			CXhChar50 sCmd("-boundary %.2f,%.2f\n ", cur_dim_pos.x, cur_dim_pos.y);
+			CXhChar50 sCmd, sPos("%.2f,%.2f", cur_dim_pos.x, cur_dim_pos.y);
+			if (m_bIslandDetection)
+				sCmd.Printf("-boundary %s\n ", (char*)sPos);
+			else
+				sCmd.Printf("-boundary a i n\n \n%s\n ",(char*)sPos);
 #ifdef _ARX_2007
-			SendCommandToCad(_bstr_t(sCmd));
+			SendCommandToCad((ACHAR*)_bstr_t(sCmd));
 #else
 			SendCommandToCad(sCmd);
 #endif
