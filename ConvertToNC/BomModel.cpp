@@ -459,7 +459,7 @@ int CProjectTowerType::CompareLoftAndPartDwg(const char* sFileName)
 	}
 	if (m_hashCompareResultByPartNo.GetNodeNum() == 0)
 	{
-		AfxMessageBox("BOM角钢信息和DWG角钢信息相同!");
+		AfxMessageBox("BOM信息和DWG信息相同!");
 		return 0;
 	}
 	else

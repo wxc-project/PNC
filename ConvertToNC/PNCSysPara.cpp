@@ -802,17 +802,41 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 			base_pnt[X] = origin.x;
 			base_pnt[Y] = origin.y;
 			base_pnt[Z] = origin.z;
+			int resCode = RTNORM;
+			if (CPNCModel::m_bSendCommand)
+			{
+				CXhChar50 sCmd, sPos("%.2f,%.2f", origin.x, origin.y);
+				sCmd.Printf("-boundary a i n\n \n%s\n ", (char*)sPos);
 #ifdef _ARX_2007
-			int resCode = acedCommand(RTSTR, L"-boundary", RTSTR, L"a", RTSTR, L"i", RTSTR, L"n", RTSTR, L"", RTSTR, L"", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
+				SendCommandToCad((ACHAR*)_bstr_t(sCmd));
 #else
-			int resCode = acedCommand(RTSTR, "-boundary", RTSTR, "a", RTSTR, "i", RTSTR, "n", RTSTR, "", RTSTR, "", RTPOINT, base_pnt, RTSTR, "", RTNONE);
+				SendCommandToCad(sCmd);
+#endif
+			}
+			else
+			{
+#ifdef _ARX_2007
+				resCode = acedCommand(RTSTR, L"-boundary", RTSTR, L"a", RTSTR, L"i", RTSTR, L"n", RTSTR, L"", RTSTR, L"", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
+#else
+				resCode = acedCommand(RTSTR, "-boundary", RTSTR, "a", RTSTR, "i", RTSTR, "n", RTSTR, "", RTSTR, "", RTPOINT, base_pnt, RTSTR, "", RTNONE);
 #endif		
+			}
 			if (resCode != RTNORM)
 				return FALSE;
 			acdbEntLast(seqent);
 			acdbGetObjectId(plineId, seqent);
 			if (initLastObjId == plineId)
+			{
+				if (CPNCModel::m_bSendCommand)
+#ifdef _ARX_2007
+					SendCommandToCad(L" \n ");
+#else
+					SendCommandToCad(" \n ");
+#endif
+				else
+					acedCommand(RTSTR, "");
 				return FALSE;
+			}
 			AcDbEntity *pEnt = NULL;
 			acdbOpenAcDbEntity(pEnt, plineId, AcDb::kForWrite);
 			AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
@@ -823,6 +847,14 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 					pPline->erase(Adesk::kTrue);
 					pPline->close();
 				}
+				if (CPNCModel::m_bSendCommand)
+#ifdef _ARX_2007
+					SendCommandToCad(L" \n ");
+#else
+					SendCommandToCad(" \n ");
+#endif
+				else
+					acedCommand(RTSTR, "");
 				return FALSE;
 			}
 			AcGePoint3d location;
