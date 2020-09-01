@@ -271,14 +271,18 @@ BOOL CPlateExtractor::IsBriefMatMark(char cMat)
 }
 BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 {
-	CXhChar100 str,sValue(sText);
-	sValue.Replace("　"," ");
-	if(strstr(m_sPnKey,"#"))	//#标识符在件号后面
-		sValue.Replace(m_sPnKey,"| "); 
+	CString ss(sText);
+	ss.Replace("　"," ");
+	if (strstr(m_sPnKey, "#"))
+	{	//#标识符在件号后面
+		int iPos = ss.Find(m_sPnKey);
+		if (iPos > 1 && ss[iPos - 1] == ' ')
+			ss.Delete(iPos - 1);
+		ss.Replace(m_sPnKey, "| ");
+	}
 	else
-		sValue.Replace(m_sPnKey,"|"); 
-	//for(char* sKey=strtok(sValue," \t\\P");sKey;sKey=strtok(NULL," \t\\P"))
-	CXhChar100 sPrevStr;
+		ss.Replace(m_sPnKey,"|");
+	CXhChar100 sPrevStr, str, sValue(ss.GetBuffer());
 	BOOL bHasWeldFlag = FALSE;
 	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
 	{
