@@ -95,7 +95,7 @@ IMPLEMENT_PROP_FUNC(CSysPara);
 
 const int HASHTABLESIZE=500;
 const int STATUSHASHTABLESIZE=500;
-void CSysPara::InitPropHashtable()
+int CSysPara::InitPropHashtable()
 {
 	int id=1;
 	propHashtable.SetHashTableGrowSize(HASHTABLESIZE);
@@ -269,6 +269,7 @@ void CSysPara::InitPropHashtable()
 	AddPropItem("font.fDxfTextSize", PROPLIST_ITEM(id++, "DXF文字字高"));
 	AddPropItem("font.fDimTextSize",PROPLIST_ITEM(id++,"尺寸标注字高"));
 	AddPropItem("font.fPartNoTextSize",PROPLIST_ITEM(id++,"构件编号字高"));
+	return id;
 }
 CSysPara::CSysPara(void)
 {
