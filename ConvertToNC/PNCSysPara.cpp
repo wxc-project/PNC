@@ -93,7 +93,7 @@ CPNCSysPara::LAYER_ITEM* CPNCSysPara::EnumNext()
 IMPLEMENT_PROP_FUNC(CPNCSysPara);
 const int HASHTABLESIZE = 500;
 const int STATUSHASHTABLESIZE = 500;
-void CPNCSysPara::InitPropHashtable()
+int CPNCSysPara::InitPropHashtable()
 {
 	int id=1;
 	propHashtable.SetHashTableGrowSize(HASHTABLESIZE);
@@ -145,6 +145,7 @@ void CPNCSysPara::InitPropHashtable()
 	AddPropItem("crMode.crLS20", PROPLIST_ITEM(id++, "M20¿×¾¶ÑÕÉ«"));
 	AddPropItem("crMode.crLS24", PROPLIST_ITEM(id++, "M24¿×¾¶ÑÕÉ«"));
 	AddPropItem("crMode.crOtherLS", PROPLIST_ITEM(id++, "ÆäËû¿×¾¶ÑÕÉ«"));
+	return id;
 }
 int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=100*/, CPropTreeItem *pItem/*=NULL*/)
 {
