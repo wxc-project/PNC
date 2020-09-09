@@ -349,8 +349,17 @@ BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
 			return FALSE;
 		AcDbCurve* pCurve = (AcDbCurve*)pEnt;
 		AcGePoint3d acad_ptS, acad_ptE;
-		pCurve->getStartPoint(acad_ptS);
-		pCurve->getEndPoint(acad_ptE);
+		if (pEnt->isKindOf(AcDbPolyline::desc()))
+		{
+			AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
+			if (pPline->isClosed())
+				return TRUE;
+		}
+		else
+		{
+			pCurve->getStartPoint(acad_ptS);
+			pCurve->getEndPoint(acad_ptE);
+		}
 		GEPOINT linePtS(acad_ptS.x, acad_ptS.y, 0), linePtE(acad_ptE.x, acad_ptE.y, 0);
 		if (linePtS.IsEqual(tagPT, EPS2))
 			tagPT = linePtE;
@@ -1214,6 +1223,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	pPline->erase(Adesk::kTrue);	//删除polyline对象
 	pPline->close();
 	//
+	nVertNum = tem_vertes.GetNodeNum();
 	for(int i=0;i<tem_vertes.GetNodeNum();i++)
 	{
 		VERTEX* pCurVer=tem_vertes.GetByIndex(i);
@@ -1380,7 +1390,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPolyline::desc()))
 		return FALSE;
 	AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
-	if (pPline->isClosed())
+	if (!pPline->isClosed())
 		return FALSE;	//非闭合的多段线
 	ATOM_LIST<VERTEX> tem_vertes;
 	int nVertNum = pPline->numVerts();
@@ -1786,7 +1796,8 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 {
 	CXhChar16 sDestPartNo = GetPartNo();
 	pSrcPlate->xPlate.ClonePart(&xPlate);
-	xPlate.SetPartNo(sDestPartNo);
+	if(sDestPartNo.GetLength()>1)
+		xPlate.SetPartNo(sDestPartNo);	//保留原来的件号（分解一板多号的时候） wxc-20.09.09
 	//
 	dim_pos = pSrcPlate->dim_pos;
 	dim_vec = pSrcPlate->dim_vec;

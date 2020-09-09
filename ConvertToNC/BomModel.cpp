@@ -1388,7 +1388,7 @@ void ExportUbomConfigFile()
 	fprintf(fp, "AutoExtractAngles=%d ;\n", g_xUbomModel.m_bExtractAnglesWhenOpenFile);
 	fprintf(fp, "MaxLenErr=%.1f ;\n", g_xUbomModel.m_fMaxLenErr);
 	fprintf(fp, "NOT_PRINT=%s ;\n", (char*)g_xUbomModel.m_sNotPrintFilter);
-	fprintf(fp, "PrintSortType=%s ;\n", (char*)g_xUbomModel.m_ciPrintSortType);
+	fprintf(fp, "PrintSortType=%d ;\n", g_xUbomModel.m_ciPrintSortType);
 	fprintf(fp, "**DWG ∂±…Ë÷√\n");
 	fprintf(fp, "JG_CARD=%s ;\n", (char*)g_xUbomModel.m_sJgCadName);
 	fprintf(fp, "JgCadPartLabel=%s ;\n", (char*)g_xUbomModel.m_sJgCadPartLabel);

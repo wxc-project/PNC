@@ -67,6 +67,7 @@ BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_NOTIFY(NM_DBLCLK, IDC_PART_LIST, &CPartListDlg::OnNMDblclkPartList)
 	ON_NOTIFY(NM_RCLICK, IDC_PART_LIST, &CPartListDlg::OnNMRClickPartList)
 	ON_COMMAND(ID_REVISE_TEH_PLATE, &CPartListDlg::OnRetrievedPlate)
+	ON_COMMAND(ID_DELETE_ITEM, &CPartListDlg::OnDeleteItem)
 END_MESSAGE_MAP()
 
 
@@ -354,17 +355,19 @@ void CPartListDlg::OnNMRClickPartList(NMHDR *pNMHDR, LRESULT *pResult)
 		if (iCurSel >= 0)
 			pSelPlate = (CPlateProcessInfo*)m_partList.GetItemData(iCurSel);
 	}
+	DWORD dwPos = GetMessagePos();
+	CPoint point(LOWORD(dwPos), HIWORD(dwPos));
+	CMenu popMenu;
+	popMenu.LoadMenu(IDR_ITEM_CMD_POPUP);
+	CMenu *pMenu = popMenu.GetSubMenu(0);
+	pMenu->DeleteMenu(0, MF_BYPOSITION);
 	if (pSelPlate)
 	{
-		DWORD dwPos = GetMessagePos();
-		CPoint point(LOWORD(dwPos), HIWORD(dwPos));
-		CMenu popMenu;
-		popMenu.LoadMenu(IDR_ITEM_CMD_POPUP);
-		CMenu *pMenu = popMenu.GetSubMenu(0);
-		pMenu->DeleteMenu(0, MF_BYPOSITION);
 		pMenu->AppendMenu(MF_STRING, ID_REVISE_TEH_PLATE, "重新提取");
-		popMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
+		pMenu->AppendMenu(MF_SEPARATOR);
 	}
+	pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "清空");
+	popMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 	*pResult = 0;
 }
 
@@ -394,6 +397,11 @@ void CPartListDlg::OnRetrievedPlate()
 		return;
 	}
 	pSelPlate->CopyAttributes(pFirstPlate);
+	UpdatePartList();
+}
+void CPartListDlg::OnDeleteItem()
+{
+	model.Empty();
 	UpdatePartList();
 }
 

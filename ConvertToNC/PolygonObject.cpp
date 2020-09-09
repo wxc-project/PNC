@@ -414,10 +414,12 @@ void CVectorMonoImage::SetConnStateAt(int xI, int yJ)
 //访问空白连通区域
 void CVectorMonoImage::VisitBlankConnPixels()
 {
+	UINT nNum = m_nWidth * m_nHeight, index = 1;
+	if (nNum <= 0)
+		return;
 	CString sProcess = "智能识别钢板的外轮廓边.....";
 	if (DisplayProcess)
 		DisplayProcess(0, sProcess.GetBuffer());
-	UINT nNum = m_nWidth * m_nHeight, index = 1;
 	std::stack< std::pair<int, int> > xNearPixels;
 	xNearPixels.push(std::pair<int, int>(0, 0));
 	SetConnStateAt(0, 0);

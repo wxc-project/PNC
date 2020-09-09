@@ -64,5 +64,6 @@ protected:
 	afx_msg void OnBnClickedBtnMoveMkRect();
 	afx_msg void OnBnClickedChkEditMk();
 	afx_msg void OnRetrievedPlate();
+	afx_msg void OnDeleteItem();
 };
 #endif
