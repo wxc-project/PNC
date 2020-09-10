@@ -456,7 +456,7 @@ bool CBatchPrint::PrintProcessCardToPaper(bool bSendCmd)
 		{
 			CXhChar50 sLeftTop("%.f,%.f\n", pScope->L_T[X], pScope->L_T[Y]);
 			CXhChar50 sRightBottom("%.f,%.f\n", pScope->R_B[X], pScope->R_B[Y]);
-			CXhChar500 sCmd("-plot\ny\n\n%s%s\nL\nN\nw\n%s%s\nC\nN\n.\nY\nA\n\nN\nY\n",
+			CXhChar500 sCmd("-plot\ny\n\n%s%s\nL\nN\nw\n%s%s\nC\nY\nmonochrome.ctb\nY\nA\n\nN\nY\n",
 				(char*)sDevice, (char*)sPaperSize, (char*)sLeftTop, (char*)sRightBottom);
 #ifdef _ARX_2007
 			SendCommandToCad(L"CMDECHO 0\n");
@@ -472,45 +472,45 @@ bool CBatchPrint::PrintProcessCardToPaper(bool bSendCmd)
 			acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
 			acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
 				RTSTR, L"",							//布局名
-				RTSTR, L"",							//输出设备的名称
-				RTSTR, L"",							//图纸尺寸:<A4>
+				RTSTR, sDevice,						//输出设备的名称
+				RTSTR, sPaperSize,					//图纸尺寸:<A4>
 				RTSTR, L"",							//图纸单位:<毫米>
-				RTSTR, L"",							//图形方向:<横向|纵向>
-				RTSTR, L"",							//是否反向打印
+				RTSTR, L"L",						//图形方向:<横向|纵向>
+				RTSTR, L"N",							//是否反向打印
 				RTSTR, L"w",						//打印区域:<指定窗口>
 				RTPOINT, pScope->L_T,				//左上角
 				RTPOINT, pScope->R_B,				//右下角
 				RTSTR, L"",							//打印比例:<布满>
-				RTSTR, L"",							//打印偏移：<居中>
-				RTSTR, L"",							//是否按样式打印
-				RTSTR, L"",							//打印样式名称
-				RTSTR, L"",							//打印线宽
-				RTSTR, L"",							//着色打印设置
+				RTSTR, L"C",						//打印偏移：<居中>
+				RTSTR, L"Y",						//是否按样式打印
+				RTSTR, L"monochrome.ctb",			//打印样式名称
+				RTSTR, L"Y",						//打印线宽
+				RTSTR, L"A",						//着色打印设置
 				RTSTR, L"",							//打印到文件
-				RTSTR, L"",							//是否保存页面设置更改
-				RTSTR, L"",							//是否继续打印
+				RTSTR, L"N",						//是否保存页面设置更改
+				RTSTR, L"Y",						//是否继续打印
 				RTNONE);
 #else
 			acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
 			acedCommand(RTSTR, "-plot", RTSTR, "y",	//是否需要详细打印配置[是(Y)/否(N)]
 				RTSTR, "",							//布局名
-				RTSTR, "",							//输出设备的名称
-				RTSTR, "",							//图纸尺寸:<A4>
+				RTSTR, sDevice,						//输出设备的名称
+				RTSTR, sPaperSize,					//图纸尺寸:<A4>
 				RTSTR, "",							//图纸单位:<毫米>
-				RTSTR, "",							//图形方向:<横向|纵向>
-				RTSTR, "",							//是否反向打印
+				RTSTR, "L",							//图形方向:<横向|纵向>
+				RTSTR, "N",							//是否反向打印
 				RTSTR, "w",							//打印区域:<指定窗口>
 				RTPOINT, pScope->L_T,				//左上角
 				RTPOINT, pScope->R_B,				//右下角
 				RTSTR, "",							//打印比例:<布满>
-				RTSTR, "",							//打印偏移：<居中>
-				RTSTR, "",							//是否按样式打印
-				RTSTR, "",							//打印样式名称
-				RTSTR, "",							//打印线宽
-				RTSTR, "",							//着色打印设置
+				RTSTR, "C",							//打印偏移：<居中>
+				RTSTR, "Y",							//是否按样式打印
+				RTSTR, "monochrome.ctb",			//打印样式名称
+				RTSTR, "Y",							//打印线宽
+				RTSTR, "A",							//着色打印设置
 				RTSTR, "",							//打印到文件
-				RTSTR, "",							//是否保存页面设置更改
-				RTSTR, "",							//是否继续打印
+				RTSTR, "N",							//是否保存页面设置更改
+				RTSTR, "Y",							//是否继续打印
 				RTNONE);
 #endif
 		}
@@ -535,7 +535,11 @@ CBatchPrint::CBatchPrint(ATOM_LIST<PRINT_SCOPE> *pPrintScopeList, bool bSendCmd,
 		if (m_xPdfPlotCfg.m_sDeviceName.GetLength() <= 0)
 			m_xPdfPlotCfg.m_sDeviceName.Copy("DWG To PDF.pc3");
 	}
-	//else if (m_ciPrintType == PRINT_TYPE_PAPER)
+	else if (m_ciPrintType == PRINT_TYPE_PAPER)
+	{
+		if (m_xPaperPlotCfg.m_sPaperSize.GetLength() <= 0)
+			m_xPaperPlotCfg.m_sPaperSize.Copy("A4");
+	}
 }
 
 bool CBatchPrint::Print()

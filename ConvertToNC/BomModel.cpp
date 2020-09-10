@@ -9,6 +9,7 @@
 #include "PNCSysPara.h"
 #include "Expression.h"
 #include "FileIO.h"
+#include "BatchPrint.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -1340,6 +1341,26 @@ void ImportUbomConfigFile()
 			{
 				g_xBomCfg.m_sProcessFlag.Copy(skey);
 				g_xBomCfg.m_sProcessFlag.Remove(' ');
+			}
+		}
+		else if (_stricmp(key_word, "Paper.DeviceName") == 0)
+		{
+			skey = strtok(NULL, ";");
+			if (skey != NULL)
+			{
+				CBatchPrint::m_xPaperPlotCfg.m_sDeviceName.Copy(skey);
+				CBatchPrint::m_xPaperPlotCfg.m_sDeviceName.TrimLeft();
+				CBatchPrint::m_xPaperPlotCfg.m_sDeviceName.TrimRight();
+			}
+		}
+		else if (_stricmp(key_word, "Paper.PaperSize") == 0)
+		{
+			skey = strtok(NULL, ";");
+			if (skey != NULL)
+			{
+				CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.Copy(skey);
+				CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.TrimLeft();
+				CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.TrimRight();
 			}
 		}
 		else
