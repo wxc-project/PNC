@@ -115,7 +115,7 @@ void ExplodeText(const char*sText, GEPOINT pt, double fTextH, double fRotAnge,AT
 		return;
 	IDbText *pText = (IDbText*)pDrawing->AppendDbEntity(IDbEntity::DbText);
 	pText->SetHeight(fTextH);
-	pText->SetAlignment(IDbText::AlignMiddleLeft);
+	pText->SetAlignment(IDbText::AlignBottomLeft);
 	pText->SetPosition(pt);
 	pText->SetRotation(fRotAnge);
 	pText->SetTextString(sText);
