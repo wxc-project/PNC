@@ -1,7 +1,7 @@
 #include "StdAfx.h"
-#include "DocManagerReactor.h"
+#include "PNCDocReactor.h"
 #include "CadToolFunc.h"
-#include "DockBarManager.h"
+#include "PNCDockBarManager.h"
 #include "ExplodeTxtDlg.h"
 
 CDocManagerReactor::CDocManagerReactor()
@@ -20,7 +20,7 @@ void CDocManagerReactor::documentActivated(AcApDocument* pActivatedDoc)
 	//
 	CAcModuleResourceOverride useThisRes;
 #ifndef __UBOM_ONLY_
-	CPartListDlg* pPartDlg = g_xDockBarManager.GetPartListDlgPtr();
+	CPartListDlg* pPartDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 	if (pPartDlg)
 		pPartDlg->ClearPartList();
 #endif
@@ -34,7 +34,7 @@ void CDocManagerReactor::documentDestroyed(const char* fileName)
 #ifndef __UBOM_ONLY_
 	if (model.m_sCurWorkFile.CompareNoCase(fileName) == 0)
 	{
-		CPartListDlg* pPartDlg = g_xDockBarManager.GetPartListDlgPtr();
+		CPartListDlg* pPartDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 		if (pPartDlg)
 			pPartDlg->ClearPartList();
 	}

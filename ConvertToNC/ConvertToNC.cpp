@@ -33,7 +33,7 @@
 #include "PNCSysPara.h"
 #include "MsgBox.h"
 #include "SteelSealReactor.h"
-#include "DockBarManager.h"
+#include "PNCDockBarManager.h"
 #include "BomExport.h"
 
 #ifdef _DEBUG
@@ -43,7 +43,6 @@ static char THIS_FILE[]=__FILE__;
 #endif
 /////////////////////////////////////////////////////////////////////////////
 // ObjectARX EntryPoint
-CDockBarManager g_xDockBarManager;
 void RegisterServerComponents ()
 {	
 #ifdef _ARX_2007
@@ -366,7 +365,7 @@ void InitApplication()
 	//显示对话框
 #ifndef __UBOM_ONLY_
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
-	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
+	g_xPNCDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 #else
 	ImportUbomConfigFile();	//读取配置文件
 	CXhChar100 sWndText("UBOM");

@@ -3,6 +3,7 @@
 #include "CadToolFunc.h"
 #include "PNCSysPara.h"
 #include "DragEntSet.h"
+#include "PNCCryptCoreCode.h"
 
 #ifndef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
@@ -69,7 +70,7 @@ void CDrawDamBoard::EraseDamBoard()
 	for(AcDbObjectId *pEntId=m_xEntIdList.GetFirst();pEntId;pEntId=m_xEntIdList.GetNext())
 	{
 		pEnt=NULL;
-		acdbOpenAcDbEntity(pEnt,*pEntId,AcDb::kForWrite);
+		XhAcdbOpenAcDbEntity(pEnt,*pEntId,AcDb::kForWrite);
 		if(pEnt==NULL)
 			continue;
 		pEnt->erase(Adesk::kTrue);
@@ -88,7 +89,7 @@ void CDrawDamBoard::DrawSteelSealRect(CPlateProcessInfo *pPlate)
 	CBlockTableRecordLife rec(GetBlockTableRecord());
 	double fHalfL=g_pncSysPara.m_nMkRectLen*0.5,fHalfW=g_pncSysPara.m_nMkRectWidth*0.5;
 	AcDbEntity* pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, MkCadObjId(pPlate->m_xMkDimPoint.idCadEnt), AcDb::kForRead);
+	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(pPlate->m_xMkDimPoint.idCadEnt), AcDb::kForRead);
 	if (pEnt == NULL||!pEnt->isKindOf(AcDbPoint::desc()))
 		return;
 	pEnt->close();
@@ -110,7 +111,7 @@ void CDrawDamBoard::DrawSteelSealRect(CPlateProcessInfo *pPlate)
 	{
 		m_rectId = outputId;
 		AcDbEntity *pEnt=NULL;
-		acdbOpenAcDbEntity(pEnt, m_rectId, AcDb::kForWrite);
+		XhAcdbOpenAcDbEntity(pEnt, m_rectId, AcDb::kForWrite);
 		CAcDbObjLife rectLife(pEnt);
 		if (pEnt!=NULL&&pEnt->isKindOf(AcDbBlockReference::desc()))
 			pEnt->addReactor(g_pSteelSealReactor);
@@ -119,7 +120,7 @@ void CDrawDamBoard::DrawSteelSealRect(CPlateProcessInfo *pPlate)
 void CDrawDamBoard::EraseSteelSealRect()
 {
 	AcDbEntity *pEnt=NULL;
-	acdbOpenAcDbEntity(pEnt,m_rectId,AcDb::kForWrite);
+	XhAcdbOpenAcDbEntity(pEnt,m_rectId,AcDb::kForWrite);
 	if(pEnt)
 	{
 		pEnt->erase(Adesk::kTrue);

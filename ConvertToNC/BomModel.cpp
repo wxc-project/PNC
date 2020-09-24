@@ -1057,7 +1057,7 @@ void ImportUbomConfigFile()
 	FILE *fp = fopen(file_name, "rt");
 	if (fp == NULL)
 		return;
-	g_pncSysPara.hashBoltDList.Empty();
+	g_pncSysPara.EmptyBoltBlockRecog();
 	g_pncSysPara.m_recogSchemaList.Empty();
 	char line_txt[MAX_PATH] = "";
 	while (!feof(fp))

@@ -57,12 +57,12 @@ CPlateExtractor::CPlateExtractor()
 }
 CPlateExtractor::~CPlateExtractor()
 {
-	hashBoltDList.Empty();
+	EmptyBoltBlockRecog();
 	m_recogSchemaList.Empty();
 }
 void CPlateExtractor::Init()
 {	//¼þºÅ±ê×¢ÉèÖÃ
-	m_iDimStyle = 0;
+	m_iDimStyle=0;
 	m_sPnKey.Copy("#");
 	m_sThickKey.Copy("-");
 	m_sMatKey.Copy("Q");
@@ -86,21 +86,7 @@ void CPlateExtractor::Init()
 	InsertRecogSchema("¶àÐÐ7", 1, "¼þºÅ:", "²ÄÖÊ:", "°åºñ:", "¼þÊý", "ÕýÇú", "·´Çú");
 	InsertRecogSchema("¶àÐÐ8", 1, "¼þºÅ:", "²ÄÖÊ:", "°åºñ:", "¼þÊý", "ÍâÇú", "ÄÚÇú");
 	//ÂÝË¨Ö±¾¶ÉèÖÃ
-	hashBoltDList.SetValue("M24", BOLT_BLOCK("TMA", "M24", 24));
-	hashBoltDList.SetValue("M20", BOLT_BLOCK("TMA", "M20", 20));
-	hashBoltDList.SetValue("M16", BOLT_BLOCK("TMA", "M16", 16));
-	hashBoltDList.SetValue("M12", BOLT_BLOCK("TMA", "M12", 12));
-	hashBoltDList.SetValue("°å¿×25.5", BOLT_BLOCK("TW", "°å¿×25.5", 24));
-	hashBoltDList.SetValue("°å¿×21.5", BOLT_BLOCK("TW", "°å¿×21.5", 20));
-	hashBoltDList.SetValue("°å¿×19.5", BOLT_BLOCK("TW", "°å¿×19.5", 18));
-	hashBoltDList.SetValue("°å¿×17.5", BOLT_BLOCK("TW", "°å¿×17.5", 16));
-	hashBoltDList.SetValue("°å¿×13.5", BOLT_BLOCK("TW", "°å¿×13.5", 12));
-	hashBoltDList.SetValue("°å¿×Ä¬ÈÏ", BOLT_BLOCK("TW", "°å¿×Ä¬ÈÏ", 0));
-	hashBoltDList.SetValue("°å¿×26.0", BOLT_BLOCK("TW", "°å¿×26.0", 24));
-	hashBoltDList.SetValue("°å¿×22.0", BOLT_BLOCK("TW", "°å¿×22.0", 20));
-	hashBoltDList.SetValue("°å¿×20.0", BOLT_BLOCK("TW", "°å¿×20.0", 18));
-	hashBoltDList.SetValue("°å¿×18.0", BOLT_BLOCK("TW", "°å¿×18.0", 16));
-	hashBoltDList.SetValue("°å¿×14.0", BOLT_BLOCK("TW", "°å¿×14.0", 12));
+	m_xBoltBlockRecog.InitPlateBoltBlock();
 }
 RECOG_SCHEMA* CPlateExtractor::InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
 	char* matKey, char* thickKey, char* partCountKey /*= NULL*/,

@@ -2,6 +2,7 @@
 #include "PNCSysPara.h"
 #include "CadToolFunc.h"
 #include "LayerTable.h"
+#include "PNCCryptCoreCode.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -72,7 +73,7 @@ void CPNCSysPara::Init()
 }
 CPNCSysPara::~CPNCSysPara()
 {
-	hashBoltDList.Empty();
+	m_xBoltBlockRecog.Empty();
 	m_xHashDefaultFilterLayers.Empty();
 	m_xHashEdgeKeepLayers.Empty();
 }
@@ -439,7 +440,7 @@ double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord, double 
 	return fHoleD;
 }
 
-BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole)
+BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pBelongModel /*= NULL*/)
 {
 	if (pEnt == NULL)
 		return FALSE;
@@ -466,19 +467,21 @@ BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole)
 #endif
 		if (sName.GetLength() <= 0)
 			return FALSE;
-		BOLT_BLOCK* pBoltD = hashBoltDList.GetValue(sName);
+		BOLT_BLOCK* pBoltD = GetBlotBlockByName(sName);
 		if (pBoltD == NULL)
 		{	//只对设置未螺栓图符的块进行处理，否则可能错误识别其它块为螺栓孔 wht 20-04-28
 			return FALSE;
 		}
 		double fHoleD = 0;
-		CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+		if (pBelongModel == NULL)
+			pBelongModel = &model;
+		CAD_ENTITY* pLsBlockEnt = pBelongModel->m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
 		if (pLsBlockEnt)
 			fHoleD = pLsBlockEnt->m_fSize;
 		else
 		{
 			fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-			CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.Add(pEnt->id().asOldId());
+			CAD_ENTITY* pLsBlockEnt = pBelongModel->m_xBoltBlockHash.Add(pEnt->id().asOldId());
 			pLsBlockEnt->pos.x = hole.posX;
 			pLsBlockEnt->pos.y = hole.posY;
 			pLsBlockEnt->m_fSize = fHoleD;
@@ -839,7 +842,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 				return FALSE;
 			}
 			AcDbEntity *pEnt = NULL;
-			acdbOpenAcDbEntity(pEnt, plineId, AcDb::kForWrite);
+			XhAcdbOpenAcDbEntity(pEnt, plineId, AcDb::kForWrite);
 			AcDbPolyline *pPline = (AcDbPolyline*)pEnt;
 			if (pPline == NULL || pPline->numVerts() != nNum)
 			{
@@ -951,11 +954,24 @@ void PNCSysSetImportDefault()
 {
 	char file_name[MAX_PATH] = "";
 	GetAppPath(file_name);
+#ifndef __UBOM_ONLY_
 	strcat(file_name, "rule.set");
-	FILE *fp = fopen(file_name, "rt");
+#else
+	strcat(file_name, "ubom.cfg");
+#endif
+	FILE* fp = fopen(file_name, "rt");
 	if (fp == NULL)
 		return;
-	g_pncSysPara.hashBoltDList.Empty();
+	PNCSysSetImportDefault(fp);
+	fclose(fp);
+}
+
+bool PNCSysSetImportDefault(FILE *fp)
+{
+	if (fp == NULL)
+		return false;
+	int nTemp = 0;
+	g_pncSysPara.EmptyBoltBlockRecog();
 	g_pncSysPara.m_recogSchemaList.Empty();
 	int nValue = 0;
 	char line_txt[MAX_PATH] = "", sText[MAX_PATH] = "", key_word[100] = "";
@@ -1078,7 +1094,7 @@ void PNCSysSetImportDefault()
 			CString skeyName(skey);
 			if (strlen(skey) > 0)
 			{
-				BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.Add(skey);
+				BOLT_BLOCK *pBoltD = g_pncSysPara.AddBoltBlock(skey);
 				fgets(line_txt, MAX_PATH, fp);
 				skey = strtok(line_txt, ";");
 				if (!strcmp(skeyName, skey))
@@ -1135,7 +1151,6 @@ void PNCSysSetImportDefault()
 			}
 		}
 	}
-	fclose(fp);
 	//加载配置文件后激活当前识别模型 wht 19-10-30
 	if (g_pncSysPara.m_recogSchemaList.GetNodeNum() <= 0)
 	{
@@ -1155,18 +1170,27 @@ void PNCSysSetImportDefault()
 			break;
 		}
 	}
+	return true;
 }
 void PNCSysSetExportDefault()
 {
 	char file_name[MAX_PATH] = "";
 	GetAppPath(file_name);
 	strcat(file_name, "rule.set");
-	FILE *fp = fopen(file_name, "wt");
+	FILE* fp = fopen(file_name, "wt");
 	if (fp == NULL)
 	{
 		AfxMessageBox("打不开指定的配置文件!");
 		return;
 	}
+	PNCSysSetExportDefault(fp);
+	fclose(fp);
+}
+
+bool PNCSysSetExportDefault(FILE *fp)
+{
+	if (fp == NULL)
+		return false;
 	fprintf(fp, "基本设置\n");
 	fprintf(fp, "bIncDeformed=%s ;考虑火曲变形量\n", g_pncSysPara.m_bIncDeformed ? "是" : "否");
 	fprintf(fp, "m_bUseMaxEdge=%d ;启用最大边长\n", g_pncSysPara.m_bUseMaxEdge);
@@ -1200,9 +1224,9 @@ void PNCSysSetExportDefault()
 	fprintf(fp, "BoltRecogMode=%d ;螺栓识别模式\n", g_pncSysPara.m_ciBoltRecogMode);
 	fprintf(fp, "PartNoCirD=%.1f ;件号圆圈直径\n", g_pncSysPara.m_fPartNoCirD);
 	fprintf(fp, "螺栓识别设置\n");
-	for (BOLT_BLOCK *pBoltBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBoltBlock; pBoltBlock = g_pncSysPara.hashBoltDList.GetNext())
+	for (BOLT_BLOCK *pBoltBlock = g_pncSysPara.EnumFirstBlotBlock(); pBoltBlock; pBoltBlock = g_pncSysPara.EnumNextBlotBlock())
 	{
-		fprintf(fp, "BoltDKey=%s;图块名称;螺栓直径\n", g_pncSysPara.hashBoltDList.GetCursorKey());
+		fprintf(fp, "BoltDKey=%s;图块名称;螺栓直径\n", (char*)g_pncSysPara.GetBoltBlockCurKey());
 		if (!strcmp(pBoltBlock->sGroupName, ""))
 			fprintf(fp, "%s;", " ");
 		else
@@ -1225,5 +1249,64 @@ void PNCSysSetExportDefault()
 		fprintf(fp, "%d;", pSchema->m_bEditable ? 1 : 0);
 		fprintf(fp, "%d\n", pSchema->m_bEnable ? 1 : 0);
 	}
-	fclose(fp);
+	fprintf(fp, "比例识别\n");
+	fprintf(fp, "MapScale=%.f ;缩放比例\n", g_pncSysPara.m_fMapScale);
+	return true;
+}
+
+
+static int SplitPathStrToArr(CString& sPath, CStringArray& strPathArr)
+{
+	if (!strPathArr.IsEmpty())
+		strPathArr.RemoveAll();
+	int i = 0, i2 = 0;
+	while ((i2 = sPath.Find(';', i)) != -1)
+	{
+		strPathArr.Add(sPath.Mid(i, i2 - i));
+		i = i2 + 1;
+	}
+	if (i < sPath.GetLength())
+		strPathArr.Add(sPath.Right(sPath.GetLength() - i));
+	return strPathArr.GetSize();
+}
+
+static CString PathArrToString(CStringArray& strArr)
+{
+	CString sPath = "";
+	for (int i = 0; i < strArr.GetSize(); i++)
+	{
+		if (sPath.GetLength() > 0)
+			sPath.Append(";");
+		sPath.Append(strArr[i]);
+	}
+	return sPath;
+}
+
+CXhChar500 CPNCSysPara::GetCurPlateCardFileName()
+{
+	CXhChar500 sCurPath;
+	CStringArray strPathArr;
+	if (SplitPathStrToArr(CString(m_sPlateCardFileName), strPathArr) > 0)
+		sCurPath.Copy(strPathArr[0]);
+	return sCurPath;
+}
+
+CXhChar500 CPNCSysPara::SetCurPlateCardFileName(const char* file_name)
+{
+	CStringArray destPathArr;
+	if (file_name != NULL)
+		destPathArr.Add(file_name);
+	CStringArray strPathArr;
+	if (SplitPathStrToArr(CString(m_sPlateCardFileName), strPathArr) > 0)
+	{
+		for (int i = 0; i < strPathArr.GetSize(); i++)
+		{
+			if (strPathArr[i].CompareNoCase(file_name) == 0)
+				continue;
+			destPathArr.Add(CXhChar500(strPathArr[i]));
+		}
+	}
+	CString sPath = PathArrToString(destPathArr);
+	m_sPlateCardFileName = sPath;
+	return CXhChar500(sPath);
 }

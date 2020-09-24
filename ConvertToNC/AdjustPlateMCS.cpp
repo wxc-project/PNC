@@ -1,6 +1,7 @@
 #include "StdAfx.h"
 #include "AdjustPlateMCS.h"
 #include "CadToolFunc.h"
+#include "PNCCryptCoreCode.h"
 
 CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 {
@@ -41,7 +42,7 @@ void CAdjustPlateMCS::MoveCloneEnts(AcGeMatrix3d moveMat)
 	for (ULONG *pId = m_pPlateInfo->m_cloneEntIdList.GetFirst(); pId; pId = m_pPlateInfo->m_cloneEntIdList.GetNext())
 	{
 		AcDbObjectId entId = MkCadObjId(*pId);
-		Acad::ErrorStatus es = acdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
+		Acad::ErrorStatus es = XhAcdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
 		if (es != Acad::eOk)
 			AfxMessageBox(CXhChar50("%d", es));
 		if (pEnt == NULL)
@@ -93,7 +94,7 @@ bool CAdjustPlateMCS::Rotation()
 	MoveCloneEnts(moveMat);
 	//3. Ðý×ª¸ÖÓ¡ºÅÎ»ÖÃ
 	AcDbEntity *pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_pPlateInfo->m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
+	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(m_pPlateInfo->m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
 	if (pEnt)
 	{
 		pEnt->transformBy(rotationMat);

@@ -105,7 +105,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			g_pncSysPara.m_ciLayoutMode = CPNCSysPara::LAYOUT_CLONE;
 		pSysSettingDlg->UpdateLayoutProperty(pItem);
 #ifndef __UBOM_ONLY_
-		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+		CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd() != NULL)
 		{
 			pPartListDlg->RefreshCtrlState();
@@ -127,7 +127,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	else if(pItem->m_idProp==CPNCSysPara::GetPropID("CDrawDamBoard::BOARD_HEIGHT"))
 	{
 		CDrawDamBoard::BOARD_HEIGHT = atoi(valueStr);
-		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+		CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
@@ -135,7 +135,7 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	{
 		CDrawDamBoard::m_bDrawAllBamBoard = valueStr[0] - '0';
 		CLockDocumentLife lockDocument;
-		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+		CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
 			pPartListDlg->m_xDamBoardManager.DrawAllDamBoard(&model);
 	}
@@ -521,7 +521,7 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 		if (pBoltBlock == NULL)
 		{	//点击父节点
 			pListCtrl->SetSubItemText(pSelItem, iSubItem, sTextValue);
-			for (pBoltBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBoltBlock; pBoltBlock = g_pncSysPara.hashBoltDList.GetNext())
+			for (pBoltBlock = g_pncSysPara.EnumFirstBlotBlock(); pBoltBlock; pBoltBlock = g_pncSysPara.EnumNextBlotBlock())
 			{
 				if (pBoltBlock->sGroupName.Equal(sOldValue))
 					pBoltBlock->sGroupName = sTextValue;
@@ -531,14 +531,14 @@ static BOOL FireValueModify(CSuperGridCtrl* pListCtrl, CSuperGridCtrl::CTreeItem
 		{	//点击子节点
 			if (iSubItem == 1)
 			{
-				BOLT_BLOCK* pFindBolt = g_pncSysPara.hashBoltDList.GetValue(sTextValue);
+				BOLT_BLOCK* pFindBolt = g_pncSysPara.GetBlotBlockByName(sTextValue);
 				if (pFindBolt)
 				{
 					AfxMessageBox(CXhChar50("{%s}已存在此螺栓块",sTextValue));
 					return FALSE;
 				}
 				pBoltBlock->sBlockName = sTextValue;
-				g_pncSysPara.hashBoltDList.ModifyKeyStr(sOldValue, sTextValue);
+				g_pncSysPara.ModifyBoltBlockKeyStr(sOldValue, sTextValue);
 			}
 			else if (iSubItem == 2)
 				pBoltBlock->diameter = atoi(sTextValue);
@@ -714,7 +714,7 @@ void CPNCSysSettingDlg::RefreshListItem()
 	else if (m_iSelTabGroup == PROPGROUP_BOLT)
 	{
 		hashGroupByItemName.Empty();
-		for (BOLT_BLOCK *pBoltD = g_pncSysPara.hashBoltDList.GetFirst(); pBoltD; pBoltD = g_pncSysPara.hashBoltDList.GetNext())
+		for (BOLT_BLOCK *pBoltD = g_pncSysPara.EnumFirstBlotBlock(); pBoltD; pBoltD = g_pncSysPara.EnumNextBlotBlock())
 		{
 			CSuperGridCtrl::CTreeItem** ppGroupItem = hashGroupByItemName.GetValue(pBoltD->sGroupName);
 			if (ppGroupItem == NULL)
@@ -769,12 +769,12 @@ void CPNCSysSettingDlg::OnPNCSysDel()
 			if (IDOK == MessageBox("注意：确定要删除整个分组吗？", "提示", IDOK))
 			{
 				CString sGroupName = m_listCtrlSysSetting.GetItemText(iSelRow, 0);
-				for (BOLT_BLOCK* pBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBlock; pBlock = g_pncSysPara.hashBoltDList.GetNext())
+				for (BOLT_BLOCK* pBlock = g_pncSysPara.EnumFirstBlotBlock(); pBlock; pBlock = g_pncSysPara.EnumNextBlotBlock())
 				{
 					if (pBlock->sGroupName.EqualNoCase(sGroupName))
-						g_pncSysPara.hashBoltDList.DeleteCursor();
+						g_pncSysPara.DeleteCurBoltBlock();
 				}
-				g_pncSysPara.hashBoltDList.Clean();
+				g_pncSysPara.CleanBoltBlockRecog();
 				//
 				m_listCtrlSysSetting.DeleteAllSonItems(pSelItem);
 				m_listCtrlSysSetting.DeleteItem(iSelRow);
@@ -785,15 +785,15 @@ void CPNCSysSettingDlg::OnPNCSysDel()
 			BOLT_BLOCK* pSelBlock = (BOLT_BLOCK*)pSelItem->m_idProp;
 			if (pSelBlock && IDOK == MessageBox("确定要删除吗？", "提示", IDOK))
 			{
-				for (BOLT_BLOCK* pBlock = g_pncSysPara.hashBoltDList.GetFirst(); pBlock; pBlock = g_pncSysPara.hashBoltDList.GetNext())
+				for (BOLT_BLOCK* pBlock = g_pncSysPara.EnumFirstBlotBlock(); pBlock; pBlock = g_pncSysPara.EnumNextBlotBlock())
 				{
 					if (pBlock == pSelBlock)
 					{
-						g_pncSysPara.hashBoltDList.DeleteCursor();
+						g_pncSysPara.DeleteCurBoltBlock();
 						break;
 					}
 				}
-				g_pncSysPara.hashBoltDList.Clean();
+				g_pncSysPara.CleanBoltBlockRecog();
 				//
 				m_listCtrlSysSetting.DeleteItem(iSelRow);
 			}
@@ -822,13 +822,13 @@ void CPNCSysSettingDlg::OnPNCSysAdd()
 		dlg.m_sCaption = "螺栓块名";
 		if (dlg.DoModal() == IDOK)
 		{
-			BOLT_BLOCK* pBlock = g_pncSysPara.hashBoltDList.GetValue(dlg.m_sItemValue);
+			BOLT_BLOCK* pBlock = g_pncSysPara.GetBlotBlockByName(dlg.m_sItemValue);
 			if (pBlock)
 			{
 				AfxMessageBox(CXhChar50("{%s}已存在该螺栓块!",(char*)pBlock->sBlockName));
 				return;
 			}
-			pBlock = g_pncSysPara.hashBoltDList.Add(dlg.m_sItemValue);
+			pBlock = g_pncSysPara.AddBoltBlock(dlg.m_sItemValue);
 			pBlock->sBlockName = dlg.m_sItemValue;
 			pBlock->sGroupName = sGroupName;
 			//

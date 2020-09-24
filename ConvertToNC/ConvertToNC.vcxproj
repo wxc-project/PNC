@@ -3306,6 +3306,7 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\TimerCount.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\XhMath.cpp" />
+    <ClCompile Include="..\..\ToolKits\TowerCad\BoltBlockRecog.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp" />
     <ClCompile Include="..\..\ToolKits\TowerCad\ParseAdaptNo.cpp" />
     <ClCompile Include="..\..\XhCore\AlgFun\f_alg_fun.cpp">
@@ -3652,7 +3653,6 @@
     <ClCompile Include="CadHighlightEntManager.cpp" />
     <ClCompile Include="CadObjLife.cpp" />
     <ClCompile Include="ConvertToNC.cpp" />
-    <ClCompile Include="DocManagerReactor.cpp" />
     <ClCompile Include="DrawDamBoard.cpp" />
     <ClCompile Include="DrawUnit.cpp" />
     <ClCompile Include="DwgFile.cpp" />
@@ -3664,6 +3664,9 @@
     <ClCompile Include="OptimalSortDlg.cpp" />
     <ClCompile Include="PartListDlg.cpp" />
     <ClCompile Include="PNCCmd.cpp" />
+    <ClCompile Include="PNCCryptCoreCode.cpp" />
+    <ClCompile Include="PNCDockBarManager.cpp" />
+    <ClCompile Include="PNCDocReactor.cpp" />
     <ClCompile Include="PNCModel.cpp" />
     <ClCompile Include="PNCSysPara.cpp" />
     <ClCompile Include="PNCSysSettingDlg.cpp" />
@@ -3741,6 +3744,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\TimerCount.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhMath.h" />
+    <ClInclude Include="..\..\ToolKits\TowerCad\BoltBlockRecog.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\ParseAdaptNo.h" />
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
@@ -3954,8 +3958,6 @@
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
     <ClInclude Include="CadObjLife.h" />
-    <ClInclude Include="DockBarManager.h" />
-    <ClInclude Include="DocManagerReactor.h" />
     <ClInclude Include="DrawDamBoard.h" />
     <ClInclude Include="DrawUnit.h" />
     <ClInclude Include="ExplodeTxtDlg.h" />
@@ -3966,6 +3968,9 @@
     <ClInclude Include="OptimalSortDlg.h" />
     <ClInclude Include="PartListDlg.h" />
     <ClInclude Include="PNCCmd.h" />
+    <ClInclude Include="PNCCryptCoreCode.h" />
+    <ClInclude Include="PNCDockBarManager.h" />
+    <ClInclude Include="PNCDocReactor.h" />
     <ClInclude Include="PNCModel.h" />
     <ClInclude Include="PNCSysPara.h" />
     <ClInclude Include="PNCSysSettingDlg.h" />

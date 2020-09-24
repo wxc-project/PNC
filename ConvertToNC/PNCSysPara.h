@@ -4,7 +4,7 @@
 #include "PropListItem.h"
 #include "ProcessPart.h"
 #include "SteelSealReactor.h"
-#include "DockBarManager.h"
+#include "PNCDockBarManager.h"
 
 //////////////////////////////////////////////////////////////////////////
 struct BOLT_HOLE {
@@ -18,6 +18,7 @@ struct BOLT_HOLE {
 };
 //////////////////////////////////////////////////////////////////////////
 //CPNCSysPara
+class CPNCModel;
 #ifndef __UBOM_ONLY_
 class CPNCSysPara : public CPlateExtractor
 #else
@@ -54,6 +55,7 @@ public:
 private:
 	CHashStrList<LAYER_ITEM> m_xHashDefaultFilterLayers;
 	CHashStrList<LAYER_ITEM> m_xHashEdgeKeepLayers;
+	CXhChar500 m_sPlateCardFileName;
 public:
 	//常规参数
 	int m_iPPiMode;			//PPI文件生成模式 0.一板一号 1.一板多号
@@ -106,6 +108,9 @@ public:
 	LAYER_ITEM* AppendSpecItem(const char* sLayer){return m_xHashEdgeKeepLayers.Add(sLayer);}
 	LAYER_ITEM* GetEdgeLayerItem(const char* sLayer){return m_xHashEdgeKeepLayers.GetValue(sLayer);}
 	void EmptyEdgeLayerHash(){m_xHashEdgeKeepLayers.Empty();}
+	//大样图套框配置
+	CXhChar500 GetCurPlateCardFileName();
+	CXhChar500 SetCurPlateCardFileName(const char* file_name);
 	//
 	BOOL IsNeedFilterLayer(const char* sLayer);
 	BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
@@ -116,7 +121,7 @@ public:
 	//
 	BOOL RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo);
 	BOOL RecogArcEdge(AcDbEntity* pEnt, f3dArcLine& arcLine, BYTE& ciEdgeType);
-	BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole);
+	BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pBelongModel = NULL);
 	BOOL RecogMkRect(AcDbEntity* pEnt, f3dPoint* ptArr, int nNum);
 	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
@@ -127,3 +132,5 @@ extern CSteelSealReactor *g_pSteelSealReactor;
 //
 void PNCSysSetImportDefault();
 void PNCSysSetExportDefault();
+bool PNCSysSetImportDefault(FILE* fp);
+bool PNCSysSetExportDefault(FILE* fp);

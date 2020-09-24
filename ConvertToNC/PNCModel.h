@@ -2,7 +2,7 @@
 #include "XeroExtractor.h"
 #include "ProcessPart.h"
 #include "ArrayList.h"
-#include "DocManagerReactor.h"
+#include "PNCDocReactor.h"
 #include "..\..\LDS\LDS\BOM\BOM.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -139,6 +139,7 @@ public:
 	virtual BOOL IsClose(int* pIndex = NULL);
 };
 //CPlateProcessInfo
+class CPNCModel;
 class CPlateProcessInfo : public CPlateObject
 {
 	struct LAYOUT_VERTEX{
@@ -154,6 +155,7 @@ class CPlateProcessInfo : public CPlateObject
 	};
 private:
 	GECS ucs;
+	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
 	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
 public:
 	BOOL m_bEnableReactor;
@@ -182,11 +184,21 @@ public:
 	static const BYTE MODIFY_SINGLE_NUM = 0x02;
 	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
 	BYTE m_ciModifyState;
+	//
+	f2dRect m_rectCard;			//工艺卡矩形框，用于批量打印 wht 20.01.27
+	BOOL m_bHasCard;			//判断钢板是否带工艺卡框 wht 20.01.27
+	static const DWORD ERROR_NORMAL					= 0x0;	//无错误
+	static const DWORD ERROR_TEXT_OUTSIDE_OF_PLATE	= 0x01;	//文字超边
+	static const DWORD ERROR_REPEAT_PART_LABEL		= 0x02;	//重复件号
+	static const DWORD ERROR_TEXT_INSIDE_OF_HOLE	= 0x04;	//孔内文字
+	static const DWORD ERROR_LABEL_INSIDE_OF_HOLE	= 0x08;	//孔内件号
+	DWORD m_dwErrorType;
+	DWORD m_dwCorrectState;	//与错误状态配对使用，暂时只用来记录文字缩放是否修正成功 wht 19.12.24
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
 	void PreprocessorBoltEnt(int *piInvalidCirCountForText);
-	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt);
+	CAD_ENTITY* AppendRelaEntity(CPNCModel *pBelongModel, AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
 public:
 	CPlateProcessInfo();
 	//
@@ -205,8 +217,8 @@ public:
 	BOOL InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr);
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
-	void ExtractPlateRelaEnts();
-	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
+	void ExtractPlateRelaEnts(CPNCModel *pBelongModel=NULL);
+	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE, CPNCModel *pBelongModel=NULL);
 	void CheckProfileEdge();
 	//生成中性文件
 	void InitPPiInfo();
@@ -216,7 +228,8 @@ public:
 	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
 	void InitEdgeEntIdMap();
 	void InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType);
-	void DrawPlate(f3dPoint *pOrgion=NULL,BOOL bCreateDimPos=FALSE,BOOL bDrawAsBlock=FALSE,GEPOINT *pPlateCenter=NULL);
+	bool DrawPlate(f3dPoint *pOrgion=NULL,BOOL bCreateDimPos=FALSE,BOOL bDrawAsBlock=FALSE,
+				   GEPOINT *pPlateCenter=NULL,double scale=0,BOOL bSupportRotation=TRUE);
 	void DrawPlateProfile(f3dPoint *pOrgion = NULL);
 	//钢板钢印位置处理
 	void InitMkPos(GEPOINT &mk_pos, GEPOINT &mk_vec);

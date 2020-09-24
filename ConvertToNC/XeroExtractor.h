@@ -3,6 +3,7 @@
 #include "f_ent_list.h"
 #include "HashTable.h"
 #include "XhCharString.h"
+#include "BoltBlockRecog.h"
 #include <vector>
 using std::vector;
 //////////////////////////////////////////////////////////////////////////
@@ -25,28 +26,6 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 //钢板大样图识别器
-struct BOLT_BLOCK
-{
-	CXhChar50 sGroupName;	//分组名称
-	CXhChar16 sBlockName;
-	short diameter;
-	double hole_d;
-	BOLT_BLOCK() {
-		Init("", "",0, 0);
-	}
-	BOLT_BLOCK(const char* name, short md=0, double holeD=0) {
-		Init("", name, md, holeD);
-	}
-	BOLT_BLOCK(const char* groupName, const char* name, short md=0, double holeD=0){
-		Init(groupName, name, md, holeD);
-	}
-	void Init(const char* groupName, const char* name, short md, double holeD) {
-		sGroupName.Copy(groupName);
-		sBlockName.Copy(name);
-		diameter = md;
-		hole_d = holeD;
-	}
-};
 struct RECOG_SCHEMA{
 	CXhChar50 m_sSchemaName;//识别模式名称
 	int m_iDimStyle;		//0.单行标注 1.多行标注
@@ -67,6 +46,7 @@ protected:
 	RECOG_SCHEMA* InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
 		char* matKey, char* thickKey, char* partCountKey = NULL,
 		char* frontBendKey = NULL, char* reverseBendKey = NULL);
+	CBoltBlockRecog m_xBoltBlockRecog;
 public:
 	int m_iDimStyle;		//0.单行标注 1.多行标注
 	CXhChar50 m_sPnKey;		//
@@ -76,7 +56,6 @@ public:
 	CXhChar50 m_sFrontBendKey;	//正曲
 	CXhChar50 m_sReverseBendKey;//反曲
 	ATOM_LIST<RECOG_SCHEMA> m_recogSchemaList;
-	CHashStrList<BOLT_BLOCK> hashBoltDList;
 public:
 	CPlateExtractor();
 	virtual ~CPlateExtractor();
@@ -104,6 +83,17 @@ public:
 	virtual void Init();
 	virtual BOOL IsBendLine(AcDbLine* pAcDbLine, ISymbolRecognizer* pRecognizer = NULL);
 	virtual BOOL IsSlopeLine(AcDbLine* pAcDbLine, ISymbolRecognizer* pRecognizer = NULL);
+	//
+	BOLT_BLOCK* GetBlotBlockByName(const char* sBlockName) { return m_xBoltBlockRecog.FromName(sBlockName); }
+	BOLT_BLOCK* AddBoltBlock(const char* sBlockName) { return m_xBoltBlockRecog.Add(sBlockName); }
+	BOLT_BLOCK *EnumFirstBlotBlock() { return m_xBoltBlockRecog.EnumFirst(); }
+	BOLT_BLOCK *EnumNextBlotBlock() { return m_xBoltBlockRecog.EnumNext(); }
+	CXhChar50 GetBoltBlockCurKey() { return m_xBoltBlockRecog.GetCurKey(); }
+	BOLT_BLOCK *ModifyBoltBlockKeyStr(const char *oldkey, const char *newkey) { return m_xBoltBlockRecog.ModifyKeyStr(oldkey, newkey); }
+	BOOL DeleteBoltBlockByName(const char* sName) { return m_xBoltBlockRecog.DeleteBoltBlockByName(sName); }
+	void EmptyBoltBlockRecog() { m_xBoltBlockRecog.Empty(); }
+	void CleanBoltBlockRecog() { m_xBoltBlockRecog.Clean(); }
+	void DeleteCurBoltBlock(BOOL bClean=FALSE) { return m_xBoltBlockRecog.DeleteCursor(bClean); }
 };
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////

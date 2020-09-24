@@ -557,17 +557,17 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 {
 	if (m_sFileName.GetLength() <= 0 || pTblCfg == NULL)
 		return FALSE;
-	DisplayProgress(0, "读取Excel表格数据.....");
+	DisplayCadProgress(0, "读取Excel表格数据.....");
 	//1、打开指定文件
-	DisplayProgress(10);
+	DisplayCadProgress(10);
 	CExcelOperObject excelobj;
 	if (!excelobj.OpenExcelFile(m_sFileName))
 	{
-		DisplayProgress(100);
+		DisplayCadProgress(100);
 		return FALSE;
 	}
 	//2、获取定制列信息
-	DisplayProgress(30);
+	DisplayCadProgress(30);
 	CHashStrList<DWORD> hashColIndexByColTitle;
 	pTblCfg->m_xTblCfg.GetHashColIndexByColTitleTbl(hashColIndexByColTitle);
 	int iStartRow = pTblCfg->m_xTblCfg.m_nStartRow - 1;
@@ -575,12 +575,12 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 	BOOL bReadOK = FALSE;
 	if (pTblCfg->m_sBomSheetName.GetLength() > 0)	
 	{	//配置文件中指定了sheet加载表单
-		DisplayProgress(50);
+		DisplayCadProgress(50);
 		ARRAY_LIST<int> sheetIndexList;
 		CExcelOper::GetExcelIndexOfSpecifySheet(&excelobj, pTblCfg->m_sBomSheetName, sheetIndexList);
 		for (int *pSheetIndex = sheetIndexList.GetFirst(); pSheetIndex; pSheetIndex = sheetIndexList.GetNext())
 		{
-			DisplayProgress(70 + (*pSheetIndex));
+			DisplayCadProgress(70 + (*pSheetIndex));
 			CVariant2dArray sheetContentMap(1, 1);
 			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, *pSheetIndex, 52);
 			int iCurIndex = sheetIndexList.GetCurrentIndex();
@@ -603,7 +603,7 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 		int nSheetNum = excelobj.GetWorkSheetCount(), nValidSheetCount = 0;
 		for (int iSheet = 1; iSheet <= nSheetNum; iSheet++)
 		{
-			DisplayProgress(70 + iSheet);
+			DisplayCadProgress(70 + iSheet);
 			CVariant2dArray sheetContentMap(1, 1);
 			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet);
 			if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
@@ -611,7 +611,7 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 		}
 		bReadOK = nValidSheetCount > 0 ? TRUE : FALSE;
 	}
-	DisplayProgress(100);
+	DisplayCadProgress(100);
 	if (!bReadOK)
 		logerr.Log("缺少关键列(件号或规格或材质或单基数)!");
 	return bReadOK;

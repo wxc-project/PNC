@@ -108,7 +108,7 @@ protected:
 public:
 	CVectorMonoImage();
 	//
-	void(*DisplayProcess)(int percent, char *sTitle);	//进度显示回调函数
+	void(*DisplayProcess)(int percent, const char *sTitle);	//进度显示回调函数
 	void SetOCS(GECS& _ocs,double scaleOfView2Model=0.01);
 	void DrawLine(f3dLine line, long idRelaObj = 0);
 	void DrawArcLine(f3dArcLine arc_line, long idRelaObj = 0);

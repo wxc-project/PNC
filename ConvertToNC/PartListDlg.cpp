@@ -14,6 +14,7 @@
 #include "AcUiDialogPanel.h"
 #include "PNCSysPara.h"
 #include "PNCSysSettingDlg.h"
+#include "PNCCryptCoreCode.h"
 
 #ifndef __UBOM_ONLY_
 // CPartListDlg ¶Ô»°¿ò
@@ -653,7 +654,7 @@ void CPartListDlg::OnBnClickedBtnMoveMkRect()
 	AcDbObjectId entId=m_xDamBoardManager.GetSteelSealRectId(pPlateInfo);
 	DRAGSET.Add(entId);
 	AcDbEntity *pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, pointId, AcDb::kForRead);
+	XhAcdbOpenAcDbEntity(pEnt, pointId, AcDb::kForRead);
 	if (pEnt == NULL)
 		return;
 	pEnt->close();

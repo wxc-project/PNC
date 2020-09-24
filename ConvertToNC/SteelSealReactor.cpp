@@ -2,6 +2,7 @@
 #include "SteelSealReactor.h"
 #include "CadToolFunc.h"
 #include "PNCModel.h"
+#include "PNCCryptCoreCode.h"
 
 CSteelSealReactor::CSteelSealReactor()
 {
@@ -48,7 +49,7 @@ void CSteelSealReactor::modified(const AcDbObject* dbObj)
 			return;
 		//通过块位置更新数据点的位置
 		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, AcDbObjectId((AcDbStub*)pPlateInfo->m_xMkDimPoint.idCadEnt),AcDb::kForWrite);
+		XhAcdbOpenAcDbEntity(pEnt, AcDbObjectId((AcDbStub*)pPlateInfo->m_xMkDimPoint.idCadEnt),AcDb::kForWrite);
 		CAcDbObjLife objLife(pEnt);
 		if (pEnt == NULL||!pEnt->isKindOf(AcDbPoint::desc()))
 			return;

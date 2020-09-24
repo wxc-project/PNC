@@ -40,7 +40,7 @@ void SmartExtractPlate()
 	SmartExtractPlate(&model, TRUE);
 }
 
-void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
+void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHashSet<AcDbObjectId> *pObjIdSet/*=NULL*/)
 {
 	if (pModel == NULL)
 		return;
@@ -74,8 +74,16 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 	SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
 	if (bSupportSelectEnts)
 	{	//PNC支持进行手动框选
-		if (!SelCadEntSet(selectedEntList))
-			return;
+		if (pObjIdSet)
+		{
+			for (AcDbObjectId entId = pObjIdSet->GetFirst(); entId; entId = pObjIdSet->GetNext())
+				selectedEntList.SetValue(entId.asOldId(), entId);
+		}
+		if (selectedEntList.GetNodeNum() <= 0)
+		{
+			if (!SelCadEntSet(selectedEntList))
+				return;
+		}
 	}
 	else
 	{	//UBOM默认处理所有图元
@@ -86,10 +94,10 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 	CHashSet<AcDbObjectId> textIdHash;
 	AcDbEntity *pEnt = NULL;
 	int index = 1,nNum= selectedEntList.GetNodeNum();
-	DisplayProgress(0, "查找图纸文字标注,识别钢板件号信息.....");
+	DisplayCadProgress(0, "查找图纸文字标注,识别钢板件号信息.....");
 	for (AcDbObjectId entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext(), index++)
 	{
-		DisplayProgress(int(100 * index / nNum));
+		DisplayCadProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(entId);
 		if((pEnt = objLife.GetEnt())==NULL)
 			continue;
@@ -167,7 +175,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 			pPlateProcess->xPlate.cMaterial = 'S';
 		}
 	}
-	DisplayProgress(100);
+	DisplayCadProgress(100);
 	if(pModel->GetPlateNum()<=0)
 	{
 		if (AfxMessageBox("该文件不满足文字识别配置！是否调整文字识别配置？", MB_YESNO) == IDYES)
@@ -190,10 +198,10 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 	//根据轮廓闭合区域更新钢板的基本信息+螺栓信息+轮廓边信息
 	int nSum = 0;
 	nNum = pModel->GetPlateNum();
-	DisplayProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
+	DisplayCadProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
 	{
-		DisplayProgress(int(100 * nSum / nNum));
+		DisplayCadProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractPlateRelaEnts();
 		pPlateProcess->CheckProfileEdge();
 		if(!pPlateProcess->UpdatePlateInfo())
@@ -203,13 +211,13 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 		//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
 		pPlateProcess->m_bNeedExtract = FALSE;
 	}
-	DisplayProgress(100);
+	DisplayCadProgress(100);
 	//将提取的钢板信息导出到中性文件中
 	if (g_pncSysPara.m_iPPiMode == 0)
-		model.SplitManyPartNo();
+		pModel->SplitManyPartNo();
 	CString file_path;
 	GetCurWorkPath(file_path);
-	model.CreatePlatePPiFile(file_path);
+	pModel->CreatePlatePPiFile(file_path);
 	//写工程塔型配置文件 wht 19-01-12
 	if (pModel->m_sTaType.GetLength() > 0)
 	{
@@ -222,7 +230,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/)
 	//通过菜单提取的钢板需更新构件列表
 	if (CPNCModel::m_bSendCommand == FALSE)
 	{
-		CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+		CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 		if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd()!=NULL)
 		{
 			pPartListDlg->RefreshCtrlState();
@@ -406,9 +414,9 @@ void SendPartEditor()
 //////////////////////////////////////////////////////////////////////////
 void ShowPartList()
 {	
-	g_xDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
+	g_xPNCDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 	//更新构件列表
-	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+	CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 	if (pPartListDlg != NULL)
 		pPartListDlg->UpdatePartList();
 }
@@ -488,7 +496,7 @@ void DrawPlates()
 		g_pncSysPara.m_ciGroupType = group_type;
 	model.DrawPlates();
 	//更新构件列表
-	CPartListDlg *pPartListDlg = g_xDockBarManager.GetPartListDlgPtr();
+	CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 	if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd() != NULL)
 	{
 		pPartListDlg->RefreshCtrlState();
@@ -744,16 +752,6 @@ void DrawProfileByTxtFile()
 	acedCommand(RTSTR, "PDMODE", RTSTR, "34", RTNONE);		//显示点 X
 #endif
 }
-//////////////////////////////////////////////////////////////////////////
-//打碎文本,将文本类型转换为多段线
-//ExplodeText
-//////////////////////////////////////////////////////////////////////////
-void ExplodeText()
-{
-	CLogErrorLife logErrLife;
-	CAcModuleResourceOverride useThisRes;
-	g_xDockBarManager.DisplayExplodeTxtDockBar();
-}
 #endif
 //////////////////////////////////////////////////////////////////////////
 //系统设置
@@ -790,7 +788,7 @@ void RevisionPartProcess()
 	}
 	//显示对话框
 	int nWidth = g_xBomCfg.InitBomTitle();
-	g_xDockBarManager.DisplayRevisionDockBar(nWidth);
+	g_xPNCDockBarManager.DisplayRevisionDockBar(nWidth);
 }
 #endif
 //////////////////////////////////////////////////////////////////////////

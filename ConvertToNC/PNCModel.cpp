@@ -10,6 +10,7 @@
 #include "PolygonObject.h"
 #include "DimStyle.h"
 #include "XhMath.h"
+#include "PNCCryptCoreCode.h"
 #ifdef __TIMER_COUNT_
 #include "TimerCount.h"
 #endif
@@ -74,7 +75,7 @@ void CAD_LINE::Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end)
 BOOL CAD_LINE::UpdatePos()
 {
 	AcDbEntity *pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, MkCadObjId(idCadEnt), AcDb::kForRead);
+	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(idCadEnt), AcDb::kForRead);
 	CAcDbObjLife life(pEnt);
 	if (pEnt == NULL)
 		return FALSE;
@@ -471,15 +472,17 @@ void CPlateProcessInfo::CheckProfileEdge()
 			pCurVertex->tag.dwParam = pCadLine->idCadEnt;
 	}
 }
+
 //
-CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
+CAD_ENTITY* __AppendRelaEntity(CPNCModel *pBelongModel, AcDbEntity *pEnt, 
+							   CHashList<CAD_ENTITY> *pHashRelaEntIdList /*= NULL*/)
 {
-	if(pEnt==NULL)
+	if (pEnt == NULL || pHashRelaEntIdList == NULL)
 		return NULL;
-	CAD_ENTITY* pRelaEnt=m_xHashRelaEntIdList.GetValue(pEnt->id().asOldId());
+	CAD_ENTITY* pRelaEnt= pHashRelaEntIdList->GetValue(pEnt->id().asOldId());
 	if(pRelaEnt==NULL)
 	{
-		pRelaEnt=m_xHashRelaEntIdList.Add(pEnt->id().asOldId());
+		pRelaEnt= pHashRelaEntIdList->Add(pEnt->id().asOldId());
 		pRelaEnt->idCadEnt=pEnt->id().asOldId();
 		if (pEnt->isKindOf(AcDbLine::desc()))
 			pRelaEnt->ciEntType = TYPE_LINE;
@@ -538,7 +541,9 @@ CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
 		{
 			pRelaEnt->ciEntType = TYPE_BLOCKREF;
-			CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+			if (pBelongModel == NULL)
+				pBelongModel = &model;
+			CAD_ENTITY* pLsBlockEnt = pBelongModel->m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
 			if (pLsBlockEnt)
 			{	//记录图块的位置和大小，方便后期处理同一位置有多个图块的情况
 				pRelaEnt->pos.x = pLsBlockEnt->pos.x;
@@ -572,8 +577,20 @@ CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(AcDbEntity *pEnt)
 	}
 	return pRelaEnt;
 }
+
+CAD_ENTITY* CPlateProcessInfo::AppendRelaEntity(CPNCModel *pBelongModel, AcDbEntity* pEnt, 
+												CHashList<CAD_ENTITY>* pHashRelaEntIdList /*= NULL*/)
+{
+	if (pEnt == NULL)
+		return NULL;
+	if (pHashRelaEntIdList == NULL)
+		pHashRelaEntIdList = &m_xHashRelaEntIdList;
+	ASSERT(pHashRelaEntIdList != NULL);
+	return XhAppendRelaEntity(pBelongModel, pEnt, pHashRelaEntIdList);
+	//return __AppendRelaEntity(pBelongModel, pEnt, pHashRelaEntIdList);
+}
 //根据钢板的轮廓点初始化归属钢板的图元集合
-void CPlateProcessInfo::ExtractPlateRelaEnts()
+void CPlateProcessInfo::ExtractPlateRelaEnts(CPNCModel *pBelongModel /*= NULL*/)
 {
 	m_xHashRelaEntIdList.Empty();
 	m_xHashRelaEntIdList.SetValue(partNoId.asOldId(), CAD_ENTITY(partNoId.asOldId()));
@@ -588,10 +605,10 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 		if(pVer->tag.lParam==0||pVer->tag.lParam==-1)
 			continue;
 		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, MkCadObjId(pVer->tag.dwParam), AcDb::kForRead);
+		XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(pVer->tag.dwParam), AcDb::kForRead);
 		if (pEnt)
 		{
-			AppendRelaEntity(pEnt);
+			AppendRelaEntity(pBelongModel, pEnt);
 			pEnt->close();
 		}
 	}
@@ -651,7 +668,7 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 			if (!IsInPlate(dimPt))
 				continue;
 		}
-		AppendRelaEntity(pEnt);
+		AppendRelaEntity(pBelongModel,pEnt);
 	}
 }
 
@@ -745,7 +762,7 @@ void CPlateProcessInfo::PreprocessorBoltEnt(int *piInvalidCirCountForText)
 	}
 }
 //根据钢板相关的图元集合更新基本信息、螺栓信息及顶点(火曲)信息
-BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
+BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/, CPNCModel* pBelongModel /*= NULL*/)
 {
 	if(!IsValid())
 		return FALSE;
@@ -813,6 +830,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	PreprocessorBoltEnt(&nInvalidCirCountForText);
 	if (nInvalidCirCountForText > 0)
 		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！",(char*)xPlate.GetPartNo(),nInvalidCirCountForText);
+	if (pBelongModel == NULL)
+		pBelongModel = &model;
 	//baseInfo应定义在For循环外，否则多行多次提取会导致之前的提取到的结果被冲掉 wht 19-10-22
 	BASIC_INFO baseInfo;
 	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
@@ -833,8 +852,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				xPlate.m_nSingleNum = xPlate.m_nProcessNum = baseInfo.m_nNum;
 			if (baseInfo.m_idCadEntNum != 0)
 				partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
-			if (baseInfo.m_sTaType.GetLength() > 0 && model.m_sTaType.GetLength() <= 0)
-				model.m_sTaType.Copy(baseInfo.m_sTaType);
+			if (baseInfo.m_sTaType.GetLength() > 0 && pBelongModel->m_sTaType.GetLength() <= 0)
+				pBelongModel->m_sTaType.Copy(baseInfo.m_sTaType);
 			if(baseInfo.m_sPartNo.GetLength()>0&&bRelatePN)
 			{
 				if(xPlate.GetPartNo().GetLength()<=0)
@@ -849,7 +868,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 		}
 		//提取螺栓信息
 		BOLT_HOLE boltInfo;
-		if(g_pncSysPara.RecogBoltHole(pEnt,boltInfo))
+		if(g_pncSysPara.RecogBoltHole(pEnt,boltInfo,pBelongModel))
 		{
 			BOLT_INFO *pBoltInfo=boltList.append();
 			pBoltInfo->posX=boltInfo.posX;
@@ -982,7 +1001,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			CAcDbObjLife objLife(MkCadObjId(pCurBolt->feature));
 			if ((pEnt = objLife.GetEnt()) && pEnt->isKindOf(AcDbBlockReference::desc()))
 			{
-				CAD_ENTITY* pLsBlockEnt = model.m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
+				CAD_ENTITY* pLsBlockEnt = pBelongModel->m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
 				if (pLsBlockEnt)
 					org_hole_d2 = pLsBlockEnt->m_fSize;
 			}
@@ -1162,7 +1181,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		return;	//执行boundary未新增实体(即未找到有效的封闭区域)
 	}
 	AcDbEntity *pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt,plineId,AcDb::kForWrite);
+	XhAcdbOpenAcDbEntity(pEnt,plineId,AcDb::kForWrite);
 	if(pEnt==NULL||!pEnt->isKindOf(AcDbPolyline::desc()))
 	{
 		if(pEnt)
@@ -1576,7 +1595,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 		pVer->tag.dwParam = objItem.idCadEnt;
 		//记录圆弧信息
 		AcDbEntity *pEnt = NULL;
-		acdbOpenAcDbEntity(pEnt, MkCadObjId(objItem.idCadEnt), AcDb::kForRead);
+		XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(objItem.idCadEnt), AcDb::kForRead);
 		CAcDbObjLife objLife(pEnt);
 		if (pEnt && pEnt->isKindOf(AcDbArc::desc()))
 		{
@@ -2039,15 +2058,18 @@ void CPlateProcessInfo::InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType)
 	datumStartVertex.srcPos = datumPt;
 	datumEndVertex.srcPos = datumStartVertex.srcPos;
 }
-void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/*=FALSE*/,BOOL bDrawAsBlock/*=FALSE*/, GEPOINT *pPlateCenter /*= NULL*/)
+bool CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/*=FALSE*/,
+								  BOOL bDrawAsBlock/*=FALSE*/, GEPOINT *pPlateCenter /*= NULL*/,
+								  double scale /*= 0*/, BOOL bSupportRotation /*= TRUE*/)
 {	
 	CLockDocumentLife lockCurDocumentLife;
 	AcDbBlockTableRecord *pBlockTableRecord=GetBlockTableRecord();
 	if(pBlockTableRecord==NULL)
 	{
 		AfxMessageBox("获取块表记录失败!");
-		return;
+		return false;
 	}
+	AcGeMatrix3d scaleMat;
 	AcGeMatrix3d moveMat,rotationMat;
 	if(pOrgion)
 	{	//计算平移基准点及旋转角度
@@ -2064,6 +2086,10 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 		GEPOINT dest_vec=datumEndVertex.offsetPos-datumStartVertex.offsetPos;
 		double fDegAngle=Cal2dLineAng(0,0,dest_vec.x,dest_vec.y)-Cal2dLineAng(0,0,src_vec.x,src_vec.y);
 		rotationMat.setToRotation(fDegAngle,AcGeVector3d::kZAxis,AcGePoint3d(ptTo[X],ptTo[Y],ptTo[Z]));
+		//
+		AcGePoint3d centerPt(pOrgion->x, pOrgion->y, 0);
+		if (fabs(scale) > 0)
+			scaleMat.setToScaling(scale, centerPt);
 	}
 	AcGeMatrix3d blockMoveMat;
 	if (pPlateCenter)
@@ -2097,10 +2123,13 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 			if(pOrgion)
 			{
 				pClone->transformBy(moveMat);		//平移
-				pClone->transformBy(rotationMat);	//旋转
+				if(bSupportRotation)
+					pClone->transformBy(rotationMat);	//旋转
 			}
 			if (pPlateCenter&&bDrawAsBlock)
 				pClone->transformBy(blockMoveMat);	//作为块输出时，移动至原点位置，设置块插入点为矩形中心点 wht 19-07-25
+			if (fabs(scale) > 0 && fabs(scale-1)>EPS)
+				pClone->transformBy(scaleMat);		//按指定比例缩放钢板 wht 20-01-22
 			AcDbObjectId entId;
 			DRAGSET.AppendAcDbEntity(pCurBlockTblRec,entId,pClone);
 			m_cloneEntIdList.append(entId.asOldId());
@@ -2136,7 +2165,7 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 		if (pOrgion || (pPlateCenter && bDrawAsBlock))
 		{
 			AcDbEntity* pEnt = NULL;
-			acdbOpenAcDbEntity(pEnt, circleId, AcDb::kForWrite);
+			XhAcdbOpenAcDbEntity(pEnt, circleId, AcDb::kForWrite);
 			if (pEnt)
 			{
 				if (pOrgion)
@@ -2153,6 +2182,7 @@ void CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/,BOOL bCreateDimPos/
 	if (bDrawAsBlock&&pPlateCenter&&pCurBlockTblRec != pBlockTableRecord)
 		DRAGSET.EndBlockRecord(pBlockTableRecord, *pPlateCenter, 1.0, &m_layoutBlockId);
 	pBlockTableRecord->close();
+	return true;
 }
 void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 {
@@ -2275,7 +2305,7 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 		{
 			entId = MkCadObjId(m_newAddEntIdList.At(i));
 			AcDbEntity* pEnt = NULL;
-			acdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
+			XhAcdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
 			if (pEnt)
 			{
 				pEnt->transformBy(moveMat);
@@ -2669,7 +2699,7 @@ bool CPlateProcessInfo::SyncSteelSealPos()
 	AcDbEntity *pEnt = NULL;
 	if (m_xMkDimPoint.idCadEnt != 0)
 	{
-		Acad::ErrorStatus es=acdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForRead);
+		Acad::ErrorStatus es=XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForRead);
 		if (es != Acad::eOk)
 		{
 			if (pEnt)
@@ -2716,7 +2746,7 @@ bool CPlateProcessInfo::AutoCorrectedSteelSealPos()
 bool CPlateProcessInfo::GetSteelSealPos(GEPOINT &pos)
 {
 	AcDbEntity* pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForRead);
+	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForRead);
 	CAcDbObjLife objLife(pEnt);
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPoint::desc()))
 		return false;
@@ -2729,7 +2759,7 @@ bool CPlateProcessInfo::GetSteelSealPos(GEPOINT &pos)
 bool CPlateProcessInfo::UpdateSteelSealPos(GEPOINT &pos)
 {
 	AcDbEntity* pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
+	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
 	CAcDbObjLife life(pEnt);
 	if (pEnt == NULL || !pEnt->isKindOf(AcDbPoint::desc()))
 		return false;
@@ -2747,7 +2777,7 @@ void CPlateProcessInfo::RefreshPlateNum()
 		return;
 	CLockDocumentLife lockCurDocLife;
 	AcDbEntity *pEnt = NULL;
-	acdbOpenAcDbEntity(pEnt, partNumId, AcDb::kForWrite);
+	XhAcdbOpenAcDbEntity(pEnt, partNumId, AcDb::kForWrite);
 	CAcDbObjLife entLife(pEnt);
 	CXhChar100 sValueG, sValueS, sValueM;
 	if (pEnt->isKindOf(AcDbText::desc()))
@@ -2869,10 +2899,10 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 	AcDbEntity *pEnt = NULL;
 	//剔除非轮廓边图元，记录火曲线特征信息
 	int index = 1, nNum = selectedEntIdSet.GetNodeNum() * 2;
-	DisplayProgress(0, "剔除无效的非轮廓边图元.....");
+	DisplayCadProgress(0, "剔除无效的非轮廓边图元.....");
 	for (objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(), index++)
 	{
-		DisplayProgress(int(100 * index / nNum));
+		DisplayCadProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -2893,7 +2923,7 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 	CHashStrList< ATOM_LIST<CAD_LINE> > hashLineArrByPosKeyStr;
 	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(),index++)
 	{
-		DisplayProgress(int(100 * index / nNum));
+		DisplayCadProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -2923,7 +2953,7 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 			pEndLineList = hashLineArrByPosKeyStr.Add(endKeyStr);
 		pEndLineList->append(CAD_LINE(objId, len));
 	}
-	DisplayProgress(100);
+	DisplayCadProgress(100);
 	for (ATOM_LIST<CAD_LINE> *pList = hashLineArrByPosKeyStr.GetFirst(); pList; pList = hashLineArrByPosKeyStr.GetNext())
 	{
 		if (pList->GetNodeNum() != 1)
@@ -3348,7 +3378,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	ocs.axis_y.Set(0, -1, 0);
 	ocs.axis_z.Set(0, 0, -1);
 	CVectorMonoImage xImage;
-	xImage.DisplayProcess = DisplayProgress;
+	xImage.DisplayProcess = DisplayCadProgress;
 	xImage.SetOCS(ocs, 0.2);	//g_pncSysPara.m_fPixelScale
 	for (int i = 0; i < arrArcLine.GetNodeNum(); i++)
 		xImage.DrawArcLine(arrArcLine[i], arrArcLine[i].feature);
@@ -3404,10 +3434,10 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 	}
 	//根据多段线提取钢板轮廓点
 	int nStep = 0, nNum = acdbPolylineSet.GetNodeNum() + acdbArclineSet.GetNodeNum() + acdbCircleSet.GetNodeNum();
-	DisplayProgress(0, "修订钢板轮廓点信息.....");
+	DisplayCadProgress(0, "修订钢板轮廓点信息.....");
 	for (objId = acdbPolylineSet.GetFirst(); objId; objId = acdbPolylineSet.GetNext(), nStep++)
 	{
-		DisplayProgress(int(100 * nStep / nNum));
+		DisplayCadProgress(int(100 * nStep / nNum));
 		CPlateProcessInfo tem_plate;
 		if (!tem_plate.InitProfileByAcdbPolyLine(objId))
 			continue;
@@ -3425,7 +3455,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 	}
 	for (objId = acdbCircleSet.GetFirst(); objId; objId = acdbCircleSet.GetNext(), nStep++)
 	{
-		DisplayProgress(int(100 * nStep / nNum));
+		DisplayCadProgress(int(100 * nStep / nNum));
 		CPlateProcessInfo tem_plate;
 		if (!tem_plate.InitProfileByAcdbCircle(objId))
 			continue;
@@ -3467,7 +3497,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		int nSize = (index == 0) ? line_arr.GetSize() : hashUnmatchLine.GetNodeNum();
 		while (nSize > 0)
 		{
-			DisplayProgress(int(100 * nStep / nNum));
+			DisplayCadProgress(int(100 * nStep / nNum));
 			CAD_LINE* pStartLine = line_arr.GetFirst();
 			if (index != 0)
 				pStartLine = hashUnmatchLine.GetFirst();
@@ -3518,7 +3548,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 			nSize = (index == 0) ? line_arr.GetSize() : hashUnmatchLine.GetNodeNum();
 		}
 	}
-	DisplayProgress(100);
+	DisplayCadProgress(100);
 }
 //处理钢板一板多号的情况
 void CPNCModel::MergeManyPartNo()
