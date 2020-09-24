@@ -23,8 +23,8 @@ static CXhChar500 GetTempFileFolderPath(bool bEmpty,const char* subFolder)
 	BOOL bContinue = fileFind.FindFile(CXhChar500("%s*.*", (char*)sTemp));
 	if (!bContinue)
 		MakeDirectory(sTemp);
-	else
-	{
+	else if (bEmpty)
+	{	
 		while (bContinue)
 		{
 			bContinue = fileFind.FindNextFile();
@@ -446,6 +446,11 @@ bool CBatchPrint::PrintProcessCardToPaper(bool bSendCmd)
 	//进行批量打印
 	if (m_pPrintScopeList==NULL)
 		m_pPrintScopeList = &m_xPrintScopeList;
+	CXhChar500 sTempPath = GetTempFileFolderPath(FALSE, "Parper-Log");
+	CTime time = CTime::GetCurrentTime();
+	CString sTime = time.Format("%Y%m%d%H%M%S");
+	CLogFile plotLog(CXhChar500("%s\\plot(%s).log",(char*)sTempPath,sTime));
+	int i = 0;
 	for(PRINT_SCOPE *pScope= m_pPrintScopeList->GetFirst();pScope;pScope= m_pPrintScopeList->GetNext())
 	{
 		ZoomAcadView(pScope->GetCadEntScope(),10);
@@ -464,6 +469,9 @@ bool CBatchPrint::PrintProcessCardToPaper(bool bSendCmd)
 #else
 			SendCommandToCad("CMDECHO 0\n");
 			SendCommandToCad(sCmd);
+			plotLog.Log("%d. %s# %s，%s，Rect:(%.f,%.f),(%.f,%.f)", 
+				++i, (char*)pScope->m_sPartLabel, (char*)m_xPaperPlotCfg.m_sDeviceName,
+				(char*)m_xPaperPlotCfg.m_sPaperSize, pScope->L_T[X], pScope->L_T[Y], pScope->R_B[X], pScope->R_B[Y]);
 #endif
 		}
 		else
