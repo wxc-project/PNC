@@ -32,7 +32,6 @@
 #define IDC_BTN_EXPORT_DXF              123
 #define IDC_BTN_CLOCKWISE_ROTATION      124
 #define IDC_BTN_MIRROR                  125
-#define IDD_EXPLODE_TXT_DLG             125
 #define IDC_BTN_ANTICLOCKWISE_ROTATION  126
 #define IDC_BTN_MOVE                    127
 #define IDC_BTN_MOVE_MK_RECT            128
@@ -40,11 +39,11 @@
 #define IDC_CHECK1                      129
 #define IDC_CHK_EDIT_MK                 129
 #define IDC_CHK_GRADE                   131
+#define IDD_PRINT_SET_DLG               131
 #define IDC_LIST_SYSTEM_SETTING_DLG     132
 #define IDC_CHK_MAT_H                   132
 #define IDC_E_SEARCH_TEXT               133
 #define IDC_BTN_SEARCH                  134
-#define IDC_TREE_CTRL                   135
 #define IDD_REVISION_DLG                136
 #define IDC_BTN_PDF                     136
 #define IDC_BTN_PNG                     137
@@ -109,7 +108,7 @@
 #define ID_IMPORT_DWG_FILE              32773
 #define ID_PROJECT_PROPERTY             32775
 #define ID_IMPORT_BOM_FILE              32776
-#define ID_COMPARE_DATA	                32777
+#define ID_COMPARE_DATA                 32777
 #define ID_EXPORT_COMPARE_RESULT        32778
 #define ID_REFRESH_PART_NUM             32779
 #define ID_EXPORT_PROJECT               32780
@@ -136,7 +135,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        131
+#define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32799
 #define _APS_NEXT_CONTROL_VALUE         154
 #define _APS_NEXT_SYMED_VALUE           102

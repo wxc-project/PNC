@@ -1386,6 +1386,13 @@ void ImportUbomConfigFile()
 			break;
 		}
 	}
+	//初始化批量打印设置
+	if (CBatchPrint::m_xPngPlotCfg.m_sDeviceName.GetLength() <= 0)
+		CBatchPrint::m_xPngPlotCfg.m_sDeviceName.Copy("PublishToWeb PNG.pc3");
+	if (CBatchPrint::m_xPdfPlotCfg.m_sDeviceName.GetLength() <= 0)
+		CBatchPrint::m_xPdfPlotCfg.m_sDeviceName.Copy("DWG To PDF.pc3");
+	if (CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.GetLength() <= 0)
+		CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.Copy("A4");
 	//导出UBOM下的钢板提取规则设置
 	PNCSysSetExportDefault();
 }

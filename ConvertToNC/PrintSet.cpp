@@ -31,7 +31,7 @@ CString CPrintSet::GetPrintDeviceCmbItemStr()
     return sDeviceStr;
 }
 
-CString CPrintSet::GetMediaNameByDeviceName(const char* sDeviceName)
+CString CPrintSet::GetPaperSizeCmbItemStr(const char* sDeviceName)
 {
     CString sMediaNameStr;
     CLockDocumentLife lock;

@@ -10,6 +10,7 @@
 #include "BatchPrint.h"
 #include "ExcelOper.h"
 #include "RevisionDlg.h"
+#include "PrintSetDlg.h"
 
 #ifdef __UBOM_ONLY_
 
@@ -1218,12 +1219,9 @@ void COptimalSortDlg::UpdateHelpStr()
 
 void COptimalSortDlg::OnBnClickedBtnPrintSet()
 {
-	//CWndShowLife showLife(this);
-#ifdef _ARX_2007
-	SendCommandToCad(L"PLOT ");
-#else
-	SendCommandToCad("PLOT ");
-#endif
+	CPrintSetDlg dlg;
+	dlg.m_ciPrintType = m_iPrintType;
+	dlg.DoModal();
 }
 
 BOOL COptimalSortDlg::GetPrintParaFromReg(LPCTSTR lpszSection, LPCTSTR lpszEntry)
