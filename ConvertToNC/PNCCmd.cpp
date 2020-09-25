@@ -247,6 +247,35 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		AcDbEntity *pEnt = objLife.GetEnt();
 		if (pEnt==NULL)
 			continue;
+		if (pEnt->isKindOf(AcDbBlockReference::desc()))
+		{	//处理带电焊图块的钢板
+			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
+			AcDbObjectId blockId = pReference->blockTableRecord();
+			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
+			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
+			if (pTempBlockTableRecord == NULL)
+				continue;
+			pTempBlockTableRecord->close();
+			CXhChar50 sName;
+#ifdef _ARX_2007
+			ACHAR* sValue = new ACHAR[50];
+			pTempBlockTableRecord->getName(sValue);
+			sName.Copy((char*)_bstr_t(sValue));
+			delete[] sValue;
+#else
+			char *sValue = new char[50];
+			pTempBlockTableRecord->getName(sValue);
+			sName.Copy(sValue);
+			delete[] sValue;
+#endif
+			if(strcmp(sName, "weld") != 0)
+				continue;
+			AcGePoint3d pos = pReference->position();
+			CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(GEPOINT(pos.x,pos.y));
+			if (pPlateInfo == NULL)
+				continue;
+			pPlateInfo->xBomPlate.bWeldPart = TRUE;
+		}
 		if(!pEnt->isKindOf(AcDbText::desc())&&!pEnt->isKindOf(AcDbMText::desc()))
 			continue;
 		GEPOINT dim_pos=GetCadTextDimPos(pEnt);

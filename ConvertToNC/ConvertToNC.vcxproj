@@ -3656,7 +3656,6 @@
     <ClCompile Include="DrawDamBoard.cpp" />
     <ClCompile Include="DrawUnit.cpp" />
     <ClCompile Include="DwgFile.cpp" />
-    <ClCompile Include="ExplodeTxtDlg.cpp" />
     <ClCompile Include="FilterLayerDlg.cpp" />
     <ClCompile Include="InputAnValDlg.cpp" />
     <ClCompile Include="InputMKRectDlg.cpp" />
@@ -3672,6 +3671,7 @@
     <ClCompile Include="PNCSysSettingDlg.cpp" />
     <ClCompile Include="PolygonObject.cpp" />
     <ClCompile Include="PrintSet.cpp" />
+    <ClCompile Include="PrintSetDlg.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="SelColorDlg.cpp" />
     <ClCompile Include="StdAfx.cpp">
@@ -3960,7 +3960,6 @@
     <ClInclude Include="CadObjLife.h" />
     <ClInclude Include="DrawDamBoard.h" />
     <ClInclude Include="DrawUnit.h" />
-    <ClInclude Include="ExplodeTxtDlg.h" />
     <ClInclude Include="FilterLayerDlg.h" />
     <ClInclude Include="InputAnValDlg.h" />
     <ClInclude Include="InputMKRectDlg.h" />
@@ -3975,6 +3974,7 @@
     <ClInclude Include="PNCSysPara.h" />
     <ClInclude Include="PNCSysSettingDlg.h" />
     <ClInclude Include="PolygonObject.h" />
+    <ClInclude Include="PrintSetDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="RevisionDlg.h" />
     <ClInclude Include="SelColorDlg.h" />
