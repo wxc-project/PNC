@@ -11,8 +11,9 @@ struct PLOT_CFG
 public:
 	CXhChar500 m_sDeviceName;
 	CXhChar500 m_sPaperSize;
+	BYTE m_ciPaperRot;			//图纸方向:'L'横向；'P'纵向
 	CXhChar500 m_sFileNameTemplate;
-
+	PLOT_CFG() { m_ciPaperRot = 'L'; }
 	const static char *TOWER_TYPE;		// = "塔型";
 	const static char *PART_LABEL;		// = "件号";
 	const static char *MAT_MARK;		// = "材质";
@@ -28,7 +29,7 @@ class CPrintSet
 {
 public:
 	static CString GetPrintDeviceCmbItemStr();
-	static CString GetMediaNameByDeviceName(const char* sDeviceName);
+	static CString GetPaperSizeCmbItemStr(const char* sDeviceName);
 	static CXhChar500 GetPlotCfgName(bool bPromptInfo);
 	static BOOL SetPlotMedia(PLOT_CFG* pPlotCfg, bool bPromptInfo);
 };
@@ -75,9 +76,11 @@ private:
 	bool m_bEmptyFiles;
 	ATOM_LIST<PRINT_SCOPE> *m_pPrintScopeList;
 	ATOM_LIST<PRINT_SCOPE> m_xPrintScopeList;
-	bool PrintProcessCardToPNG(bool bEmptyPngFiles, bool bSendCmd);
-	bool PrintProcessCardToPDF(bool bEmptyPdfFiles, bool bSendCmd);
-	bool PrintProcessCardToPaper(bool bSendCmd);
+protected:
+	bool PrintProcessCardToPNG();
+	bool PrintProcessCardToPDF();
+	bool PrintProcessCardToPaper();
+	bool RunPrint(PRINT_SCOPE *pScope, PLOT_CFG* pPlotCfg, CXhChar500 sFilePath);
 public:
 	const static BYTE PRINT_TYPE_PAPER	= 1;
 	const static BYTE PRINT_TYPE_PNG	= 2;
