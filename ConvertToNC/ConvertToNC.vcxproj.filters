@@ -312,9 +312,6 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\folder_dialog.cpp">
       <Filter>ToolCode</Filter>
     </ClCompile>
-    <ClCompile Include="ExplodeTxtDlg.cpp">
-      <Filter>PNC</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\AngleLibrary.cpp">
       <Filter>PartLib</Filter>
     </ClCompile>
@@ -374,6 +371,9 @@
     </ClCompile>
     <ClCompile Include="PNCDocReactor.cpp">
       <Filter>PNC</Filter>
+    </ClCompile>
+    <ClCompile Include="PrintSetDlg.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -608,9 +608,6 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\folder_dialog.h">
       <Filter>ToolCode</Filter>
     </ClInclude>
-    <ClInclude Include="ExplodeTxtDlg.h">
-      <Filter>PNC</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\XhCore\PartLib\AngleLibrary.h">
       <Filter>PartLib</Filter>
     </ClInclude>
@@ -673,6 +670,9 @@
     </ClInclude>
     <ClInclude Include="PNCDocReactor.h">
       <Filter>PNC</Filter>
+    </ClInclude>
+    <ClInclude Include="PrintSetDlg.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

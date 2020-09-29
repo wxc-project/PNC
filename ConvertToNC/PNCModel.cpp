@@ -259,17 +259,17 @@ void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
 	//根据圆弧更新顶点信息
 	for (pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
 	{
-		if (pVer->pos.IsEqual(arcLine.Start(), CPNCModel::DIST_ERROR))
+		if (pVer->pos.IsEqual(arcLine.Start(), CPNCModel::DIST_ERROR) && iStart==-1)
 		{
 			iStart = i;
 			pVer->pos = arcLine.Start();
 		}
-		if (pVer->pos.IsEqual(arcLine.End(), CPNCModel::DIST_ERROR))
+		else if (pVer->pos.IsEqual(arcLine.End(), CPNCModel::DIST_ERROR) && iEnd == -1)
 		{
 			iEnd = i;
 			pVer->pos = arcLine.End();
 		}
-		if (iStart > -1 && iEnd > -1)
+		if (iStart > -1 && iEnd > -1 && iStart != iEnd)
 		{
 			bFind = TRUE;
 			break;
@@ -2214,15 +2214,24 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 			{	//圆弧
 				GEPOINT ptS = pCurVer->pos, ptE = pNextVer->pos, org = pCurVer->arc.center, norm = pCurVer->arc.work_norm;
 				f3dArcLine arcline;
-				if (pCurVer->ciEdgeType == 2)
-				{	//圆弧
-					arcline.CreateMethod3(ptS, ptE, norm, pCurVer->arc.radius, org);
-					entId = CreateAcadArcLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
+				if (pCurVer->arc.radius > 0 && DISTANCE(ptS, ptE) > EPS)
+				{
+					if (pCurVer->ciEdgeType == 2)
+					{	//圆弧
+						arcline.CreateMethod3(ptS, ptE, norm, pCurVer->arc.radius, org);
+						entId = CreateAcadArcLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
+					}
+					else
+					{	//椭圆
+						arcline.CreateEllipse(org, ptS, ptE, pCurVer->arc.column_norm, norm, pCurVer->arc.radius);
+						entId = CreateAcadEllipseLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
+						m_newAddEntIdList.append(entId.asOldId());
+					}
 				}
 				else
-				{	//椭圆
-					arcline.CreateEllipse(org, ptS, ptE, pCurVer->arc.column_norm, norm, pCurVer->arc.radius);
-					entId = CreateAcadEllipseLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
+				{	//
+					logerr.Log("钢板的圆弧轮廓边信息有误，请检查原图!");
+					entId = CreateAcadLine(pBlockTableRecord, ptS, ptE, 0, 0, g_pncSysPara.crMode.crEdge);
 				}
 				m_newAddEntIdList.append(entId.asOldId());
 			}

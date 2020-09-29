@@ -2,7 +2,6 @@
 #include "PNCDocReactor.h"
 #include "CadToolFunc.h"
 #include "PNCDockBarManager.h"
-#include "ExplodeTxtDlg.h"
 
 CDocManagerReactor::CDocManagerReactor()
 {
