@@ -242,15 +242,19 @@ static BYTE InitAnglePropByText(PART_ANGLE *pAngle, const char* sValue,
 		(strstr(sValue, "(") && strstr(sValue, ")") && strstr(sValue, "%d")==NULL)||
 		(strstr(sValue, "（") && strstr(sValue, "）") && strstr(sValue, "%d") == NULL))	//"#)","("&&")","（"&&"）"表示有焊接立板 如(245#) wht 20-07-29
 	{
-		if (pAngleInfo && pTextPos)
+		const int MAX_PART_NO_LEN = 16;	//此处只处理件号字符串，长度过长时不可能为肋板件号标注 wht 20-09-29
+		if (strlen(sValue) < MAX_PART_NO_LEN)
 		{
-			f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_WELD);
-			if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+			if (pAngleInfo && pTextPos)
+			{
+				f3dPoint data_pt = pAngleInfo->GetAngleDataPos(ITEM_TYPE_WELD);
+				if (DISTANCE(*pTextPos, data_pt) > DIST_TILE_2_PROP)
+					pAngle->bWeldPart = TRUE;
+				//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
+			}
+			else
 				pAngle->bWeldPart = TRUE;
-			//else 为标题文本，某些属性标题会放到草图区域中 wht 20-07-30
 		}
-		else
-			pAngle->bWeldPart = TRUE;
 	}
 	return cType;
 }
@@ -465,6 +469,8 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		if (nLen > 2)
 		{
 			CString sKaiJiao = sValue;
+			BOOL bHasPlus = sKaiJiao.Find("+")>=0;
+			BOOL bHasMinus = sKaiJiao.Find("-")>=0;
 			sKaiJiao.Replace("°", "");
 			sKaiJiao.Replace("度", "");
 			sKaiJiao.Replace("+", "");
@@ -473,15 +479,32 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			//可能有两种标注方式：
 			//1. 4.5°	大于0小于45度范围内，识别为开角度数
 			//2.94.5°  大于90度小于180度，识别为第二种标注方式 wht 20-08-20
-			if((fAngle>0 && fAngle<45) || (fAngle>90 && fAngle<180))
-				m_xAngle.bKaiJiao = TRUE;
+			BOOL bContinueRecoge = TRUE;
+			if (bHasPlus || bHasMinus)
+			{	//第一种标注方式，标注 +4.5、-4.5
+				if (fAngle > 0 && fAngle < 45)
+				{
+					if (bHasPlus)
+						m_xAngle.bKaiJiao = TRUE;
+					else
+						m_xAngle.bHeJiao = TRUE;
+					bContinueRecoge = FALSE;
+				}
+			}
+			if(bContinueRecoge)
+			{
+				if ((fAngle > 0 && fAngle < 45) || (fAngle > 90 && fAngle < 180))
+					m_xAngle.bKaiJiao = TRUE;
+				else if (fAngle > 45 && fAngle < 90)
+					m_xAngle.bHeJiao = TRUE;
+			}
 		}
 		else
 			m_xAngle.bKaiJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_KAIJIAO;
 		if (g_xUbomModel.m_uiCustomizeSerial == ID_SiChuan_ChengDu)
 		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
-			if(m_xAngle.bKaiJiao)
+			if(m_xAngle.bKaiJiao || m_xAngle.bHeJiao)
 				m_xAngle.siZhiWan = 1;
 		}
 	}
@@ -491,6 +514,8 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		if (nLen > 2)
 		{
 			CString sHeiao = sValue;
+			BOOL bHasPlus = sHeiao.Find("+") >= 0;
+			BOOL bHasMinus = sHeiao.Find("-") >= 0;
 			sHeiao.Replace("°", "");
 			sHeiao.Replace("度", "");
 			sHeiao.Replace("+", "");
@@ -498,16 +523,33 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			//可能有两种标注方式：
 			//1. 4.5°	大于0小于45度范围内，识别为开角度数
 			//2.84.5°  大于45度小于90度
+			BOOL bContinueRecoge = TRUE;
 			double fAngle = atof(sHeiao);
-			if(fAngle>0 && fAngle<90)
-				m_xAngle.bHeJiao = TRUE;
+			if (bHasPlus || bHasMinus)
+			{	//第一种标注方式，标注 +4.5、-4.5
+				if (fAngle > 0 && fAngle < 45)
+				{
+					if (bHasPlus)
+						m_xAngle.bKaiJiao = TRUE;
+					else
+						m_xAngle.bHeJiao = TRUE;
+					bContinueRecoge = FALSE;
+				}
+			}
+			if (bContinueRecoge)
+			{
+				if (fAngle > 0 && fAngle < 90)
+					m_xAngle.bHeJiao = TRUE;
+				else if (fAngle > 90 && fAngle < 180)
+					m_xAngle.bKaiJiao = TRUE;
+			}
 		}
 		else
 			m_xAngle.bHeJiao = strlen(sValue) > 0;
 		cType = ITEM_TYPE_HEJIAO;
 		if (g_xUbomModel.m_uiCustomizeSerial == ID_SiChuan_ChengDu)
 		{	//中电建成都铁塔特殊要求:开合角也属于弯曲工艺
-			if (m_xAngle.bHeJiao)
+			if (m_xAngle.bHeJiao || m_xAngle.bKaiJiao)
 				m_xAngle.siZhiWan = 1;
 		}
 	}
@@ -684,6 +726,24 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 		pEnt->close();
 	}
 	m_ciModifyState |= MODIFY_SUM_WEIGHT;
+}
+//////////////////////////////////////////////////////////////////////////
+//
+BOOL PART_LABEL_DIM::IsPartLabelDim()
+{
+	if (m_xCirEnt.idCadEnt > 0 && m_xInnerText.idCadEnt > 0 &&
+		m_xInnerText.sText != NULL && strlen(m_xInnerText.sText) > 0 &&
+		GetSegI().iSeg > 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+SEGI PART_LABEL_DIM::GetSegI()
+{
+	SEGI segI;
+	if (!ParsePartNo(m_xInnerText.sText, &segI, NULL))
+		segI.iSeg = 0;
+	return segI;
 }
 //////////////////////////////////////////////////////////////////////////
 //CDwgFileInfo
@@ -956,20 +1016,42 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 	}
 	//处理角钢工艺卡块打碎的情况：根据"件号"标题提取角钢信息
 	CHashSet<AcDbObjectId> textIdHash;
+	ATOM_LIST<PART_LABEL_DIM> labelDimList;
+	ATOM_LIST<CAD_ENTITY> cadTextList;
 	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext(), index++)
 	{
 		DisplayCadProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(entId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
+		if (pEnt->isKindOf(AcDbCircle::desc()))
+		{
+			AcDbCircle *pCir = (AcDbCircle*)pEnt;
+			PART_LABEL_DIM *pLabelDim = labelDimList.append();
+			pLabelDim->m_xCirEnt.ciEntType = TYPE_CIRCLE;
+			pLabelDim->m_xCirEnt.idCadEnt = pEnt->objectId().asOldId();
+			pLabelDim->m_xCirEnt.m_fSize = pCir->radius();
+			Cpy_Pnt(pLabelDim->m_xCirEnt.pos, pCir->center());
+			continue;
+		}
 		if(!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()))
 			continue;
 		textIdHash.SetValue(entId.handle(), entId);	//记录角钢工艺卡的实时文本
 		//根据件号关键字识别角钢
 		CXhChar100 sText = GetCadTextContent(pEnt);
+		GEPOINT testPt = GetCadTextDimPos(pEnt);
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{
+			AcDbText *pText = (AcDbText*)pEnt;
+			CAD_ENTITY *pCadText = cadTextList.append();
+			pCadText->ciEntType = TYPE_TEXT;
+			pCadText->idCadEnt = entId.asOldId();
+			pCadText->m_fSize = pText->height();
+			pCadText->pos = testPt;
+			strncpy(pCadText->sText, sText, 99);
+		}
 		if (!g_xUbomModel.IsPartLabelTitle(sText))
 			continue;	//无效的件号标题
-		GEPOINT testPt = GetCadTextDimPos(pEnt);
 		CAngleProcessInfo* pJgInfo = NULL;
 		for (pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())
 		{
@@ -994,6 +1076,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		logerr.Log("%s文件提取角钢失败",(char*)m_sFileName);
 		return FALSE;
 	}
+	
 	//根据角钢数据位置获取角钢信息
 	index = 1;
 	nNum = textIdHash.GetNodeNum();
@@ -1021,6 +1104,37 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		}
 	}
 	DisplayCadProgress(100);
+	//根据焊接肋板初始化角钢焊接属性 wht 20-09-29
+	//初始化件号标注文字内容
+	for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
+	{
+		CAD_ENTITY *pCadText = NULL;
+		for (pCadText = cadTextList.GetFirst(); pCadText; pCadText = cadTextList.GetNext())
+		{
+			if (pLabelDim->m_xCirEnt.IsInScope(pCadText->pos))
+			{
+				pLabelDim->m_xInnerText.ciEntType = pCadText->ciEntType;
+				pLabelDim->m_xInnerText.idCadEnt = pCadText->idCadEnt;
+				pLabelDim->m_xInnerText.m_fSize = pCadText->m_fSize;
+				pLabelDim->m_xInnerText.pos = pCadText->pos;
+				strcpy(pLabelDim->m_xInnerText.sText, pCadText->sText);
+				break;
+			}
+		}
+		if (pCadText == NULL)	//未找到文字的圆圈需移除
+			labelDimList.DeleteCursor();
+	}
+	labelDimList.Clean();
+	for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
+	{
+		SEGI segI = pLabelDim->GetSegI();
+		if (segI.iSeg <= 0)
+			continue;
+		CAngleProcessInfo* pJgInfo = FindAngleByPt(pLabelDim->m_xCirEnt.pos);
+		if (pJgInfo && !pJgInfo->m_xAngle.bWeldPart)
+			pJgInfo->m_xAngle.bWeldPart = TRUE;
+	}
+
 	//对提取的角钢信息进行合理性检查
 	CHashStrList<BOOL> hashJgByPartNo;
 	for (CAngleProcessInfo* pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())

@@ -58,6 +58,12 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //
 class CProjectTowerType;
+struct PART_LABEL_DIM {
+	CAD_ENTITY m_xCirEnt;
+	CAD_ENTITY m_xInnerText;
+	BOOL IsPartLabelDim();
+	SEGI GetSegI();
+};
 class CDwgFileInfo 
 {
 private:
