@@ -1,10 +1,9 @@
 // PrintSetDlg.cpp: 实现文件
 //
-
 #include "stdafx.h"
 #include "PrintSetDlg.h"
 #include "PropertyListOper.h"
-
+#ifdef __UBOM_ONLY_
 BOOL ModifyProperty(CPropertyList *pPropList, CPropTreeItem* pItem, CString &valueStr)
 {
 	CPrintSetDlg* pDlg = (CPrintSetDlg*)pPropList->GetParent();
@@ -148,3 +147,4 @@ void CPrintSetDlg::OnCancel()
 {
 	return CDialog::OnCancel();
 }
+#endif

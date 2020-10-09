@@ -373,7 +373,7 @@
       <Filter>PNC</Filter>
     </ClCompile>
     <ClCompile Include="PrintSetDlg.cpp">
-      <Filter>源文件</Filter>
+      <Filter>UBOM</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -672,7 +672,7 @@
       <Filter>PNC</Filter>
     </ClInclude>
     <ClInclude Include="PrintSetDlg.h">
-      <Filter>头文件</Filter>
+      <Filter>UBOM</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

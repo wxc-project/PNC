@@ -5,7 +5,7 @@
 #include "PropListItem.h"
 #include "BatchPrint.h"
 // CPrintSetDlg ¶Ô»°¿ò
-
+#ifdef __UBOM_ONLY_
 class CPrintSetDlg : public CDialog
 {
 	DECLARE_DYNAMIC(CPrintSetDlg)
@@ -31,3 +31,4 @@ protected:
 	virtual void OnCancel();
 	DECLARE_MESSAGE_MAP()
 };
+#endif
