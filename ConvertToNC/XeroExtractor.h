@@ -74,6 +74,7 @@ public:
 	BOOL IsMatchMatRule(const char* sText);
 	BOOL IsMatchNumRule(const char* sText);
 	BOOL IsMatchBendRule(const char* sText);
+	BOOL IsMatchRollEdgeRule(const char* sText);
 	BOOL IsBriefMatMark(char cMat);
 	//解析件号时返回解析结果类型，用于排除焊接子件件号 wht 19-07-22
 	static const int PART_LABEL_EMPTY = 0;	//空件号
@@ -84,7 +85,8 @@ public:
 	void ParseThickText(const char* sText,int& nThick);
 	void ParseMatText(const char* sText,char& cMat,char& cQuality);
 	void ParseNumText(const char* sText,int& nNum);
-	void ParseBendText(const char* sText,double &degree,BOOL &bFrontBend);
+	bool ParseBendText(const char* sText,double &degree,BOOL &bFrontBend);
+	bool ParseRollEdgeText(const char* sText, double& degree, BOOL& bFrontBend);
 	//
 	virtual void Init();
 	virtual BOOL IsBendLine(AcDbLine* pAcDbLine, ISymbolRecognizer* pRecognizer = NULL);

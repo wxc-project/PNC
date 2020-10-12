@@ -58,10 +58,12 @@ void CSteelSealReactor::modified(const AcDbObject* dbObj)
 		pPoint->setPosition(pos);
 		//更新字盒子位置之后，同步更新PPI文件中钢印号位置
 		pPlateInfo->SyncSteelSealPos();
-		//更新PPI文件
-		CString file_path;
-		GetCurWorkPath(file_path);
-		pPlateInfo->CreatePPiFile(file_path);
+		if (CPlateProcessInfo::m_bCreatePPIFile)
+		{	//更新PPI文件
+			CString file_path;
+			GetCurWorkPath(file_path);
+			pPlateInfo->CreatePPiFile(file_path);
+		}
 		//更新界面
 		actrTransactionManager->flushGraphics();
 		acedUpdateDisplay();

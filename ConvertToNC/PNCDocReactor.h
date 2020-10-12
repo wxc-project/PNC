@@ -1,12 +1,13 @@
 #pragma once
 #include <acdocman.h>
-class CDocManagerReactor : public AcApDocManagerReactor
+class CPNCDocReactor : public AcApDocManagerReactor
 {
 public:
-	CDocManagerReactor();
-	~CDocManagerReactor();
+	CPNCDocReactor();
+	~CPNCDocReactor();
 	//
 	virtual void documentActivated(AcApDocument* pActivatedDoc);
 	virtual void documentDestroyed(const char* fileName);
 };
 
+extern CPNCDocReactor *g_pPNCDocReactor;

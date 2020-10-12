@@ -3,16 +3,18 @@
 #include "CadToolFunc.h"
 #include "PNCDockBarManager.h"
 
-CDocManagerReactor::CDocManagerReactor()
+CPNCDocReactor *g_pPNCDocReactor;
+
+CPNCDocReactor::CPNCDocReactor()
 {
 }
 
 
-CDocManagerReactor::~CDocManagerReactor()
+CPNCDocReactor::~CPNCDocReactor()
 {
 }
 
-void CDocManagerReactor::documentActivated(AcApDocument* pActivatedDoc)
+void CPNCDocReactor::documentActivated(AcApDocument* pActivatedDoc)
 {
 	if (pActivatedDoc == NULL)
 		return;
@@ -25,7 +27,7 @@ void CDocManagerReactor::documentActivated(AcApDocument* pActivatedDoc)
 #endif
 }
 
-void CDocManagerReactor::documentDestroyed(const char* fileName)
+void CPNCDocReactor::documentDestroyed(const char* fileName)
 {
 	if (strlen(fileName) <= 0)
 		return;
