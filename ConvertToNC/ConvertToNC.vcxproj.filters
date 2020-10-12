@@ -375,6 +375,9 @@
     <ClCompile Include="PrintSetDlg.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
+    <ClCompile Include="SortedModel.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">

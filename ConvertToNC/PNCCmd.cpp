@@ -70,10 +70,11 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	}
 	CLogErrorLife logErrLife;
 	CHashSet<AcDbObjectId> selectedEntList;
-	//默认选择所有的图形，方便后期的过滤使用
-	SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
 	if (bSupportSelectEnts)
-	{	//PNC支持进行手动框选
+	{	//进行手动框选
+		//非智能提取轮廓时，需要选择所有的图形方便后期的过滤使用
+		if (g_pncSysPara.m_ciRecogMode != CPNCSysPara::FILTER_BY_PIXEL)
+			SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
 		if (pObjIdSet)
 		{
 			for (AcDbObjectId entId = pObjIdSet->GetFirst(); entId; entId = pObjIdSet->GetNext())
@@ -86,9 +87,8 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		}
 	}
 	else
-	{	//UBOM默认处理所有图元
-		for (AcDbObjectId entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
-			selectedEntList.SetValue(entId.asOldId(), entId);
+	{	//处理所有图元
+		SelCadEntSet(selectedEntList, TRUE);
 	}
 	//从框选信息中提取中钢板的标识，统计钢板集合
 	CHashSet<AcDbObjectId> textIdHash;
@@ -148,6 +148,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		}
 		//
 		CPlateProcessInfo* pPlateProcess = pModel->AppendPlate(sPartNo);
+		pPlateProcess->m_pBelongModel = pModel;
 		pPlateProcess->m_bNeedExtract = TRUE;	//选择CAD实体包括当前件号时设置位需要提取
 		pPlateProcess->dim_pos = dim_pos;
 		pPlateProcess->dim_vec = dim_vec;
@@ -187,6 +188,8 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		}
 		return;
 	}
+	//提取钢板的螺栓孔（螺栓块、圆、三角、矩形、腰圆）
+	pModel->ExtractPlateBoltEnts(selectedEntList);
 	//提取钢板的轮廓边
 	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
 		pModel->ExtractPlateProfileEx(selectedEntList);
@@ -204,6 +207,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		DisplayCadProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractPlateRelaEnts();
 		pPlateProcess->CheckProfileEdge();
+		pPlateProcess->UpdateBoltHoles();
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
 		if (pPlateProcess->IsValid())
