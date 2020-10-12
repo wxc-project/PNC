@@ -238,6 +238,13 @@ BOOL CPlateExtractor::IsMatchNumRule(const char* sText)
 	}
 	return FALSE;
 }
+BOOL CPlateExtractor::IsMatchRollEdgeRule(const char* sText)
+{
+	if (strstr(sText, "正曲卷边90") || strstr(sText, "反曲卷边90"))
+		return TRUE;
+	else
+		return FALSE;
+}
 BOOL CPlateExtractor::IsMatchBendRule(const char* sText)
 {
 	if(strlen(sText)<=0||(strlen(m_sFrontBendKey)<=0&&strlen(m_sReverseBendKey)<=0))
@@ -391,12 +398,14 @@ void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
 		}
 	}
 }
-void CPlateExtractor::ParseBendText(const char* sText,double &degree,BOOL &bFrontBend)
+bool CPlateExtractor::ParseBendText(const char* sText,double &degree,BOOL &bFrontBend)
 {
 	if (strstr(sText, m_sFrontBendKey))
 		bFrontBend = TRUE;
-	else
+	else if (strstr(sText, m_sReverseBendKey))
 		bFrontBend = FALSE;
+	else
+		return false;
 	CXhChar100 sValue(sText);
 	sValue.Replace("　"," ");
 	sValue.Replace(m_sFrontBendKey,"");
@@ -405,10 +414,21 @@ void CPlateExtractor::ParseBendText(const char* sText,double &degree,BOOL &bFron
 	sValue.Replace("°"," ");
 	sValue.Replace("度"," ");
 	char* sKey = strtok(sValue, " ");
-	if(strlen(sKey)>0)
-		degree=atof(sKey);
+	if (strlen(sKey) > 0)
+	{
+		degree = atof(sKey);
+		return true;
+	}
 	else
 		degree=0;
+	return false;
+}
+bool CPlateExtractor::ParseRollEdgeText(const char* sText, double& degree, BOOL& bFrontBend)
+{
+	if (strstr(sText, "卷边90") == NULL)
+		return false;
+	else
+		return ParseBendText(sText, degree, bFrontBend);
 }
 BOOL CPlateExtractor::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
@@ -432,9 +452,14 @@ BOOL CPlateExtractor::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogni
 BOOL CPlateExtractor::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
 	BOOL bRet=FALSE;
+	AcDbObjectId lineTypeId = GetEntLineTypeId(pAcDbLine);
+	CXhChar50 sLineType = GetLineTypeName(lineTypeId);
+	//重庆广仁，焊缝线线型为TRACKS wht 20-09-24
+	if (sLineType.GetLength() > 0 && sLineType.EqualNoCase("TRACKS"))
+		return TRUE;
 	if(pRecognizer!=NULL)
 	{
-
+		
 	}
 	return bRet;
 }
