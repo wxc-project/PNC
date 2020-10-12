@@ -51,6 +51,9 @@ public:
 		double m_fLS16;
 		double m_fLS20;
 		double m_fLS24;
+		double m_fLS_SJ;	//三角螺栓孔径
+		double m_fLS_ZF;	//方形螺栓孔径
+		double m_fLS_YY;	//腰圆螺栓孔径
 	}standard_hole;
 private:
 	CHashStrList<LAYER_ITEM> m_xHashDefaultFilterLayers;
@@ -98,6 +101,23 @@ public:
 	BYTE m_ciBendLineColorIndex;
 	CXhChar16 m_sProfileLineType;
 	double m_fPixelScale;
+public:	//属性定义区
+	//件号圆圈处理模式
+	BYTE get_ciPartNoCirMode() const;
+	BYTE set_ciPartNoCirMode(BYTE ciPartNoCirMode);
+	__declspec(property(put = set_ciPartNoCirMode, get = get_ciPartNoCirMode)) BYTE m_ciPartNoCirMode;
+	//孔径标注处理模式
+	BYTE get_ciHoleDimTextMode() const;
+	BYTE set_ciHoleDimTextMode(BYTE ciHoleDimTextMode);
+	__declspec(property(put = set_ciHoleDimTextMode, get = get_ciHoleDimTextMode)) BYTE m_ciHoleDimTextMode;
+	//圆孔螺栓处理模式
+	BYTE get_ciCircleLsMode() const;
+	BYTE set_ciCircleLsMode(BYTE ciCircleLsMode);
+	__declspec(property(put = set_ciCircleLsMode, get = get_ciCircleLsMode)) BYTE m_ciCircleLsMode;
+	//多段线螺栓处理模式
+	BYTE get_ciPolylineLsMode() const;
+	BYTE set_ciPolylineLsMode(BYTE ciPolylineLsMode);
+	__declspec(property(put = set_ciPolylineLsMode, get = get_ciPolylineLsMode)) BYTE m_ciPolylineLsMode;
 public:
 	CPNCSysPara();
 	~CPNCSysPara();
@@ -115,9 +135,10 @@ public:
 	BOOL IsNeedFilterLayer(const char* sLayer);
 	BOOL IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer=NULL);
 	BOOL IsProfileEnt(AcDbEntity* pEnt);
-	BOOL IsFilterPartNoCir() { return m_ciBoltRecogMode & FILTER_PARTNO_CIR; }
-	BOOL IsRecogHoleDimText() { return m_ciBoltRecogMode & RECOGN_HOLE_D_DIM; }
-	BOOL IsRecogCirByBoltD() { return m_ciBoltRecogMode & RECOGN_LS_CIRCLE; }
+	BOOL IsFilterPartNoCir() { return m_ciPartNoCirMode > 0; }
+	BOOL IsRecogHoleDimText() { return m_ciHoleDimTextMode > 0; }
+	BOOL IsRecogCirByBoltD() { return m_ciCircleLsMode > 0; }
+	BOOL IsRecongPolylineLs() { return m_ciPolylineLsMode > 0; }
 	//
 	BOOL RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo);
 	BOOL RecogArcEdge(AcDbEntity* pEnt, f3dArcLine& arcLine, BYTE& ciEdgeType);

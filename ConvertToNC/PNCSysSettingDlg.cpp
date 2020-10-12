@@ -151,10 +151,10 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("FilterPartNoCir"))
 	{
-		if(valueStr.CompareNoCase("过滤")==0)
-			g_pncSysPara.m_ciBoltRecogMode |= 0X01;
+		if (valueStr.CompareNoCase("过滤") == 0)
+			g_pncSysPara.m_ciPartNoCirMode = 1;
 		else
-			g_pncSysPara.m_ciBoltRecogMode &= 0X02;
+			g_pncSysPara.m_ciPartNoCirMode = 0;
 		//
 		pPropList->DeleteAllSonItems(pItem);
 		if (g_pncSysPara.IsFilterPartNoCir())
@@ -165,16 +165,16 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogHoleDimText"))
 	{
 		if (valueStr.CompareNoCase("按标注处理") == 0)
-			g_pncSysPara.m_ciBoltRecogMode |= 0X02;
+			g_pncSysPara.m_ciHoleDimTextMode = 1;
 		else
-			g_pncSysPara.m_ciBoltRecogMode &= 0X01;
+			g_pncSysPara.m_ciHoleDimTextMode = 0;
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogLsCircle"))
 	{
 		if (valueStr.CompareNoCase("根据标准孔进行筛选") == 0)
-			g_pncSysPara.m_ciBoltRecogMode |= 0X04;
+			g_pncSysPara.m_ciCircleLsMode = 1;
 		else
-			g_pncSysPara.m_ciBoltRecogMode &= 0X03;
+			g_pncSysPara.m_ciCircleLsMode = 0;
 		//
 		pPropList->DeleteAllSonItems(pItem);
 		if (g_pncSysPara.IsRecogCirByBoltD())
@@ -183,6 +183,23 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			oper.InsertEditPropItem(pItem, "standardM16", "", "", -1, TRUE);
 			oper.InsertEditPropItem(pItem, "standardM20", "", "", -1, TRUE);
 			oper.InsertEditPropItem(pItem, "standardM24", "", "", -1, TRUE);
+		}
+	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RecogLsPolyline"))
+	{
+		if (valueStr.CompareNoCase("自动计算孔径") == 0)
+			g_pncSysPara.m_ciPolylineLsMode = 1;
+		else if (valueStr.CompareNoCase("指定标准孔径") == 0)
+			g_pncSysPara.m_ciPolylineLsMode = 2;
+		else
+			g_pncSysPara.m_ciPolylineLsMode = 0;
+		//
+		pPropList->DeleteAllSonItems(pItem);
+		if (g_pncSysPara.m_ciPolylineLsMode == 2)
+		{
+			oper.InsertEditPropItem(pItem, "standard_SJ", "", "", -1, TRUE);
+			oper.InsertEditPropItem(pItem, "standard_ZF", "", "", -1, TRUE);
+			oper.InsertEditPropItem(pItem, "standard_YY", "", "", -1, TRUE);
 		}
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iRecogMode"))
@@ -936,6 +953,13 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 		oper.InsertEditPropItem(pPropItem, "standardM16");
 		oper.InsertEditPropItem(pPropItem, "standardM20");
 		oper.InsertEditPropItem(pPropItem, "standardM24");
+	}
+	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "RecogLsPolyline");
+	if (g_pncSysPara.m_ciPolylineLsMode == 2)
+	{
+		oper.InsertEditPropItem(pPropItem, "standard_SJ");
+		oper.InsertEditPropItem(pPropItem, "standard_ZF");
+		oper.InsertEditPropItem(pPropItem, "standard_YY");
 	}
 	oper.InsertCmbListPropItem(pGroupItem, "RecogHoleDimText");
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "FilterPartNoCir");

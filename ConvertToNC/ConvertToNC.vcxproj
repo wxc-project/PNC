@@ -3674,6 +3674,7 @@
     <ClCompile Include="PrintSetDlg.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="SelColorDlg.cpp" />
+    <ClCompile Include="SortedModel.cpp" />
     <ClCompile Include="StdAfx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug05|Win32'">Create</PrecompiledHeader>

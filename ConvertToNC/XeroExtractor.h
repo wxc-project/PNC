@@ -5,7 +5,13 @@
 #include "XhCharString.h"
 #include "BoltBlockRecog.h"
 #include <vector>
+#include <map>
+#include <set>
 using std::vector;
+using std::map;
+using std::set;
+using std::multimap;
+using std::multiset;
 //////////////////////////////////////////////////////////////////////////
 //ÌØÊâ·ûºÅÊ¶±ğÆ÷
 struct ISymbolRecognizer {

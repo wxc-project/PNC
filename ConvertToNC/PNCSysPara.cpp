@@ -59,6 +59,9 @@ void CPNCSysPara::Init()
 	standard_hole.m_fLS16 = 17.5;
 	standard_hole.m_fLS20 = 21.5;
 	standard_hole.m_fLS24 = 25.5;
+	standard_hole.m_fLS_SJ = 17.5;
+	standard_hole.m_fLS_ZF = 21.5;
+	standard_hole.m_fLS_YY = 21.5;
 	//默认过滤图层名
 #ifdef __PNC_
 	m_xHashDefaultFilterLayers.SetValue(LayerTable::UnvisibleProfileLayer.layerName, LAYER_ITEM(LayerTable::UnvisibleProfileLayer.layerName, 1));//不可见轮廓线
@@ -90,6 +93,64 @@ CPNCSysPara::LAYER_ITEM* CPNCSysPara::EnumNext()
 		return m_xHashDefaultFilterLayers.GetNext();
 	else
 		return m_xHashEdgeKeepLayers.GetNext();
+}
+//件号圆圈处理模式(占第一位)
+BYTE CPNCSysPara::get_ciPartNoCirMode() const
+{
+	BYTE ciTypeFlag = m_ciBoltRecogMode & 0X01;
+	return ciTypeFlag;
+}
+BYTE CPNCSysPara::set_ciPartNoCirMode(BYTE ciPartNoCirMode)
+{
+	BYTE ciTypeFlag = ciPartNoCirMode & 0X01;
+	m_ciBoltRecogMode &= 0xfe;
+	m_ciBoltRecogMode |= ciTypeFlag;
+	return ciPartNoCirMode & 0X01;
+}
+//孔径标注处理模式(占第二位)
+BYTE CPNCSysPara::get_ciHoleDimTextMode() const
+{
+	BYTE ciTypeFlag = m_ciBoltRecogMode & 0X02;
+	ciTypeFlag >>= 1;
+	return ciTypeFlag;
+}
+BYTE CPNCSysPara::set_ciHoleDimTextMode(BYTE ciHoleDimTextMode)
+{
+	BYTE ciTypeFlag = ciHoleDimTextMode & 0X01;
+	ciTypeFlag <<= 1;
+	m_ciBoltRecogMode &= 0xfd;
+	m_ciBoltRecogMode |= ciTypeFlag;
+	return ciHoleDimTextMode & 0X01;
+}
+//圆孔螺栓处理模式(占第三位)
+BYTE CPNCSysPara::get_ciCircleLsMode() const
+{
+	BYTE ciTypeFlag = m_ciBoltRecogMode & 0X04;
+	ciTypeFlag >>= 2;
+	return ciTypeFlag;
+}
+BYTE CPNCSysPara::set_ciCircleLsMode(BYTE ciCircleLsMode)
+{
+	BYTE ciTypeFlag = ciCircleLsMode & 0X01;
+	ciTypeFlag <<= 2;
+	m_ciBoltRecogMode &= 0xfb;
+	m_ciBoltRecogMode |= ciTypeFlag;
+	return ciCircleLsMode & 0X01;
+}
+//多段线螺栓处理模式(占五、六位)
+BYTE CPNCSysPara::get_ciPolylineLsMode() const
+{
+	BYTE ciTypeFlag = m_ciBoltRecogMode & 0x30;
+	ciTypeFlag >>= 4;
+	return ciTypeFlag;
+}
+BYTE CPNCSysPara::set_ciPolylineLsMode(BYTE ciPolylineLsMode)
+{
+	BYTE ciTypeFlag = ciPolylineLsMode & 0x03;
+	ciTypeFlag <<= 4;
+	m_ciBoltRecogMode &= 0xcf;
+	m_ciBoltRecogMode |= ciTypeFlag;
+	return ciPolylineLsMode & 0x03;
 }
 IMPLEMENT_PROP_FUNC(CPNCSysPara);
 const int HASHTABLESIZE = 500;
@@ -127,6 +188,10 @@ int CPNCSysPara::InitPropHashtable()
 	AddPropItem("standardM16", PROPLIST_ITEM(id++, "M16标准孔径"));
 	AddPropItem("standardM20", PROPLIST_ITEM(id++, "M20标准孔径"));
 	AddPropItem("standardM24", PROPLIST_ITEM(id++, "M24标准孔径"));
+	AddPropItem("standard_SJ", PROPLIST_ITEM(id++, "三角螺栓孔径"));
+	AddPropItem("standard_ZF", PROPLIST_ITEM(id++, "方形螺栓孔径"));
+	AddPropItem("standard_YY", PROPLIST_ITEM(id++, "腰圆螺栓孔径"));
+	AddPropItem("RecogLsPolyline", PROPLIST_ITEM(id++, "多段线螺栓", "非图符块的多段线螺栓(三角、矩形、腰圆等)", "不进行处理|自动计算孔径|指定标准孔径"));
 	//显示模式
 	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
 	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","图元克隆|钢板对比|自动排版|下料预审|图元筛选"));
@@ -292,6 +357,12 @@ int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=1
 		sText.Printf("%g", standard_hole.m_fLS20);
 	else if (GetPropID("standardM24") == id)
 		sText.Printf("%g", standard_hole.m_fLS24);
+	else if(GetPropID("standard_SJ")==id)
+		sText.Printf("%g", standard_hole.m_fLS_SJ);
+	else if (GetPropID("standard_ZF") == id)
+		sText.Printf("%g", standard_hole.m_fLS_ZF);
+	else if (GetPropID("standard_YY") == id)
+		sText.Printf("%g", standard_hole.m_fLS_YY);
 	else if (GetPropID("RecogLsBlock") == id)
 		sText.Copy("根据图符设置处理");
 	else if (GetPropID("RecogHoleDimText") == id)
@@ -307,6 +378,15 @@ int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=1
 			sText.Copy("根据标准孔进行筛选");
 		else
 			sText.Copy("统一按特殊孔处理");
+	}
+	else if (GetPropID("RecogLsPolyline") == id)
+	{
+		if (m_ciPolylineLsMode == 0)
+			sText.Copy("不进行处理");
+		else if (m_ciPolylineLsMode == 1)
+			sText.Copy("自动计算孔径");
+		else
+			sText.Copy("指定标准孔径");
 	}
 	else if (GetPropID("m_iProfileColorIndex") == id)
 		sText.Printf("RGB%X", GetColorFromIndex(m_ciProfileColorIndex));
@@ -381,69 +461,12 @@ BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/
 }
 
 //螺栓图符主要有：圆形、三角形、方形
-double RecogHoleDByBlockRef(AcDbBlockTableRecord *pTempBlockTableRecord, double scale)
-{
-	if (pTempBlockTableRecord == NULL)
-		return 0;
-	double fHoleD = 0;
-	AcDbEntity *pEnt = NULL;
-	AcDbBlockTableRecordIterator *pIterator = NULL;
-	pTempBlockTableRecord->newIterator(pIterator);
-	if (pIterator)
-	{
-		SCOPE_STRU scope;
-		for (; !pIterator->done(); pIterator->step())
-		{
-			pIterator->getEntity(pEnt, AcDb::kForRead);
-			if (pEnt == NULL)
-				continue;
-			pEnt->close();
-			AcDbCircle acad_cir;
-			if (pEnt->isKindOf(AcDbCircle::desc()))
-			{
-				AcDbCircle *pCir = (AcDbCircle*)pEnt;
-				acad_cir.setCenter(pCir->center());
-				acad_cir.setNormal(pCir->normal());
-				acad_cir.setRadius(pCir->radius());
-				VerifyVertexByCADEnt(scope, &acad_cir);
-			}
-			else if (pEnt->isKindOf(AcDbPolyline::desc()))
-			{	//按照外切圆处理，多段线区域的中心为块的坐标
-				AcDbPolyline *pPolyLine = (AcDbPolyline*)pEnt;
-				if (pPolyLine->numVerts() <= 0)
-					continue;
-				AcGePoint3d point;
-				pPolyLine->getPointAt(0, point);
-				double fRadius = GEPOINT(point.x, point.y).mod();
-				acad_cir.setCenter(AcGePoint3d(0, 0, 0));
-				acad_cir.setNormal(AcGeVector3d(0, 0, 1));
-				acad_cir.setRadius(fRadius);
-				VerifyVertexByCADEnt(scope, &acad_cir);
-			}
-			else
-				continue;
-		}
-		fHoleD = max(scope.wide(), scope.high());
-		fHoleD = fabs(fHoleD*scale);
-		//对计算得到的孔径进行圆整，精确到小数点一位
-		int nValue = (int)floor(fHoleD);		//整数部分
-		double fValue = fHoleD - nValue;	//小数部分
-		if (fValue < EPS2)	//孔径为整数
-			fHoleD = nValue;
-		else if (fValue > EPS_COS2)
-			fHoleD = nValue + 1;
-		else if (fabs(fValue - 0.5) < EPS2)
-			fHoleD = nValue + 0.5;
-		else
-			fHoleD = ftoi(fHoleD);
-	}
-	return fHoleD;
-}
-
 BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pBelongModel /*= NULL*/)
 {
 	if (pEnt == NULL)
 		return FALSE;
+	if (pBelongModel == NULL)
+		pBelongModel = &model;
 	if (pEnt->isKindOf(AcDbBlockReference::desc()))
 	{
 		AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
@@ -472,20 +495,8 @@ BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pB
 		{	//只对设置未螺栓图符的块进行处理，否则可能错误识别其它块为螺栓孔 wht 20-04-28
 			return FALSE;
 		}
-		double fHoleD = 0;
-		if (pBelongModel == NULL)
-			pBelongModel = &model;
-		CAD_ENTITY* pLsBlockEnt = pBelongModel->m_xBoltBlockHash.GetValue(pEnt->id().asOldId());
-		if (pLsBlockEnt)
-			fHoleD = pLsBlockEnt->m_fSize;
-		else
-		{
-			fHoleD = RecogHoleDByBlockRef(pTempBlockTableRecord, pReference->scaleFactors().sx);
-			CAD_ENTITY* pLsBlockEnt = pBelongModel->m_xBoltBlockHash.Add(pEnt->id().asOldId());
-			pLsBlockEnt->pos.x = hole.posX;
-			pLsBlockEnt->pos.y = hole.posY;
-			pLsBlockEnt->m_fSize = fHoleD;
-		}
+		CBoltEntGroup* pLsBlockEnt = pBelongModel->m_xBoltEntHash.GetValue(CXhChar50("%d", pEnt->id().asOldId()));
+		double 	fHoleD = pLsBlockEnt ? pLsBlockEnt->m_fHoleD : 0;
 		if (fHoleD <= 0)
 		{
 			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "根据螺栓图符{%s}计算孔径失败！", (char*)sName);
@@ -533,19 +544,16 @@ BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pB
 		/*否则在PPE中统一处理孔径增大值时会丢失此处提取的孔径增大值 wht 19-09-12
 		/*对孔径进行圆整，精确到小数点一位
 		*/
-		int nValue = (int)floor(fDiameter);	//整数部分
-		double fValue = fDiameter - nValue;	//小数部分
-		if (fValue < EPS2)	//孔径为整数
-			fDiameter = nValue;
-		else if (fValue > EPS_COS2)
-			fDiameter = nValue + 1;
-		else if (fabs(fValue - 0.5) < EPS2)
-			fDiameter = nValue + 0.5;
-		else
-			fDiameter = ftoi(fDiameter);
-		hole.d = fDiameter;
+		GEPOINT center(pCircle->center().x, pCircle->center().y, pCircle->center().z);
+		CBoltEntGroup* pLsBlockEnt = pBelongModel->m_xBoltEntHash.GetValue(CPNCModel::MakePosKeyStr(center));
+		if (pLsBlockEnt == NULL)
+		{
+			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "丢失圆孔位置(%s)的螺栓", CPNCModel::MakePosKeyStr(center));
+			return FALSE;
+		}
 		hole.increment = 0;
 		hole.ciSymbolType = 2;	//默认挂线孔
+		hole.d = pLsBlockEnt->m_fHoleD;
 		hole.posX = (float)pCircle->center().x;
 		hole.posY = (float)pCircle->center().y;
 		return TRUE;

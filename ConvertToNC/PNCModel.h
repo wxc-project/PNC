@@ -60,6 +60,26 @@ public:
 		}
 	}
 };
+class CBoltEntGroup
+{
+public:
+	BYTE m_ciType;		//0.图块|1.圆圈|2.多段线|3.三角形|4.正方形|5.腰圆孔
+	ULONG m_idEnt;
+	BOOL m_bMatch;		//是否匹配到钢板
+	float m_fPosX;
+	float m_fPosY;
+	float m_fHoleD;
+	vector<ULONG> m_xLineArr;
+	vector<ULONG> m_xCirArr;
+	vector<ULONG> m_xArcArr;
+public:
+	CBoltEntGroup() { 
+		m_ciType = 0; 
+		m_idEnt = 0;
+		m_bMatch = FALSE; 
+		m_fPosX = m_fPosY = m_fHoleD = 0;
+	}
+};
 struct BASIC_INFO {
 	char m_cMat;
 	char m_cQuality;			//质量等级
@@ -156,6 +176,7 @@ class CPlateProcessInfo : public CPlateObject
 private:
 	GECS ucs;
 	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
+	CPNCModel* _pBelongModel;
 	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
 public:
 	BOOL m_bEnableReactor;
@@ -194,11 +215,15 @@ public:
 	static const DWORD ERROR_LABEL_INSIDE_OF_HOLE	= 0x08;	//孔内件号
 	DWORD m_dwErrorType;
 	DWORD m_dwCorrectState;	//与错误状态配对使用，暂时只用来记录文字缩放是否修正成功 wht 19.12.24
+	//属性定义区
+	CPNCModel* get_pBelongModel() const;
+	CPNCModel* set_pBelongModel(CPNCModel* pBelongModel);
+	__declspec(property(put = set_pBelongModel, get = get_pBelongModel)) CPNCModel* m_pBelongModel;
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
 	void PreprocessorBoltEnt(int *piInvalidCirCountForText);
-	CAD_ENTITY* AppendRelaEntity(CPNCModel *pBelongModel, AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
+	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
 public:
 	CPlateProcessInfo();
 	//
@@ -217,8 +242,9 @@ public:
 	BOOL InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr);
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
-	void ExtractPlateRelaEnts(CPNCModel *pBelongModel=NULL);
-	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE, CPNCModel *pBelongModel=NULL);
+	void ExtractPlateRelaEnts();
+	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
+	void UpdateBoltHoles();
 	void CheckProfileEdge();
 	//生成中性文件
 	void InitPPiInfo();
@@ -265,7 +291,7 @@ class CPNCModel
 public:
 	CHashSet<AcDbObjectId> m_xAllEntIdSet;
 	CHashSet<AcDbObjectId> m_xAllLineHash;
-	CHashList<CAD_ENTITY> m_xBoltBlockHash;
+	CHashStrList<CBoltEntGroup> m_xBoltEntHash;
 	CXhChar100 m_sCompanyName;	//设计单位
 	CXhChar100 m_sPrjCode;		//工程编号
 	CXhChar100 m_sPrjName;		//工程名称
@@ -278,11 +304,21 @@ public:
 	static const float DIST_ERROR;
 	static const float WELD_MAX_HEIGHT;
 	static BOOL m_bSendCommand;
+	//
+	static CString MakePosKeyStr(GEPOINT pos);
+	static double StandardHoleD(double fDiameter);
+private:
+	bool AppendBoltEntsByBlock(ULONG idBlockEnt);
+	bool AppendBoltEntsByCircle(ULONG idCirEnt);
+	bool AppendBoltEntsByPolyline(ULONG idPolyline);
+	bool AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine);
+	bool AppendBoltEntsByAloneLines(vector<CAD_LINE> vectorAloneLine);
 public:
 	CPNCModel(void);
 	~CPNCModel(void);
 	//
 	void Empty();
+	void ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols);
@@ -361,33 +397,5 @@ public:
 	void DividPlatesByPartNo();
 };
 //////////////////////////////////////////////////////////////////////////
-//
-class CDxfFolder
-{
-public:
-	struct DXF_ITEM 
-	{
-		CXhChar50 m_sFileName;
-		CString m_sFilePath;
-	};
-	CString m_sFolderPath;
-	CXhChar50 m_sFolderName;
-	vector<DXF_ITEM> m_xDxfFileSet;
-public:
-	CDxfFolder() {}
-	~CDxfFolder() { m_xDxfFileSet.clear(); }
-};
-class CExpoldeModel {
-	ATOM_LIST<CDxfFolder> dxfFolderList;
-public:
-	CExpoldeModel() { ; }
-	//
-	int GetNum() { return dxfFolderList.GetNodeNum(); }
-	CDxfFolder* AppendFolder() { return dxfFolderList.append(); }
-	CDxfFolder* EnumFirst() { return dxfFolderList.GetFirst(); }
-	CDxfFolder* EnumNext() { return dxfFolderList.GetNext(); }
-};
-//////////////////////////////////////////////////////////////////////////
 extern CPNCModel model;
-extern CExpoldeModel g_explodeModel;
 extern CDocManagerReactor *g_pDocManagerReactor;
