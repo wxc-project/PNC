@@ -5,7 +5,6 @@
 #include "PropListItem.h"
 #include "BatchPrint.h"
 // CPrintSetDlg ¶Ô»°¿ò
-
 #ifdef __UBOM_ONLY_
 class CPrintSetDlg : public CDialog
 {
