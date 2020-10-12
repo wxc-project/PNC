@@ -90,6 +90,7 @@ public:
 	static const BYTE RECOGN_LS_CIRCLE  = 0X04; //处理普通螺栓圆圈
 	BYTE m_ciBoltRecogMode;
 	double m_fPartNoCirD;
+	double m_fRoundLineLen;		//腰圆孔的过渡直线长度
 	//轮廓识别参数
 	static const BYTE FILTER_BY_LINETYPE = 0;	//按线型识别
 	static const BYTE FILTER_BY_LAYER	 = 1;	//按图层识别

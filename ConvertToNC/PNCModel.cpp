@@ -56,6 +56,7 @@ CAD_LINE::CAD_LINE(ULONG lineId /*= 0*/) :
 CAD_LINE::CAD_LINE(AcDbObjectId id, double len) :
 	CAD_ENTITY(id.asOldId())
 {
+	ciEntType = TYPE_LINE;
 	m_ciSerial = 0;
 	m_fSize = len;
 	m_bReverse = FALSE;
@@ -63,6 +64,7 @@ CAD_LINE::CAD_LINE(AcDbObjectId id, double len) :
 }
 void CAD_LINE::Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end)
 {
+	ciEntType = TYPE_LINE;
 	m_ciSerial = 0;
 	idCadEnt = id.asOldId();
 	m_ptStart = start;
@@ -83,6 +85,7 @@ BOOL CAD_LINE::UpdatePos()
 		AcDbLine *pLine = (AcDbLine*)pEnt;
 		m_ptStart.Set(pLine->startPoint().x, pLine->startPoint().y, 0);
 		m_ptEnd.Set(pLine->endPoint().x, pLine->endPoint().y, 0);
+		ciEntType = TYPE_LINE;
 	}
 	else if (pEnt->isKindOf(AcDbArc::desc()))
 	{
@@ -92,6 +95,7 @@ BOOL CAD_LINE::UpdatePos()
 		pArc->getEndPoint(endPt);
 		m_ptStart.Set(startPt.x, startPt.y, 0);
 		m_ptEnd.Set(endPt.x, endPt.y, 0);
+		ciEntType = TYPE_ARC;
 	}
 	else if (pEnt->isKindOf(AcDbEllipse::desc()))
 	{
@@ -101,6 +105,7 @@ BOOL CAD_LINE::UpdatePos()
 		pEllipse->getEndPoint(endPt);
 		m_ptStart.Set(startPt.x, startPt.y, 0);
 		m_ptEnd.Set(endPt.x, endPt.y, 0);
+		ciEntType = TYPE_ELLIPSE;
 	}
 	else if (pEnt->isKindOf(AcDbPolyline::desc()))
 	{
@@ -115,6 +120,7 @@ BOOL CAD_LINE::UpdatePos()
 			if (iVertIndex == nVertNum - 1)
 				m_ptEnd.Set(location.x, location.y, 0);
 		}
+		ciEntType = TYPE_POLYLINE;
 	}
 	else
 		return FALSE;
@@ -552,11 +558,11 @@ void CPlateProcessInfo::UpdateBoltHoles()
 			double fHoleD = pBoltGroup->m_fHoleD;
 			if (g_pncSysPara.m_ciPolylineLsMode == 2)
 			{	//用户指定标准螺栓直径
-				if (pBoltGroup->m_ciType == 3)
+				if (pBoltGroup->m_ciType == CBoltEntGroup::BOLT_TRIANGLE)
 					fHoleD = g_pncSysPara.standard_hole.m_fLS_SJ;
-				else if (pBoltGroup->m_ciType == 4)
+				else if (pBoltGroup->m_ciType == CBoltEntGroup::BOLT_SQUARE)
 					fHoleD = g_pncSysPara.standard_hole.m_fLS_ZF;
-				else if (pBoltGroup->m_ciType == 5)
+				else if (pBoltGroup->m_ciType == CBoltEntGroup::BOLT_WAIST_ROUND)
 					fHoleD = g_pncSysPara.standard_hole.m_fLS_YY;
 			}
 			if (fabs(fHoleD - 13.5) < 1)
@@ -3154,7 +3160,7 @@ bool CPNCModel::AppendBoltEntsByBlock(ULONG idBlockEnt)
 	if (pBoltEnt == NULL)
 	{
 		pBoltEnt = m_xBoltEntHash.Add(sKey);
-		pBoltEnt->m_ciType = 0;
+		pBoltEnt->m_ciType = CBoltEntGroup::BOLT_BLOCK;
 		pBoltEnt->m_idEnt = pEnt->id().asOldId();
 		pBoltEnt->m_fPosX = (float)pReference->position().x;
 		pBoltEnt->m_fPosY = (float)pReference->position().y;
@@ -3184,7 +3190,7 @@ bool CPNCModel::AppendBoltEntsByCircle(ULONG idCirEnt)
 	if (pBoltEnt == NULL)
 	{
 		pBoltEnt = m_xBoltEntHash.Add(MakePosKeyStr(center));
-		pBoltEnt->m_ciType = 1;
+		pBoltEnt->m_ciType = CBoltEntGroup::BOLT_CIRCLE;
 		pBoltEnt->m_fPosX = (float)center.x;
 		pBoltEnt->m_fPosY = (float)center.y;
 		pBoltEnt->m_fHoleD = (float)StandardHoleD(fDiameter);
@@ -3214,7 +3220,6 @@ bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 	int nVertNum = pPolyline->numVerts();
 	if (nVertNum == 3)
 	{
-		double dfLen = 0;
 		for (int iVertIndex = 0; iVertIndex < 3; iVertIndex++)
 		{
 			if (pPolyline->segType(iVertIndex) != AcDbPolyline::kLine)
@@ -3240,7 +3245,7 @@ bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 		if (pBoltEnt == NULL)
 		{
 			pBoltEnt = m_xBoltEntHash.Add(MakePosKeyStr(center));
-			pBoltEnt->m_ciType = 2;
+			pBoltEnt->m_ciType = CBoltEntGroup::BOLT_TRIANGLE;
 			pBoltEnt->m_fPosX = (float)center.x;
 			pBoltEnt->m_fPosY = (float)center.y;
 			pBoltEnt->m_fHoleD = (float)StandardHoleD(dfDiameter);
@@ -3297,14 +3302,15 @@ bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 		else
 			return false;
 		//添加螺栓块
-		if (ptArr.size() != 4)
-			return false;
 		GEPOINT center = (ptArr[0] + ptArr[2])*0.5;
 		CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(MakePosKeyStr(center));
 		if (pBoltEnt == NULL)
 		{
 			pBoltEnt = m_xBoltEntHash.Add(MakePosKeyStr(center));
-			pBoltEnt->m_ciType = 2;
+			if (nLineNum == 4)
+				pBoltEnt->m_ciType = CBoltEntGroup::BOLT_SQUARE;
+			else
+				pBoltEnt->m_ciType = CBoltEntGroup::BOLT_WAIST_ROUND;
 			pBoltEnt->m_fPosX = (float)center.x;
 			pBoltEnt->m_fPosY = (float)center.y;
 			pBoltEnt->m_fHoleD = (float)StandardHoleD(dfDiameter);
@@ -3312,6 +3318,7 @@ bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 		}
 		else
 			pBoltEnt->m_fHoleD = (float)max(pBoltEnt->m_fHoleD, StandardHoleD(dfDiameter));
+		return true;
 	}
 	return false;
 }
@@ -3321,8 +3328,10 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 	if (vectorConnLine.size() <= 0)
 		return false;
 	std::set<CString> setKeyStr;
+	std::map<CString,CAD_LINE> mapLineByPosStr;		//
 	std::multimap<CString, CAD_ENTITY> mapTriangle;
 	std::multimap<CString, CAD_ENTITY> mapSquare;
+	std::multimap<CString, CAD_ENTITY> mapRound;
 	typedef std::multimap<CString, CAD_ENTITY>::iterator ITERATOR;
 	//根据每条线段计算出构成三角形和正方形后的中心点位置
 	GEPOINT ptS, ptE, ptM, line_vec, up_off_vec, dw_off_vec;
@@ -3338,24 +3347,43 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 		normalize(up_off_vec);
 		dw_off_vec = up_off_vec * -1;
 		double fLen = DISTANCE(ptS, ptE);
-		//计算该直线组成三角形后的中心点位置
-		CAD_ENTITY xEntity;
-		xEntity.idCadEnt = vectorConnLine[i].idCadEnt;
-		xEntity.m_fSize = fLen / sqrt(3) * 2;
-		xEntity.pos = ptM + up_off_vec * (0.5*fLen / sqrt(3));
-		setKeyStr.insert(MakePosKeyStr(xEntity.pos));
-		mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
-		xEntity.pos = ptM + dw_off_vec * (0.5*fLen / sqrt(3));
-		setKeyStr.insert(MakePosKeyStr(xEntity.pos));
-		mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
-		//计算该直线组成正方形后的中心点位置
-		xEntity.m_fSize = fLen * sqrt(2);
-		xEntity.pos = ptM + up_off_vec * 0.5*fLen;
-		setKeyStr.insert(MakePosKeyStr(xEntity.pos));
-		mapSquare.insert(std::make_pair(MakePosKeyStr(xEntity.pos), vectorConnLine[i]));
-		xEntity.pos = ptM + dw_off_vec * 0.5*fLen;
-		setKeyStr.insert(MakePosKeyStr(xEntity.pos));
-		mapSquare.insert(std::make_pair(MakePosKeyStr(xEntity.pos), vectorConnLine[i]));
+		if (vectorConnLine[i].ciEntType == TYPE_LINE)
+		{
+			//将直线的始终端坐标作为键值记录直线
+			CString sPosKey;
+			sPosKey.Format("S(%d,%d)E(%d,%d)", ftoi(ptS.x), ftoi(ptS.y), ftoi(ptE.x), ftoi(ptE.y));
+			mapLineByPosStr.insert(std::make_pair(sPosKey, vectorConnLine[i]));
+			//计算该直线组成三角形后的中心点位置
+			CAD_ENTITY xEntity;
+			xEntity.idCadEnt = vectorConnLine[i].idCadEnt;
+			xEntity.m_fSize = fLen / sqrt(3) * 2;
+			xEntity.pos = ptM + up_off_vec * (0.5*fLen / sqrt(3));
+			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
+			mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
+			xEntity.pos = ptM + dw_off_vec * (0.5*fLen / sqrt(3));
+			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
+			mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
+			//计算该直线组成正方形后的中心点位置
+			xEntity.m_fSize = fLen * sqrt(2);
+			xEntity.pos = ptM + up_off_vec * 0.5*fLen;
+			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
+			mapSquare.insert(std::make_pair(MakePosKeyStr(xEntity.pos), vectorConnLine[i]));
+			xEntity.pos = ptM + dw_off_vec * 0.5*fLen;
+			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
+			mapSquare.insert(std::make_pair(MakePosKeyStr(xEntity.pos), vectorConnLine[i]));
+		}
+		else if (vectorConnLine[i].ciEntType == TYPE_ARC)
+		{	//计算腰圆中心点
+			CAD_ENTITY xEntity;
+			xEntity.idCadEnt = vectorConnLine[i].idCadEnt;
+			xEntity.m_fSize = fLen;
+			xEntity.pos = ptM + up_off_vec * (0.5*g_pncSysPara.m_fRoundLineLen);
+			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
+			mapRound.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
+			xEntity.pos = ptM + dw_off_vec * (0.5*g_pncSysPara.m_fRoundLineLen);
+			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
+			mapRound.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
+		}
 	}
 	//提取出符合要求的三角形和方形直线段
 	std::set<CString>::iterator set_iter;
@@ -3371,7 +3399,7 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 			if (pBoltEnt == NULL)
 			{
 				pBoltEnt = m_xBoltEntHash.Add(sKey);
-				pBoltEnt->m_ciType = 3;
+				pBoltEnt->m_ciType = CBoltEntGroup::BOLT_TRIANGLE;
 				pBoltEnt->m_fPosX = (float)begIter->second.pos.x;
 				pBoltEnt->m_fPosY = (float)begIter->second.pos.y;
 				pBoltEnt->m_fHoleD = (float)StandardHoleD(begIter->second.m_fSize);
@@ -3393,7 +3421,7 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 			if (pBoltEnt == NULL)
 			{
 				pBoltEnt = m_xBoltEntHash.Add(sKey);
-				pBoltEnt->m_ciType = 4;
+				pBoltEnt->m_ciType = CBoltEntGroup::BOLT_SQUARE;
 				pBoltEnt->m_fPosX = (float)begIter->second.pos.x;
 				pBoltEnt->m_fPosY = (float)begIter->second.pos.y;
 				pBoltEnt->m_fHoleD = (float)StandardHoleD(begIter->second.m_fSize);
@@ -3406,10 +3434,82 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 			else
 				pBoltEnt->m_fHoleD = (float)max(pBoltEnt->m_fHoleD, StandardHoleD(begIter->second.m_fSize));
 		}
+		//处理腰圆图形
+		if (mapRound.count(sKey) == 2)
+		{
+			ITERATOR begIter = mapRound.lower_bound(sKey);
+			ITERATOR endIter = mapRound.upper_bound(sKey);
+			CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(sKey);
+			if (pBoltEnt == NULL)
+			{
+				pBoltEnt = m_xBoltEntHash.Add(sKey);
+				pBoltEnt->m_ciType = CBoltEntGroup::BOLT_WAIST_ROUND;
+				pBoltEnt->m_fPosX = (float)begIter->second.pos.x;
+				pBoltEnt->m_fPosY = (float)begIter->second.pos.y;
+				pBoltEnt->m_fHoleD = (float)StandardHoleD(begIter->second.m_fSize);
+				while (begIter != endIter)
+				{
+					pBoltEnt->m_xArcArr.push_back(begIter->second.idCadEnt);
+					begIter++;
+				}
+			}
+		}
 	}
-	//TODO:处理腰圆图形
-
-
+	//补齐椭圆弧的过渡直线段
+	for (CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetFirst(); pBoltEnt; pBoltEnt = m_xBoltEntHash.GetNext())
+	{
+		if (pBoltEnt->m_ciType != CBoltEntGroup::BOLT_WAIST_ROUND)
+			continue;
+		if (pBoltEnt->m_xLineArr.size() == 2 && pBoltEnt->m_xArcArr.size() == 2)
+			continue;	//已处理
+		if (pBoltEnt->m_xArcArr.size() != 2)
+			continue;
+		GEPOINT ptS[2], ptE[2];
+		for (size_t i = 0; i < pBoltEnt->m_xArcArr.size(); i++)
+		{
+			AcDbEntity *pEnt = NULL;
+			XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(pBoltEnt->m_xArcArr[i]), AcDb::kForRead);
+			CAcDbObjLife life(pEnt);
+			if (pEnt == NULL || !pEnt->isKindOf(AcDbArc::desc()))
+				continue;
+			AcDbArc* pArc = (AcDbArc*)pEnt;
+			AcGePoint3d startPt, endPt;
+			pArc->getStartPoint(startPt);
+			pArc->getEndPoint(endPt);
+			ptS[i].Set(startPt.x, startPt.y, 0);
+			ptE[i].Set(endPt.x, endPt.y, 0);
+		}
+		//查找过渡直线
+		CString sKeyLine1[2], sKeyLine2[2];
+		if (DISTANCE(ptS[0], ptS[1]) < DISTANCE(ptS[0], ptE[1]))
+		{
+			sKeyLine1[0].Format("S(%d,%d)E(%d,%d)", ftoi(ptS[0].x), ftoi(ptS[0].y), ftoi(ptS[1].x), ftoi(ptS[1].y));
+			sKeyLine1[1].Format("S(%d,%d)E(%d,%d)", ftoi(ptS[1].x), ftoi(ptS[1].y), ftoi(ptS[0].x), ftoi(ptS[0].y));
+			sKeyLine2[0].Format("S(%d,%d)E(%d,%d)", ftoi(ptE[0].x), ftoi(ptE[0].y), ftoi(ptE[1].x), ftoi(ptE[1].y));
+			sKeyLine2[1].Format("S(%d,%d)E(%d,%d)", ftoi(ptE[1].x), ftoi(ptE[1].y), ftoi(ptE[0].x), ftoi(ptE[0].y));
+		}
+		else
+		{
+			sKeyLine1[0].Format("S(%d,%d)E(%d,%d)", ftoi(ptS[0].x), ftoi(ptS[0].y), ftoi(ptE[1].x), ftoi(ptE[1].y));
+			sKeyLine1[1].Format("S(%d,%d)E(%d,%d)", ftoi(ptE[1].x), ftoi(ptE[1].y), ftoi(ptS[0].x), ftoi(ptS[0].y));
+			sKeyLine2[0].Format("S(%d,%d)E(%d,%d)", ftoi(ptE[0].x), ftoi(ptE[0].y), ftoi(ptS[1].x), ftoi(ptS[1].y));
+			sKeyLine2[1].Format("S(%d,%d)E(%d,%d)", ftoi(ptS[1].x), ftoi(ptS[1].y), ftoi(ptE[0].x), ftoi(ptE[0].y));
+		}
+		std::map<CString, CAD_LINE>::const_iterator cn_iter1, cn_iter2;
+		cn_iter1 = mapLineByPosStr.find(sKeyLine1[0]);
+		cn_iter2 = mapLineByPosStr.find(sKeyLine1[1]);
+		if (cn_iter1 != mapLineByPosStr.end())
+			pBoltEnt->m_xLineArr.push_back(cn_iter1->second.idCadEnt);
+		else if (cn_iter2 != mapLineByPosStr.end())
+			pBoltEnt->m_xLineArr.push_back(cn_iter2->second.idCadEnt);
+		//
+		cn_iter1 = mapLineByPosStr.find(sKeyLine2[0]);
+		cn_iter2 = mapLineByPosStr.find(sKeyLine2[1]);
+		if (cn_iter1 != mapLineByPosStr.end())
+			pBoltEnt->m_xLineArr.push_back(cn_iter1->second.idCadEnt);
+		else if (cn_iter2 != mapLineByPosStr.end())
+			pBoltEnt->m_xLineArr.push_back(cn_iter2->second.idCadEnt);
+	}
 	return true;
 }
 //根据孤立短线段提取螺栓
@@ -3524,12 +3624,13 @@ void CPNCModel::ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			if (pEnt == NULL)
 				continue;
 			pEnt->close();
-			if(!pEnt->isKindOf(AcDbLine::desc()))
+			if (!pEnt->isKindOf(AcDbLine::desc()) && 
+				!pEnt->isKindOf(AcDbArc::desc()))
 				continue;
-			AcDbLine* pLine = (AcDbLine*)pEnt;
+			AcDbCurve* pCurve = (AcDbCurve*)pEnt;
 			AcGePoint3d acad_ptS, acad_ptE;
-			pLine->getStartPoint(acad_ptS);
-			pLine->getEndPoint(acad_ptE);
+			pCurve->getStartPoint(acad_ptS);
+			pCurve->getEndPoint(acad_ptE);
 			GEPOINT ptS, ptE;
 			Cpy_Pnt(ptS, acad_ptS);
 			Cpy_Pnt(ptE, acad_ptE);
@@ -3537,6 +3638,13 @@ void CPNCModel::ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			double len = DISTANCE(ptS, ptE);
 			if (len < 10 || len>30)
 				continue;	//过滤过小或过长线段
+			if (pEnt->isKindOf(AcDbArc::desc()))
+			{	//
+				AcDbArc* pArc = (AcDbArc*)pEnt;
+				double fAngle = fabs(pArc->endAngle() - pArc->startAngle());
+				if (fabs(fAngle - Pi) > EPS2)
+					continue;	//非180度的圆弧
+			}
 			vectorLine.push_back(CAD_LINE(objId, ptS, ptE));
 			mapLineNumInPos[MakePosKeyStr(ptS)] += 1;
 			mapLineNumInPos[MakePosKeyStr(ptE)] += 1;
@@ -3549,7 +3657,6 @@ void CPNCModel::ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			ITERATOR iterE = mapLineNumInPos.find(MakePosKeyStr(vectorLine[ii].m_ptEnd));
 			if (iterS != mapLineNumInPos.end() && iterE != mapLineNumInPos.end())
 			{
-				int nS = iterS->second, nE = iterE->second;
 				if (iterS->second == 1 && iterE->second == 1)
 					vectorAloneLine.push_back(vectorLine[ii]);
 				if (iterS->second == 2 && iterE->second == 2)
@@ -3557,7 +3664,6 @@ void CPNCModel::ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			}
 		}
 		AppendBoltEntsByConnectLines(vectorConnLine);
-		//AppendBoltEntsByAloneLines(vectorAloneLine);
 	}
 }
 //根据bpoly命令初始化钢板的轮廓边

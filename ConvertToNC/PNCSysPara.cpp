@@ -47,6 +47,7 @@ void CPNCSysPara::Init()
 	m_fPixelScale = 0.6;
 	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
 	m_fPartNoCirD = 0;
+	m_fRoundLineLen = 12.5;
 	//ƒ¨»œ—’…´…Ë÷√
 	crMode.crEdge = RGB(255, 0, 0);
 	crMode.crLS12 = RGB(0, 255, 255);

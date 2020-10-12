@@ -14,6 +14,7 @@ enum ENTITY_TYPE {
 	TYPE_CIRCLE,
 	TYPE_ELLIPSE,
 	TYPE_SPLINE,
+	TYPE_POLYLINE,
 	TYPE_TEXT,
 	TYPE_MTEXT,
 	TYPE_BLOCKREF,
@@ -63,7 +64,12 @@ public:
 class CBoltEntGroup
 {
 public:
-	BYTE m_ciType;		//0.图块|1.圆圈|2.多段线|3.三角形|4.正方形|5.腰圆孔
+	static const BYTE BOLT_BLOCK		=0;
+	static const BYTE BOLT_CIRCLE		=1;
+	static const BYTE BOLT_TRIANGLE		=2;
+	static const BYTE BOLT_SQUARE		=3;
+	static const BYTE BOLT_WAIST_ROUND	=4;
+	BYTE m_ciType;		//0.图块|1.圆圈|2.三角形|3.正方形|4.腰圆孔
 	ULONG m_idEnt;
 	BOOL m_bMatch;		//是否匹配到钢板
 	float m_fPosX;
