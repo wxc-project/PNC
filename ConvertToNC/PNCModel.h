@@ -222,8 +222,10 @@ public:
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
-	void PreprocessorBoltEnt(int *piInvalidCirCountForText);
+	void PreprocessorBoltEnt(int* piInvalidCirCountForText, int* piInvalidCirCountForLabel,
+							 CHashStrList<CXhChar16>* pHashPartLabelByLabel);
 	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
+	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
 public:
 	CPlateProcessInfo();
 	//
@@ -244,7 +246,7 @@ public:
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	void ExtractPlateRelaEnts();
 	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
-	void UpdateBoltHoles();
+	void UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelByLabel = NULL);
 	void CheckProfileEdge();
 	//生成中性文件
 	void InitPPiInfo();
@@ -265,6 +267,8 @@ public:
 	bool UpdateSteelSealPos(GEPOINT &pos);
 	//刷新钢板显示数量
 	void RefreshPlateNum();
+	//控制是否需要输出ppi文件 wht 20-10-10
+	static BOOL m_bCreatePPIFile;
 };
 //////////////////////////////////////////////////////////////////////////
 //
@@ -327,12 +331,12 @@ public:
 	void SplitManyPartNo();
 	void CreatePlatePPiFile(const char* work_path);
 	//绘制钢板
-	void DrawPlates();
-	void DrawPlatesToLayout();
-	void DrawPlatesToCompare();
-	void DrawPlatesToProcess();
-	void DrawPlatesToClone();
-	void DrawPlatesToFiltrate();
+	void DrawPlates(BOOL bOnlyNewExtractedPlate=FALSE);
+	void DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate = FALSE);
+	void DrawPlatesToCompare(BOOL bOnlyNewExtractedPlate = FALSE);
+	void DrawPlatesToProcess(BOOL bOnlyNewExtractedPlate = FALSE);
+	void DrawPlatesToClone(BOOL bOnlyNewExtractedPlate = FALSE);
+	void DrawPlatesToFiltrate(BOOL bOnlyNewExtractedPlate = FALSE);
 	//
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }
@@ -386,7 +390,7 @@ public:
 	};
 	CHashStrList<PARTGROUP> hashPlateGroup;
 public:
-	CSortedModel(CPNCModel *pModel);
+	CSortedModel(CPNCModel *pModel, BOOL bOnlyNewExtractedPlate = FALSE);
 	//
 	CPlateProcessInfo *EnumFirstPlate();
 	CPlateProcessInfo *EnumNextPlate();
@@ -398,4 +402,3 @@ public:
 };
 //////////////////////////////////////////////////////////////////////////
 extern CPNCModel model;
-extern CDocManagerReactor *g_pDocManagerReactor;

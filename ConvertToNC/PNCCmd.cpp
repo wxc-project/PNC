@@ -115,7 +115,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			if (strlen(sPartNo) <= 0)
 			{
 				CXhChar500 sText = GetCadTextContent(pEnt);
-				logerr.Log("钢板信息{%s}满足设置的文字识别规则，但识别失败请联系信狐客户!", (char*)sText);
+				logerr.Log("钢板信息{%s}满足设置的文字识别规则，但识别失败请联系信狐客服!", (char*)sText);
 				continue;
 			}
 			else
@@ -136,7 +136,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 				sPartNo.Copy(baseInfo.m_sPartNo);
 			else
 			{
-				logerr.Log("通过图块识别钢板基本信息,识别失败请联系信狐客户!");
+				logerr.Log("通过图块识别钢板基本信息,识别失败请联系信狐客服!");
 				continue;
 			}
 		}
@@ -144,6 +144,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		if (pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId))
 		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
 			logerr.Log("件号{%s}有重复请确认!", (char*)sPartNo);
+			pExistPlate->m_dwErrorType |= CPlateProcessInfo::ERROR_REPEAT_PART_LABEL;
 			continue;
 		}
 		//
@@ -177,7 +178,12 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		}
 	}
 	DisplayCadProgress(100);
-	if(pModel->GetPlateNum()<=0)
+	if (selectedEntList.GetNodeNum() <= 0)
+	{
+		AfxMessageBox("未选择提取内容，无法执行提取操作！");
+		return;
+	}
+	else if(pModel->GetPlateNum()<=0)
 	{
 		if (AfxMessageBox("该文件不满足文字识别配置！是否调整文字识别配置？", MB_YESNO) == IDYES)
 		{
@@ -202,35 +208,47 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	int nSum = 0;
 	nNum = pModel->GetPlateNum();
 	DisplayCadProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
+	CHashStrList<CXhChar16> hashPartLabelByLabel;
+	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(FALSE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(FALSE))
+		hashPartLabelByLabel.SetValue(pPlateProcess->GetPartNo(), pPlateProcess->GetPartNo());
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
 	{
 		DisplayCadProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractPlateRelaEnts();
 		pPlateProcess->CheckProfileEdge();
-		pPlateProcess->UpdateBoltHoles();
+		pPlateProcess->UpdateBoltHoles(&hashPartLabelByLabel);
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
 		if (pPlateProcess->IsValid())
 			pPlateProcess->InitPPiInfo();
+		//移至DrawPlate之后进行修改NeedExtract状态，解决多次提取每次都绘制所有钢板的问题 wht 20-10-11
 		//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
-		pPlateProcess->m_bNeedExtract = FALSE;
+		//pPlateProcess->m_bNeedExtract = FALSE;
 	}
 	DisplayCadProgress(100);
 	//将提取的钢板信息导出到中性文件中
 	if (g_pncSysPara.m_iPPiMode == 0)
 		pModel->SplitManyPartNo();
-	CString file_path;
-	GetCurWorkPath(file_path);
-	pModel->CreatePlatePPiFile(file_path);
-	//写工程塔型配置文件 wht 19-01-12
-	if (pModel->m_sTaType.GetLength() > 0)
+	if (CPlateProcessInfo::m_bCreatePPIFile)
 	{
-		CString cfg_path = file_path + "config.ini";
-		cfg_path.Format("%sconfig.ini", file_path);
-		pModel->WritePrjTowerInfoToCfgFile(cfg_path);
+		CString file_path;
+		GetCurWorkPath(file_path);
+		pModel->CreatePlatePPiFile(file_path);
+		//写工程塔型配置文件 wht 19-01-12
+		if (pModel->m_sTaType.GetLength() > 0)
+		{
+			CString cfg_path = file_path + "config.ini";
+			cfg_path.Format("%sconfig.ini", file_path);
+			pModel->WritePrjTowerInfoToCfgFile(cfg_path);
+		}
 	}
 	//绘制提取的钢板外形--支持排版
-	pModel->DrawPlates();
+	pModel->DrawPlates(!CPlateProcessInfo::m_bCreatePPIFile);
+	//绘制完成之后将钢板设置为已提取，支持只绘制新提取的钢板 wht 20-10-11
+	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(TRUE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(TRUE), nSum++)
+	{	//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
+		pPlateProcess->m_bNeedExtract = FALSE;
+	}
 	//通过菜单提取的钢板需更新构件列表
 	if (CPNCModel::m_bSendCommand == FALSE)
 	{
