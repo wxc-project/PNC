@@ -140,13 +140,15 @@ BOOL CPrintSet::SetPlotMedia(PLOT_CFG *pPlotCfg, bool bPromptInfo)
         {	//获取输出设备名称
             if (bPromptInfo)
             {
-                CXhChar500 sError("\n名称:%s,设置错误，请在设置中确认后重试！", (char*)pPlotCfg->m_sDeviceName);
+				CXhChar500 sError("\n名称:%s,设置错误，请在设置中确认后重试！", (char*)pPlotCfg->m_sDeviceName);
 #ifdef _ARX_2007
                 acutPrintf(_bstr_t(sError));
 #else
                 acutPrintf(sError);
 #endif
             }
+			pLayout->close();
+			return FALSE;
         }
         //ACHAR* m_mediaName = _T("ISO A4");//图纸名称
 #ifdef _ARX_2007

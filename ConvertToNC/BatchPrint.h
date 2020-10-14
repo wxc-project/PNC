@@ -80,7 +80,7 @@ protected:
 	bool PrintProcessCardToPNG();
 	bool PrintProcessCardToPDF();
 	bool PrintProcessCardToPaper();
-	bool RunPrint(PRINT_SCOPE *pScope, PLOT_CFG* pPlotCfg, CXhChar500 sFilePath);
+	bool RunPrint(PRINT_SCOPE *pScope, PLOT_CFG* pPlotCfg, const char* file_path = NULL);
 public:
 	const static BYTE PRINT_TYPE_PAPER	= 1;
 	const static BYTE PRINT_TYPE_PNG	= 2;

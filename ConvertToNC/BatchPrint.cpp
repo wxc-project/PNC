@@ -220,104 +220,19 @@ PLOT_CFG CBatchPrint::m_xPngPlotCfg;
 PLOT_CFG CBatchPrint::m_xPaperPlotCfg;
 bool CBatchPrint::PrintProcessCardToPNG()
 {	//判断打印机是否合理
-	CPrintSet::SetPlotMedia(&m_xPngPlotCfg, TRUE);
-	CXhChar500 sPlotCfgName = CPrintSet::GetPlotCfgName(TRUE);
-	if (sPlotCfgName.GetLength() <= 0)
+	if (!CPrintSet::SetPlotMedia(&m_xPngPlotCfg, TRUE))
 		return false;
 	CAcadSysVarLife varLife("FILEDIA", 0);
 	//进行批量打印
 	CXhChar500 sTempPath= GetTempFileFolderPath(m_bEmptyFiles, "PNG"), sFilePath;
 	SetCurrentDirectory(sTempPath);	//设置当前工作路径
-	CXhChar50 sDevice("\n");	// "PublishToWeb PNG.pc3\n");
-	CXhChar50 sPaperSize("\n");	//"Sun Hi-Res (1600.00 x 1280.00 像素)\n");
-	if (m_xPngPlotCfg.m_sDeviceName.GetLength() > 0 &&
-		!m_xPngPlotCfg.m_sDeviceName.EqualNoCase("无"))
-	{
-		if (m_xPngPlotCfg.m_sDeviceName.GetLength() > 0)
-		{
-			sDevice.Copy(m_xPngPlotCfg.m_sDeviceName);
-			sDevice.Append('\n');
-		}
-		if (m_xPngPlotCfg.m_sPaperSize.GetLength() > 0)
-		{
-			sPaperSize.Copy(m_xPngPlotCfg.m_sPaperSize);
-			sPaperSize.Append('\n');
-		}
-	}
 	if (m_pPrintScopeList == NULL)
 		m_pPrintScopeList = &m_xPrintScopeList;
 	PLOT_CFG* pPlotCfg = &m_xPngPlotCfg;
-	CXhChar16 sExtension(".png");
 	for (PRINT_SCOPE *pScope = m_pPrintScopeList->GetFirst(); pScope; pScope = m_pPrintScopeList->GetNext())
 	{
-		ZoomAcadView(pScope->GetCadEntScope(), 10);
-		//更新界面
-		actrTransactionManager->flushGraphics();
-		acedUpdateDisplay();
-
-		CString sLabel = pScope->GetPartFileName(pPlotCfg, sExtension);
-		sFilePath.Printf("%s%s", (char*)sTempPath, sLabel);
-		int nRetCode = 0;
-		if (m_bSendCmd)
-		{
-			CXhChar50 sLeftTop("%.f,%.f\n", pScope->L_T[X], pScope->L_T[Y]);
-			CXhChar50 sRightBottom("%.f,%.f\n", pScope->R_B[X], pScope->R_B[Y]);
-			CXhChar500 sCmd("-plot\ny\n\n%s%sL\nN\nw\n%s%s\nC\nY\nmonochrome.ctb\nY\nA\n%s\nN\nY\n",
-				(char*)sDevice, (char*)sPaperSize, (char*)sLeftTop, (char*)sRightBottom, (char*)sFilePath);
-#ifdef _ARX_2007
-			SendCommandToCad(L"CMDECHO 0\n");
-			SendCommandToCad((ACHAR*)_bstr_t(sCmd));
-#else
-			SendCommandToCad("CMDECHO 0\n");
-			SendCommandToCad(sCmd);
-#endif
-		}
-		else
-		{
-#ifdef _ARX_2007
-			acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);	//设置命令行是否产生回显
-			nRetCode = acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, L"",								//布局名
-				RTSTR, (ACHAR*)_bstr_t(sDevice),		//输出设备的名称
-				RTSTR, (ACHAR*)_bstr_t(sPaperSize),		//图纸尺寸:<A4>
-				RTSTR, L"L",							//图形方向:<横向|纵向>
-				RTSTR, L"N",							//是否反向打印
-				RTSTR, L"w",							//打印区域:<指定窗口>
-				RTPOINT, pScope->L_T,					//左上角
-				RTPOINT, pScope->R_B,					//右下角
-				RTSTR, L"",								//打印比例:<布满>
-				RTSTR, L"C",							//打印偏移：<居中>
-				RTSTR, L"Y",							//是否按样式打印
-				RTSTR, L".",							//打印样式名称
-				RTSTR, L"Y",							//打印线宽
-				RTSTR, L"A",							//着色打印设置
-				RTSTR, (ACHAR*)_bstr_t(sFilePath),	//打印到文件	//此处设置完成路径时会失败，需要调用SetCurrentDirectory之后，此处直接输入文件名 wht 17-10-23
-				RTSTR, L"N",							//是否保存对页面设置的修改
-				RTSTR, L"Y",							//是否继续打印
-				RTNONE);
-#else
-			acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-			nRetCode = acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, "",							//布局名
-				RTSTR, sDevice,						//输出设备的名称
-				RTSTR, sPaperSize,					//图纸尺寸:<A4>
-				RTSTR, "L",							//图形方向:<横向|纵向>
-				RTSTR, "N",							//是否反向打印
-				RTSTR, "w",							//打印区域:<指定窗口>
-				RTPOINT, pScope->L_T,				//左上角
-				RTPOINT, pScope->R_B,				//右下角
-				RTSTR, "",							//打印比例:<布满>
-				RTSTR, "C",							//打印偏移：<居中>
-				RTSTR, "Y",							//是否按样式打印
-				RTSTR, "monochrome.ctb",			//打印样式名称
-				RTSTR, "Y",							//打印线宽
-				RTSTR, "A",							//着色打印设置
-				RTSTR, sFilePath,					//打印到文件
-				RTSTR, "N",							//是否保存对页面设置的修改
-				RTSTR, "Y",							//是否继续打印
-				RTNONE);
-#endif
-		}
+		CString sLabel = pScope->GetPartFileName(pPlotCfg, ".png");
+		RunPrint(pScope, pPlotCfg, sLabel);
 	}
 	//打开图片文件夹
 	ShellExecute(NULL, "open", NULL, NULL, sTempPath, SW_SHOW);
@@ -326,106 +241,19 @@ bool CBatchPrint::PrintProcessCardToPNG()
 
 bool CBatchPrint::PrintProcessCardToPDF()
 {	//判断打印机是否合理
-	CPrintSet::SetPlotMedia(&m_xPdfPlotCfg, TRUE);
-	CXhChar500 sPlotCfgName = CPrintSet::GetPlotCfgName(TRUE);
-	if (sPlotCfgName.GetLength() <= 0)
+	if (!CPrintSet::SetPlotMedia(&m_xPdfPlotCfg, TRUE))
 		return false;
 	CAcadSysVarLife varLife("FILEDIA", 0);
 	//进行批量打印
 	CXhChar500 sTempPath = GetTempFileFolderPath(m_bEmptyFiles, "PDF"), sFilePath;
 	SetCurrentDirectory(sTempPath);	//设置当前工作路径
-	CXhChar50 sDevice("\n");		// "Microsoft Print To PDF\n");
-	CXhChar50 sPaperSize("\n");		//"A4"
-	if (m_xPdfPlotCfg.m_sDeviceName.GetLength() > 0 &&
-		!m_xPdfPlotCfg.m_sDeviceName.EqualNoCase("无"))
-	{
-		if (m_xPdfPlotCfg.m_sDeviceName.GetLength() > 0)
-		{
-			sDevice.Copy(m_xPdfPlotCfg.m_sDeviceName);
-			sDevice.Append('\n');
-		}
-		if (m_xPdfPlotCfg.m_sPaperSize.GetLength() > 0)
-		{
-			sPaperSize.Copy(m_xPdfPlotCfg.m_sPaperSize);
-			sPaperSize.Append('\n');
-		}
-	}
 	if (m_pPrintScopeList == NULL)
 		m_pPrintScopeList = &m_xPrintScopeList;
 	PLOT_CFG* pPlotCfg = &m_xPdfPlotCfg;
-	CXhChar16 sExtension(".pdf");
 	for (PRINT_SCOPE *pScope = m_pPrintScopeList->GetFirst(); pScope; pScope = m_pPrintScopeList->GetNext())
 	{
-		ZoomAcadView(pScope->GetCadEntScope(), 10);
-		//更新界面
-		actrTransactionManager->flushGraphics();
-		acedUpdateDisplay();
-
-		CString sLabel = pScope->GetPartFileName(pPlotCfg,sExtension);
-		sFilePath.Printf("%s%s", (char*)sTempPath,sLabel);
-		int nRetCode = 0;
-		if (m_bSendCmd)
-		{
-			CXhChar50 sLeftTop("%.f,%.f\n", pScope->L_T[X], pScope->L_T[Y]);
-			CXhChar50 sRightBottom("%.f,%.f\n", pScope->R_B[X], pScope->R_B[Y]);
-			CXhChar500 sCmd("-plot\ny\n\n%s%s\nL\nN\nw\n%s%s\nC\nY\nmonochrome.ctb\nY\nA\n%s\nN\nY\n",
-				(char*)sDevice, (char*)sPaperSize, (char*)sLeftTop, (char*)sRightBottom, (char*)sFilePath);
-#ifdef _ARX_2007
-			SendCommandToCad(L"CMDECHO 0\n");
-			SendCommandToCad((ACHAR*)_bstr_t(sCmd));
-#else
-			SendCommandToCad("CMDECHO 0\n");
-			SendCommandToCad(sCmd);
-#endif
-		}
-		else
-		{
-#ifdef _ARX_2007
-			acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);	//设置命令行是否产生回显
-			nRetCode = acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, L"",								//布局名
-				RTSTR, (ACHAR*)_bstr_t(sDevice),		//输出设备的名称
-				RTSTR, (ACHAR*)_bstr_t(sPaperSize),		//图纸尺寸:<A4>
-				RTSTR, L"",								//输入图纸单位[英寸(I) / 毫米(M] <英寸>:	//PDF独有
-				RTSTR, L"L",							//图形方向:<横向|纵向>
-				RTSTR, L"N",							//是否反向打印
-				RTSTR, L"w",							//打印区域:<指定窗口>
-				RTPOINT, pScope->L_T,					//左上角
-				RTPOINT, pScope->R_B,					//右下角
-				RTSTR, L"",								//打印比例:<布满>
-				RTSTR, L"C",							//打印偏移：<居中>
-				RTSTR, L"Y",							//是否按样式打印
-				RTSTR, L".",							//打印样式名称
-				RTSTR, L"Y",							//打印线宽
-				RTSTR, L"A",							//着色打印设置
-				RTSTR, (ACHAR*)_bstr_t(sFilePath),	//打印到文件	//此处设置完成路径时会失败，需要调用SetCurrentDirectory之后，此处直接输入文件名 wht 17-10-23
-				RTSTR, L"N",							//是否保存对页面设置的修改
-				RTSTR, L"Y",							//是否继续打印
-				RTNONE);
-#else
-			acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-			nRetCode = acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, "",							//布局名
-				RTSTR, sDevice,						//输出设备的名称
-				RTSTR, sPaperSize,					//图纸尺寸:<A4>
-				RTSTR, "",							//输入图纸单位[英寸(I) / 毫米(M] <英寸>:	//PDF独有
-				RTSTR, "L",							//图形方向:<横向|纵向>
-				RTSTR, "N",							//是否反向打印
-				RTSTR, "w",							//打印区域:<指定窗口>
-				RTPOINT, pScope->L_T,				//左上角
-				RTPOINT, pScope->R_B,				//右下角
-				RTSTR, "",							//打印比例:<布满>
-				RTSTR, "C",							//打印偏移：<居中>
-				RTSTR, "Y",							//是否按样式打印
-				RTSTR, "monochrome.ctb",			//打印样式名称
-				RTSTR, "Y",							//打印线宽
-				RTSTR, "A",							//着色打印设置
-				RTSTR, sFilePath,					//打印到文件
-				RTSTR, "N",							//是否保存对页面设置的修改
-				RTSTR, "Y",							//是否继续打印
-				RTNONE);
-#endif
-		}
+		CString sLabel = pScope->GetPartFileName(pPlotCfg, ".pdf");
+		RunPrint(pScope, pPlotCfg, sLabel);
 	}
 	//打开图片文件夹
 	ShellExecute(NULL, "open", NULL, NULL, sTempPath, SW_SHOW);
@@ -434,179 +262,83 @@ bool CBatchPrint::PrintProcessCardToPDF()
 
 bool CBatchPrint::PrintProcessCardToPaper()
 {	//判断打印机是否合理
-	CPrintSet::SetPlotMedia(&m_xPaperPlotCfg, TRUE);
-	CXhChar500 sPlotCfgName = CPrintSet::GetPlotCfgName(TRUE);
-	if (sPlotCfgName.GetLength() <= 0)
+	if (!CPrintSet::SetPlotMedia(&m_xPaperPlotCfg, TRUE))
 		return false;
-	CXhChar50 sDevice("\n");
-	CXhChar50 sPaperSize("\n");
-	if (m_xPaperPlotCfg.m_sDeviceName.GetLength() > 0)
-		sDevice.Printf("%s\n", (char*)m_xPaperPlotCfg.m_sDeviceName);
-	if (m_xPaperPlotCfg.m_sPaperSize.GetLength() > 0)
-		sPaperSize.Printf("%s\n", (char*)m_xPaperPlotCfg.m_sPaperSize);
-	//进行批量打印
-	if (m_pPrintScopeList==NULL)
-		m_pPrintScopeList = &m_xPrintScopeList;
 	CXhChar500 sTempPath = GetTempFileFolderPath(FALSE, "Parper-Log");
 	CTime time = CTime::GetCurrentTime();
 	CString sTime = time.Format("%Y%m%d%H%M%S");
 	CLogFile plotLog(CXhChar500("%s\\plot(%s).log",(char*)sTempPath,sTime));
 	int i = 0;
+	//进行批量打印
+	if (m_pPrintScopeList == NULL)
+		m_pPrintScopeList = &m_xPrintScopeList;
 	for(PRINT_SCOPE *pScope= m_pPrintScopeList->GetFirst();pScope;pScope= m_pPrintScopeList->GetNext())
 	{
-		ZoomAcadView(pScope->GetCadEntScope(),10);
-		//更新界面
-		actrTransactionManager->flushGraphics();
-		acedUpdateDisplay();
-		if (m_bSendCmd)
-		{
-			CXhChar50 sLeftTop("%.f,%.f\n", pScope->L_T[X], pScope->L_T[Y]);
-			CXhChar50 sRightBottom("%.f,%.f\n", pScope->R_B[X], pScope->R_B[Y]);
-			CXhChar500 sCmd("-plot\ny\n\n%s%s\nL\nN\nw\n%s%s\nC\nY\nmonochrome.ctb\nY\nA\n\nN\nY\n",
-				(char*)sDevice, (char*)sPaperSize, (char*)sLeftTop, (char*)sRightBottom);
-#ifdef _ARX_2007
-			SendCommandToCad(L"CMDECHO 0\n");
-			SendCommandToCad((ACHAR*)_bstr_t(sCmd));
-#else
-			SendCommandToCad("CMDECHO 0\n");
-			SendCommandToCad(sCmd);
-			plotLog.Log("%d. %s# %s，%s，Rect:(%.f,%.f),(%.f,%.f)", 
-				++i, (char*)pScope->m_sPartLabel, (char*)m_xPaperPlotCfg.m_sDeviceName,
-				(char*)m_xPaperPlotCfg.m_sPaperSize, pScope->L_T[X], pScope->L_T[Y], pScope->R_B[X], pScope->R_B[Y]);
-#endif
-		}
-		else
-		{
-#ifdef _ARX_2007
-			acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-			acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, L"",							//布局名
-				RTSTR, sDevice,						//输出设备的名称
-				RTSTR, sPaperSize,					//图纸尺寸:<A4>
-				RTSTR, L"",							//图纸单位:<毫米>
-				RTSTR, L"L",						//图形方向:<横向|纵向>
-				RTSTR, L"N",							//是否反向打印
-				RTSTR, L"w",						//打印区域:<指定窗口>
-				RTPOINT, pScope->L_T,				//左上角
-				RTPOINT, pScope->R_B,				//右下角
-				RTSTR, L"",							//打印比例:<布满>
-				RTSTR, L"C",						//打印偏移：<居中>
-				RTSTR, L"Y",						//是否按样式打印
-				RTSTR, L"monochrome.ctb",			//打印样式名称
-				RTSTR, L"Y",						//打印线宽
-				RTSTR, L"A",						//着色打印设置
-				RTSTR, L"",							//打印到文件
-				RTSTR, L"N",						//是否保存页面设置更改
-				RTSTR, L"Y",						//是否继续打印
-				RTNONE);
-#else
-			acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-			acedCommand(RTSTR, "-plot", RTSTR, "y",	//是否需要详细打印配置[是(Y)/否(N)]
-				RTSTR, "",							//布局名
-				RTSTR, sDevice,						//输出设备的名称
-				RTSTR, sPaperSize,					//图纸尺寸:<A4>
-				RTSTR, "",							//图纸单位:<毫米>
-				RTSTR, "L",							//图形方向:<横向|纵向>
-				RTSTR, "N",							//是否反向打印
-				RTSTR, "w",							//打印区域:<指定窗口>
-				RTPOINT, pScope->L_T,				//左上角
-				RTPOINT, pScope->R_B,				//右下角
-				RTSTR, "",							//打印比例:<布满>
-				RTSTR, "C",							//打印偏移：<居中>
-				RTSTR, "Y",							//是否按样式打印
-				RTSTR, "monochrome.ctb",			//打印样式名称
-				RTSTR, "Y",							//打印线宽
-				RTSTR, "A",							//着色打印设置
-				RTSTR, "",							//打印到文件
-				RTSTR, "N",							//是否保存页面设置更改
-				RTSTR, "Y",							//是否继续打印
-				RTNONE);
-#endif
-		}
+		RunPrint(pScope, &m_xPaperPlotCfg);
+		//输出日志
+		plotLog.Log("%d. %s# %s，%s，Rect:(%.f,%.f),(%.f,%.f)",
+			++i, (char*)pScope->m_sPartLabel, (char*)m_xPaperPlotCfg.m_sDeviceName,
+			(char*)m_xPaperPlotCfg.m_sPaperSize, pScope->L_T[X], pScope->L_T[Y], 
+			pScope->R_B[X], pScope->R_B[Y]);
 	}
 	return true;
 }
 
-bool CBatchPrint::RunPrint(PRINT_SCOPE *pScope, PLOT_CFG* pPlotCfg, CXhChar500 sFilePath)
+bool CBatchPrint::RunPrint(PRINT_SCOPE *pScope, PLOT_CFG* pPlotCfg, const char* file_path /*= NULL*/)
 {
+	if (pPlotCfg == NULL || pScope == NULL)
+		return false;
+	CXhChar16 sPaperRot = (pPlotCfg->m_ciPaperRot == 'P') ? "P" : "L";
+	CXhChar50 sDevice, sPaperSize, sFileName, sRectLT, sRectRB;
+	if (pPlotCfg->m_sDeviceName.GetLength() > 0)
+		sDevice.Copy(pPlotCfg->m_sDeviceName);
+	if (pPlotCfg->m_sPaperSize.GetLength() > 0)
+		sPaperSize.Copy(pPlotCfg->m_sPaperSize);
+	if (file_path != NULL && strlen(file_path) > 0)
+		sFileName.Copy(file_path);
+	sRectLT.Printf("%g,%g\n", pScope->L_T[X], pScope->L_T[Y]);
+	sRectRB.Printf("%g,%g\n", pScope->R_B[X], pScope->R_B[Y]);
+	sDevice.Append("\n");
+	sPaperSize.Append("\n");
+	sPaperRot.Append("\n");
+	sFileName.Append("\n");
+	//根据打印区域进行缩放，更新界面
+	ZoomAcadView(pScope->GetCadEntScope(), 10);
 	actrTransactionManager->flushGraphics();
 	acedUpdateDisplay();
-	CXhChar50 sDevice = pPlotCfg->m_sDeviceName;
-	CXhChar50 sPaperSize = pPlotCfg->m_sPaperSize;
-	CXhChar16 sPaperRot("%c", pPlotCfg->m_ciPaperRot);
-	if (m_bSendCmd)
-	{
-		sDevice.Append("\n");
-		sPaperSize.Append("\n");
-		sPaperRot.Append("\n");
-		sFilePath.Append("\n");
-		CXhChar50 sLeftTop("%.f,%.f\n", pScope->L_T[X], pScope->L_T[Y]);
-		CXhChar50 sRightBottom("%.f,%.f\n", pScope->R_B[X], pScope->R_B[Y]);
-		CXhChar500 sCmd("-plot\ny\n\n%s%s\n%sN\nw\n%s%s\nC\nY\nmonochrome.ctb\nY\nA\n%sN\nY\n",
-			(char*)sDevice, (char*)sPaperSize, (char*)sPaperRot, (char*)sLeftTop, (char*)sRightBottom, (char*)sFilePath);
-#ifdef _ARX_2007
-		SendCommandToCad(L"CMDECHO 0\n");
-		SendCommandToCad((ACHAR*)_bstr_t(sCmd));
-#else
-		SendCommandToCad("CMDECHO 0\n");
-		SendCommandToCad(sCmd);
-#endif
-	}
+	//执行打印命令
+	CString sCmd;
+	sCmd.Append("-plot\n");			//打印指令
+	sCmd.Append("y\n");				//是否需要详细打印配置[是(Y)/否(N)]
+	sCmd.Append("\n");				//布局名
+	sCmd.Append((char*)sDevice);	//设备的名称
+	sCmd.Append((char*)sPaperSize);	//图纸尺寸
+	if (m_ciPrintType == PRINT_TYPE_PDF||m_ciPrintType==PRINT_TYPE_PAPER)
+		sCmd.Append("\n");			//输入图纸单位[英寸(I) / 毫米(M] <英寸>:
+	sCmd.Append((char*)sPaperRot);	//图形方向:<横向|纵向>
+	sCmd.Append("N\n");				//是否反向打印
+	sCmd.Append("w\n");				//打印区域:<指定窗口>
+	sCmd.Append((char*)sRectLT);	//左上角
+	sCmd.Append((char*)sRectRB);	//右下角
+	sCmd.Append("\n");				//打印比例:<布满>
+	sCmd.Append("C\n");				//打印偏移：<居中>
+	sCmd.Append("Y\n");				//是否按样式打印
+	sCmd.Append("monochrome.ctb\n");//打印样式名称
+	sCmd.Append("Y\n");				//打印线宽
+	sCmd.Append("A\n");				//着色打印设置
+	if(strstr(sDevice,"DWG To PDF.pc3")|| strstr(sDevice,"PublishToWeb PNG.pc3"))
+		sCmd.Append((char*)sFileName);	//输入文件名
 	else
-	{
+		sCmd.Append("N\n");			//是否打印到文件
+	sCmd.Append("N\n");				//是否保存对页面设置的修改
+	sCmd.Append("Y\n");				//是否继续打印
 #ifdef _ARX_2007
-		acedCommand(RTSTR, L"CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-		acedCommand(RTSTR, L"-plot", RTSTR, L"y",	//是否需要详细打印配置[是(Y)/否(N)]
-			RTSTR, L"",							//布局名
-			RTSTR, sDevice,						//输出设备的名称
-			RTSTR, sPaperSize,					//图纸尺寸:<A4>
-			RTSTR, (ACHAR*)_bstr_t(sDevice),	//输出设备的名称
-			RTSTR, (ACHAR*)_bstr_t(sPaperSize),	//图纸尺寸:<A4>
-			RTSTR, L"",							//图纸单位:<毫米>
-			RTSTR, L"L",						//图形方向:<横向|纵向>
-			RTSTR, L"N",							//是否反向打印
-			RTSTR, (ACHAR*)_bstr_t(sPaperRot),	//图形方向:<横向|纵向>
-			RTSTR, L"N",						//是否反向打印
-			RTSTR, L"w",						//打印区域:<指定窗口>
-			RTPOINT, pScope->L_T,				//左上角
-			RTPOINT, pScope->R_B,				//右下角
-			RTSTR, L"",							//打印比例:<布满>
-			RTSTR, L"C",						//打印偏移：<居中>
-			RTSTR, L"Y",						//是否按样式打印
-			RTSTR, L"monochrome.ctb",			//打印样式名称
-			RTSTR, L"Y",						//打印线宽
-			RTSTR, L"A",						//着色打印设置
-			RTSTR, L"",							//打印到文件
-			RTSTR, (ACHAR*)_bstr_t(sFilePath),	//打印到文件
-			RTSTR, L"N",						//是否保存页面设置更改
-			RTSTR, L"Y",						//是否继续打印
-			RTNONE);
+	SendCommandToCad(L"CMDECHO 0\n");
+	SendCommandToCad((ACHAR*)_bstr_t(sCmd));
 #else
-		acedCommand(RTSTR, "CMDECHO", RTLONG, 0, RTNONE);		//设置命令行是否产生回显
-		acedCommand(RTSTR, "-plot", RTSTR, "y",	//是否需要详细打印配置[是(Y)/否(N)]
-			RTSTR, "",							//布局名
-			RTSTR, sDevice,						//输出设备的名称
-			RTSTR, sPaperSize,					//图纸尺寸:<A4>
-			RTSTR, "",							//图纸单位:<毫米>
-			RTSTR, "L",							//图形方向:<横向|纵向>
-			RTSTR, sPaperRot,					//图形方向:<横向|纵向>
-			RTSTR, "N",							//是否反向打印
-			RTSTR, "w",							//打印区域:<指定窗口>
-			RTPOINT, pScope->L_T,				//左上角
-			RTPOINT, pScope->R_B,				//右下角
-			RTSTR, "",							//打印比例:<布满>
-			RTSTR, "C",							//打印偏移：<居中>
-			RTSTR, "Y",							//是否按样式打印
-			RTSTR, "monochrome.ctb",			//打印样式名称
-			RTSTR, "Y",							//打印线宽
-			RTSTR, "A",							//着色打印设置
-			RTSTR, "",							//打印到文件
-			RTSTR, sFilePath,					//打印到文件
-			RTSTR, "N",							//是否保存页面设置更改
-			RTSTR, "Y",							//是否继续打印
-			RTNONE);
+	SendCommandToCad("CMDECHO 0\n");
+	SendCommandToCad((char*)sCmd.GetBuffer());
 #endif
-	}
 	return true;
 }
 CBatchPrint::CBatchPrint(ATOM_LIST<PRINT_SCOPE> *pPrintScopeList, bool bSendCmd, BYTE ciPrintType, bool bEmptyPngFiles /*= FALSE*/)

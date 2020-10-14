@@ -102,9 +102,19 @@ int CPrintSetDlg::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=
 			sText.Copy("¥Ú”°PNG");
 	}
 	else if (id == GetPropID("m_sDeviceName"))
-		sText.Copy(m_xPlotCfg.m_sDeviceName);
+	{
+		if (m_xPlotCfg.m_sDeviceName.GetLength() <= 0)
+			sText.Copy("Œﬁ");
+		else
+			sText.Copy(m_xPlotCfg.m_sDeviceName);
+	}
 	else if (id == GetPropID("m_sPaperSize"))
-		sText.Copy(m_xPlotCfg.m_sPaperSize);
+	{
+		if (m_xPlotCfg.m_sPaperSize.GetLength() <= 0)
+			sText.Copy("ƒ¨»œ≥ﬂ¥Á");
+		else
+			sText.Copy(m_xPlotCfg.m_sPaperSize);
+	}
 	else if (id == GetPropID("m_ciPaperRot"))
 	{
 		if (m_xPlotCfg.m_ciPaperRot == 'L')

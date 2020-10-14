@@ -3327,7 +3327,7 @@ bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 			return false;
 		GEPOINT off_vec = (ptArr[1] - ptArr[0]) + (ptArr[2] - ptArr[0]);
 		normalize(off_vec);
-		dfDiameter = 2 * (dfLen / sqrt(3));
+		dfDiameter = 2 * (dfLen / sqrt(3.0));
 		GEPOINT center = ptArr[0] + off_vec * dfDiameter*0.5;
 		CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(MakePosKeyStr(center));
 		if (pBoltEnt == NULL)
@@ -3444,15 +3444,15 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 			//计算该直线组成三角形后的中心点位置
 			CAD_ENTITY xEntity;
 			xEntity.idCadEnt = vectorConnLine[i].idCadEnt;
-			xEntity.m_fSize = fLen / sqrt(3) * 2;
-			xEntity.pos = ptM + up_off_vec * (0.5*fLen / sqrt(3));
+			xEntity.m_fSize = fLen / sqrt(3.0) * 2;
+			xEntity.pos = ptM + up_off_vec * (0.5*fLen / sqrt(3.0));
 			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
 			mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
-			xEntity.pos = ptM + dw_off_vec * (0.5*fLen / sqrt(3));
+			xEntity.pos = ptM + dw_off_vec * (0.5*fLen / sqrt(3.0));
 			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
 			mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
 			//计算该直线组成正方形后的中心点位置
-			xEntity.m_fSize = fLen * sqrt(2);
+			xEntity.m_fSize = fLen * sqrt(2.0);
 			xEntity.pos = ptM + up_off_vec * 0.5*fLen;
 			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
 			mapSquare.insert(std::make_pair(MakePosKeyStr(xEntity.pos), vectorConnLine[i]));
