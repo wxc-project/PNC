@@ -1168,7 +1168,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			Cpy_Pnt(line.endPt, pAcDbLine->endPoint());
 			if(g_pncSysPara.IsBendLine((AcDbLine*)pEnt,&symbols))
 			{
-				if (!RecogRollEdge(rollEdgeDimTextSet, line))
+				//RecogRollEdge算法待完善，目前PNC中不需要特殊处理卷边点wxc-2020.10.14
+				//if (!RecogRollEdge(rollEdgeDimTextSet, line))
 				{
 					if (xPlate.m_cFaceN >= 3)
 						continue;	//最多支持两条火曲线
@@ -3063,36 +3064,11 @@ void CPNCModel::Empty()
 //从选中的图元中剔除无效的非轮廓边图元（孤立线条、短焊缝线等）
 void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols)
 {
-	AcDbObjectId objId;
 	AcDbEntity *pEnt = NULL;
-	//剔除非轮廓边图元，记录火曲线特征信息
-	int index = 1, nNum = selectedEntIdSet.GetNodeNum() * 2 + m_xBoltEntHash.GetNodeNum();
-	DisplayCadProgress(0, "剔除无效的非轮廓边图元.....");
-	for (objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(), index++)
-	{
-		DisplayCadProgress(int(100 * index / nNum));
-		CAcDbObjLife objLife(objId);
-		if ((pEnt = objLife.GetEnt()) == NULL)
-			continue;
-		if (pEnt->isKindOf(AcDbSpline::desc()))
-		{
-			if (pSymbols)
-				pSymbols->AppendSymbolEnt((AcDbSpline*)pEnt);
-			//确认样条曲线为火曲线标识后，再从选择集中移除，否则样条曲线椭圆弧无法识别 wht 20-07-18
-			AcDbSpline *pSpline = (AcDbSpline*)pEnt;
-			if(pSpline->numControlPoints()<=6 && pSpline->numFitPoints()<=4)
-				selectedEntIdSet.DeleteNode(objId.asOldId());
-		}
-		else if (!g_pncSysPara.IsProfileEnt(pEnt))
-			selectedEntIdSet.DeleteNode(objId.asOldId());
-	}
-	selectedEntIdSet.Clean();
-	//剔除孤立线条以及焊缝线
 	std::set<CString> setKeyStr;
 	std::multimap<CString, CAD_LINE> hashLineArrByPosKeyStr;
-	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(),index++)
+	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
 	{
-		DisplayCadProgress(int(100 * index / nNum));
 		CAcDbObjLife objLife(objId);
 		if ((pEnt = objLife.GetEnt()) == NULL)
 			continue;
@@ -3114,13 +3090,37 @@ void CPNCModel::FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSym
 		hashLineArrByPosKeyStr.insert(std::make_pair(MakePosKeyStr(ptS), CAD_LINE(objId, len)));
 		hashLineArrByPosKeyStr.insert(std::make_pair(MakePosKeyStr(ptE), CAD_LINE(objId, len)));
 	}
-	for (std::set<CString>::iterator iter = setKeyStr.begin();iter!=setKeyStr.end();++iter)
+	//剔除非轮廓边图元，记录火曲线特征信息
+	int index = 1, nNum = selectedEntIdSet.GetNodeNum() + setKeyStr.size() + m_xBoltEntHash.GetNodeNum();
+	DisplayCadProgress(0, "剔除无效的非轮廓边图元.....");
+	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(), index++)
 	{
+		DisplayCadProgress(int(100 * index / nNum));
+		CAcDbObjLife objLife(objId);
+		if ((pEnt = objLife.GetEnt()) == NULL)
+			continue;
+		if (pEnt->isKindOf(AcDbSpline::desc()))
+		{
+			if (pSymbols)
+				pSymbols->AppendSymbolEnt((AcDbSpline*)pEnt);
+			//确认样条曲线为火曲线标识后，再从选择集中移除，否则样条曲线椭圆弧无法识别 wht 20-07-18
+			AcDbSpline *pSpline = (AcDbSpline*)pEnt;
+			if (pSpline->numControlPoints() <= 6 && pSpline->numFitPoints() <= 4)
+				selectedEntIdSet.DeleteNode(objId.asOldId());
+		}
+		else if (!g_pncSysPara.IsProfileEnt(pEnt))
+			selectedEntIdSet.DeleteNode(objId.asOldId());
+	}
+	selectedEntIdSet.Clean();
+	//剔除孤立线条以及焊缝线
+	for (std::set<CString>::iterator iter = setKeyStr.begin(); iter != setKeyStr.end(); ++iter, index++)
+	{
+		DisplayCadProgress(int(100 * index / nNum));
 		if (hashLineArrByPosKeyStr.count(*iter) != 1)
 			continue;
 		std::multimap<CString, CAD_LINE>::iterator mapIter;
 		mapIter = hashLineArrByPosKeyStr.find(*iter);
-		if(mapIter!=hashLineArrByPosKeyStr.end() && mapIter->second.m_fSize< CPNCModel::WELD_MAX_HEIGHT)
+		if (mapIter != hashLineArrByPosKeyStr.end() && mapIter->second.m_fSize < CPNCModel::WELD_MAX_HEIGHT)
 			selectedEntIdSet.DeleteNode(mapIter->second.idCadEnt);
 	}
 	selectedEntIdSet.Clean();
