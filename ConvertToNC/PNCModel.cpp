@@ -3291,6 +3291,8 @@ bool CPNCModel::AppendBoltEntsByCircle(ULONG idCirEnt)
 	}
 	return true;
 }
+const double SQRT_2 = 1.414213562373095;
+const double SQRT_3 = 1.732050807568877;
 //根据多段线提取螺栓
 bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 {
@@ -3327,7 +3329,7 @@ bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 			return false;
 		GEPOINT off_vec = (ptArr[1] - ptArr[0]) + (ptArr[2] - ptArr[0]);
 		normalize(off_vec);
-		dfDiameter = 2 * (dfLen / sqrt(3));
+		dfDiameter = 2 * (dfLen / SQRT_3);
 		GEPOINT center = ptArr[0] + off_vec * dfDiameter*0.5;
 		CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(MakePosKeyStr(center));
 		if (pBoltEnt == NULL)
@@ -3444,15 +3446,15 @@ bool CPNCModel::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine)
 			//计算该直线组成三角形后的中心点位置
 			CAD_ENTITY xEntity;
 			xEntity.idCadEnt = vectorConnLine[i].idCadEnt;
-			xEntity.m_fSize = fLen / sqrt(3) * 2;
-			xEntity.pos = ptM + up_off_vec * (0.5*fLen / sqrt(3));
+			xEntity.m_fSize = fLen / SQRT_3 * 2;
+			xEntity.pos = ptM + up_off_vec * (0.5*fLen / SQRT_3);
 			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
 			mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
-			xEntity.pos = ptM + dw_off_vec * (0.5*fLen / sqrt(3));
+			xEntity.pos = ptM + dw_off_vec * (0.5*fLen / SQRT_3);
 			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
 			mapTriangle.insert(std::make_pair(MakePosKeyStr(xEntity.pos), xEntity));
 			//计算该直线组成正方形后的中心点位置
-			xEntity.m_fSize = fLen * sqrt(2);
+			xEntity.m_fSize = fLen * SQRT_2;
 			xEntity.pos = ptM + up_off_vec * 0.5*fLen;
 			setKeyStr.insert(MakePosKeyStr(xEntity.pos));
 			mapSquare.insert(std::make_pair(MakePosKeyStr(xEntity.pos), vectorConnLine[i]));
