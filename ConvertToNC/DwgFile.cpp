@@ -732,7 +732,8 @@ void CAngleProcessInfo::RefreshAngleSpec()
 {
 	CLockDocumentLife lockCurDocLife;
 	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_DES_GUIGE);
-	CXhChar16 sGuiGe("%s", (char*)m_xAngle.sSpec);
+	char cMark1, cMark2;
+	CXhChar100 sValueG;
 	if (specId == NULL)
 	{	//添加角钢规格
 		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
@@ -741,6 +742,7 @@ void CAngleProcessInfo::RefreshAngleSpec()
 			logerr.Log("块表打开失败");
 			return;
 		}
+		CXhChar16 sGuiGe("L%lf×%lf", m_xAngle.wide, m_xAngle.thick);
 		DimText(pBlockTableRecord, data_pt, sGuiGe, TextStyleTable::hzfs.textStyleId,
 			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid, AcDbObjectId::kNull,
 			RGB(255, 0, 0));
@@ -754,6 +756,23 @@ void CAngleProcessInfo::RefreshAngleSpec()
 		{
 			AcDbText* pText = (AcDbText*)pEnt;
 #ifdef _ARX_2007
+			sValueG.Copy(_bstr_t(pText->textString()));
+#else
+			sValueG.Copy(pText->textString());
+#endif
+			double fWidth = 0, fThick = 0;
+			if (strstr(sValueG, "L"))
+				sscanf(sValueG, "%c%lf%c%lf",  &cMark1, &fWidth, &cMark2, &fThick);
+			else if (strstr(sValueG, "∠"))
+				sscanf(sValueG, "%c%lf%c%lf", &cMark1, &fWidth, &cMark2, &fThick);
+			
+			CXhChar100 sFormat;
+			sFormat.Append(cMark1);
+			sFormat.Append("%.0f");
+			sFormat.Append(cMark2);
+			sFormat.Append("%.0f");
+			CXhChar16 sGuiGe((char*)sFormat, m_xAngle.wide, m_xAngle.thick);
+#ifdef _ARX_2007
 			pText->setTextString(_bstr_t(sGuiGe));
 #else
 			pText->setTextString(sGuiGe);
@@ -765,6 +784,24 @@ void CAngleProcessInfo::RefreshAngleSpec()
 		else
 		{
 			AcDbMText* pMText = (AcDbMText*)pEnt;
+			CXhChar500 sContents;
+#ifdef _ARX_2007
+			sContents.Copy(_bstr_t(pMText->contents()));
+#else
+			sContents.Copy(pMText->contents());
+#endif
+			CString sText(sContents);
+			
+			double fWidth = 0, fThick = 0;
+			if (sText.Find("L") >= 0)
+			{
+
+			}
+			else if (sText.Find("∠") >= 0)
+			{
+
+			}
+			CXhChar16 sGuiGe("L%lf×%lf", m_xAngle.wide, m_xAngle.thick);
 #ifdef _ARX_2007
 			pMText->setContents(_bstr_t(sGuiGe));
 #else

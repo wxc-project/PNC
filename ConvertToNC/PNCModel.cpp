@@ -3046,16 +3046,25 @@ void CPlateProcessInfo::RefreshPlateSpec()
 		}
 		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
 		{
-			sValuePn = strtok(sValueG, "#");
-			for (char* sKey = strtok(NULL, " "); sKey; sKey = strtok(NULL, " "))
+			CString sValurLeft, sValueRight;
+			CString sValueStr(sValueG);
+			sValurLeft = sValueStr.Left(sValueStr.Find(g_pncSysPara.m_sThickKey));
+			int nSpecKeyIndex = sValueStr.Find(g_pncSysPara.m_sThickKey) + 1;//从规格的数字部分开始遍历
+			for (; nSpecKeyIndex < sValueStr.GetLength(); nSpecKeyIndex++)
 			{
-				if (strstr(sKey, "Q"))
+				char cSpecChar = sValueStr.GetAt(nSpecKeyIndex);
+				if (cSpecChar <'0' || cSpecChar>'9')
 				{
-					sValueM.Copy(sKey);
+					nSpecKeyIndex++;
 					break;
 				}
 			}
-			sValueS.Printf("%s#%s -%.0f ", (char*)sValuePn, (char*)sValueM, xBomPlate.thick);
+			if (nSpecKeyIndex > 0 && nSpecKeyIndex < sValueStr.GetLength())
+			{
+				int nRightLenth = sValueStr.GetLength() - nSpecKeyIndex;
+				sValueRight = sValueStr.Right(nRightLenth);
+			}
+			sValueS.Printf("%s -%.0f %s", sValurLeft.GetBuffer(), xBomPlate.thick, sValueRight.GetBuffer());
 		}
 		else
 		{
@@ -3139,8 +3148,16 @@ void CPlateProcessInfo::RefreshPlateMat()
 		}
 		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
 		{
-			sValuePn = strtok(sValueG, "#");
-			sValueS.Printf("%s#%s -%.0f ", (char*)sValuePn, (char*)xBomPlate.sMaterial, xBomPlate.thick);
+			CString sValurLeft, sValueRight;
+			CString sValueStr(sValueG);
+			sValurLeft = sValueStr.Left(sValueStr.Find(g_pncSysPara.m_sMatKey));
+			int nSpecKeyIndex = sValueStr.Find(g_pncSysPara.m_sThickKey);
+			if (nSpecKeyIndex > 0)
+			{
+				int nRightLenth = sValueStr.GetLength() - nSpecKeyIndex;
+				sValueRight = sValueStr.Right(nRightLenth);
+			}
+			sValueS.Printf("%s%s %s", sValurLeft.GetBuffer(), (char*)xBomPlate.sMaterial, sValueRight.GetBuffer());			
 		}
 		else
 		{
