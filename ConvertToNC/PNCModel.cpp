@@ -1975,6 +1975,7 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 {
 	CXhChar16 sDestPartNo = GetPartNo();
 	pSrcPlate->xPlate.ClonePart(&xPlate);
+	xPlate.cQuality = pSrcPlate->xPlate.cQuality;
 	if(sDestPartNo.GetLength()>1)
 		xPlate.SetPartNo(sDestPartNo);	//保留原来的件号（分解一板多号的时候） wxc-20.09.09
 	//
@@ -3018,6 +3019,184 @@ void CPlateProcessInfo::RefreshPlateNum()
 		}
 	}
 	m_ciModifyState |= MODIFY_MANU_NUM;
+}
+//更新钢板规格
+void CPlateProcessInfo::RefreshPlateSpec()
+{
+	if (partNoId == NULL)
+		return;
+	CLockDocumentLife lockCurDocLife;
+	AcDbEntity *pEnt = NULL;
+	XhAcdbOpenAcDbEntity(pEnt, partNoId, AcDb::kForWrite);
+	CAcDbObjLife entLife(pEnt);
+	CXhChar100 sValueG, sValueS, sValueM, sValuePn;
+	if (pEnt->isKindOf(AcDbText::desc()))
+	{
+		AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+		sValueG.Copy(_bstr_t(pText->textString()));
+#else
+		sValueG.Copy(pText->textString());
+#endif
+		if (g_pncSysPara.m_iDimStyle == 1 &&
+			((strstr(sValueG, "规格:") != NULL && strstr(g_pncSysPara.m_sThickKey, "规格:") != NULL) ||
+			(strstr(sValueG, "规格：") != NULL && strstr(g_pncSysPara.m_sThickKey, "规格：") != NULL)))
+		{	//修改钢板加工数 wht 19-08-05
+			sValueS.Printf("%s%.0f", (char*)g_pncSysPara.m_sThickKey, xBomPlate.thick);
+		}
+		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
+		{
+			sValuePn = strtok(sValueG, "#");
+			for (char* sKey = strtok(NULL, " "); sKey; sKey = strtok(NULL, " "))
+			{
+				if (strstr(sKey, "Q"))
+				{
+					sValueM.Copy(sKey);
+					break;
+				}
+			}
+			sValueS.Printf("%s#%s -%.0f ", (char*)sValuePn, (char*)sValueM, xBomPlate.thick);
+		}
+		else
+		{
+			for (char* sKey = strtok(sValueG, " \t"); sKey; sKey = strtok(NULL, " \t"))
+			{
+				if (strstr(sKey, "Q"))
+				{
+					sValueM.Copy(sKey);
+					break;
+				}
+			}
+			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)sValueM, xBomPlate.feature1);
+		}
+#ifdef _ARX_2007
+		pText->setTextString(_bstr_t(sValueS));
+#else
+		pText->setTextString(sValueS);
+#endif
+		//修改加工数后设置为红色 wht 20-07-29
+		int color_index = GetNearestACI(RGB(255, 0, 0));
+		pText->setColorIndex(color_index);
+	}
+	else if (pEnt->isKindOf(AcDbMText::desc()))
+	{
+		CXhChar500 sContents;
+		AcDbMText *pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+		sContents.Copy(_bstr_t(pMText->contents()));
+#else
+		sContents.Copy(pMText->contents());
+#endif
+		CString sText(sContents);
+		for (char* sKey = strtok(sContents, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
+		{
+			CXhChar200 sTemp(sKey);
+			if (g_pncSysPara.m_iDimStyle == 1 &&
+				((strstr(sTemp, "规格:") != NULL && strstr(g_pncSysPara.m_sThickKey, "规格:") != NULL) ||
+				(strstr(sTemp, "规格：") != NULL && strstr(g_pncSysPara.m_sThickKey, "规格：") != NULL)))
+			{
+				sTemp.Replace("\\P", "");
+				sValueS.Printf("%s%.0f", (char*)g_pncSysPara.m_sThickKey, xBomPlate.thick);
+				sText.Replace(sTemp, sValueS);	//更新数量行 wht 19-08-13
+#ifdef _ARX_2007
+				pMText->setContents(_bstr_t(sText));
+#else
+				pMText->setContents(sText);
+#endif
+				//修改加工数后设置为红色 wht 20-07-29
+				int color_index = GetNearestACI(RGB(255, 0, 0));
+				pMText->setColorIndex(color_index);
+				break;
+			}
+
+		}
+	}
+	m_ciModifyState |= MODIFY_DES_SPEC;
+}
+//更新钢板材质
+void CPlateProcessInfo::RefreshPlateMat()
+{
+	if (partNoId == NULL)
+		return;
+	CLockDocumentLife lockCurDocLife;
+	AcDbEntity *pEnt = NULL;
+	XhAcdbOpenAcDbEntity(pEnt, partNoId, AcDb::kForWrite);
+	CAcDbObjLife entLife(pEnt);
+	CXhChar100 sValueG, sValueS, sValueM, sValuePn;
+	if (pEnt->isKindOf(AcDbText::desc()))
+	{
+		AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+		sValueG.Copy(_bstr_t(pText->textString()));
+#else
+		sValueG.Copy(pText->textString());
+#endif
+		if (g_pncSysPara.m_iDimStyle == 1 &&
+			((strstr(sValueG, "材质:") != NULL && strstr(g_pncSysPara.m_sMatKey, "材质:") != NULL) ||
+			(strstr(sValueG, "材质：") != NULL && strstr(g_pncSysPara.m_sMatKey, "材质：") != NULL)))
+		{	//修改钢板加工数 wht 19-08-05
+			sValueS.Printf("%s", xBomPlate.sMaterial);
+		}
+		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
+		{
+			sValuePn = strtok(sValueG, "#");
+			sValueS.Printf("%s#%s -%.0f ", (char*)sValuePn, (char*)xBomPlate.sMaterial, xBomPlate.thick);
+		}
+		else
+		{
+			for (char* sKey = strtok(sValueG, " \t"); sKey; sKey = strtok(NULL, " \t"))
+			{
+				if (strstr(sKey, "Q"))
+				{
+					sValueM.Copy(sKey);
+					break;
+				}
+			}
+			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)xBomPlate.sMaterial, xBomPlate.feature1);
+		}
+#ifdef _ARX_2007
+		pText->setTextString(_bstr_t(sValueS));
+#else
+		pText->setTextString(sValueS);
+#endif
+		//修改加工数后设置为红色 wht 20-07-29
+		int color_index = GetNearestACI(RGB(255, 0, 0));
+		pText->setColorIndex(color_index);
+	}
+	else if (pEnt->isKindOf(AcDbMText::desc()))
+	{
+		CXhChar500 sContents;
+		AcDbMText *pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+		sContents.Copy(_bstr_t(pMText->contents()));
+#else
+		sContents.Copy(pMText->contents());
+#endif
+		CString sText(sContents);
+		for (char* sKey = strtok(sContents, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
+		{
+			CXhChar200 sTemp(sKey);
+			if (g_pncSysPara.m_iDimStyle == 1 &&
+				((strstr(sTemp, "材质:") != NULL && strstr(g_pncSysPara.m_sMatKey, "材质:") != NULL) ||
+				(strstr(sTemp, "材质：") != NULL && strstr(g_pncSysPara.m_sMatKey, "材质：") != NULL)))
+			{
+				sTemp.Replace("\\P", "");
+				sValueS.Printf("%s",xBomPlate.sMaterial);
+				sText.Replace(sTemp, sValueS);	//更新数量行 wht 19-08-13
+#ifdef _ARX_2007
+				pMText->setContents(_bstr_t(sText));
+#else
+				pMText->setContents(sText);
+#endif
+				//修改加工数后设置为红色 wht 20-07-29
+				int color_index = GetNearestACI(RGB(255, 0, 0));
+				pMText->setColorIndex(color_index);
+				break;
+			}
+
+		}
+	}
+	m_ciModifyState |= MODIFY_DES_MAT;
 }
 SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 {

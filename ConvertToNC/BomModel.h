@@ -29,11 +29,15 @@ public:
 	AcDbObjectId partNumId;		//加工数ID
 	AcDbObjectId singleNumId;	//单基数ID
 	AcDbObjectId sumWeightId;	//总重ID
+	AcDbObjectId specId;		//规格ID
+	AcDbObjectId materialId;	//材质ID
 	CXhChar200 m_sTowerType;
 	//加工数、单基数、总重修改状态 wht 20-07-29
 	static const BYTE MODIFY_MANU_NUM	= 0x01;
 	static const BYTE MODIFY_SINGLE_NUM = 0x02;
 	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
+	static const BYTE MODIFY_DES_GUIGE = 0x08;
+	static const BYTE MODIFY_DES_MAT = 0x10;
 	BYTE m_ciModifyState;
 public:
 	CAngleProcessInfo();
@@ -53,6 +57,8 @@ public:
 	void RefreshAngleNum();
 	void RefreshAngleSingleNum();
 	void RefreshAngleSumWeight();
+	void RefreshAngleSpec();
+	void RefreshAngleMaterial();
 	SCOPE_STRU GetCADEntScope(){return scope;}
 };
 //////////////////////////////////////////////////////////////////////////
@@ -94,6 +100,8 @@ public:
 	void ModifyAngleDwgPartNum();
 	void ModifyAngleDwgSingleNum();
 	void ModifyAngleDwgSumWeight();
+	void ModifyAngleDwgSpec();
+	void ModifyAngleDwgMaterial();
 	//钢板DWG操作
 	int GetPlateNum(){return m_xPncMode.GetPlateNum();}
 	void EmptyPlateList() { m_xPncMode.Empty(); }
@@ -102,6 +110,8 @@ public:
 	CPlateProcessInfo* FindPlateByPt(f3dPoint text_pos);
 	CPlateProcessInfo* FindPlateByPartNo(const char* sPartNo);
 	void ModifyPlateDwgPartNum();
+	void ModifyPlateDwgSpec();
+	void ModifyPlateDwgMaterial();
 	CPNCModel *GetPncModel() { return &m_xPncMode; }
 	//打印清单
 	BOOL ImportPrintBomExcelFile(const char* sFileName);
@@ -199,6 +209,8 @@ public:
 	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X10修正重量
 	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
 	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x40批量打印 wht 20-05-26
+	static const BYTE FUNC_DWG_AMEND_SPEC	 = 8;	//0x80修正规格
+	static const BYTE FUNC_DWG_AMEND_MAT	 = 9;	//0x100修正材质
 	DWORD m_dwFunctionFlag;
 	//定制客户
 	UINT m_uiCustomizeSerial;

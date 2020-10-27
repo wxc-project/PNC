@@ -1454,7 +1454,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;__SUPPORT_DOCK_UI_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd-dll\AES;..\..\ARXSDK\ObjectARX 2005\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(IntDir)UBOM.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -3436,27 +3436,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDllZrx19|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\SegI.cpp" />
-    <ClCompile Include="..\..\XhLmd\AES\aes.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">false</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="..\..\XhLmd\DES\DES.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebug05|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDllZrx19|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
+    <ClCompile Include="..\..\XhLmd-dll\AES\aes.cpp" />
     <ClCompile Include="..\..\XhLmd\DogDrvs\GSMH.CPP">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
@@ -3785,6 +3765,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\Variant.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\XhTreeCtrl.h" />
     <ClInclude Include="..\..\ToolKits\TowerCad\DimStyle.h" />
+    <ClInclude Include="..\..\XhLmd-dll\AES\aes.h" />
     <ClInclude Include="AdjustPlateMCS.h" />
     <ClInclude Include="BatchPrint.h" />
     <ClInclude Include="BomExport.h" />
@@ -3820,18 +3801,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\SegI.h" />
-    <ClInclude Include="..\..\XhLmd\AES\aes.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="..\..\XhLmd\DES\DES.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\..\XhLmd\DogDrvs\GSMH.H">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>

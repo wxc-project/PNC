@@ -153,9 +153,6 @@
     <ClCompile Include="..\..\XhLmd\XhLdsLm\XhLdsLm.cpp">
       <Filter>XhLdsLm\Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\XhLmd\AES\aes.cpp">
-      <Filter>XhLicAgent\AES</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\Computer.cpp">
       <Filter>XhLicAgent\Computer</Filter>
     </ClCompile>
@@ -167,9 +164,6 @@
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.cpp">
       <Filter>XhLicAgent\Computer</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\XhLmd\DES\DES.cpp">
-      <Filter>XhLicAgent\DES</Filter>
     </ClCompile>
     <ClCompile Include="..\..\XhLmd\RSA\BigInt.cpp">
       <Filter>XhLicAgent\RSA</Filter>
@@ -378,6 +372,9 @@
     <ClCompile Include="SortedModel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\XhLmd-dll\AES\aes.cpp">
+      <Filter>XhLicAgent\AES</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -461,9 +458,6 @@
     <ClInclude Include="..\..\XhLmd\XhLdsLm\XhLdsLm.h">
       <Filter>XhLdsLm\Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\XhLmd\AES\aes.h">
-      <Filter>XhLicAgent\AES</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Computer.h">
       <Filter>XhLicAgent\Computer</Filter>
     </ClInclude>
@@ -478,9 +472,6 @@
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\WMIQuery.h">
       <Filter>XhLicAgent\Computer</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\XhLmd\DES\DES.h">
-      <Filter>XhLicAgent\DES</Filter>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\RSA\BigInt.h">
       <Filter>XhLicAgent\RSA</Filter>
@@ -676,6 +667,9 @@
     </ClInclude>
     <ClInclude Include="PrintSetDlg.h">
       <Filter>UBOM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd-dll\AES\aes.h">
+      <Filter>XhLicAgent\AES</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
