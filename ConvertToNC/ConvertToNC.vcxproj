@@ -129,6 +129,14 @@
       <Configuration>UBOMDebugDll07</Configuration>
       <Platform>x64</Platform>
     </ProjectConfiguration>
+    <ProjectConfiguration Include="UBOMDebugDll10|Win32">
+      <Configuration>UBOMDebugDll10</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="UBOMDebugDll10|x64">
+      <Configuration>UBOMDebugDll10</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="UBOMDebugDllZrx19|Win32">
       <Configuration>UBOMDebugDllZrx19</Configuration>
       <Platform>Win32</Platform>
@@ -278,6 +286,15 @@
     <PlatformToolset>v80</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+    <PlatformToolset>v90</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
@@ -543,6 +560,13 @@
     <UseOfAtl>false</UseOfAtl>
     <CLRSupport>false</CLRSupport>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
+    <UseOfMfc>Dynamic</UseOfMfc>
+    <UseOfAtl>false</UseOfAtl>
+    <CLRSupport>false</CLRSupport>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
@@ -719,6 +743,9 @@
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
@@ -828,6 +855,13 @@
     <LinkIncremental>true</LinkIncremental>
     <TargetExt>.arx</TargetExt>
     <TargetName>PNC</TargetName>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">
+    <IntDir>$(Configuration)\</IntDir>
+    <OutDir>$(Configuration)\</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+    <TargetExt>.arx</TargetExt>
+    <TargetName>UBOM</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'">
     <IntDir>UBOMDebugObj7\</IntDir>
@@ -1026,6 +1060,11 @@
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugDll10|x64'">
+    <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
+    <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|x64'">
     <IntDir>$(PlatformName)\$(ConfigurationName)</IntDir>
     <OutDir>$(SolutionDir)$(PlatformName)\$(ConfigurationName)</OutDir>
     <LinkIncremental>true</LinkIncremental>
@@ -1371,7 +1410,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__PNC_;__LAYOUT_;__AFTER_ARX_2007;_ARX_2007;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;__ENABLE_XHSTRING_LENGTH_PROPERTY_;_XERORPTTBL_EMBEDDED_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore\Ent;..\..\XhCore\AlgFun;..\..\XhCore\EntList;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd\XhLicAgent;..\..\XhLmd\XhLdsLm;..\..\ObjectARX 2010\inc-win32;..\..\ObjectARX 2010\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\ARXSDK\ObjectARX 2010\inc-win32;..\..\ARXSDK\ObjectARX 2010\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(OutDir)PNC.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -1386,9 +1425,51 @@
       <ImportLibrary>$(OutDir)PNC.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
       <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;D:\ObjectARX 2005\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
-      <AdditionalLibraryDirectories>..\..\XhCore\AlgFun\Release;..\..\XhCore\EntList\Release;..\..\XhCore\Ent\Release;..\..\XhLmd\XhLdsLm\Release2;..\..\XhLmd\XhLicAgent\Release2;..\..\ObjectARX 2010\lib-win32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\PartLib\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\ARXSDK\ObjectARX 2010\lib-win32</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb18.lib;acge18.lib;acISMobj18.lib;adui18.lib;acui18.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_ent.lib;f_ent_list.lib;f_alg_fun.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\PNC.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <Culture>0x0409</Culture>
+      <PreprocessorDefinitions>__SUPPORT_DOCK_UI_;_DEBUG;__PNC_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>false</ForceConformanceInForLoopScope>
+      <MinimalRebuild>true</MinimalRebuild>
+      <StringPooling>false</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;__AFTER_ARX_2007;_ARX_2007;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>
+      </AdditionalUsingDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\ARXSDK\ObjectARX 2010\inc-win32;..\..\ARXSDK\ObjectARX 2010\inc</AdditionalIncludeDirectories>
+      <PrecompiledHeaderOutputFile>$(OutDir)UBOM.pch</PrecompiledHeaderOutputFile>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ProgramDataBaseFileName>$(IntDir)</ProgramDataBaseFileName>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <OutputFile>$(OutDir)UBOM.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <ProgramDatabaseFile>$(OutDir)UBOM.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)UBOM.lib</ImportLibrary>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\PartLib\Release;..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;D:\ObjectARX 2005\lib;D:\CimsForTa\XhLmd\DogDrvs</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\XhCore-dll\PartLib\Debug;..\..\ARXSDK\ObjectARX 2010\lib-win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>acdb18.lib;acge18.lib;acISMobj18.lib;adui18.lib;acui18.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_ent.lib;f_ent_list.lib;f_alg_fun.lib;PartLib.lib;XhLicAgent2.lib;XhLdsLm2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>.\UBOM.def</ModuleDefinitionFile>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -1495,7 +1576,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;_AFXEXT;_ARX_2007;__UBOM_ONLY_;__PNC_;__DRAG_ENT_;__PIXEL_RECOG_;__CAD_CONTEXT_;APP_EMBEDDED_MODULE_ENCRYPT;__TIMER_COUNT_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalUsingDirectories>
       </AdditionalUsingDirectories>
-      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\;..\..\XhCore-dll\Ent;..\..\XhCore-dll\AlgFun;..\..\XhCore-dll\EntList;..\..\XhCore-dll\PartLib;..\..\ToolKits\ToolCode;..\..\ToolKits\TowerCad;..\..\XhLmd-dll\XhLicAgent;..\..\XhLmd-dll\XhLdsLm;..\..\XhLmd\AES;..\..\ARXSDK\ObjectARX 2007\inc</AdditionalIncludeDirectories>
       <PrecompiledHeaderOutputFile>$(IntDir)UBOM.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
       <ObjectFileName>$(IntDir)</ObjectFileName>
@@ -1509,7 +1590,7 @@
       <ProgramDatabaseFile>$(OutDir)UBOM.pdb</ProgramDatabaseFile>
       <ImportLibrary>$(OutDir)UBOM.lib</ImportLibrary>
       <TargetMachine>MachineX86</TargetMachine>
-      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\PartLib\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\..\ARXSDK\ObjectARX 2007\lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\..\XhCore-dll\AlgFun\Release;..\..\XhCore-dll\EntList\Release;..\..\XhCore-dll\Ent\Release;..\..\XhCore-dll\PartLib\Debug;..\..\XhLmd-dll\XhLdsLm\Release2;..\..\XhLmd-dll\XhLicAgent\Release2;..\..\ARXSDK\ObjectARX 2007\lib</AdditionalLibraryDirectories>
       <AdditionalDependencies>acdb17.lib;acge17.lib;achapi17.lib;acISMobj17.lib;adui17.lib;acui17.lib;rxapi.lib;acgiapi.lib;acad.lib;acedapi.lib;hasp_windows_106281.lib;f_alg_fun.lib;f_ent.lib;f_ent_list.lib;XhLicAgent2.lib;XhLdsLm2.lib;PartLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>.\UBOM.def</ModuleDefinitionFile>
     </Link>
@@ -2576,6 +2657,37 @@
       <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|x64'">
+    <ClCompile>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <WarningLevel>Level1</WarningLevel>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <Optimization>Disabled</Optimization>
+      <MinimalRebuild>true</MinimalRebuild>
+      <StringPooling>false</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeTypeInfo>true</RuntimeTypeInfo>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <PreprocessorDefinitions>_WIN64;_WINDOWS;CONVERTTONC_MODULE;_AFXEXT;_ACRXAPP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalUsingDirectories>c:\Program Files\AutoCAD 2011\;%(AdditionalUsingDirectories)</AdditionalUsingDirectories>
+    </ClCompile>
+    <Link>
+      <OutputFile>$(outdir)/XHConvertToNC.arx</OutputFile>
+      <LinkDLL>true</LinkDLL>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ProgramDatabaseFile>$(OutDir)/ConvertToNC.pdb</ProgramDatabaseFile>
+      <ImportLibrary>$(OutDir)/ConvertToNC.lib</ImportLibrary>
+      <TargetMachine>MachineX64</TargetMachine>
+      <ModuleDefinitionFile>PNC.def</ModuleDefinitionFile>
+    </Link>
+    <ResourceCompile>
+      <AdditionalIncludeDirectories>$(NOINHERIT)$(IntDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|x64'">
     <ClCompile>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -3314,6 +3426,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3325,6 +3438,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3336,6 +3450,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3349,12 +3464,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDllZrx19|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\XhCore\PartLib\BoltLibrary.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3366,6 +3484,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3390,6 +3509,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3401,6 +3521,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3429,6 +3550,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3440,7 +3562,8 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3451,6 +3574,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3462,6 +3586,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3473,6 +3598,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3484,6 +3610,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3495,6 +3622,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3506,6 +3634,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3517,6 +3646,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3528,6 +3658,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3539,6 +3670,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3550,6 +3682,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3561,6 +3694,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3572,6 +3706,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3583,6 +3718,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3594,6 +3730,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3605,6 +3742,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3616,6 +3754,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3627,6 +3766,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3638,6 +3778,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3682,6 +3823,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">Create</PrecompiledHeader>
@@ -3710,6 +3852,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll07|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='DebugDll10|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebug7|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|x64'">Create</PrecompiledHeader>
@@ -3755,12 +3898,15 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDllZrx19|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhCore\PartLib\BoltLibrary.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3802,6 +3948,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\PropertyList.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SortFunc.h" />
@@ -3818,25 +3965,29 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\SegI.h" />
     <ClInclude Include="..\..\XhLmd\AES\aes.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">false</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">false</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">false</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\DES\DES.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\DogDrvs\GSMH.H">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3848,6 +3999,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3859,6 +4011,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3870,24 +4023,28 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLdsLm\ToolKits.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLdsLm\XhLdsLm.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\Computer\Computer.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3899,6 +4056,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3910,6 +4068,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3921,6 +4080,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3932,6 +4092,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -3943,18 +4104,21 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\DogAPI.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\LicBuffer.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
@@ -4012,6 +4176,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
@@ -4024,6 +4189,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDllZrx19|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='DebugDll10|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll10|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll05|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMDebugDll07|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='UBOMForTMADebug05|Win32'">false</ExcludedFromBuild>
