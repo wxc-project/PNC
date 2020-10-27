@@ -727,6 +727,109 @@ void CAngleProcessInfo::RefreshAngleSumWeight()
 	}
 	m_ciModifyState |= MODIFY_SUM_WEIGHT;
 }
+//
+void CAngleProcessInfo::RefreshAngleSpec()
+{
+	CLockDocumentLife lockCurDocLife;
+	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_DES_GUIGE);
+	CXhChar16 sGuiGe("%s", (char*)m_xAngle.sSpec);
+	if (specId == NULL)
+	{	//添加角钢规格
+		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+		if (pBlockTableRecord == NULL)
+		{
+			logerr.Log("块表打开失败");
+			return;
+		}
+		DimText(pBlockTableRecord, data_pt, sGuiGe, TextStyleTable::hzfs.textStyleId,
+			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid, AcDbObjectId::kNull,
+			RGB(255, 0, 0));
+		pBlockTableRecord->close();//关闭块表
+	}
+	else
+	{	//改写角钢规格
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, specId, AcDb::kForWrite);
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{
+			AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+			pText->setTextString(_bstr_t(sGuiGe));
+#else
+			pText->setTextString(sGuiGe);
+#endif
+			//修改规格后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pText->setColorIndex(color_index);
+		}
+		else
+		{
+			AcDbMText* pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+			pMText->setContents(_bstr_t(sGuiGe));
+#else
+			pMText->setContents(sGuiGe);
+#endif
+			//修改规格后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pMText->setColorIndex(color_index);
+		}
+		pEnt->close();
+	}
+	m_ciModifyState |= MODIFY_DES_GUIGE;
+}
+//
+void CAngleProcessInfo::RefreshAngleMaterial()
+{
+	CLockDocumentLife lockCurDocLife;
+	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_DES_MAT);
+	CXhChar16 sMat("%s", (char*)m_xAngle.sMaterial);
+	if (materialId == NULL)
+	{	//添加角钢材质
+		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+		if (pBlockTableRecord == NULL)
+		{
+			logerr.Log("块表打开失败");
+			return;
+		}
+		DimText(pBlockTableRecord, data_pt, sMat, TextStyleTable::hzfs.textStyleId,
+			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid, AcDbObjectId::kNull,
+			RGB(255, 0, 0));
+		pBlockTableRecord->close();//关闭块表
+	}
+	else
+	{	//改写角钢材质
+		AcDbEntity *pEnt = NULL;
+		acdbOpenAcDbEntity(pEnt, materialId, AcDb::kForWrite);
+		if (pEnt->isKindOf(AcDbText::desc()))
+		{
+			AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+			pText->setTextString(_bstr_t(sMat));
+#else
+			pText->setTextString(sMat);
+#endif
+			//修改材质后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pText->setColorIndex(color_index);
+		}
+		else
+		{
+			AcDbMText* pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+			pMText->setContents(_bstr_t(sMat));
+#else
+			pMText->setContents(sMat);
+#endif
+			//修改材质后设置为红色 wht 20-07-29
+			int color_index = GetNearestACI(RGB(255, 0, 0));
+			pMText->setColorIndex(color_index);
+		}
+		pEnt->close();
+	}
+	m_ciModifyState |= MODIFY_DES_MAT;
+}
+
 //////////////////////////////////////////////////////////////////////////
 //
 BOOL PART_LABEL_DIM::IsPartLabelDim()
@@ -808,6 +911,78 @@ void CDwgFileInfo::ModifyPlateDwgPartNum()
 	}
 	if(bFinish)
 		AfxMessageBox("钢板加工数修改完毕!");
+}
+//更新钢板规格
+void CDwgFileInfo::ModifyPlateDwgSpec()
+{
+	if (m_xPncMode.GetPlateNum() <= 0)
+		return;
+	BOOL bFinish = TRUE;
+	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate())
+	{
+		CXhChar16 sPartNo = pInfo->xPlate.GetPartNo();
+		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if (pLoftBom == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("TMA放样材料表中没有%s钢板", (char*)sPartNo);
+			continue;
+		}
+		if (pInfo->partNoId == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("%s钢板规格修改失败!", (char*)sPartNo);
+			continue;
+		}
+		if (pInfo->xBomPlate.thick != pLoftBom->thick)
+		{	//规格不同进行修改
+			pInfo->xBomPlate.thick = pLoftBom->thick;	//规格
+			pInfo->xBomPlate.sSpec = pLoftBom->sSpec;	//规格
+			//pInfo->xPlate.m_fThick = pLoftBom->thick;	//规格
+			//pInfo->xPlate.SetSpec(pLoftBom->sSpec);
+			pInfo->RefreshPlateSpec();
+		}
+	}
+	if (bFinish)
+		AfxMessageBox("钢板规格修改完毕!");
+}
+//更新钢板材质
+void CDwgFileInfo::ModifyPlateDwgMaterial()
+{
+	if (m_xPncMode.GetPlateNum() <= 0)
+		return;
+	BOOL bFinish = TRUE;
+	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate())
+	{
+		CXhChar16 sPartNo = pInfo->xPlate.GetPartNo();
+		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if (pLoftBom == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("TMA放样材料表中没有%s钢板", (char*)sPartNo);
+			continue;
+		}
+		if (pInfo->partNoId == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("%s钢板材质修改失败!", (char*)sPartNo);
+			continue;
+		}
+		if (toupper(pInfo->xBomPlate.cMaterial) != toupper(pLoftBom->cMaterial) ||
+			(pInfo->xBomPlate.cMaterial != pLoftBom->cMaterial && !g_xUbomModel.m_bEqualH_h)||
+			(pInfo->xBomPlate.cMaterial == 'A' && !pLoftBom->sMaterial.Equal(pInfo->xBomPlate.sMaterial)) ||
+			(g_xUbomModel.m_bCmpQualityLevel && pInfo->xBomPlate.cQualityLevel != pLoftBom->cQualityLevel))
+		{	//材质不同进行修改
+			pInfo->xBomPlate.cMaterial = pLoftBom->cMaterial;	//材质
+			pInfo->xBomPlate.sMaterial = pLoftBom->sMaterial;	//材质
+			pInfo->xBomPlate.cQualityLevel = pLoftBom->cQualityLevel;
+			//pInfo->xPlate.cMaterial = pLoftBom->cMaterial;	//材质
+			//pInfo->xPlate.cQuality = pLoftBom->cQualityLevel;
+			pInfo->RefreshPlateMat();
+		}
+	}
+	if (bFinish)
+		AfxMessageBox("钢板材质修改完毕!");
 }
 //得到显示图元集合
 int CDwgFileInfo::GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet)
@@ -967,6 +1142,66 @@ void CDwgFileInfo::ModifyAngleDwgSumWeight()
 	if (bFinish)
 		AfxMessageBox("角钢总重修改完毕!");
 }
+//更新角钢规格
+void CDwgFileInfo::ModifyAngleDwgSpec()
+{
+	if (m_hashJgInfo.GetNodeNum() <= 0)
+		return;
+	CAngleProcessInfo* pJgInfo = NULL;
+	BOOL bFinish = TRUE;
+	for (pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg())
+	{
+		CXhChar16 sPartNo = pJgInfo->m_xAngle.sPartNo;
+		BOMPART* pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if (pBomJg == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("TMA材料表中没有%s角钢", (char*)sPartNo);
+			continue;
+		}
+		if (!pJgInfo->m_xAngle.sSpec.EqualNoCase(pBomJg->sSpec))
+		{
+			pJgInfo->m_xAngle.wide = pBomJg->wide;
+			pJgInfo->m_xAngle.wingWideY = pBomJg->wingWideY;
+			pJgInfo->m_xAngle.thick = pBomJg->thick;
+			pJgInfo->m_xAngle.sSpec = pBomJg->sSpec;
+			pJgInfo->RefreshAngleSpec();
+		}
+	}
+	if (bFinish)
+		AfxMessageBox("角钢规格修改完毕!");
+}
+//更新角钢材质
+void CDwgFileInfo::ModifyAngleDwgMaterial()
+{
+	if (m_hashJgInfo.GetNodeNum() <= 0)
+		return;
+	CAngleProcessInfo* pJgInfo = NULL;
+	BOOL bFinish = TRUE;
+	for (pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg())
+	{
+		CXhChar16 sPartNo = pJgInfo->m_xAngle.sPartNo;
+		BOMPART* pBomJg = m_pProject->m_xLoftBom.FindPart(sPartNo);
+		if (pBomJg == NULL)
+		{
+			bFinish = FALSE;
+			logerr.Log("TMA材料表中没有%s角钢", (char*)sPartNo);
+			continue;
+		}
+		if (toupper(pJgInfo->m_xAngle.cMaterial) != toupper(pBomJg->cMaterial) ||
+			(pJgInfo->m_xAngle.cMaterial != pBomJg->cMaterial && !g_xUbomModel.m_bEqualH_h) ||
+			(pJgInfo->m_xAngle.cMaterial == 'A' && !pBomJg->sMaterial.Equal(pJgInfo->m_xAngle.sMaterial)) ||
+			(g_xUbomModel.m_bCmpQualityLevel && pJgInfo->m_xAngle.cQualityLevel != pBomJg->cQualityLevel))
+		{
+			pJgInfo->m_xAngle.cMaterial = pBomJg->cMaterial;
+			pJgInfo->m_xAngle.sMaterial = pBomJg->sMaterial;
+			pJgInfo->m_xAngle.cQualityLevel = pBomJg->cQualityLevel;
+			pJgInfo->RefreshAngleMaterial();
+		}
+	}
+	if (bFinish)
+		AfxMessageBox("角钢材质修改完毕!");
+}
 //提取角钢操作
 BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 {
@@ -1101,6 +1336,10 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 				pJgInfo->sumWeightId = objId;
 			else if (cType == ITEM_TYPE_PART_NUM)
 				pJgInfo->singleNumId = objId;
+			else if (cType == ITEM_TYPE_DES_MAT)
+				pJgInfo->materialId = objId;
+			else if (cType == ITEM_TYPE_DES_GUIGE)
+				pJgInfo->specId = objId;
 		}
 	}
 	DisplayCadProgress(100);

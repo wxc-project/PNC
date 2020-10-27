@@ -210,6 +210,8 @@ public:
 	static const BYTE MODIFY_MANU_NUM	= 0x01;
 	static const BYTE MODIFY_SINGLE_NUM = 0x02;
 	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
+	static const BYTE MODIFY_DES_SPEC	= 0x08;
+	static const BYTE MODIFY_DES_MAT	= 0x10;
 	BYTE m_ciModifyState;
 	//
 	f2dRect m_rectCard;			//工艺卡矩形框，用于批量打印 wht 20.01.27
@@ -273,6 +275,8 @@ public:
 	bool UpdateSteelSealPos(GEPOINT &pos);
 	//刷新钢板显示数量
 	void RefreshPlateNum();
+	void RefreshPlateSpec();
+	void RefreshPlateMat();
 	//控制是否需要输出ppi文件 wht 20-10-10
 	static BOOL m_bCreatePPIFile;
 };

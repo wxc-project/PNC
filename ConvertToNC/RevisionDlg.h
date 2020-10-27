@@ -93,6 +93,8 @@ protected:
 	afx_msg void OnExportCompResult();
 	afx_msg void OnRefreshPartNum();
 	afx_msg void OnRefreshSingleNum();
+	afx_msg void OnRefreshSpec();
+	afx_msg void OnRefreshMat();
 	afx_msg void OnModifyErpFile();
 	afx_msg void OnDeleteItem();
 	afx_msg void OnSearchPart();

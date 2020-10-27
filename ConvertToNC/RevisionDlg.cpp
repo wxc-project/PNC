@@ -189,6 +189,8 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_EXPORT_COMPARE_RESULT,OnExportCompResult)
 	ON_COMMAND(ID_REFRESH_PART_NUM,OnRefreshPartNum)
 	ON_COMMAND(ID_REFRESH_SINGLE_NUM, OnRefreshSingleNum)
+	ON_COMMAND(ID_REFRESH_GUIGE, OnRefreshSpec)
+	ON_COMMAND(ID_REFRESH_MAT, OnRefreshMat)
 	ON_COMMAND(ID_MODIFY_ERP_FILE,OnModifyErpFile)
 	ON_COMMAND(ID_BATCH_PRINT_PART, OnBatchPrintPart)
 	ON_COMMAND(ID_EMPTY_PLATE_RETRIEVED_RESLUT, OnEmptyRetrievedPlates)
@@ -326,12 +328,16 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 			lpInfo->SetSubItemText(i, pPart->sSpec, TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_SPEC))
 				lpInfo->SetSubItemColor(i, clr);
+			if ((modifyFlag & CAngleProcessInfo::MODIFY_DES_GUIGE) > 0)
+				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MAT))
 		{	//材质
 			lpInfo->SetSubItemText(i, CBomModel::QueryMatMarkIncQuality(pPart), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MAT))
 				lpInfo->SetSubItemColor(i, clr);
+			if ((modifyFlag & CAngleProcessInfo::MODIFY_DES_MAT) > 0)
+				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
 		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_LEN))
 		{	//长度
@@ -864,6 +870,10 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_SINGLE_NUM, "更新单基数");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_WEIGHT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SPEC))
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_GUIGE, "更新规格");
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_MAT))
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_MAT, "更新材质");
 		if(pMenu->GetMenuItemCount()>0)
 			pMenu->AppendMenu(MF_SEPARATOR);
 		if (pItemInfo->itemType == ANGLE_DWG_ITEM)
@@ -896,6 +906,10 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_SINGLE_NUM, "更新单基数");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_WEIGHT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SPEC))
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_GUIGE, "更新规格");
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_MAT))
+			pMenu->AppendMenu(MF_STRING, ID_REFRESH_MAT, "更新材质");
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 		{
@@ -1312,6 +1326,46 @@ void CRevisionDlg::OnRefreshSingleNum()
 		pDwgInfo->ModifyAngleDwgSingleNum();
 	if (pDwgInfo->GetPlateNum()>0)
 		pDwgInfo->ModifyPlateDwgPartNum();
+#ifdef _ARX_2007
+	SendCommandToCad(L"RE ");
+#else
+	SendCommandToCad("RE ");
+#endif
+	RefreshListCtrl(hSelItem);
+}
+//更新规格
+void CRevisionDlg::OnRefreshSpec()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo->GetAngleNum() > 0)
+		pDwgInfo->ModifyAngleDwgSpec();
+	if (pDwgInfo->GetPlateNum() > 0)
+		pDwgInfo->ModifyPlateDwgSpec();
+#ifdef _ARX_2007
+	SendCommandToCad(L"RE ");
+#else
+	SendCommandToCad("RE ");
+#endif
+	RefreshListCtrl(hSelItem);
+}
+//更新材质
+void CRevisionDlg::OnRefreshMat()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo->GetAngleNum() > 0)
+		pDwgInfo->ModifyAngleDwgMaterial();
+	if (pDwgInfo->GetPlateNum() > 0)
+		pDwgInfo->ModifyPlateDwgMaterial();
 #ifdef _ARX_2007
 	SendCommandToCad(L"RE ");
 #else
