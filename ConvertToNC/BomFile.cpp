@@ -482,6 +482,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		//logerr.Log("存在重复件号：%s", (char*)sPartNo);
 		double fWidth = 0, fThick = 0;
 		CProcessPart::RestoreSpec(sSpec, &fWidth, &fThick);
+		if (fWidth <= 0 && fThick <= 0)
+			continue;	//异常数据
 		if (pBomPart == NULL)
 		{
 			pBomPart = m_hashPartByPartNo.Add(sPartNo, cls_id);
