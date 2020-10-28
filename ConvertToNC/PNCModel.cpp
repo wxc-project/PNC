@@ -3044,24 +3044,29 @@ void CPlateProcessInfo::RefreshPlateSpec()
 		{	//修改钢板加工数 wht 19-08-05
 			sValueS.Printf("%s%.0f", (char*)g_pncSysPara.m_sThickKey, xBomPlate.thick);
 		}
-		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
+		else if (g_pncSysPara.m_iDimStyle == 0 &&
+			strstr(sValueG, g_pncSysPara.m_sPnKey) != NULL &&
+			strstr(sValueG, g_pncSysPara.m_sMatKey) != NULL &&
+			strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
 		{
 			CString sValurLeft, sValueRight;
 			CString sValueStr(sValueG);
 			sValurLeft = sValueStr.Left(sValueStr.Find(g_pncSysPara.m_sThickKey));
-			int nSpecKeyIndex = sValueStr.Find(g_pncSysPara.m_sThickKey) + 1;//从规格的数字部分开始遍历
-			for (; nSpecKeyIndex < sValueStr.GetLength(); nSpecKeyIndex++)
+			int nSpecKeyIndex = sValueStr.Find(g_pncSysPara.m_sThickKey);//规格字符的索引（规格字符前的长度）
+			//计算规格结束后的下一个字符的索引（规格最后一位前的长度）
+			for (int nSpecEndIndex = nSpecKeyIndex + 1; nSpecEndIndex < sValueStr.GetLength(); nSpecEndIndex++)
 			{
-				char cSpecChar = sValueStr.GetAt(nSpecKeyIndex);
+				char cSpecChar = sValueStr.GetAt(nSpecEndIndex);
 				if (cSpecChar <'0' || cSpecChar>'9')
 				{
-					nSpecKeyIndex++;
+					nSpecEndIndex++;
 					break;
 				}
 			}
-			if (nSpecKeyIndex > 0 && nSpecKeyIndex < sValueStr.GetLength())
+			if (nSpecEndIndex > 0 && nSpecEndIndex < sValueStr.GetLength() &&
+				nSpecEndIndex - nSpecKeyIndex >= 2)
 			{
-				int nRightLenth = sValueStr.GetLength() - nSpecKeyIndex;
+				int nRightLenth = sValueStr.GetLength() - nSpecEndIndex;
 				sValueRight = sValueStr.Right(nRightLenth);
 			}
 			sValueS.Printf("%s -%.0f %s", sValurLeft.GetBuffer(), xBomPlate.thick, sValueRight.GetBuffer());
@@ -3146,7 +3151,10 @@ void CPlateProcessInfo::RefreshPlateMat()
 		{	//修改钢板加工数 wht 19-08-05
 			sValueS.Printf("%s", xBomPlate.sMaterial);
 		}
-		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
+		else if (g_pncSysPara.m_iDimStyle == 0 &&
+			strstr(sValueG, g_pncSysPara.m_sPnKey) != NULL &&
+			strstr(sValueG, g_pncSysPara.m_sMatKey) != NULL &&
+			strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
 		{
 			CString sValurLeft, sValueRight;
 			CString sValueStr(sValueG);
