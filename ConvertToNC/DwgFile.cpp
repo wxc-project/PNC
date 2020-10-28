@@ -732,7 +732,8 @@ void CAngleProcessInfo::RefreshAngleSpec()
 {
 	CLockDocumentLife lockCurDocLife;
 	f3dPoint data_pt = GetAngleDataPos(ITEM_TYPE_DES_GUIGE);
-	CXhChar16 sGuiGe("%s", (char*)m_xAngle.sSpec);
+	char cMark1 = '\0', cMark2 = '\0';
+	CXhChar100 sValueG;
 	if (specId == NULL)
 	{	//添加角钢规格
 		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
@@ -741,6 +742,7 @@ void CAngleProcessInfo::RefreshAngleSpec()
 			logerr.Log("块表打开失败");
 			return;
 		}
+		CXhChar16 sGuiGe("L%lfX%lf", m_xAngle.wide, m_xAngle.thick);
 		DimText(pBlockTableRecord, data_pt, sGuiGe, TextStyleTable::hzfs.textStyleId,
 			g_pncSysPara.fTextHigh, 0, AcDb::kTextCenter, AcDb::kTextVertMid, AcDbObjectId::kNull,
 			RGB(255, 0, 0));
@@ -754,6 +756,24 @@ void CAngleProcessInfo::RefreshAngleSpec()
 		{
 			AcDbText* pText = (AcDbText*)pEnt;
 #ifdef _ARX_2007
+			sValueG.Copy(_bstr_t(pText->textString()));
+#else
+			sValueG.Copy(pText->textString());
+#endif
+			double fWidth = 0, fThick = 0;
+			if (strstr(sValueG, "L") || strstr(sValueG, "∠"))	//L45*3	//L45×3	//L45 3
+				sscanf(sValueG, "%c%lf%c%lf",  &cMark1, &fWidth, &cMark2, &fThick);
+			else if(sValueG.At(0) >='0' && sValueG.At(0) <='9')	//45*3	//45×3	//45 3 
+				sscanf(sValueG, "%lf%c%lf", &fWidth, &cMark2, &fThick);
+			
+			CXhChar100 sFormat;
+			if(cMark1 != '\0')
+				sFormat.Append(cMark1);
+			sFormat.Append("%.0f");
+			sFormat.Append(cMark2);
+			sFormat.Append("%.0f");
+			CXhChar16 sGuiGe((char*)sFormat, m_xAngle.wide, m_xAngle.thick);
+#ifdef _ARX_2007
 			pText->setTextString(_bstr_t(sGuiGe));
 #else
 			pText->setTextString(sGuiGe);
@@ -765,6 +785,8 @@ void CAngleProcessInfo::RefreshAngleSpec()
 		else
 		{
 			AcDbMText* pMText = (AcDbMText*)pEnt;
+			
+			CXhChar16 sGuiGe("L%lfX%lf", m_xAngle.wide, m_xAngle.thick);
 #ifdef _ARX_2007
 			pMText->setContents(_bstr_t(sGuiGe));
 #else
@@ -938,8 +960,6 @@ void CDwgFileInfo::ModifyPlateDwgSpec()
 		{	//规格不同进行修改
 			pInfo->xBomPlate.thick = pLoftBom->thick;	//规格
 			pInfo->xBomPlate.sSpec = pLoftBom->sSpec;	//规格
-			//pInfo->xPlate.m_fThick = pLoftBom->thick;	//规格
-			//pInfo->xPlate.SetSpec(pLoftBom->sSpec);
 			pInfo->RefreshPlateSpec();
 		}
 	}

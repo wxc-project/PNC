@@ -3044,18 +3044,32 @@ void CPlateProcessInfo::RefreshPlateSpec()
 		{	//修改钢板加工数 wht 19-08-05
 			sValueS.Printf("%s%.0f", (char*)g_pncSysPara.m_sThickKey, xBomPlate.thick);
 		}
-		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
+		else if (g_pncSysPara.m_iDimStyle == 0 &&
+			strstr(sValueG, g_pncSysPara.m_sPnKey) != NULL &&
+			strstr(sValueG, g_pncSysPara.m_sMatKey) != NULL &&
+			strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
 		{
-			sValuePn = strtok(sValueG, "#");
-			for (char* sKey = strtok(NULL, " "); sKey; sKey = strtok(NULL, " "))
+			CString sValurLeft, sValueRight;
+			CString sValueStr(sValueG);
+			sValurLeft = sValueStr.Left(sValueStr.Find(g_pncSysPara.m_sThickKey));
+			int nSpecKeyIndex = sValueStr.Find(g_pncSysPara.m_sThickKey);//规格字符的索引（规格字符前的长度）
+			//计算规格结束后的下一个字符的索引（规格最后一位前的长度）
+			for (int nSpecEndIndex = nSpecKeyIndex + 1; nSpecEndIndex < sValueStr.GetLength(); nSpecEndIndex++)
 			{
-				if (strstr(sKey, "Q"))
+				char cSpecChar = sValueStr.GetAt(nSpecEndIndex);
+				if (cSpecChar <'0' || cSpecChar>'9')
 				{
-					sValueM.Copy(sKey);
+					nSpecEndIndex++;
 					break;
 				}
 			}
-			sValueS.Printf("%s#%s -%.0f ", (char*)sValuePn, (char*)sValueM, xBomPlate.thick);
+			if (nSpecEndIndex > 0 && nSpecEndIndex < sValueStr.GetLength() &&
+				nSpecEndIndex - nSpecKeyIndex >= 2)
+			{
+				int nRightLenth = sValueStr.GetLength() - nSpecEndIndex;
+				sValueRight = sValueStr.Right(nRightLenth);
+			}
+			sValueS.Printf("%s -%.0f %s", sValurLeft.GetBuffer(), xBomPlate.thick, sValueRight.GetBuffer());
 		}
 		else
 		{
@@ -3137,10 +3151,21 @@ void CPlateProcessInfo::RefreshPlateMat()
 		{	//修改钢板加工数 wht 19-08-05
 			sValueS.Printf("%s", xBomPlate.sMaterial);
 		}
-		else if (strstr(sValueG, "#") != NULL && strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
+		else if (g_pncSysPara.m_iDimStyle == 0 &&
+			strstr(sValueG, g_pncSysPara.m_sPnKey) != NULL &&
+			strstr(sValueG, g_pncSysPara.m_sMatKey) != NULL &&
+			strstr(g_pncSysPara.m_sPnKey, "#") != NULL)
 		{
-			sValuePn = strtok(sValueG, "#");
-			sValueS.Printf("%s#%s -%.0f ", (char*)sValuePn, (char*)xBomPlate.sMaterial, xBomPlate.thick);
+			CString sValurLeft, sValueRight;
+			CString sValueStr(sValueG);
+			sValurLeft = sValueStr.Left(sValueStr.Find(g_pncSysPara.m_sMatKey));
+			int nSpecKeyIndex = sValueStr.Find(g_pncSysPara.m_sThickKey);
+			if (nSpecKeyIndex > 0)
+			{
+				int nRightLenth = sValueStr.GetLength() - nSpecKeyIndex;
+				sValueRight = sValueStr.Right(nRightLenth);
+			}
+			sValueS.Printf("%s%s %s", sValurLeft.GetBuffer(), (char*)xBomPlate.sMaterial, sValueRight.GetBuffer());			
 		}
 		else
 		{
