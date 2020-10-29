@@ -15,14 +15,20 @@ enum CARD_ITEM_TYPE{
 	ITEM_TYPE_CUT_EDGE=10,		//铲边
 	ITEM_TYPE_WRAP_EDGE=11,		//卷边
 	ITEM_TYPE_WELD=12,			//焊接
+	ITEM_TYPE_WELD_STICK=69,	//焊丝型号
+	ITEM_TYPE_NOT_WELD_PART = 72,//散件是指不用焊接的零件 wht 20-08-21 新增
 	ITEM_TYPE_KAIJIAO=13,		//开角
 	ITEM_TYPE_HEJIAO=14,		//合角
+	ITEM_TYPE_KAIHE_JIAO = 73,	//开合角	wht 20-08-21 新增
+	ITEM_TYPE_SLOT_CUT = 81,	//开槽（角钢割口，钢管开槽）
 	ITEM_TYPE_PART_NUM=15,		//单基数
 	ITEM_TYPE_PIECE_WEIGHT=16,	//单重 
 	ITEM_TYPE_SUM_PART_NUM=17,	//加工数
 	ITEM_TYPE_SUM_WEIGHT=18,	//总重
 	ITEM_TYPE_REPL_MAT=19,		//代用材质
 	ITEM_TYPE_DES_MAT=20,		//设计材质
+	ITEM_TYPE_DES_MAT_BRIEF	=70,	//设计材质简化字符 wht 20-08-21 新增
+	ITEM_TYPE_REPL_MAT_BRIEF = 71,	//代用材质简化字符 wht 20-08-21 新增
 	ITEM_TYPE_REPL_GUIGE=21,	//代用规格
 	ITEM_TYPE_DES_GUIGE=22,		//设计规格
 	ITEM_TYPE_PRJ_NAME=23,		//工程名称
@@ -61,6 +67,31 @@ enum CARD_ITEM_TYPE{
 	ITEM_TYPE_PUSH_FLAT_S_Y=56,	//始端Y压扁
 	ITEM_TYPE_PUSH_FLAT_E_X=57,	//终端X压扁
 	ITEM_TYPE_PUSH_FLAT_E_Y=58,	//终端Y压扁
+	ITEM_TYPE_PUSH_FLAT_M_X=59,	//中间X压扁
+	ITEM_TYPE_PUSH_FLAT_M_Y=60, //中间Y压扁
+	ITEM_TYPE_LSMX_NUM=61,		//其他孔数
+	ITEM_TYPE_CUT_ARC=62,		//切弧
+	ITEM_TYPE_FILLET=63,		//坡口
+	ITEM_TYPE_ZUAN_KONG=64,		//钻孔
+	ITEM_TYPE_CHONG_KONG=65,	//冲孔
+	ITEM_TYPE_PUNCH_SHEAR=66,	//冲剪
+	ITEM_TYPE_GAS_CUTTING=67,	//气割
+	ITEM_TYPE_ONCE_OVER=68,		//一次完成
+	//ITEM_TYPE_WELD_STICK=69,	//焊丝型号
+	//为电工电气定制角钢工艺，新加以下属性,以下属性按分类安排到相邻属性附近 wht 20-08-21
+	//ITEM_TYPE_DES_MAT_BRIEF	=70,//设计材质简化字符
+	//ITEM_TYPE_REPL_MAT_BRIEF = 71,//代用材质简化字符
+	//ITEM_TYPE_NOT_WELD_PART	=72,//散件是指不用焊接的零件
+	//ITEM_TYPE_KAIHE_JIAO = 73,	//开合角
+	ITEM_TYPE_TASK_NO = 74,			//任务单号
+	ITEM_TYPE_TOLERANCE = 75,		//材料公差标准(国标、国网、南网等)
+	ITEM_TYPE_TRIAL_ASSEMBLY = 76,	//试组装\批量
+	ITEM_TYPE_TUBE_TYPE = 77,		//埋弧焊管、高频管、无缝管
+	ITEM_TYPE_TECH_REQ = 78,		//技术要求
+	ITEM_TYPE_ONLY_PAGENUM = 79,	//共  页，总页码，只有数字
+	ITEM_TYPE_ONLY_PAGEINDEX = 80,	//第  页，页码索引，只有数字
+	//ITEM_TYPE_SLOT_CUT = 81,		//开槽（角钢割口，钢管开槽）
+	
 };
 
 #endif

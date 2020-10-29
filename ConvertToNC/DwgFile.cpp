@@ -262,19 +262,23 @@ static BYTE InitAnglePropByText(PART_ANGLE *pAngle, const char* sValue,
 BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 {
 	BYTE cType = 0;
-	if (PtInDataRect(ITEM_TYPE_PART_NO, data_pos))	//件号
-	{
+	if (PtInDataRect(ITEM_TYPE_PART_NO, data_pos))	
+	{	//件号
 		m_xAngle.sPartNo.Copy(sValue);
 		cType = ITEM_TYPE_PART_NO;
 	}
-	else if (PtInDataRect(ITEM_TYPE_DES_MAT, data_pos))	//材质
-	{
+	else if (PtInDataRect(ITEM_TYPE_DES_MAT, data_pos))	
+	{	//设计材质
 		m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sValue);
 		m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sValue);
 		cType = ITEM_TYPE_DES_MAT;
 	}
-	else if(PtInDataRect(ITEM_TYPE_DES_GUIGE,data_pos))	//规格
-	{	//带%时使用CXhCharTempl类会出错 wht 20-08-05	
+	else if (PtInDataRect(ITEM_TYPE_DES_MAT_BRIEF, data_pos))
+	{	//设计简化材质
+
+	}
+	else if(PtInDataRect(ITEM_TYPE_DES_GUIGE,data_pos))
+	{	//设计规格，带%时使用CXhCharTempl类会出错 wht 20-08-05	
 		BOOL bHasMultipleSign = FALSE;
 		CString sSpec(sValue);	//CXhChar50 sSpec(sValue);
 		if(strstr(sSpec,"∠"))
@@ -366,23 +370,23 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 		m_xAngle.thick=(float)fThick;
 		cType = ITEM_TYPE_DES_GUIGE;
 	}
-	else if (PtInDataRect(ITEM_TYPE_LENGTH, data_pos))	//长度
-	{
+	else if (PtInDataRect(ITEM_TYPE_LENGTH, data_pos))	
+	{	//长度
 		m_xAngle.length = atof(sValue);
 		cType = ITEM_TYPE_LENGTH;
 	}
-	else if (PtInDataRect(ITEM_TYPE_PIECE_WEIGHT, data_pos))	//单重
-	{
+	else if (PtInDataRect(ITEM_TYPE_PIECE_WEIGHT, data_pos))	
+	{	//单重
 		m_xAngle.fMapSumWeight = (float)atof(sValue);
 		cType = ITEM_TYPE_PIECE_WEIGHT;
 	}
-	else if (PtInDataRect(ITEM_TYPE_PART_NUM, data_pos))	//单基数
-	{
+	else if (PtInDataRect(ITEM_TYPE_PART_NUM, data_pos))	
+	{	//单基数
 		m_xAngle.SetPartNum(atoi(sValue));
 		cType = ITEM_TYPE_PART_NUM;
 	}
-	else if(PtInDataRect(ITEM_TYPE_SUM_PART_NUM,data_pos))	//加工数
-	{
+	else if(PtInDataRect(ITEM_TYPE_SUM_PART_NUM,data_pos))
+	{	//加工数
 		if (strstr(sValue, "x") || strstr(sValue, "X") || strstr(sValue, "*"))
 		{	//支持提取 1x4格式的加工数 wht 20-07-29
 			if (strstr(sValue, "加工数") || strstr(sValue, "数量"))
@@ -415,14 +419,14 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 			cType = ITEM_TYPE_SUM_PART_NUM;
 		}
 	}
-	else if (PtInDataRect(ITEM_TYPE_PART_NOTES, data_pos))	//备注
-	{
+	else if (PtInDataRect(ITEM_TYPE_PART_NOTES, data_pos))
+	{	//备注
 		strcpy(m_xAngle.sNotes,sValue);
 		InitAnglePropByText(&m_xAngle, sValue);
 		cType = ITEM_TYPE_PART_NOTES;
 	}
-	else if (PtInDataRect(ITEM_TYPE_SUM_WEIGHT, data_pos))	//总重
-	{
+	else if (PtInDataRect(ITEM_TYPE_SUM_WEIGHT, data_pos))
+	{	//总重
 		m_xAngle.fSumWeight = (float)atof(sValue);
 		cType = ITEM_TYPE_SUM_WEIGHT;
 	}
