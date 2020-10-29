@@ -1144,6 +1144,12 @@ void ImportUbomConfigFile()
 				g_xUbomModel.m_sJgCadPartLabel.Remove(' ');
 			}
 		}
+		else if (_stricmp(key_word, "JgCadPartLabelMat") == 0)
+		{
+			skey = strtok(NULL, ";");
+			if (skey != NULL)
+				g_xUbomModel.m_uiJgCadPartLabelMat = atoi(skey);
+		}
 		else if (_stricmp(key_word, "JgCardBlockName") == 0)
 		{
 			skey = strtok(NULL, ";");
@@ -1425,6 +1431,7 @@ void ExportUbomConfigFile()
 	fprintf(fp, "MaxLenErr=%.1f ;\n", g_xUbomModel.m_fMaxLenErr);
 	fprintf(fp, "NOT_PRINT=%s ;\n", (char*)g_xUbomModel.m_sNotPrintFilter);
 	fprintf(fp, "PrintSortType=%d ;\n", g_xUbomModel.m_ciPrintSortType);
+	fprintf(fp, "JgCadPartLabelMat=%d ;\n", g_xUbomModel.m_uiJgCadPartLabelMat);
 	fprintf(fp, "**DWG ∂±…Ë÷√\n");
 	fprintf(fp, "JG_CARD=%s ;\n", (char*)g_xUbomModel.m_sJgCadName);
 	fprintf(fp, "JgCadPartLabel=%s ;\n", (char*)g_xUbomModel.m_sJgCadPartLabel);

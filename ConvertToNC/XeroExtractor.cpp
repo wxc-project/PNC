@@ -615,6 +615,11 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 				part_no_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
 				part_no_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
 			}
+			else if (grid_data.type_id == ITEM_TYPE_DES_MAT_BRIEF)		//简化字符
+			{
+				mat_brief_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
+				mat_brief_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			}
 			else if (grid_data.type_id == ITEM_TYPE_DES_MAT)	//设计材质
 			{
 				mat_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);

@@ -372,6 +372,9 @@
     <ClCompile Include="SortedModel.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\XhLmd\DES\DES.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\XhLmd-dll\AES\aes.cpp">
       <Filter>XhLicAgent\AES</Filter>
     </ClCompile>
@@ -670,6 +673,9 @@
     </ClInclude>
     <ClInclude Include="..\..\XhLmd-dll\AES\aes.h">
       <Filter>XhLicAgent\AES</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\XhLmd\DES\DES.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

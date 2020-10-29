@@ -111,6 +111,7 @@ class CJgCardExtractor
 public:
 	f2dRect part_no_rect;
 	f2dRect mat_rect;
+	f2dRect mat_brief_rect;
 	f2dRect guige_rect;
 	f2dRect length_rect;
 	f2dRect piece_weight_rect;

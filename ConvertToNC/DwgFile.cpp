@@ -60,6 +60,8 @@ f2dRect CAngleProcessInfo::GetAngleDataRect(BYTE data_type)
 		rect = g_pncSysPara.part_no_rect;
 	else if (data_type == ITEM_TYPE_DES_MAT)
 		rect = g_pncSysPara.mat_rect;
+	else if (data_type == ITEM_TYPE_DES_MAT_BRIEF)
+		rect = g_pncSysPara.mat_brief_rect;
 	else if (data_type == ITEM_TYPE_DES_GUIGE)
 		rect = g_pncSysPara.guige_rect;
 	else if (data_type == ITEM_TYPE_LENGTH)
@@ -264,7 +266,17 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	BYTE cType = 0;
 	if (PtInDataRect(ITEM_TYPE_PART_NO, data_pos))	
 	{	//件号
-		m_xAngle.sPartNo.Copy(sValue);
+		if(m_xAngle.sPartNo.GetLength() <= 0)
+			m_xAngle.sPartNo.Copy(sValue);
+		else if(g_xUbomModel.m_uiJgCadPartLabelMat == 1)
+			m_xAngle.sPartNo.Append(sValue);
+		else
+		{
+			CXhChar16 sMat = m_xAngle.sPartNo;
+			m_xAngle.sPartNo.Empty();
+			m_xAngle.sPartNo.Append(sValue);
+			m_xAngle.sPartNo.Append(sMat);
+		}
 		cType = ITEM_TYPE_PART_NO;
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_MAT, data_pos))	
@@ -275,7 +287,9 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_MAT_BRIEF, data_pos))
 	{	//设计简化材质
-
+		if(g_xUbomModel.m_uiJgCadPartLabelMat > 0)
+			m_xAngle.sPartNo.Append(sValue);
+		cType = ITEM_TYPE_DES_MAT_BRIEF;
 	}
 	else if(PtInDataRect(ITEM_TYPE_DES_GUIGE,data_pos))
 	{	//设计规格，带%时使用CXhCharTempl类会出错 wht 20-08-05	

@@ -222,6 +222,7 @@ public:
 	BOOL m_bExeRppWhenArxLoad;			//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
 	BOOL m_bExtractPltesWhenOpenFile;	//打开钢板文件后执行提取操作,默认为TRUE wht 20-07-29
 	BOOL m_bExtractAnglesWhenOpenFile;	//打开角钢文件后执行提取操作,默认为TRUE wht 20-07-29
+	UINT m_uiJgCadPartLabelMat;			//角钢工艺卡提取件号材质符:	0:不添加材质符	1:左侧	2:右侧
 	CXhChar100 m_sJgCadName;			//角钢工艺卡名称
 	CXhChar50 m_sJgCadPartLabel;		//角钢工艺卡中的件号标题
 	CXhChar50 m_sJgCardBlockName;		//角钢工艺卡块名称 wht 19-09-24
