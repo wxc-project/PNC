@@ -266,16 +266,14 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	BYTE cType = 0;
 	if (PtInDataRect(ITEM_TYPE_PART_NO, data_pos))	
 	{	//件号
-		if(m_xAngle.sPartNo.GetLength() <= 0)
-			m_xAngle.sPartNo.Copy(sValue);
-		else if(g_xUbomModel.m_uiJgCadPartLabelMat == 1)
-			m_xAngle.sPartNo.Append(sValue);
-		else
+		m_xAngle.sPartNo.Copy(sValue);
+		//处理角钢件号中的材质字符
+		if (CProcessPart::QuerySteelMatIndex(m_xAngle.cMaterial) > 0)
 		{
-			CXhChar16 sMat = m_xAngle.sPartNo;
-			m_xAngle.sPartNo.Empty();
-			m_xAngle.sPartNo.Append(sValue);
-			m_xAngle.sPartNo.Append(sMat);
+			if (g_xUbomModel.m_uiJgCadPartLabelMat == 1)	 //前
+				m_xAngle.sPartNo.InsertBefore(m_xAngle.cMaterial, 0);
+			else if (g_xUbomModel.m_uiJgCadPartLabelMat == 2)//后
+				m_xAngle.sPartNo.Append(m_xAngle.cMaterial);
 		}
 		cType = ITEM_TYPE_PART_NO;
 	}
@@ -287,8 +285,18 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos,const char* sValue)
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_MAT_BRIEF, data_pos))
 	{	//设计简化材质
-		if(g_xUbomModel.m_uiJgCadPartLabelMat > 0)
-			m_xAngle.sPartNo.Append(sValue);
+		CString sMatBrief(sValue);
+		sMatBrief.Remove(' ');
+		if (sMatBrief.GetLength() > 0)
+			m_xAngle.cMaterial = sMatBrief[0];
+		//处理角钢件号中的材质字符
+		if (CProcessPart::QuerySteelMatIndex(m_xAngle.cMaterial) > 0)
+		{
+			if (g_xUbomModel.m_uiJgCadPartLabelMat == 1)	 //前
+				m_xAngle.sPartNo.InsertBefore(m_xAngle.cMaterial, 0);
+			else if (g_xUbomModel.m_uiJgCadPartLabelMat == 2)//后
+				m_xAngle.sPartNo.Append(m_xAngle.cMaterial);
+		}
 		cType = ITEM_TYPE_DES_MAT_BRIEF;
 	}
 	else if(PtInDataRect(ITEM_TYPE_DES_GUIGE,data_pos))

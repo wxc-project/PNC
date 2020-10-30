@@ -893,6 +893,35 @@ CAngleProcessInfo *CProjectTowerType::FindAngleInfoByPartNo(const char* sPartNo)
 //CBomModel
 CBomModel::CBomModel(void)
 {
+	InitBomModel();
+	//初始化客户信息
+	m_xMapClientInfo["安徽宏源"] = ID_AnHui_HongYuan;
+	m_xMapClientInfo["安徽汀阳"] = ID_AnHui_TingYang;
+	m_xMapClientInfo["中电建成都铁塔"] = ID_SiChuan_ChengDu;
+	m_xMapClientInfo["江苏华电"] = ID_JiangSu_HuaDian;
+	m_xMapClientInfo["成都东方"] = ID_ChengDu_DongFang;
+	m_xMapClientInfo["青岛豪迈"] = ID_QingDao_HaoMai;
+	m_xMapClientInfo["青岛强力钢结构"] = ID_QingDao_QLGJG;
+	m_xMapClientInfo["青岛载力"] = ID_QingDao_ZAILI;
+	m_xMapClientInfo["五洲鼎益"] = ID_WUZHOU_DINGYI;
+	m_xMapClientInfo["山东华安"] = ID_SHANDONG_HAUAN;
+	m_xMapClientInfo["青岛鼎兴"] = ID_QingDao_DingXing;
+	m_xMapClientInfo["青岛百斯特"] = ID_QingDao_BaiSiTe;
+	m_xMapClientInfo["青岛汇金通"] = ID_QingDao_HuiJinTong;
+	m_xMapClientInfo["洛阳龙羽"] = ID_LuoYang_LongYu;
+	m_xMapClientInfo["江苏电装"] = ID_JiangSu_DianZhuang;
+	m_xMapClientInfo["河南永光"] = ID_HeNan_YongGuang;
+	m_xMapClientInfo["广东安恒"] = ID_GuangDong_AnHeng;
+	m_xMapClientInfo["广东禅涛"] = ID_GuangDong_ChanTao;
+	m_xMapClientInfo["重庆江电"] = ID_ChongQing_JiangDian;
+	m_xMapClientInfo["青岛武晓"] = ID_QingDao_WuXiao;
+}
+CBomModel::~CBomModel(void)
+{
+	
+}
+void CBomModel::InitBomModel()
+{
 	m_dwFunctionFlag = 0;
 	m_uiCustomizeSerial = 0;
 	m_bExeRppWhenArxLoad = TRUE;
@@ -904,14 +933,13 @@ CBomModel::CBomModel(void)
 	m_sJgCadName.Empty();
 	m_sJgCadPartLabel.Empty();
 	m_sJgCardBlockName.Empty();
+	m_sNotPrintFilter.Empty();
 	m_ciPrintSortType = 0;
+	m_uiJgCadPartLabelMat = 0;
 	//
+	m_xPrjTowerTypeList.Empty();
 	CProjectTowerType* pProject = m_xPrjTowerTypeList.Add(0);
 	pProject->m_sProjName.Copy("新建工程");
-}
-CBomModel::~CBomModel(void)
-{
-	
 }
 bool CBomModel::IsValidFunc(int iFuncType)
 {
@@ -1057,14 +1085,71 @@ static char* InitBomTblTitleCfg(char* skey, CBomTblTitleCfg *pBomTblCfg)
 	}
 	return skey;
 }
-void ImportUbomConfigFile()
+//遍历记录所有用户配置
+void TraversalUbomConfigFiles()
 {
-	char file_name[MAX_PATH] = "";
-	GetAppPath(file_name);
-	strcat(file_name, "ubom.cfg");
-	FILE *fp = fopen(file_name, "rt");
+	char APP_PATH[MAX_PATH] = "";
+	GetAppPath(APP_PATH);
+	CFileFind file_find;
+	BOOL bFind = file_find.FindFile(CXhChar200("%s\\配置\\*.cfg", APP_PATH));
+	while (bFind)
+	{
+		bFind = file_find.FindNextFile();
+		if (file_find.IsDots() || file_find.IsHidden() || file_find.IsReadOnly() ||
+			file_find.IsSystem() || file_find.IsTemporary() || file_find.IsDirectory())
+			continue;
+		CString file_path = file_find.GetFilePath();
+		CString file_name = file_find.GetFileName();
+		CString str_ext = file_path.Right(4);	//取后缀名
+		str_ext.MakeLower();
+		if (str_ext.CompareNoCase(".cfg") != 0)
+			continue;
+		FILE* fp = fopen(file_path, "rt");
+		if(fp==NULL)
+			continue;
+		//读取文件，获取客户ID
+		int nClientId = 0;
+		char line_txt[MAX_PATH] = "";
+		while (!feof(fp))
+		{
+			if (fgets(line_txt, MAX_PATH, fp) == NULL)
+				break;
+			CString sLine(line_txt);
+			sLine.Remove('\n');
+			sLine.Remove('\t');
+			sprintf(line_txt, "%s", sLine);
+			char *skey = strtok(line_txt, "=");
+			CString key_word(skey);
+			key_word.Remove(' ');
+			if (_stricmp(key_word, "CLIENT_ID") == 0)
+			{
+				skey = strtok(NULL, ";");
+				nClientId = atoi(skey);
+				g_xUbomModel.m_xMapClientCfgFile.insert(std::make_pair(nClientId, file_name));
+				break;
+			}
+		}
+		fclose(fp);
+	}
+	file_find.Close();
+}
+//初始化配置
+void ImportUbomConfigFile(const char* file_path/*=NULL*/)
+{
+	FILE *fp = NULL;
+	if (file_path && strlen(file_path) > 0)
+		fp = fopen(file_path, "rt");
+	if (fp == NULL)
+	{	//读取默认的配置文件
+		char file_name[MAX_PATH] = "";
+		GetAppPath(file_name);
+		strcat(file_name, "ubom.cfg");
+		fp = fopen(file_name, "rt");
+	}
 	if (fp == NULL)
 		return;
+	g_xUbomModel.InitBomModel();
+	g_xBomCfg.Init();
 	g_pncSysPara.EmptyBoltBlockRecog();
 	g_pncSysPara.m_recogSchemaList.Empty();
 	char line_txt[MAX_PATH] = "";
@@ -1391,13 +1476,27 @@ void ImportUbomConfigFile()
 		}
 	}
 	fclose(fp);
-	//
+	//初始化钢板识别规则
 	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
 	{
 		if (pSchema->m_bEnable)
 		{
 			g_pncSysPara.ActiveRecogSchema(pSchema);
 			break;
+		}
+	}
+	//初始化角钢工艺卡识别规则
+	if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE) ||
+		g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
+	{	//加载角钢工艺卡
+		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "", sJgCardPath2[MAX_PATH] = "";
+		GetAppPath(APP_PATH);
+		sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_xUbomModel.m_sJgCadName);
+		sprintf(sJgCardPath2, "%s角钢工艺卡\\%s", APP_PATH, (char*)g_xUbomModel.m_sJgCadName);
+		if (!g_pncSysPara.InitJgCardInfo(sJgCardPath) &&	//在根目录中查找工艺卡模板
+			!g_pncSysPara.InitJgCardInfo(sJgCardPath2))		//在“角钢工艺卡”子目录中查找工艺卡模板 wht 20-07-18
+		{
+			logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!", sJgCardPath));
 		}
 	}
 	//初始化批量打印设置

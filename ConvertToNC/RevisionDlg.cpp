@@ -204,6 +204,8 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_EN_CHANGE(IDC_E_LEN_ERR, OnEnChangeELenErr)
 	ON_BN_CLICKED(IDC_CHK_MAT_H, &CRevisionDlg::OnBnClickedChkMatH)
 	ON_BN_CLICKED(IDC_BTN_SETTINGS, &CRevisionDlg::OnBnClickedSettings)
+	ON_CBN_SELCHANGE(IDC_CMB_CLIENT, &CRevisionDlg::OnCbnSelchangeCmbClient)
+	ON_CBN_SELCHANGE(IDC_CMB_CFG, &CRevisionDlg::OnCbnSelchangeCmbCfg)
 END_MESSAGE_MAP()
 
 // CRevisionDlg 消息处理程序
@@ -224,13 +226,54 @@ BOOL CRevisionDlg::OnInitDialog()
 	m_xListReport.SetCompareItemFunc(FireCompareItem);
 	m_xListReport.SetItemChangedFunc(FireItemChanged);
 	m_xListReport.EmptyColumnHeader();
-	for (size_t i = 0; i < g_xBomCfg.GetBomTitleCount(); i++)
-		m_xListReport.AddColumnHeader(g_xBomCfg.GetTitleName(i), g_xBomCfg.GetTitleWidth(i));
-	m_xListReport.InitListCtrl();
 	RefreshListCtrl(NULL);
 	//初始化树列表
 	m_treeCtrl.ModifyStyle(0, TVS_HASLINES|TVS_HASBUTTONS|TVS_LINESATROOT|TVS_SHOWSELALWAYS|TVS_EDITLABELS);
 	RefreshTreeCtrl();
+	//初始化客户下拉框
+#ifdef __ALFA_TEST_
+	//记录所有用户，用于测试
+	CComboBox* pClientCmb = (CComboBox*)GetDlgItem(IDC_CMB_CLIENT);
+	std::map<CString, int>::iterator iterS = g_xUbomModel.m_xMapClientInfo.begin();
+	std::map<CString, int>::iterator iterE = g_xUbomModel.m_xMapClientInfo.end();
+	for (; iterS != iterE; ++iterS)
+		pClientCmb->AddString(iterS->first);
+	int nSel = pClientCmb->FindString(0, g_xUbomModel.m_sCustomizeName);
+	if (nSel >= 0)
+		pClientCmb->SetCurSel(nSel);
+	//初始化配置下拉框
+	CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
+	multimap<int, CString>::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
+	multimap<int, CString>::iterator iterL = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
+	for (; iterF != iterL; iterF++)
+		pCfgCmb->AddString(iterF->second);
+	pCfgCmb->SetCurSel(0);
+#else
+	CRect tree_rect, cmb_rect;
+	GetDlgItem(IDC_CMB_CLIENT)->GetWindowRect(cmb_rect);
+	m_treeCtrl.GetWindowRect(&tree_rect);
+	ScreenToClient(&tree_rect);
+	tree_rect.bottom += cmb_rect.Height() + 5;
+	//
+	GetDlgItem(IDC_S_CLIENT)->ShowWindow(SW_HIDE);
+	GetDlgItem(IDC_CMB_CLIENT)->ShowWindow(SW_HIDE);
+	if (g_xUbomModel.m_xMapClientCfgFile.count(g_xUbomModel.m_uiCustomizeSerial) <= 1)
+	{	//只有一个配置不进行显示
+		GetDlgItem(IDC_S_CFG)->ShowWindow(SW_HIDE);
+		GetDlgItem(IDC_CMB_CFG)->ShowWindow(SW_HIDE);
+		tree_rect.bottom += cmb_rect.Height() + 5;
+	}
+	else
+	{
+		CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
+		multimap<int, CString>::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
+		multimap<int, CString>::iterator iterL = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
+		for (; iterF != iterL; iterF++)
+			pCfgCmb->AddString(iterF->second);
+		pCfgCmb->SetCurSel(0);
+	}
+	m_treeCtrl.MoveWindow(tree_rect);
+#endif
 	//移动窗口到合适位置
 	RECT rect,clientRect;
 	GetClientRect(&clientRect);
@@ -464,6 +507,18 @@ int CompareBomPartPtrByPartNo(const BomPartPtr &part1, const BomPartPtr &part2)
 }
 void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 {
+	//更新标题列
+	if (hItem == NULL)
+	{
+		m_xListReport.EmptyColumnHeader();
+		for (size_t i = 0; i < g_xBomCfg.GetBomTitleCount(); i++)
+			m_xListReport.AddColumnHeader(g_xBomCfg.GetTitleName(i), g_xBomCfg.GetTitleWidth(i));
+		m_xListReport.InitListCtrl();
+		m_xListReport.DeleteAllItems();
+		m_xListReport.Redraw();
+		return;
+	}
+	//更新内容
 	m_sRecordNum = "";
 	m_sCurFile = "";
 	TREEITEM_INFO *pInfo = hItem != NULL ? (TREEITEM_INFO*)m_treeCtrl.GetItemData(hItem) : NULL;
@@ -1639,5 +1694,59 @@ void CRevisionDlg::OnBnClickedSettings()
 	CLogErrorLife logErrLife;
 	CPNCSysSettingDlg dlg;
 	dlg.DoModal();
+}
+
+void CRevisionDlg::OnCbnSelchangeCmbClient()
+{
+	UpdateData();
+	CComboBox *pCMB = (CComboBox*)GetDlgItem(IDC_CMB_CLIENT);
+	if (pCMB->GetCount()<=1)
+		return;
+	CString sKey;
+	int iCurSel = pCMB->GetCurSel();
+	pCMB->GetLBText(iCurSel, sKey);
+	map<CString, int>::iterator iter = g_xUbomModel.m_xMapClientInfo.find(sKey);
+	if (iter == g_xUbomModel.m_xMapClientInfo.end())
+		return;
+	g_xUbomModel.m_uiCustomizeSerial = iter->second;
+	//更新配置文件
+	CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
+	pCfgCmb->ResetContent();
+	multimap<int, CString>::iterator iterS = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
+	multimap<int, CString>::iterator iterE = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
+	for (; iterS != iterE; iterS++)
+		pCfgCmb->AddString(iterS->second);
+	pCfgCmb->SetCurSel(0);
+	if (pCfgCmb->GetCount() > 0)
+		OnCbnSelchangeCmbCfg();
+}
+
+void CRevisionDlg::OnCbnSelchangeCmbCfg()
+{
+	UpdateData();
+	CString sCfgName;
+	CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
+	int iCurSel = pCfgCmb->GetCurSel();
+	pCfgCmb->GetLBText(iCurSel, sCfgName);
+	//读取配置文件
+	char APP_PATH[MAX_PATH] = "";
+	GetAppPath(APP_PATH);
+	CString cfg_file(APP_PATH);
+	cfg_file += "配置\\";
+	cfg_file += sCfgName;
+	ImportUbomConfigFile(cfg_file);
+#ifdef __ALFA_TEST_
+	int nWidth = g_xBomCfg.InitBomTitle();
+	RefreshTreeCtrl();
+	RefreshListCtrl(NULL);
+	//更新CAD显示标题
+	CXhChar100 sWndText("UBOM");
+	sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');
+	::SetWindowText(adsw_acadMainWnd(), sWndText);
+#else
+	//同一个客户显示的数据列相同，仅刷新界面即可
+	RefreshTreeCtrl();
+	RefreshListCtrl(NULL);
+#endif
 }
 #endif

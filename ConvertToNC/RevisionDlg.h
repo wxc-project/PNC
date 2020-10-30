@@ -107,6 +107,8 @@ protected:
 	afx_msg void OnEnChangeELenErr();
 	afx_msg void OnBnClickedChkMatH();
 	afx_msg void OnBnClickedSettings();
+	afx_msg void OnCbnSelchangeCmbClient();
+	afx_msg void OnCbnSelchangeCmbCfg();
 	afx_msg LRESULT OnAcadKeepFocus(WPARAM, LPARAM);
 public:
 	CXhTreeCtrl *GetTreeCtrl(){return &m_treeCtrl;}
