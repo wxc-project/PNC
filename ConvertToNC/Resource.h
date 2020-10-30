@@ -69,6 +69,10 @@
 #define IDC_BTN_IMPROT_PRINT_BOM        151
 #define IDC_BTN_EMPTY_PRINT_BOM         152
 #define IDC_BTN_SETTINGS                153
+#define IDC_CMB_CLIENT                  154
+#define IDC_CMB_CFG                     155
+#define IDC_S_CLIENT                    156
+#define IDC_S_CFG                       157
 #define IDD_OPTIMAL_SORT_DLG            288
 #define IDC_LIST_REPORT                 1025
 #define IDC_E_VAL                       1093
@@ -130,8 +134,8 @@
 #define ID_BATCH_RETRIEVED_PLATES       32796
 #define ID_EMPTY_ANGLE_RETRIEVED_RESLUT 32797
 #define ID_EMPTY_PLATE_RETRIEVED_RESLUT 32798
-#define ID_REFRESH_GUIGE				32799
-#define ID_REFRESH_MAT					32800
+#define ID_REFRESH_GUIGE                32799
+#define ID_REFRESH_MAT                  32800
 
 // Next default values for new objects
 // 
@@ -139,7 +143,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32801
-#define _APS_NEXT_CONTROL_VALUE         154
+#define _APS_NEXT_CONTROL_VALUE         158
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
 #endif

@@ -3,6 +3,7 @@
 #include "XhCharString.h"
 #include "BomFile.h"
 #include "PNCModel.h"
+#include <map>
 
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
@@ -215,6 +216,8 @@ public:
 	//定制客户
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
+	std::map<CString, int> m_xMapClientInfo;
+	std::multimap<int, CString> m_xMapClientCfgFile;
 	//配置参数
 	double m_fMaxLenErr;				//长度最大误差值
 	BOOL m_bCmpQualityLevel;			//质量等级校审
@@ -234,6 +237,7 @@ public:
 	CBomModel(void);
 	~CBomModel(void);
 	//
+	void InitBomModel();
 	bool IsValidFunc(int iFuncType);
 	DWORD AddFuncType(int iFuncType);
 	BOOL IsJgCardBlockName(const char* sBlockName);
@@ -244,6 +248,7 @@ public:
 };
 extern CBomModel g_xUbomModel;
 //
-void ImportUbomConfigFile();
+void TraversalUbomConfigFiles();
+void ImportUbomConfigFile(const char* file_path = NULL);
 void ExportUbomConfigFile();
 #endif

@@ -88,7 +88,9 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	}
 	else
 	{	//处理所有图元
-		SelCadEntSet(selectedEntList, TRUE);
+		SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
+		for (AcDbObjectId entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
+			selectedEntList.SetValue(entId.asOldId(), entId);
 	}
 	//从框选信息中提取中钢板的标识，统计钢板集合
 	CHashSet<AcDbObjectId> textIdHash;
@@ -823,20 +825,6 @@ void EnvGeneralSet()
 void RevisionPartProcess()
 {
 	CLogErrorLife logErrLife;
-	if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE)||
-		g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
-	{	//加载角钢工艺卡
-		char APP_PATH[MAX_PATH] = "", sJgCardPath[MAX_PATH] = "",sJgCardPath2[MAX_PATH]="";
-		GetAppPath(APP_PATH);
-		sprintf(sJgCardPath, "%s%s", APP_PATH, (char*)g_xUbomModel.m_sJgCadName);
-		sprintf(sJgCardPath2, "%s\\角钢工艺卡\\%s", APP_PATH, (char*)g_xUbomModel.m_sJgCadName);
-		if (!g_pncSysPara.InitJgCardInfo(sJgCardPath) &&	//在根目录中查找工艺卡模板
-			!g_pncSysPara.InitJgCardInfo(sJgCardPath2))		//在“角钢工艺卡”子目录中查找工艺卡模板 wht 20-07-18
-		{
-			logerr.Log(CXhChar200("角钢工艺卡读取失败(%s)!", sJgCardPath));
-			return;
-		}
-	}
 	//显示对话框
 	int nWidth = g_xBomCfg.InitBomTitle();
 	g_xPNCDockBarManager.DisplayRevisionDockBar(nWidth);

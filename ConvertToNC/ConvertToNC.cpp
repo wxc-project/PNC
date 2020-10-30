@@ -367,6 +367,7 @@ void InitApplication()
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
 	g_xPNCDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 #else
+	TraversalUbomConfigFiles();
 	ImportUbomConfigFile();	//¶ÁÈ¡ÅäÖÃÎÄ¼þ
 	CXhChar100 sWndText("UBOM");
 	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)

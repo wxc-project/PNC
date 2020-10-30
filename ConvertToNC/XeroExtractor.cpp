@@ -539,6 +539,7 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 {
 	if (strlen(sJgCardPath) <= 0)
 		return CARD_READ_FAIL;
+	CLockDocumentLife lockCurDocment;
 	PRESET_ARRLIST(CXhChar100, partNoPosArr, 10);
 	AcDbDatabase blkDb(Adesk::kFalse);//定义空的数据库
 	Acad::ErrorStatus retCode;

@@ -85,6 +85,7 @@ public:
 	CBomConfig(void);
 	~CBomConfig(void);
 	//
+	void Init();
 	int InitBomTitle();
 	//
 	BOOL IsEqualDefaultProcessFlag(const char* sValue);
