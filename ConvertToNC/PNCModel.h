@@ -106,6 +106,7 @@ struct BASIC_INFO {
 //CPlateObject
 class CPlateObject
 {
+protected:
 	POLYGON region;
 public:
 	struct CIR_PLATE {
@@ -248,6 +249,7 @@ public:
 	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL);
 	SCOPE_STRU GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK=TRUE);
 	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
+	void CreateRgnByText();
 	//初始化钢板轮廓边信息
 	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息

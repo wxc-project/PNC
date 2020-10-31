@@ -264,6 +264,12 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	}
 #else
 	//UBOM只需要更新钢板的基本信息
+	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(TRUE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(TRUE))
+	{	
+		if(!pPlateProcess->IsValid())
+			pPlateProcess->CreateRgnByText();
+	}
+	//
 	pModel->MergeManyPartNo();
 	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
 	{

@@ -421,6 +421,37 @@ CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
 	_pBelongModel = pBelongModel;
 	return _pBelongModel;
 }
+//根据件号位置计算文本区域，便于UBOM识别基本信息
+void CPlateProcessInfo::CreateRgnByText()
+{
+	CAcDbObjLife objLife(partNoId);
+	AcDbEntity *pEnt = objLife.GetEnt();
+	if (pEnt == NULL || !pEnt->isKindOf(AcDbText::desc()))
+		return;
+	CXhChar50 sText;
+	AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+	sText.Copy(_bstr_t(pText->textString()));
+#else
+	sText.Copy(pText->textString());
+#endif
+	f3dPoint text_norm, dim_norm, dim_vec(1, 0, 0);
+	Cpy_Pnt(text_norm, pText->normal());
+	if (text_norm.IsZero())
+		text_norm.Set(0, 0, 1);
+	double height = pText->height();
+	double angle = pText->rotation();
+	double len = DrawTextLength(sText, height, pText->textStyle());
+	dim_norm.Set(-sin(angle), cos(angle));
+	RotateVectorAroundVector(dim_vec, angle, text_norm);
+	//
+	ARRAY_LIST<f3dPoint> vertexList;
+	vertexList.append(f3dPoint(dim_pos + dim_norm * height*1.5 - dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 2 - dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 2 + dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos + dim_norm * height*1.5 + dim_vec * len * 2));
+	region.CreatePolygonRgn(vertexList.m_pData, vertexList.GetSize());
+}
 //检测钢板原图的轮廓状态：是否闭合
 void CPlateProcessInfo::CheckProfileEdge()
 {
