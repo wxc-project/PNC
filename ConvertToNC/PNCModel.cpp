@@ -144,8 +144,25 @@ CPlateObject::~CPlateObject()
 void CPlateObject::CreateRgn()
 {
 	ARRAY_LIST<f3dPoint> vertices;
-	for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
-		vertices.append(pVer->pos);
+	int nNum = vertexList.GetNodeNum();
+	for (int i = 0; i < nNum; i++)
+	{
+		VERTEX* pCur = vertexList.GetByIndex(i);
+		vertices.append(pCur->pos);
+		if (pCur->ciEdgeType == 2)
+		{	//将圆弧简化为多条线段，减小钢板轮廓区域误差
+			VERTEX* pNext = vertexList.GetByIndex((i + 1) % nNum);
+			GEPOINT ptS = pCur->pos, ptE = pNext->pos;
+			f3dArcLine arcLine;
+			if (arcLine.CreateMethod3(ptS, ptE, pCur->arc.work_norm, pCur->arc.radius, pCur->arc.center))
+			{
+				int nSlices = CalArcResolution(arcLine.Radius(), arcLine.SectorAngle(), 1.0, 5.0, 18);
+				double angle = arcLine.SectorAngle() / nSlices;
+				for (int i = 1; i < nSlices; i++)
+					vertices.append(arcLine.PositionInAngle(angle*i));
+			}
+		}
+	}
 	if (vertices.GetSize() > 0)
 		region.CreatePolygonRgn(vertices.m_pData, vertices.GetSize());
 }
@@ -239,7 +256,7 @@ void CPlateObject::ReverseVertexs()
 		i++;
 	}
 	//
-	vertexList.Empty();
+	EmptyVertexs();
 	for (i = 0; i < n; i++)
 	{
 		pVertex = vertexList.append();
@@ -511,7 +528,7 @@ void CPlateProcessInfo::UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelB
 	{
 		if (m_xHashInvalidBoltCir.GetValue((DWORD)pRelaObj))
 		{
-			m_xHashRelaEntIdList.DeleteCursor();
+			//m_xHashRelaEntIdList.DeleteCursor();	//不能直接删除关联图元，否则绘制模块丢失图元
 			continue;	//过滤掉无效的螺栓实体（大圆内的小圆、件号标注） wht 19-07-20
 		}
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
@@ -548,7 +565,6 @@ void CPlateProcessInfo::UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelB
 			}
 		}
 	}
-	m_xHashRelaEntIdList.Clean();
 	//提取三角螺栓图符、腰圆孔螺栓图符
 	if (g_pncSysPara.IsRecongPolylineLs() > 0)
 	{
@@ -833,15 +849,19 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 	ATOM_LIST<VERTEX> list;
 	CalEquidistantShape(CPNCModel::DIST_ERROR * 2, &list);
 #ifdef __ALFA_TEST_
+	CLockDocumentLife lockCurDocment;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
-	int nNum = list.GetNodeNum();
-	for (int i = 0; i < nNum; i++)
+	if (pBlockTableRecord)
 	{
-		VERTEX* pCurVer = list.GetByIndex(i);
-		VERTEX* pNextVer = list.GetByIndex((i + 1) % nNum);
-		CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, RGB(125, 255, 0));
+		int nNum = list.GetNodeNum();
+		for (int i = 0; i < nNum; i++)
+		{
+			VERTEX* pCurVer = list.GetByIndex(i);
+			VERTEX* pNextVer = list.GetByIndex((i + 1) % nNum);
+			CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, RGB(125, 255, 0));
+		}
+		pBlockTableRecord->close();
 	}
-	pBlockTableRecord->close();
 #endif
 	struct resbuf* pList = NULL, *pPoly = NULL;
 	for (VERTEX* pVer = list.GetFirst(); pVer; pVer = list.GetNext())
@@ -1256,6 +1276,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		return;
 #ifdef __ALFA_TEST1_
 	//用于测试查看文本的坐标位置
+	CLockDocumentLife lockCurDocument;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
 	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y + 10));
 	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y - 10));
@@ -1446,7 +1467,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 		}
 	}
 	//填充钢板的轮廓点
-	vertexList.Empty();
+	EmptyVertexs();
 	for(int i=0;i<tem_vertes.GetNodeNum();i++)
 	{
 		VERTEX* pCur=tem_vertes.GetByIndex(i);
@@ -1476,7 +1497,6 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 	//对轮廓点进行合理性检查(是否按逆时针排序)
 	if(!IsValidVertexs())
 		ReverseVertexs();
-	CreateRgn();
 }
 BOOL CPlateProcessInfo::InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntSet)
 {	//1.根据选中实体初始化直线列表
@@ -1536,7 +1556,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle)
 	GEPOINT center;
 	AcDbCircle* pCircle = (AcDbCircle*)pEnt;
 	Cpy_Pnt(center, pCircle->center());
-	vertexList.Empty();
+	EmptyVertexs();
 	for (int i = 0; i < 4; i++)
 	{
 		VERTEX* pVer = vertexList.append();
@@ -1557,7 +1577,6 @@ BOOL CPlateProcessInfo::InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle)
 	}
 	if (!IsValidVertexs())
 		ReverseVertexs();
-	CreateRgn();
 	return TRUE;
 }
 BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
@@ -1600,7 +1619,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 		}
 	}
 	//
-	vertexList.Empty();
+	EmptyVertexs();
 	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
 	{
 		VERTEX* pCur = tem_vertes.GetByIndex(i);
@@ -1629,7 +1648,6 @@ BOOL CPlateProcessInfo::InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline)
 	}
 	if (!IsValidVertexs())
 		ReverseVertexs();
-	CreateRgn();
 	return TRUE;
 }
 BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ARRAY_LIST<CAD_LINE>& xLineArr)
@@ -1836,7 +1854,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 		}
 	}
 	//初始化钢板轮廓点
-	vertexList.Empty();
+	EmptyVertexs();
 	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
 	{
 		VERTEX* pCur = tem_vertes.GetByIndex(i);
@@ -1865,7 +1883,6 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 	}
 	if (!IsValidVertexs())
 		ReverseVertexs();
-	CreateRgn();
 	return TRUE;
 }
 void CPlateProcessInfo::InitMkPos(GEPOINT &mk_pos,GEPOINT &mk_vec)
@@ -1981,7 +1998,7 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 	//
 	dim_pos = pSrcPlate->dim_pos;
 	dim_vec = pSrcPlate->dim_vec;
-	vertexList.Empty();
+	EmptyVertexs();
 	CPlateObject::VERTEX* pSrcVertex = NULL;
 	for (CPlateObject::VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
 		pSrcVertex = pSrcPlate->vertexList.GetNext())
@@ -3472,12 +3489,22 @@ bool CPNCModel::AppendBoltEntsByCircle(ULONG idCirEnt)
 	AcDbCircle* pCircle = (AcDbCircle*)pEnt;
 	if (int(pCircle->radius()) <= 0)
 		return false;	//去除点
+	GEPOINT center(pCircle->center().x, pCircle->center().y, pCircle->center().z);
 	double fDiameter = pCircle->radius() * 2;
 	if (g_pncSysPara.m_ciMKPos == 2 &&
 		fabs(g_pncSysPara.m_fMKHoleD - fDiameter) < EPS2)
 		return false;	//去除号位孔
+	if (fDiameter > g_pncSysPara.m_nMaxHoleD)
+	{	//超过最大圆直径，判断是否按环板处理
+		CPlateProcessInfo* pPlateInfo = NULL;
+		for (pPlateInfo = EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = EnumNextPlate(FALSE))
+		{
+			double fDist = DISTANCE(pPlateInfo->dim_pos, center);
+			if (fDist < pCircle->radius())
+				return false;	//圆内有件号标注，默认为环板
+		}
+	}
 	//添加螺栓块
-	GEPOINT center(pCircle->center().x, pCircle->center().y, pCircle->center().z);
 	CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(MakePosKeyStr(center));
 	if (pBoltEnt == NULL)
 	{
@@ -4442,7 +4469,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		{
 			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
 				continue;
-			pCurPlateInfo->vertexList.Empty();
+			pCurPlateInfo->EmptyVertexs();
 			for (CPlateObject::VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
 				pVer = tem_plate.vertexList.GetNext())
 				pCurPlateInfo->vertexList.append(*pVer);
@@ -4460,7 +4487,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		{
 			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
 				continue;
-			pCurPlateInfo->vertexList.Empty();
+			pCurPlateInfo->EmptyVertexs();
 			CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
 			for (pVer = tem_plate.vertexList.GetFirst(); pVer; pVer = tem_plate.vertexList.GetNext())
 				pCurPlateInfo->vertexList.append(*pVer);
@@ -4506,7 +4533,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 				{
 					if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
 						continue;
-					pCurPlateInfo->vertexList.Empty();
+					pCurPlateInfo->EmptyVertexs();
 					CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
 					for (pVer = tem_plate.vertexList.GetFirst(); pVer;pVer = tem_plate.vertexList.GetNext())
 						pCurPlateInfo->vertexList.append(*pVer);

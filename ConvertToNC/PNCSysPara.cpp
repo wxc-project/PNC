@@ -26,7 +26,7 @@ void CPNCSysPara::Init()
 	m_iAxisXCalType = 0;
 	m_bUseMaxEdge = FALSE;
 	m_nMaxEdgeLen = 2200;
-	m_nMaxHoleD = 100;
+	m_nMaxHoleD = 50;
 	m_ciMKPos = 0;
 	m_fMKHoleD = 10;
 	m_fMapScale = 1;
@@ -443,9 +443,7 @@ BOOL CPNCSysPara::IsProfileEnt(AcDbEntity* pEnt)
 	if (pEnt->isKindOf(AcDbRegion::desc()))
 		return TRUE;	//多线段
 	if (pEnt->isKindOf(AcDbCircle::desc()))
-	{	//智能提取时，处理原板
-		if (m_ciRecogMode != CPNCSysPara::FILTER_BY_PIXEL)
-			return FALSE;
+	{	//智能提取时，处理圆板
 		AcDbCircle* pCir = (AcDbCircle*)pEnt;
 		if (pCir->radius() * 2 > m_nMaxHoleD)
 			return TRUE;

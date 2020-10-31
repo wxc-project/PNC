@@ -156,6 +156,11 @@ protected:
 public:
 	CPlateObject();
 	~CPlateObject();
+
+	void EmptyVertexs() {
+		vertexList.Empty();
+		region.Empty();
+	}
 	//
 	virtual bool IsInPlate(const double* poscoord);
 	virtual bool IsInPlate(const double* start, const double* end);
