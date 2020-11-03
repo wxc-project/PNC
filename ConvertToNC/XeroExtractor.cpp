@@ -213,13 +213,15 @@ BOOL CPlateExtractor::IsMatchThickRule(const char* sText)
 	else
 		return FALSE;
 }
+//材质关键字可以不设置，默认为"Q2"|"Q3"|"Q4" wxc-2020.11.3
 BOOL CPlateExtractor::IsMatchMatRule(const char* sText)
 {
-	if(strlen(sText)<=0 || strlen(m_sMatKey)<=0)
+	if(strlen(sText)<=0)
 		return FALSE;
 	if(m_iDimStyle==0)
 		return IsMatchPNRule(sText);
-	if(strstr(sText,m_sMatKey)&&(strstr(sText, "Q2")||strstr(sText,"Q3")||strstr(sText,"Q4")))
+	if((strlen(m_sMatKey)>0 && strstr(sText,m_sMatKey))||
+		(strstr(sText, "Q2")||strstr(sText,"Q3")||strstr(sText,"Q4")))
 		return TRUE;
 	else
 		return FALSE;
