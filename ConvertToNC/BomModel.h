@@ -163,6 +163,7 @@ public:
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
 	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
+	void DeleteDwgBomInfo(CDwgFileInfo* pDwgInfo);
 	//Ð£Éó²Ù×÷
 	int CompareOrgAndLoftParts();
 	int CompareLoftAndPartDwgs(BYTE ciTypeJ0_P1_A2=2);

@@ -1485,15 +1485,8 @@ void CRevisionDlg::OnDeleteItem()
 		pPrjTowerType = pDwgInfo->BelongModel();
 		if (pPrjTowerType == NULL)
 			return;
-		for (CDwgFileInfo *pTempDwgInfo = pPrjTowerType->dwgFileList.GetFirst(); pTempDwgInfo; pTempDwgInfo = pPrjTowerType->dwgFileList.GetNext())
-		{
-			if (pTempDwgInfo == pDwgInfo)
-			{
-				pPrjTowerType->dwgFileList.DeleteCursor(TRUE);
-				m_treeCtrl.DeleteItem(hSelItem);	//删除选中项
-				break;
-			}
-		}
+		pPrjTowerType->DeleteDwgBomInfo(pDwgInfo);
+		m_treeCtrl.DeleteItem(hSelItem);	//删除选中项
 	}
 	else if (pItemInfo->itemType == BOM_ITEM)
 	{

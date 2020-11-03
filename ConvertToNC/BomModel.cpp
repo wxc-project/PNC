@@ -147,6 +147,37 @@ CDwgFileInfo* CProjectTowerType::AppendDwgBomInfo(const char* sFileName)
 	}
 	return pDwgFile;
 }
+//删除DWG信息
+void CProjectTowerType::DeleteDwgBomInfo(CDwgFileInfo* pDwgInfo)
+{
+	//关闭对应的DWG文件
+	AcApDocument *pDoc = NULL;
+	CXhChar500 file_path;
+	AcApDocumentIterator *pIter = acDocManager->newAcApDocumentIterator();
+	for (; !pIter->done(); pIter->step())
+	{
+		pDoc = pIter->document();
+#ifdef _ARX_2007
+		file_path.Copy(_bstr_t(pDoc->fileName()));
+#else
+		file_path.Copy(pDoc->fileName());
+#endif
+		if (strstr(file_path, pDwgInfo->m_sFileName))
+			break;
+	}
+	if (pDoc)
+		CloseDoc(pDoc);
+	//数据模型中删除DWG信息
+	for (CDwgFileInfo *pTempDwgInfo = dwgFileList.GetFirst(); pTempDwgInfo; pTempDwgInfo = dwgFileList.GetNext())
+	{
+		if (pTempDwgInfo == pDwgInfo)
+		{
+			dwgFileList.DeleteCursor();
+			break;
+		}
+	}
+	dwgFileList.Clean();
+}
 //
 CDwgFileInfo* CProjectTowerType::FindDwgBomInfo(const char* sFileName)
 {

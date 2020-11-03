@@ -880,7 +880,7 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 	ATOM_LIST<VERTEX> list;
 	CalEquidistantShape(CPNCModel::DIST_ERROR * 2, &list);
 #ifdef __ALFA_TEST_
-	CLockDocumentLife lockCurDocment;
+	/*CLockDocumentLife lockCurDocment;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
 	if (pBlockTableRecord)
 	{
@@ -892,7 +892,7 @@ void CPlateProcessInfo::ExtractPlateRelaEnts()
 			CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, RGB(125, 255, 0));
 		}
 		pBlockTableRecord->close();
-	}
+	}*/
 #endif
 	struct resbuf* pList = NULL, *pPoly = NULL;
 	for (VERTEX* pVer = list.GetFirst(); pVer; pVer = list.GetNext())
@@ -1305,15 +1305,15 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern,double fMaxExter
 {
 	if (!m_bNeedExtract)
 		return;
-#ifdef __ALFA_TEST1_
+#ifdef __ALFA_TEST_
 	//用于测试查看文本的坐标位置
-	CLockDocumentLife lockCurDocument;
+	/*CLockDocumentLife lockCurDocument;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
 	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y + 10));
 	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y + 10), f3dPoint(dim_pos.x + 10, dim_pos.y - 10));
 	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x + 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y - 10));
 	CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y + 10));
-	pBlockTableRecord->close();
+	pBlockTableRecord->close();*/
 #endif
 	//
 	ads_name seqent;
@@ -4443,7 +4443,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	xImage.DetectProfilePixelsByVisit();
 	//xImage.DetectProfilePixelsByTrack();
 #ifdef __ALFA_TEST_
-	xImage.WriteBmpFileByVertStrip("F:\\11.bmp");
+	//xImage.WriteBmpFileByVertStrip("F:\\11.bmp");
 	//xImage.WriteBmpFileByPixelHash("F:\\22.bmp");
 #endif
 #ifdef __TIMER_COUNT_
