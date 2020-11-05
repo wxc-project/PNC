@@ -1727,12 +1727,9 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 		COLORREF ls_color = color;
 		for (BOLT_INFO *pBoltInfo = pPlate->m_xBoltInfoList.GetFirst(); pBoltInfo; pBoltInfo = pPlate->m_xBoltInfoList.GetNext())
 		{
-			f3dCircle circle;
-			circle.norm.Set(0, 0, 1);
-			circle.centre.Set(pBoltInfo->posX, pBoltInfo->posY, 0);
-			circle.radius = (pBoltInfo->bolt_d + pBoltInfo->hole_d_increment) / 2;
-			circle.ID = pBoltInfo->hiberId.HiberDownId(2);
 			pBoltInfo->hiberId.masterId = pPlate->GetKey();
+			cur_ls_pt.Set(pBoltInfo->posX, pBoltInfo->posY, 0);
+			double fHoleR = (pBoltInfo->bolt_d + pBoltInfo->hole_d_increment)*0.5;
 			CXhChar100 sEnter;
 			if (pBoltInfo->bolt_d == 12 && pBoltInfo->cFuncType == 0)
 				sEnter = "M12Color";
@@ -1751,28 +1748,62 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 				memmove(tem_str, tem_str + 3, 97);
 				sscanf(tem_str, "%X", &ls_color);
 			}
-			if (ciDisplayNcMode&0X01 || ciDisplayNcMode&0X02)
-			{	//切割下料模式下，显示切割孔
-				if (pBoltInfo->bolt_d >= fSpecialD)
-					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+			if (pBoltInfo->bWaistBolt)
+			{	//腰圆孔
+				if (ciDisplayNcMode & 0x04 || ciDisplayNcMode & 0x08)
+					continue;	//板床模型不显示腰圆
+				GEPOINT vecH = pBoltInfo->waistVec, vecN(-vecH.y, vecH.x, 0);
+				GEPOINT ptUpS, ptUpE, ptDwS, ptDwE, ptC = cur_ls_pt;
+				ptUpS = ptC - vecH * pBoltInfo->waistLen*0.5 + vecN * fHoleR;
+				ptUpE = ptC + vecH * pBoltInfo->waistLen*0.5 + vecN * fHoleR;
+				ptDwS = ptC - vecH * pBoltInfo->waistLen*0.5 - vecN * fHoleR;
+				ptDwE = ptC + vecH * pBoltInfo->waistLen*0.5 - vecN * fHoleR;
+				AppendDbLine(pDrawing, ptUpS, ptUpE, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				AppendDbLine(pDrawing, ptDwS, ptDwE, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				f3dArcLine arcline;
+				if (arcline.CreateMethod3(ptUpS, ptDwS, GEPOINT(0, 0, 1), fHoleR, ptC))
+				{
+					GEPOINT ptS = arcline.Start(), ptE = arcline.End(), norm = arcline.WorkNorm();
+					IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+					pArcLine->CreateMethod2(ptS, ptE, norm, arcline.SectorAngle());
+				}
+				if (arcline.CreateMethod3(ptDwE, ptUpE, GEPOINT(0, 0, 1), fHoleR, ptC))
+				{
+					GEPOINT ptS = arcline.Start(), ptE = arcline.End(), norm = arcline.WorkNorm();
+					IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+					pArcLine->CreateMethod2(ptS, ptE, norm, arcline.SectorAngle());
+				}
 			}
-			if (ciDisplayNcMode&0x04 || ciDisplayNcMode&0x08)
-			{	//板床打孔模式下
-				BOOL bNeedSH = FALSE;
-				if (ciDisplayNcMode&0x04 && CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
-					bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
-				if (ciDisplayNcMode&0x08 && CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
-					bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
-				if (pBoltInfo->cFuncType == 0)
+			else
+			{	//圆孔
+				f3dCircle circle;
+				circle.norm.Set(0, 0, 1);
+				circle.centre = cur_ls_pt;
+				circle.radius = fHoleR;
+				circle.ID = pBoltInfo->hiberId.HiberDownId(2);
+				if (ciDisplayNcMode & 0X01 || ciDisplayNcMode & 0X02)
+				{	//切割下料模式下，显示切割孔
+					if (pBoltInfo->bolt_d >= fSpecialD)
+						AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				}
+				if (ciDisplayNcMode & 0x04 || ciDisplayNcMode & 0x08)
+				{	//板床打孔模式下
+					BOOL bNeedSH = FALSE;
+					if (ciDisplayNcMode & 0x04 && CPEC::GetSysParaFromReg("PunchNeedSH", sValue))
+						bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
+					if (ciDisplayNcMode & 0x08 && CPEC::GetSysParaFromReg("DrillNeedSH", sValue))
+						bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
+					if (pBoltInfo->cFuncType == 0)
+						AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+					else if (pBoltInfo->bolt_d < fSpecialD)	//对小号特殊孔进行加工
+						AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+					else if (pBoltInfo->bolt_d >= fSpecialD && bNeedSH && (ciDisplayNcMode == 0x04 || ciDisplayNcMode == 0x08))
+						AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				}
+				if (ciDisplayNcMode == 0x10 || ciDisplayNcMode == 0)
+				{	//原始或激光加工模式下，生成所有孔
 					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
-				else if (pBoltInfo->bolt_d < fSpecialD)	//对小号特殊孔进行加工
-					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
-				else if (pBoltInfo->bolt_d >= fSpecialD && bNeedSH && (ciDisplayNcMode == 0x04 || ciDisplayNcMode == 0x08))
-					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
-			}
-			if (ciDisplayNcMode == 0x10 || ciDisplayNcMode == 0)
-			{	//原始或激光加工模式下，生成所有孔
-				AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				}
 			}
 			//显示螺栓顺序
 			BOOL bNeedDispBoltOrder = FALSE;
@@ -1804,7 +1835,6 @@ static void DrawPlateNc(CProcessPlate *pPlate, IDrawing *pDrawing, ISolidSet *pS
 			}
 			if (CProcessPartDraw::m_bDispBoltOrder && bNeedDispBoltOrder)
 			{
-				cur_ls_pt = circle.centre;
 				double fTextHeight = (CPEC::GetSysParaFromReg("TextHeight", sValue)) ? atof(sValue) : 10;
 				CXhChar50 text("%d", pBoltInfo->keyId);
 				AppendDbText(pDrawing, cur_ls_pt, text, 0, fTextHeight, IDbText::AlignMiddleCenter, plateId, 0, crText, 2);
@@ -1987,13 +2017,9 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 		COLORREF ls_color=color;
 		for(BOLT_INFO *pBoltInfo=pPlate->m_xBoltInfoList.GetFirst();pBoltInfo;pBoltInfo=pPlate->m_xBoltInfoList.GetNext())
 		{
-			f3dCircle circle;
-			circle.norm.Set(0,0,1);
-			cur_ls_pt.Set(pBoltInfo->posX,pBoltInfo->posY,0);
-			circle.centre=cur_ls_pt;
-			circle.radius = (pBoltInfo->bolt_d+pBoltInfo->hole_d_increment)/2;
-			circle.ID	  = pBoltInfo->hiberId.HiberDownId(2);
 			pBoltInfo->hiberId.masterId=pPlate->GetKey();
+			cur_ls_pt.Set(pBoltInfo->posX, pBoltInfo->posY, 0);
+			double fHoleR = (pBoltInfo->bolt_d + pBoltInfo->hole_d_increment) *0.5;
 			//只有特殊孔才可能是小数，特殊孔也查不到合适的颜色，此处可强制转为整数 wht 19-09-12
 			CXhChar100 sEnter;
 			if (pBoltInfo->bolt_d == 12 && pBoltInfo->cFuncType == 0)
@@ -2013,10 +2039,44 @@ static void DrawPlate(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet *pSolid
 				memmove(tem_str, tem_str + 3, 97);
 				sscanf(tem_str, "%X", &ls_color);
 			}
-			if(IsPositionOverlap(cur_ls_pt,lsPtList))	//同一个位置出现多个螺栓孔，特殊标记RGB(123,104,238)
-				AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,RGB(127,255,0),3);
+			//绘制螺栓
+			if (pBoltInfo->bWaistBolt)
+			{	//腰圆孔
+				GEPOINT vecH = pBoltInfo->waistVec, vecN(-vecH.y, vecH.x, 0);
+				GEPOINT ptUpS, ptUpE, ptDwS, ptDwE, ptC = cur_ls_pt;
+				ptUpS = ptC - vecH * pBoltInfo->waistLen*0.5 + vecN * fHoleR;
+				ptUpE = ptC + vecH * pBoltInfo->waistLen*0.5 + vecN * fHoleR;
+				ptDwS = ptC - vecH * pBoltInfo->waistLen*0.5 - vecN * fHoleR;
+				ptDwE = ptC + vecH * pBoltInfo->waistLen*0.5 - vecN * fHoleR;
+				AppendDbLine(pDrawing, ptUpS, ptUpE, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				AppendDbLine(pDrawing, ptDwS, ptDwE, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+				f3dArcLine arcline;
+				if (arcline.CreateMethod3(ptUpS, ptDwS, GEPOINT(0, 0, 1), fHoleR, ptC))
+				{
+					GEPOINT ptS = arcline.Start(), ptE = arcline.End(), norm = arcline.WorkNorm();
+					IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+					pArcLine->CreateMethod2(ptS, ptE, norm, arcline.SectorAngle());	
+				}
+				if (arcline.CreateMethod3(ptDwE, ptUpE, GEPOINT(0, 0, 1), fHoleR, ptC))
+				{
+					GEPOINT ptS = arcline.Start(), ptE = arcline.End(), norm = arcline.WorkNorm();
+					IDbArcline *pArcLine = AppendDbArcLine(pDrawing, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+					pArcLine->CreateMethod2(ptS, ptE, norm, arcline.SectorAngle());
+				}
+			}
 			else
-				AppendDbCircle(pDrawing,circle.centre,circle.norm,circle.radius,pBoltInfo->hiberId,PS_SOLID,ls_color,2);
+			{	//圆孔
+				f3dCircle circle;
+				circle.norm.Set(0, 0, 1);
+				circle.centre = cur_ls_pt;
+				circle.radius = fHoleR;
+				circle.ID = pBoltInfo->hiberId.HiberDownId(2);
+				if (IsPositionOverlap(cur_ls_pt, lsPtList))	//同一个位置出现多个螺栓孔，特殊标记RGB(123,104,238)
+					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, RGB(127, 255, 0), 3);
+				else
+					AppendDbCircle(pDrawing, circle.centre, circle.norm, circle.radius, pBoltInfo->hiberId, PS_SOLID, ls_color, 2);
+			}
+			//标注螺栓序号
 			if(CProcessPartDraw::m_bDispBoltOrder)
 			{
 				CXhChar100 sValue;
@@ -2102,7 +2162,7 @@ static void DrawNcBackGraphic(CProcessPlate *pPlate,IDrawing *pDrawing,ISolidSet
 	IDbRect *pRect=AppendDbRect(pDrawing,f3dPoint(-shieldThick,shieldHeight,0),f3dPoint(),plateId,PS_SOLID,RGB(0,0,0),1);
 	pRect->SetSelectable(false);
 	//3.绘制构件明细
-	if(pPlate->vertex_list.GetNodeNum()>=3)
+	if(pPlate->IsValidProfile())
 	{
 		CXhChar16 matStr = LocalQuerySteelMark(pPlate->cMaterial);
 		CXhChar200 sValue,sPartInfo("编号:%s  板厚:%dmm 材质%s",(char*)pPlate->GetPartNo(),(int)pPlate->m_fThick,(char*)matStr);
@@ -2407,9 +2467,9 @@ void CProcessPlateDraw::RotateAntiClockwise()
 	if(m_pPart==NULL||m_pPart->m_cPartType!=CProcessPart::TYPE_PLATE)
 		return;
 	CProcessPlate *pPlate=(CProcessPlate*)m_pPart;
-	int n=pPlate->vertex_list.GetNodeNum();
-	if(n<=3)
+	if (!pPlate->IsValidProfile())
 		return;
+	int n=pPlate->vertex_list.GetNodeNum();
 	pPlate->mcsFlg.ciBottomEdge=(pPlate->mcsFlg.ciBottomEdge-1+n)%n;
 	if(pPlate->IsConcaveVertex(pPlate->mcsFlg.ciBottomEdge))
 		pPlate->mcsFlg.ciBottomEdge=(pPlate->mcsFlg.ciBottomEdge-1+n)% n;
@@ -2428,9 +2488,9 @@ void CProcessPlateDraw::RotateClockwise()
 	if(m_pPart==NULL||m_pPart->m_cPartType!=CProcessPart::TYPE_PLATE)
 		return;
 	CProcessPlate *pPlate=(CProcessPlate*)m_pPart;
-	int n=pPlate->vertex_list.GetNodeNum();
-	if(n<=3)
+	if (!pPlate->IsValidProfile())
 		return;
+	int n=pPlate->vertex_list.GetNodeNum();
 	pPlate->mcsFlg.ciBottomEdge=(pPlate->mcsFlg.ciBottomEdge+1)%n;
 	if(pPlate->IsConcaveVertex(pPlate->mcsFlg.ciBottomEdge))
 		pPlate->mcsFlg.ciBottomEdge = (pPlate->mcsFlg.ciBottomEdge+1)%n;

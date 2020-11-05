@@ -38,12 +38,14 @@ void CHoleIncrementSetDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHK_M24, m_arrIsCanUse[3]);
 	DDX_Check(pDX, IDC_CHK_CUT_SH, m_arrIsCanUse[4]);
 	DDX_Check(pDX, IDC_CHK_PRO_SH, m_arrIsCanUse[5]);
+	DDX_Check(pDX, IDC_CHK_WAIST, m_arrIsCanUse[6]);
 	DDX_Text(pDX, IDC_E_M12, m_fM12Increment);
 	DDX_Text(pDX, IDC_E_M16, m_fM16Increment);
 	DDX_Text(pDX, IDC_E_M20, m_fM20Increment);
 	DDX_Text(pDX, IDC_E_M24, m_fM24Increment);
 	DDX_Text(pDX, IDC_E_CUT_SH, m_fCutIncrement);
 	DDX_Text(pDX, IDC_E_PRO_SH, m_fProIncrement);
+	DDX_Text(pDX, IDC_E_WAIST, m_fWaistIncrement);
 }
 
 
@@ -54,6 +56,7 @@ BEGIN_MESSAGE_MAP(CHoleIncrementSetDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_M24, OnChkM24)
 	ON_BN_CLICKED(IDC_CHK_CUT_SH, OnChkCutSH)
 	ON_BN_CLICKED(IDC_CHK_PRO_SH, OnChkProSH)
+	ON_BN_CLICKED(IDC_CHK_WAIST, OnChkWaist)
 END_MESSAGE_MAP()
 
 
@@ -88,6 +91,7 @@ void CHoleIncrementSetDlg::InitCtrlValue()
 		m_fM24Increment = pNcPare->m_xHoleIncrement.m_fM24;
 		m_fProIncrement = pNcPare->m_xHoleIncrement.m_fProSH;
 		m_fCutIncrement = pNcPare->m_xHoleIncrement.m_fCutSH;
+		m_fWaistIncrement = pNcPare->m_xHoleIncrement.m_fWaist;
 	}
 	else
 	{
@@ -122,6 +126,11 @@ void CHoleIncrementSetDlg::InitCtrlValue()
 		if (fabs(m_fProIncrement - fDatum) > EPS)
 			m_arrIsCanUse[5] = TRUE;
 		((CEdit*)GetDlgItem(IDC_E_PRO_SH))->SetReadOnly(!m_arrIsCanUse[5]);
+		//ÑüÔ²¿×
+		m_fWaistIncrement = g_sysPara.holeIncrement.m_fWaist;
+		if (fabs(m_fWaistIncrement - fDatum) > EPS)
+			m_arrIsCanUse[6] = TRUE;
+		((CEdit*)GetDlgItem(IDC_E_WAIST))->SetReadOnly(!m_arrIsCanUse[6]);
 	}
 }
 void CHoleIncrementSetDlg::RefreshCtrlState()
@@ -146,6 +155,9 @@ void CHoleIncrementSetDlg::RefreshCtrlState()
 		m_arrIsCanUse[5] = FALSE;
 		GetDlgItem(IDC_CHK_PRO_SH)->EnableWindow(FALSE);
 		GetDlgItem(IDC_E_PRO_SH)->EnableWindow(FALSE);
+		m_arrIsCanUse[6] = TRUE;
+		GetDlgItem(IDC_CHK_WAIST)->EnableWindow(TRUE);
+		GetDlgItem(IDC_E_WAIST)->EnableWindow(TRUE);
 	}
 	else if (m_ciCurNcMode == CNCPart::PUNCH_MODE || m_ciCurNcMode == CNCPart::DRILL_MODE)
 	{	//°å´²
@@ -179,12 +191,16 @@ void CHoleIncrementSetDlg::RefreshCtrlState()
 		m_arrIsCanUse[5] = bEnable;
 		GetDlgItem(IDC_CHK_PRO_SH)->EnableWindow(bEnable);
 		GetDlgItem(IDC_E_PRO_SH)->EnableWindow(bEnable);
+		//
+		m_arrIsCanUse[6] = FALSE;
+		GetDlgItem(IDC_CHK_WAIST)->EnableWindow(FALSE);
+		GetDlgItem(IDC_E_WAIST)->EnableWindow(FALSE);
 	}
 	else
 	{
 		if (m_ciCurNcMode == CNCPart::LASER_MODE)
 		{
-			for (int i = 0; i < 6; i++)
+			for (int i = 0; i < 7; i++)
 				m_arrIsCanUse[i] = TRUE;
 		}
 		GetDlgItem(IDC_CHK_M12)->EnableWindow(TRUE);
@@ -199,6 +215,8 @@ void CHoleIncrementSetDlg::RefreshCtrlState()
 		GetDlgItem(IDC_E_PRO_SH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_CHK_CUT_SH)->EnableWindow(TRUE);
 		GetDlgItem(IDC_E_CUT_SH)->EnableWindow(TRUE);
+		GetDlgItem(IDC_CHK_WAIST)->EnableWindow(TRUE);
+		GetDlgItem(IDC_E_WAIST)->EnableWindow(TRUE);
 	}
 }
 void CHoleIncrementSetDlg::OnChkM12()
@@ -231,6 +249,11 @@ void CHoleIncrementSetDlg::OnChkProSH()
 	m_arrIsCanUse[5] = !m_arrIsCanUse[5];
 	((CEdit*)GetDlgItem(IDC_E_PRO_SH))->SetReadOnly(!m_arrIsCanUse[5]);
 }
+void CHoleIncrementSetDlg::OnChkWaist()
+{
+	m_arrIsCanUse[6] = !m_arrIsCanUse[6];
+	((CEdit*)GetDlgItem(IDC_E_WAIST))->SetReadOnly(!m_arrIsCanUse[6]);
+}
 void CHoleIncrementSetDlg::OnOK()
 {
 	UpdateData();
@@ -242,6 +265,7 @@ void CHoleIncrementSetDlg::OnOK()
 		pNcPare->m_xHoleIncrement.m_fM24 = m_fM24Increment;
 		pNcPare->m_xHoleIncrement.m_fProSH = m_fProIncrement;
 		pNcPare->m_xHoleIncrement.m_fCutSH = m_fCutIncrement;
+		pNcPare->m_xHoleIncrement.m_fWaist = m_fWaistIncrement;
 	}
 	else
 	{
@@ -270,6 +294,10 @@ void CHoleIncrementSetDlg::OnOK()
 			g_sysPara.holeIncrement.m_fProSH = m_fCutIncrement;
 		else
 			g_sysPara.holeIncrement.m_fProSH = fDatum;
+		if (m_arrIsCanUse[6])
+			g_sysPara.holeIncrement.m_fWaist = m_fWaistIncrement;
+		else
+			g_sysPara.holeIncrement.m_fWaist = fDatum;
 	}
 	return CDialog::OnOK();
 }

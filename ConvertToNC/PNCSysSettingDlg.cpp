@@ -195,6 +195,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			g_pncSysPara.m_ciPolylineLsMode = 0;
 		//
 		pPropList->DeleteAllSonItems(pItem);
+		if (g_pncSysPara.m_ciPolylineLsMode > 0)
+			oper.InsertEditPropItem(pItem, "RoundLineLen", "", "", -1, TRUE);
 		if (g_pncSysPara.m_ciPolylineLsMode == 2)
 		{
 			oper.InsertEditPropItem(pItem, "standard_SJ", "", "", -1, TRUE);
@@ -202,6 +204,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 			oper.InsertEditPropItem(pItem, "standard_YY", "", "", -1, TRUE);
 		}
 	}
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RoundLineLen"))
+		g_pncSysPara.m_fRoundLineLen = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iRecogMode"))
 	{
 		g_pncSysPara.m_ciRecogMode = valueStr[0] - '0';
@@ -955,6 +959,8 @@ void CPNCSysSettingDlg::UpdatePncSettingProp()
 		oper.InsertEditPropItem(pPropItem, "standardM24");
 	}
 	pPropItem = oper.InsertCmbListPropItem(pGroupItem, "RecogLsPolyline");
+	if(g_pncSysPara.m_ciPolylineLsMode >0)
+		oper.InsertEditPropItem(pPropItem, "RoundLineLen");
 	if (g_pncSysPara.m_ciPolylineLsMode == 2)
 	{
 		oper.InsertEditPropItem(pPropItem, "standard_SJ");

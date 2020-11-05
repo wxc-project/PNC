@@ -13,6 +13,7 @@ struct HOLE_INCREMENT {
 	double m_fM24;		//M24
 	double m_fCutSH;	//切割式特殊孔径增大值
 	double m_fProSH;	//板床式特殊孔径增大值
+	double m_fWaist;	//腰圆孔
 };
 struct FILTER_MK_PARA
 {

@@ -70,6 +70,7 @@
 #define IDC_E_M24                       1014
 #define IDC_PROPERTY_LIST               1014
 #define IDC_LIST_PART_INFO              1015
+#define IDC_E_WAIST                     1015
 #define IDC_E_NORM_X                    1016
 #define IDC_E_EDIT_LINE                 1016
 #define IDC_E_CUT_SH                    1016
@@ -112,6 +113,7 @@
 #define IDC_RAD_DRILL                   1036
 #define IDC_FILTER_LIST                 1037
 #define IDC_BTN_ADD_ITEM                1038
+#define IDC_CHK_WAIST                   1039
 #define IDC_RADIO13                     1058
 #define IDC_RADIO14                     1059
 #define IDC_TAB_GROUP                   1080
@@ -242,10 +244,10 @@
 #define ID_SMART_SORT_BOLT_2            33013
 #define ID_SMART_SORT_BOLT_3            33014
 #define ID_FLAME_NC_DATA                33015
-#define ID_PLASMA_NC_DATA				33016
-#define ID_PUNCH_NC_DATA				33017
-#define ID_DRILL_NC_DATA				33018
-#define ID_LASER_NC_DATA				33019
+#define ID_PLASMA_NC_DATA               33016
+#define ID_PUNCH_NC_DATA                33017
+#define ID_DRILL_NC_DATA                33018
+#define ID_LASER_NC_DATA                33019
 #define ID_DISPLAY_NC_MODE              33020
 
 // Next default values for new objects
@@ -255,7 +257,7 @@
 #define _APS_3D_CONTROLS                     1
 #define _APS_NEXT_RESOURCE_VALUE        171
 #define _APS_NEXT_COMMAND_VALUE         33021
-#define _APS_NEXT_CONTROL_VALUE         1039
+#define _APS_NEXT_CONTROL_VALUE         1040
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

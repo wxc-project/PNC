@@ -47,7 +47,7 @@ void CPNCSysPara::Init()
 	m_fPixelScale = 0.6;
 	m_ciBoltRecogMode = FILTER_PARTNO_CIR;
 	m_fPartNoCirD = 0;
-	m_fRoundLineLen = 12.5;
+	m_fRoundLineLen = 24;
 	//默认颜色设置
 	crMode.crEdge = RGB(255, 0, 0);
 	crMode.crLS12 = RGB(0, 255, 255);
@@ -193,6 +193,7 @@ int CPNCSysPara::InitPropHashtable()
 	AddPropItem("standard_ZF", PROPLIST_ITEM(id++, "方形螺栓孔径"));
 	AddPropItem("standard_YY", PROPLIST_ITEM(id++, "腰圆螺栓孔径"));
 	AddPropItem("RecogLsPolyline", PROPLIST_ITEM(id++, "多段线螺栓", "非图符块的多段线螺栓(三角、矩形、腰圆等)", "不进行处理|自动计算孔径|指定标准孔径"));
+	AddPropItem("RoundLineLen", PROPLIST_ITEM(id++, "腰圆过渡长度", ""));
 	//显示模式
 	AddPropItem("DisplayMode", PROPLIST_ITEM(id++, "显示模式"));
 	AddPropItem("m_ciLayoutMode", PROPLIST_ITEM(id++, "显示布局模式","","图元克隆|钢板对比|自动排版|下料预审|图元筛选"));
@@ -389,6 +390,8 @@ int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=1
 		else
 			sText.Copy("指定标准孔径");
 	}
+	else if(GetPropID("RoundLineLen")==id)
+		sText.Printf("%g", m_fRoundLineLen);
 	else if (GetPropID("m_iProfileColorIndex") == id)
 		sText.Printf("RGB%X", GetColorFromIndex(m_ciProfileColorIndex));
 	else if (GetPropID("m_iBendLineColorIndex") == id)
@@ -1093,6 +1096,12 @@ bool PNCSysSetImportDefault(FILE *fp)
 			if (skey)
 				g_pncSysPara.m_fPartNoCirD = atof(skey);
 		}
+		else if (_stricmp(key_word, "RoundLineLen") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			if (skey)
+				g_pncSysPara.m_fRoundLineLen = atof(skey);
+		}
 		else if (_stricmp(key_word, "MapScale") == 0)
 			sscanf(line_txt, "%s%f", key_word, &g_pncSysPara.m_fMapScale);
 		else if (_stricmp(key_word, "BoltDKey") == 0)
@@ -1230,6 +1239,7 @@ bool PNCSysSetExportDefault(FILE *fp)
 	fprintf(fp, "BendLineColorIndex=%d ;制弯线颜色\n", g_pncSysPara.m_ciBendLineColorIndex);
 	fprintf(fp, "BoltRecogMode=%d ;螺栓识别模式\n", g_pncSysPara.m_ciBoltRecogMode);
 	fprintf(fp, "PartNoCirD=%.1f ;件号圆圈直径\n", g_pncSysPara.m_fPartNoCirD);
+	fprintf(fp, "RoundLineLen=%.1f ;腰圆过渡长度\n", g_pncSysPara.m_fRoundLineLen);
 	fprintf(fp, "螺栓识别设置\n");
 	for (BOLT_BLOCK *pBoltBlock = g_pncSysPara.EnumFirstBlotBlock(); pBoltBlock; pBoltBlock = g_pncSysPara.EnumNextBlotBlock())
 	{

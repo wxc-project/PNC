@@ -1,7 +1,6 @@
 #include "stdafx.h"
 #include "NcPart.h"
 #include "ArrayList.h"
-#include "DxfFile.h"
 #include "NcJg.h"
 #include "SortFunc.h"
 #include "LicFuncDef.h"
@@ -264,6 +263,221 @@ void CNCPart::DeformedPlateProfile(CProcessPlate *pPlate)
 		pVertex->vertex=xUnDeformedPlate.GetDeformedVertex(pVertex->vertex);
 }
 
+void CNCPart::InitScopeToDxf(CDxfFile& dxf_file, SCOPE_STRU& scope)
+{
+	dxf_file.extmin.Set(scope.fMinX, scope.fMaxY);
+	dxf_file.extmax.Set(scope.fMaxX, scope.fMinY);
+}
+void CNCPart::AddLineToDxf(CDxfFile& dxf_file, GEPOINT ptS, GEPOINT ptE, int clrIndex /*= -1*/)
+{
+	dxf_file.NewLine(ptS, ptE, clrIndex);
+}
+void CNCPart::AddArcLineToDxf(CDxfFile& dxf_file, GEPOINT ptS, GEPOINT ptE, GEPOINT ptC, double radius,int clrIndex /*= -1*/)
+{
+	double fAngleS = Cal2dLineAng(ptC.x, ptC.y, ptS.x, ptS.y);
+	double fAngleE = Cal2dLineAng(ptC.x, ptC.y, ptE.x, ptE.y);
+	dxf_file.NewArc(ptC.x, ptC.y, radius, fAngleS*DEGTORAD_COEF, fAngleE*DEGTORAD_COEF, clrIndex);
+}
+void CNCPart::AddEllipseToDxf(CDxfFile& dxf_file, f3dArcLine ellipse, int clrIndex /*= -1*/)
+{
+	if (ellipse.SectorAngle() <= 0 || ellipse.Radius() <= 0)
+		return;
+	int nSlices = CalArcResolution(ellipse.Radius(), ellipse.SectorAngle(), 1.0, 3.0, 10);
+	double slice_angle = ellipse.SectorAngle() / nSlices;
+	GEPOINT pre_pt = ellipse.Start(), cut_pt;
+	for (int i = 1; i <= nSlices; i++)
+	{
+		cut_pt = ellipse.PositionInAngle(i*slice_angle);
+		AddLineToDxf(dxf_file, pre_pt, cut_pt, clrIndex);
+		pre_pt = cut_pt;
+	}
+}
+void CNCPart::AddCircleToDxf(CDxfFile& dxf_file, GEPOINT ptC, double radius, int clrIndex /*= -1*/)
+{
+	dxf_file.NewCircle(ptC, radius, clrIndex);
+}
+void CNCPart::AddTextToDxf(CDxfFile& dxf_file, const char* sText, GEPOINT dimPos,
+	double fFontH, double fRotAngle/*=0*/, int clrIndex /*= -1*/)
+{
+
+	dxf_file.NewText(sText, dimPos, fFontH, 0, clrIndex);
+}
+void CNCPart::AddEdgeToDxf(CDxfFile& dxf_file, PROFILE_VER* pPrevVertex, PROFILE_VER* pCurVertex,
+							GEPOINT axis_z, BOOL bOverturn)
+{
+	if (pPrevVertex == NULL || pCurVertex == NULL)
+		return;
+	GEPOINT ptS = pPrevVertex->vertex, ptE = pCurVertex->vertex, ptC = pPrevVertex->vertex;
+	if (pPrevVertex->type == 1)
+		AddLineToDxf(dxf_file, ptS, ptE);
+	else if (pPrevVertex->type == 2)
+	{
+		f3dArcLine arcLine;
+		arcLine.CreateMethod2(ptS, ptE, pPrevVertex->work_norm, pPrevVertex->sector_angle);
+		ptS = arcLine.Start();
+		ptE = arcLine.End();
+		if (arcLine.WorkNorm()*axis_z < 0)
+		{	//法线方向不同，调整圆弧的始终端
+			ptS = arcLine.End();
+			ptE = arcLine.Start();
+		}
+		if (bOverturn)
+		{	//反转后调整圆弧的始终端
+			GEPOINT tmePt = ptS;
+			ptS = ptE;
+			ptE = tmePt;
+		}
+		AddArcLineToDxf(dxf_file, ptS, ptE, arcLine.Center(), arcLine.Radius());
+	}
+	else //if(pPrevVertex->type==3)
+	{
+		f3dArcLine arcLine;
+		arcLine.CreateEllipse(ptC, ptS, ptE, pPrevVertex->column_norm, pPrevVertex->work_norm, pPrevVertex->radius);
+		AddEllipseToDxf(dxf_file, arcLine);
+	}
+}
+
+void CNCPart::AddHoleToDxf(CDxfFile& dxf_file, BOLT_INFO* pHole)
+{
+	GEPOINT ptC(pHole->posX, pHole->posY);
+	double fHoleR = (pHole->bolt_d + pHole->hole_d_increment)*0.5;
+	if (pHole->bWaistBolt)
+	{	//绘制腰圆孔
+		GEPOINT vecH = pHole->waistVec, vecN(-vecH.y, vecH.x, 0);
+		GEPOINT ptUpS, ptUpE, ptDwS, ptDwE;
+		ptUpS = ptC - vecH * pHole->waistLen*0.5 + vecN * fHoleR;
+		ptUpE = ptC + vecH * pHole->waistLen*0.5 + vecN * fHoleR;
+		ptDwS = ptC - vecH * pHole->waistLen*0.5 - vecN * fHoleR;
+		ptDwE = ptC + vecH * pHole->waistLen*0.5 - vecN * fHoleR;
+		dxf_file.NewLine(ptUpS, ptUpE);
+		dxf_file.NewLine(ptDwS, ptDwE);
+		f3dArcLine arcline;
+		if (arcline.CreateMethod3(ptUpS, ptDwS, GEPOINT(0, 0, 1), fHoleR, ptC))
+		{
+			GEPOINT ptS = arcline.Start(), ptE = arcline.End(), pt = arcline.Center();
+			double fAngleS = Cal2dLineAng(pt.x, pt.y, ptS.x, ptS.y);
+			double fAngleE = Cal2dLineAng(pt.x, pt.y, ptE.x, ptE.y);
+			dxf_file.NewArc(pt.x, pt.y, arcline.Radius(), fAngleS*DEGTORAD_COEF, fAngleE*DEGTORAD_COEF);
+		}
+		if (arcline.CreateMethod3(ptDwE, ptUpE, GEPOINT(0, 0, 1), fHoleR, ptC))
+		{
+			GEPOINT ptS = arcline.Start(), ptE = arcline.End(), pt = arcline.Center();
+			double fAngleS = Cal2dLineAng(pt.x, pt.y, ptS.x, ptS.y);
+			double fAngleE = Cal2dLineAng(pt.x, pt.y, ptE.x, ptE.y);
+			dxf_file.NewArc(pt.x, pt.y, arcline.Radius(), fAngleS*DEGTORAD_COEF, fAngleE*DEGTORAD_COEF);
+		}
+	}
+	else
+	{	//绘制圆孔
+		dxf_file.NewCircle(ptC, fHoleR);
+	}
+}
+void CNCPart::ParseNoteInfo(const char* sPartInfoKeyStr, CStringArray& sNoteArr, CProcessPlate* pPlate)
+{
+	if (pPlate == NULL)
+		return;
+	CStringArray str_arr;
+	CXhChar200 key_str(sPartInfoKeyStr);
+	for (char *token = strtok(key_str, "\n"); token; token = strtok(NULL, "\n"))
+		str_arr.Add(token);
+	for (int i = 0; i < str_arr.GetSize(); i++)
+	{
+		CXhChar100 sNotes, sTemp;
+		key_str.Copy(str_arr[i]);
+		CXhChar100 sPrevProp;
+		for (char *token = strtok(key_str, "&"); token; token = strtok(NULL, "&"))
+		{
+			if (stricmp(token, "设计单位") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sCompanyName);
+			}
+			else if (stricmp(token, "工程编号") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sPrjCode);
+			}
+			else if (stricmp(token, "工程名称") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sPrjName);
+			}
+			else if (stricmp(token, "塔型") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sTaType);
+			}
+			else if (stricmp(token, "代号") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sTaAlias);
+			}
+			else if (stricmp(token, "钢印号") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sTaStampNo);
+			}
+			else if (stricmp(token, "操作员") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sOperator);
+			}
+			else if (stricmp(token, "审核人") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sAuditor);
+			}
+			else if (stricmp(token, "评审人") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(model.m_sCritic);
+			}
+			else if (stricmp(token, "件号") == 0)
+			{	//简化材质字符在件号之前不需要在件号前加空格 wht 19-11-05
+				if (!sPrevProp.EqualNoCase("简化材质字符") && sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(pPlate->GetPartNo());
+			}
+			else if (stricmp(token, "材质") == 0)
+			{
+				char steelmark[20] = "";
+				CProcessPart::QuerySteelMatMark(pPlate->cMaterial, steelmark);
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sNotes.Append(steelmark);
+			}
+			else if (stricmp(token, "简化材质字符") == 0)
+			{	//简化材质字符在件号之后不需要在简化字符前加空格 wht 19-11-05
+				char steelmark[20] = "";
+				CProcessPart::QuerySteelMatMark(pPlate->cMaterial, steelmark);
+				if (stricmp(steelmark, "Q235") != 0)
+				{
+					if (!sPrevProp.EqualNoCase("件号") && sNotes.GetLength() > 0)
+						sNotes.Append(' ');
+					sNotes.Append(toupper(pPlate->cMaterial));
+				}
+			}
+			else if (stricmp(token, "厚度") == 0)
+			{
+				if (sNotes.GetLength() > 0)
+					sNotes.Append(' ');
+				sTemp.Printf("%.0f", pPlate->GetThick());
+				sNotes.Append(sTemp);
+			}
+			sPrevProp.Copy(token);
+		}
+		sNoteArr.Add(sNotes);
+	}
+}
 bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int dxf_mode)
 {
 	if(pPlate==NULL)
@@ -340,10 +554,8 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 	if(tempPlate.m_cFaceN!=3)	//三面板不能执行共线点命令
 		RemoveCollinearPoint(&tempPlate);
 	//生成DXF文件
-	SCOPE_STRU scope = tempPlate.GetVertexsScope();
 	CDxfFile file;
-	file.extmin.Set(scope.fMinX,scope.fMaxY);
-	file.extmax.Set(scope.fMaxX,scope.fMinY);
+	InitScopeToDxf(file, tempPlate.GetVertexsScope());
 	if(file.OpenFile(file_path))
 	{
 		//绘制轮廓边
@@ -351,54 +563,13 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 		for(PROFILE_VER* pVertex= tempPlate.vertex_list.GetFirst();pVertex;pVertex= tempPlate.vertex_list.GetNext())
 		{
 			if (pPlate->m_cFaceN < 3 || pPrevVertex->vertex.feature != 3 || pVertex->vertex.feature != 2)
-			{
-				if (pPrevVertex->type == 1)
-					file.NewLine(pPrevVertex->vertex, pVertex->vertex);
-				else
-				{
-					f3dArcLine arcLine;
-					if (pPrevVertex->type == 2)
-						arcLine.CreateMethod2(pPrevVertex->vertex, pVertex->vertex, pPrevVertex->work_norm, pPrevVertex->sector_angle);
-					else
-						arcLine.CreateEllipse(pPrevVertex->center, pPrevVertex->vertex, pVertex->vertex, pPrevVertex->column_norm, pPrevVertex->work_norm, pPrevVertex->radius);
-					f3dPoint startPt = arcLine.Start();
-					f3dPoint endPt = arcLine.End();
-					if (arcLine.WorkNorm()*mcs.axis_z < 0)
-					{	//法线方向不同，调整圆弧的始终端
-						startPt = arcLine.End();
-						endPt = arcLine.Start();
-					}
-					if (tempPlate.mcsFlg.ciOverturn == 1)
-					{	//反转后调整圆弧的始终端
-						f3dPoint tmePt = startPt;
-						startPt = endPt;
-						endPt = tmePt;
-					}
-					f3dPoint centre = arcLine.Center();
-					double fAngleS = Cal2dLineAng(centre.x, centre.y, startPt.x, startPt.y);
-					double fAngleE = Cal2dLineAng(centre.x, centre.y, endPt.x, endPt.y);
-					if (pPrevVertex->type == 2)
-						file.NewArc(centre.x, centre.y, arcLine.Radius(), fAngleS*DEGTORAD_COEF, fAngleE*DEGTORAD_COEF);
-					else
-					{	
-						int nSlices = CalArcResolution(arcLine.Radius(), arcLine.SectorAngle(), 1.0, 3.0, 10);
-						double slice_angle = arcLine.SectorAngle() / nSlices;
-						f3dPoint pre_pt = pPrevVertex->vertex;
-						for (int i = 1; i <= nSlices; i++)
-						{
-							f3dPoint pt = arcLine.PositionInAngle(i*slice_angle);
-							file.NewLine(pre_pt, pt);
-							pre_pt = pt;
-						}
-					}
-				}
-			}
+				AddEdgeToDxf(file, pPrevVertex, pVertex, mcs.axis_z, tempPlate.mcsFlg.ciOverturn == 1);
 			else
 			{
-				file.NewLine(pPrevVertex->vertex, tempPlate.top_point);
-				file.NewLine(tempPlate.top_point, pVertex->vertex);
+				AddLineToDxf(file, pPrevVertex->vertex, tempPlate.top_point);
+				AddLineToDxf(file, tempPlate.top_point, pVertex->vertex);
 			}
-			pPrevVertex=pVertex;
+			pPrevVertex = pVertex;
 		}
 		//绘制内圆
 		if (tempPlate.m_fInnerRadius > 0)
@@ -440,60 +611,56 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 					}
 					f3dArcLine arcLine;
 					arcLine.CreateEllipse(center, ptS, ptE, columnNorm, workNorm, minorRadius);
-					//file.NewEllipse();
+					AddEllipseToDxf(file, arcLine);
 				}
 			}
 			else
-				file.NewCircle(tempPlate.m_tInnerOrigin, tempPlate.m_fInnerRadius);
+				AddCircleToDxf(file, tempPlate.m_tInnerOrigin, tempPlate.m_fInnerRadius);
 		}
 		//绘制螺栓孔
 		double fSpecialD = 0;
 		if (GetSysParaFromReg("LimitSH", sValue))
 			fSpecialD = atof(sValue);
-		f3dPoint centre,startPt;
 		for(BOLT_INFO *pHole=tempPlate.m_xBoltInfoList.GetFirst();pHole;pHole=tempPlate.m_xBoltInfoList.GetNext())
 		{
-			if(startPt.IsZero())
-				startPt.Set(pHole->posX,pHole->posY);
-			centre.Set(pHole->posX,pHole->posY);
 			if (dxf_mode == CNCPart::FLAME_MODE || dxf_mode==CNCPart::PLASMA_MODE)
 			{	//切割下料模式下，对于特殊孔进行加工
-				if (pHole->bolt_d >= fSpecialD)
-					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				if (pHole->bolt_d >= fSpecialD || pHole->bWaistBolt)
+				{	//加工特殊圆孔或者腰圆孔
+					AddHoleToDxf(file, pHole);
+				}
 			}
 			else if (dxf_mode == CNCPart::PUNCH_MODE || dxf_mode==CNCPart::DRILL_MODE)
 			{	//板床打孔模式下
+				if(pHole->bWaistBolt)
+					continue;	//板床模式下，暂不处理腰圆孔
 				BOOL bNeedSH = FALSE;
 				if (GetSysParaFromReg("DrillNeedSH", sValue) && dxf_mode == CNCPart::DRILL_MODE)
 					bNeedSH = atoi(sValue);	//钻孔考虑是否保留特殊大孔
 				if (GetSysParaFromReg("PunchNeedSH", sValue) && dxf_mode == CNCPart::PUNCH_MODE)
 					bNeedSH = atoi(sValue);	//冲孔考虑是否保留特殊大孔
 				if (pHole->cFuncType == 0)
-					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+					AddHoleToDxf(file, pHole);
 				else if (pHole->bolt_d < fSpecialD)	//对小号特殊孔进行加工
-					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+					AddHoleToDxf(file, pHole);
 				else if(pHole->bolt_d >= fSpecialD && bNeedSH)
-					file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+					AddHoleToDxf(file, pHole);
 			}
 			else if (dxf_mode == CNCPart::LASER_MODE)
 			{	//激光加工模式下，生成所有孔
-				file.NewCircle(centre, (pHole->bolt_d + pHole->hole_d_increment) / 2.0);
+				AddHoleToDxf(file, pHole);
 			}
-			startPt=centre;
 		}
 		if (tempPlate.IsDisplayMK() && 
 			(dxf_mode == CNCPart::DRILL_MODE|| dxf_mode == CNCPart::PUNCH_MODE))
 		{	//绘制号料孔(板床打孔时需要绘制钢印号)
-			double fMkHoldD=5,fMkRectL=60,fMkRectW=30;
-			//号料孔
+			f3dPoint centre(tempPlate.mkpos.x, tempPlate.mkpos.y);
+			coord_trans(centre, mcs, FALSE);
+			double fMkHoldD = 5;
 			if(GetSysParaFromReg("MKHoleD",sValue))
 				fMkHoldD=atof(sValue);
 			if (fMkHoldD > 0)
-			{
-				f3dPoint centre(tempPlate.mkpos.x,tempPlate.mkpos.y);
-				coord_trans(centre,mcs,FALSE);
-				file.NewCircle(f3dPoint(centre.x,centre.y),fMkHoldD/2.0);
-			}	
+				AddCircleToDxf(file, centre, fMkHoldD*0.5);
 		}
 		if (dxf_mode == CNCPart::LASER_MODE)
 		{	//输出火曲线并用+、-标识正反曲 wht 19-09-26
@@ -513,7 +680,7 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 				{
 					GEPOINT ptS = huoquLine[i].startPt, ptE = huoquLine[i].endPt;
 					if (bOutputBendLine)
-						file.NewLine(ptS, ptE, 1);	//设置火曲线为红色
+						AddLineToDxf(file, ptS, ptE, 1);//设置火曲线为红色
 					if (bOutputBendType)
 					{
 						double fHuoquAngle = (i == 0) ? tempPlate.m_fHuoQuAngle1 : tempPlate.m_fHuoQuAngle2;
@@ -543,116 +710,16 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 							ATOM_LIST<GELINE> lineArr;
 							model.ExplodeText(sText, dimPos, fFontH, fRotAngle, lineArr);
 							for (GELINE* pLine = lineArr.GetFirst(); pLine; pLine = lineArr.GetNext())
-								file.NewLine(pLine->start, pLine->end, nTextClrIndex);
+								AddLineToDxf(file, pLine->start, pLine->end, nTextClrIndex);
 						}
 						else
-							file.NewText(sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, nTextClrIndex);
+							AddTextToDxf(file, sText, dimPos, fFontH, fRotAngle*DEGTORAD_COEF, nTextClrIndex);
 					}
 				}
 			}
 			//激光加工模式下，显示用户指定的信息
-			CStringArray str_arr, sNoteArr;
-			CXhChar200 key_str;
-			key_str.Copy(m_sExportPartInfoKeyStr);
-			for (char *token = strtok(key_str, "\n"); token; token = strtok(NULL, "\n"))
-				str_arr.Add(token);
-			for (int i = 0; i < str_arr.GetSize(); i++)
-			{
-				CXhChar100 sNotes, sTemp;
-				key_str.Copy(str_arr[i]);
-				CXhChar100 sPrevProp;
-				for (char *token = strtok(key_str, "&"); token; token = strtok(NULL, "&"))
-				{
-					if (stricmp(token, "设计单位") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sCompanyName);
-					}
-					else if (stricmp(token, "工程编号") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sPrjCode);
-					}
-					else if (stricmp(token, "工程名称") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sPrjName);
-					}
-					else if (stricmp(token, "塔型") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sTaType);
-					}
-					else if (stricmp(token, "代号") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sTaAlias);
-					}
-					else if (stricmp(token, "钢印号") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sTaStampNo);
-					}
-					else if (stricmp(token, "操作员") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sOperator);
-					}
-					else if (stricmp(token, "审核人") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sAuditor);
-					}
-					else if (stricmp(token, "评审人") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(model.m_sCritic);
-					}
-					else if (stricmp(token, "件号") == 0)
-					{	//简化材质字符在件号之前不需要在件号前加空格 wht 19-11-05
-						if (!sPrevProp.EqualNoCase("简化材质字符")&&sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(tempPlate.GetPartNo());
-					}
-					else if (stricmp(token, "材质") == 0)
-					{
-						char steelmark[20] = "";
-						CProcessPart::QuerySteelMatMark(tempPlate.cMaterial, steelmark);
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sNotes.Append(steelmark);
-					}
-					else if (stricmp(token, "简化材质字符") == 0)
-					{	//简化材质字符在件号之后不需要在简化字符前加空格 wht 19-11-05
-						char steelmark[20] = "";
-						CProcessPart::QuerySteelMatMark(tempPlate.cMaterial, steelmark);
-						if (stricmp(steelmark, "Q235") != 0)
-						{
-							if (!sPrevProp.EqualNoCase("件号") && sNotes.GetLength() > 0)
-								sNotes.Append(' ');
-							sNotes.Append(toupper(tempPlate.cMaterial));
-						}
-					}
-					else if (stricmp(token, "厚度") == 0)
-					{
-						if (sNotes.GetLength() > 0)
-							sNotes.Append(' ');
-						sTemp.Printf("%.0f", tempPlate.GetThick());
-						sNotes.Append(sTemp);
-					}
-					sPrevProp.Copy(token);
-				}
-				sNoteArr.Add(sNotes);
-			}
+			CStringArray sNoteArr;
+			ParseNoteInfo(m_sExportPartInfoKeyStr, sNoteArr, &tempPlate);
 			if (sNoteArr.GetSize() > 0)
 			{
 				double fTextW = 0, fTextH = 0;
@@ -676,10 +743,10 @@ bool CNCPart::CreatePlateDxfFile(CProcessPlate *pPlate,const char* file_path,int
 						ATOM_LIST<GELINE> lineArr;
 						model.ExplodeText(sNoteArr[i], dimPos, fFontH, 0, lineArr);
 						for (GELINE* pLine = lineArr.GetFirst(); pLine; pLine = lineArr.GetNext())
-							file.NewLine(pLine->start, pLine->end, nTextClrIndex);
+							AddLineToDxf(file, pLine->start, pLine->end, nTextClrIndex);
 					}
 					else
-						file.NewText(sNoteArr[i], dimPos, fFontH, 0, nTextClrIndex);
+						AddTextToDxf(file, sNoteArr[i], dimPos, fFontH, 0, nTextClrIndex);
 				}
 			}
 		}

@@ -318,6 +318,7 @@ CSysPara::CSysPara(void)
 	holeIncrement.m_fM24=1.5;
 	holeIncrement.m_fCutSH=0;
 	holeIncrement.m_fProSH = 0;
+	holeIncrement.m_fWaist = 0;
 	nc.m_xFlamePara.m_xHoleIncrement = holeIncrement;
 	nc.m_xPlasmaPara.m_xHoleIncrement = holeIncrement;
 	nc.m_xPunchPara.m_xHoleIncrement = holeIncrement;
@@ -384,7 +385,7 @@ CSysPara::~CSysPara(void)
 
 BOOL CSysPara::Write(CString file_path)	//写配置文件
 {
-	CString version("2.9");
+	CString version("3.0");
 	if(file_path.IsEmpty())
 		return FALSE;
 	CFile file;
@@ -417,6 +418,7 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 	ar<<holeIncrement.m_fM24;
 	ar<<holeIncrement.m_fCutSH;
 	ar<<holeIncrement.m_fProSH;
+	ar<<holeIncrement.m_fWaist;
 	//等离子切割
 	ar<<nc.m_ciDisplayType;
 	ar<<CString(plasmaCut.m_sOutLineLen);
@@ -505,6 +507,7 @@ BOOL CSysPara::Write(CString file_path)	//写配置文件
 		ar << pNcPare->m_xHoleIncrement.m_fM24;
 		ar << pNcPare->m_xHoleIncrement.m_fCutSH;
 		ar << pNcPare->m_xHoleIncrement.m_fProSH;
+		ar << pNcPare->m_xHoleIncrement.m_fWaist;
 	}
 	//工程信息
 	ar << CString(model.m_sCompanyName);
@@ -634,6 +637,8 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 		ar>>holeIncrement.m_fCutSH;
 		if (fVersion >= 2.7)
 			ar >> holeIncrement.m_fProSH;
+		if (fVersion >= 3.0)
+			ar >> holeIncrement.m_fWaist;
 	}
 	if(fVersion>=1.8)
 	{	
@@ -774,6 +779,8 @@ BOOL CSysPara::Read(CString file_path)	//读配置文件
 			ar >> pNcPare->m_xHoleIncrement.m_fM24;
 			ar >> pNcPare->m_xHoleIncrement.m_fCutSH;
 			ar >> pNcPare->m_xHoleIncrement.m_fProSH;
+			if (compareVersion(version, "3.0") >= 0)
+				ar >> pNcPare->m_xHoleIncrement.m_fWaist;
 		}
 	}
 	//
@@ -1164,19 +1171,21 @@ void CSysPara::ReadSysParaFromReg(LPCTSTR lpszEntry)
 }
 void CSysPara::UpdateHoleIncrement(double fHoleInc)
 {
-	if(fabs(holeIncrement.m_fM12-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fM12=fHoleInc;
-	if(fabs(holeIncrement.m_fM16-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fM16=fHoleInc;
-	if(fabs(holeIncrement.m_fM20-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fM20=fHoleInc;
-	if(fabs(holeIncrement.m_fM24-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fM24=fHoleInc;
-	if(fabs(holeIncrement.m_fCutSH-holeIncrement.m_fDatum)<=EPS)
-		holeIncrement.m_fCutSH=fHoleInc;
-	if (fabs(holeIncrement.m_fProSH-holeIncrement.m_fDatum) <= EPS)
-		holeIncrement.m_fProSH=fHoleInc;
-	holeIncrement.m_fDatum=fHoleInc;
+	if (fabs(holeIncrement.m_fM12 - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fM12 = fHoleInc;
+	if (fabs(holeIncrement.m_fM16 - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fM16 = fHoleInc;
+	if (fabs(holeIncrement.m_fM20 - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fM20 = fHoleInc;
+	if (fabs(holeIncrement.m_fM24 - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fM24 = fHoleInc;
+	if (fabs(holeIncrement.m_fCutSH - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fCutSH = fHoleInc;
+	if (fabs(holeIncrement.m_fProSH - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fProSH = fHoleInc;
+	if (fabs(holeIncrement.m_fWaist - holeIncrement.m_fDatum) <= EPS)
+		holeIncrement.m_fWaist = fHoleInc;
+	holeIncrement.m_fDatum = fHoleInc;
 }
 BOOL CSysPara::IsFilterMK(int nThick, char cMat)
 {

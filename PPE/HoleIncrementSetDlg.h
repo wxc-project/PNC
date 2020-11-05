@@ -15,13 +15,14 @@ public:
 	BYTE m_ciCurNcMode;
 // 对话框数据
 	enum { IDD = IDD_HOLE_INCREMENT_DLG };
-	BOOL	m_arrIsCanUse[6];
+	BOOL	m_arrIsCanUse[7];
 	double  m_fM12Increment;
 	double  m_fM16Increment;
 	double  m_fM20Increment;
 	double  m_fM24Increment;
 	double  m_fCutIncrement;
 	double  m_fProIncrement;
+	double  m_fWaistIncrement;
 protected:
 	void InitCtrlValue();
 	void RefreshCtrlState();
@@ -36,4 +37,5 @@ protected:
 	afx_msg void OnChkM24();
 	afx_msg void OnChkCutSH();
 	afx_msg void OnChkProSH();
+	afx_msg void OnChkWaist();
 };

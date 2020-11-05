@@ -1579,7 +1579,9 @@ void CPPEView::AmendHoleIncrement()
 			//根据用户设置，修正螺栓孔径及孔径增大值
 			for (BOLT_INFO* pBolt = pDestPlate->m_xBoltInfoList.GetFirst(); pBolt; pBolt = pDestPlate->m_xBoltInfoList.GetNext())
 			{
-				if (pBolt->bolt_d == 12 && pBolt->cFuncType == 0)
+				if (pBolt->bWaistBolt)
+					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fWaist;
+				else if (pBolt->bolt_d == 12 && pBolt->cFuncType == 0)
 					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM12;
 				else if (pBolt->bolt_d == 16 && pBolt->cFuncType == 0)
 					pBolt->hole_d_increment = (float)pNCPare->m_xHoleIncrement.m_fM16;
@@ -1663,7 +1665,9 @@ void CPPEView::AmendHoleIncrement()
 			continue;
 		for(BOLT_INFO* pBolt=pProcessPart->m_xBoltInfoList.GetFirst();pBolt;pBolt=pProcessPart->m_xBoltInfoList.GetNext())
 		{
-			if(pBolt->bolt_d==12&&pBolt->cFuncType==0)
+			if (pBolt->bWaistBolt)
+				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fWaist;
+			else if(pBolt->bolt_d==12&&pBolt->cFuncType==0)
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM12;
 			else if(pBolt->bolt_d==16&&pBolt->cFuncType==0)
 				pBolt->hole_d_increment=(float)g_sysPara.holeIncrement.m_fM16;

@@ -1,6 +1,7 @@
 #pragma once
 #include "PPEModel.h"
 #include "NcPlate.h"
+#include "DxfFile.h"
 
 struct DRILL_BOLT_INFO
 {
@@ -32,6 +33,16 @@ struct PLATE_GROUP
 
 class CNCPart
 {
+	static void InitScopeToDxf(CDxfFile& dxf_file, SCOPE_STRU& scope);
+	static void AddLineToDxf(CDxfFile& dxf_file, GEPOINT ptS, GEPOINT ptE, int clrIndex = -1);
+	static void AddArcLineToDxf(CDxfFile& dxf_file, GEPOINT ptS, GEPOINT ptE, GEPOINT ptC, double radius, int clrIndex = -1);
+	static void AddCircleToDxf(CDxfFile& dxf_file, GEPOINT ptC, double radius, int clrIndex = -1);
+	static void AddEllipseToDxf(CDxfFile& dxf_file, f3dArcLine ellipse, int clrIndex = -1);
+	static void AddTextToDxf(CDxfFile& dxf_file, const char* sText, GEPOINT dimPos, double fFontH, double fRotAngle = 0, int clrIndex = -1);
+	static void AddEdgeToDxf(CDxfFile& dxf_file, PROFILE_VER* pPrevVertex, PROFILE_VER* pCurVertex, GEPOINT axis_z, BOOL bOverturn);
+	static void AddHoleToDxf(CDxfFile& dxf_file, BOLT_INFO* pHole);
+	//解析钢板的备注信息
+	static void ParseNoteInfo(const char* sPartInfoKeyStr, CStringArray& sNoteArr, CProcessPlate* pPlate);
 public:
 	//钢板NC模式
 	static const BYTE FLAME_MODE	= 0x01;	 //火焰切割

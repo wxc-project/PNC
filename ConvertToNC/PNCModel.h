@@ -79,12 +79,10 @@ public:
 	vector<ULONG> m_xCirArr;
 	vector<ULONG> m_xArcArr;
 public:
-	CBoltEntGroup() { 
-		m_ciType = 0; 
-		m_idEnt = 0;
-		m_bMatch = FALSE; 
-		m_fPosX = m_fPosY = m_fHoleD = 0;
-	}
+	CBoltEntGroup();
+	//
+	double GetWaistLen();
+	GEPOINT GetWaistVec();
 };
 struct BASIC_INFO {
 	char m_cMat;
@@ -167,7 +165,7 @@ public:
 	virtual bool IsInPlate(const double* start, const double* end);
 	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
 	virtual BOOL RecogWeldLine(f3dLine slop_line);
-	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 3; }
+	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 2; }
 	virtual BOOL IsClose(int* pIndex = NULL);
 };
 //CPlateProcessInfo
@@ -240,6 +238,7 @@ private:
 							 CHashStrList<CXhChar16>* pHashPartLabelByLabel);
 	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
 	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
+	bool RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list);
 public:
 	CPlateProcessInfo();
 	//
