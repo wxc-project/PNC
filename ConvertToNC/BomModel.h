@@ -12,8 +12,8 @@ class CAngleProcessInfo
 {
 private:
 	f3dPoint orig_pt;
-	POLYGON region;
-	SCOPE_STRU scope;
+	//
+	void InitProcessInfo(const char* sValue);
 public:
 	static const BYTE TYPE_JG = 1;		//½Ç¸Ö
 	static const BYTE TYPE_YG = 2;		//Ô²¸Ö
@@ -44,23 +44,19 @@ public:
 	CAngleProcessInfo();
 	~CAngleProcessInfo();
 	//
-	void CreateRgn();
-	bool PtInAngleRgn(const double* poscoord);
+	void SetOrig(f3dPoint pt) { orig_pt = pt; }
 	BYTE InitAngleInfo(f3dPoint data_pos,const char* sValue);
-	void SetOrig(f3dPoint pt)
-	{
-		orig_pt=pt;
-	}
-	f2dRect GetAngleDataRect(BYTE data_type);
+	bool PtInDataRect(BYTE data_type, const double* poscoord);
+	bool PtInDrawRect(const double* poscoord);
+	bool PtInAngleRgn(const double* poscoord);
 	f3dPoint GetAngleDataPos(BYTE data_type);
-	bool PtInDataRect(BYTE data_type,f3dPoint pt);
-	bool PtInDrawRect(f3dPoint pt);
+	SCOPE_STRU GetCADEntScope();
+	//
 	void RefreshAngleNum();
 	void RefreshAngleSingleNum();
 	void RefreshAngleSumWeight();
 	void RefreshAngleSpec();
 	void RefreshAngleMaterial();
-	SCOPE_STRU GetCADEntScope(){return scope;}
 };
 //////////////////////////////////////////////////////////////////////////
 //

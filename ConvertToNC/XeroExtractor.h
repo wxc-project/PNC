@@ -109,28 +109,9 @@ public:
 class CJgCardExtractor
 {
 public:
-	f2dRect part_no_rect;
-	f2dRect mat_rect;
-	f2dRect mat_brief_rect;
-	f2dRect guige_rect;
-	f2dRect length_rect;
-	f2dRect piece_weight_rect;
-	f2dRect danji_num_rect;
-	f2dRect jiagong_num_rect;
-	f2dRect note_rect;
-	f2dRect sum_weight_rect;
-	f2dRect cut_root_rect;
-	f2dRect cut_ber_rect;
-	f2dRect push_flat_rect;
-	f2dRect weld_rect;
-	f2dRect kai_jiao_rect;
-	f2dRect he_jiao_rect;
-	f2dRect cut_angle_rect;
-	f2dRect cut_angle_SX_rect, cut_angle_EX_rect;
-	f2dRect cut_angle_SY_rect, cut_angle_EY_rect;
-	f2dRect huoqu_fst_rect, huoqu_sec_rect;
-	f2dRect draw_rect;
-	double fMaxX, fMaxY, fMinX, fMinY;
+	map<long, f2dRect> mapJgCardRect;	//数据点区域
+	f2dRect draw_rect;	//绘图区域
+	f2dRect frame_rect;	//图框区域
 	double fTextHigh;
 	double fPnDistX, fPnDistY;
 public:

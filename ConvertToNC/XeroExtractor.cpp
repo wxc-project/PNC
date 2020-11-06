@@ -525,10 +525,6 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 #include "BomModel.h"
 CJgCardExtractor::CJgCardExtractor()
 {
-	fMaxX = 0;
-	fMaxY = 0;
-	fMinX = 0;
-	fMinY = 0;
 	fTextHigh = 0;
 	fPnDistX = 0;
 	fPnDistY = 0;
@@ -608,135 +604,21 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 			GRID_DATA_STRU grid_data;
 			if (!GetGridKey((AcDbPoint*)pEnt, &grid_data))
 				continue;
-			if (grid_data.data_type == 3)	//草图区域
-			{	
+			if (grid_data.data_type == 3)
+			{	//草图区域
 				draw_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
 				draw_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
 			}
-			else if (grid_data.type_id == ITEM_TYPE_PART_NO)		//件号
-			{
-				part_no_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				part_no_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_DES_MAT_BRIEF)		//简化字符
-			{
-				mat_brief_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				mat_brief_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_DES_MAT)	//设计材质
-			{
-				mat_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				mat_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_DES_GUIGE)	//设计规格
-			{
-				guige_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				guige_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_LENGTH)	//长度
-			{
-				length_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				length_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_PIECE_WEIGHT)	//单重
-			{
-				piece_weight_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				piece_weight_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_PART_NUM)	//单基数
-			{
-				danji_num_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				danji_num_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_SUM_PART_NUM)	//加工数
-			{
-				jiagong_num_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				jiagong_num_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-				fTextHigh = grid_data.fTextHigh;
-			}
-			else if (grid_data.type_id == ITEM_TYPE_SUM_WEIGHT)	//加工总重量
-			{
-				sum_weight_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				sum_weight_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-				fTextHigh = grid_data.fTextHigh;
-			}
-			else if (grid_data.type_id == ITEM_TYPE_PART_NOTES)	//备注
-			{
-				note_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				note_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_S_X)
-			{
-				cut_angle_SX_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_angle_SX_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_S_Y)
-			{
-				cut_angle_SY_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_angle_SY_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_E_X)
-			{
-				cut_angle_EX_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_angle_EX_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE_E_Y)
-			{
-				cut_angle_EY_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_angle_EY_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_HUOQU_FST)
-			{
-				huoqu_fst_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				huoqu_fst_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_HUOQU_SEC)
-			{
-				huoqu_sec_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				huoqu_sec_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_ROOT)	//刨根
-			{
-				cut_root_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_root_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_BER)	//铲背
-			{
-				cut_ber_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_ber_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_PUSH_FLAT)	//压扁
-			{
-				push_flat_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				push_flat_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_WELD)		//焊接
-			{
-				weld_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				weld_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_KAIJIAO)	//开角
-			{
-				kai_jiao_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				kai_jiao_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_HEJIAO)		//合角
-			{
-				he_jiao_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				he_jiao_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
-			}
-			else if (grid_data.type_id == ITEM_TYPE_CUT_ANGLE)	//切角
-			{
-				cut_angle_rect.topLeft.Set(grid_data.min_x, grid_data.max_y);
-				cut_angle_rect.bottomRight.Set(grid_data.max_x, grid_data.min_y);
+			else
+			{	//数据点区域
+				mapJgCardRect[grid_data.type_id].topLeft.Set(grid_data.min_x, grid_data.max_y);
+				mapJgCardRect[grid_data.type_id].bottomRight.Set(grid_data.max_x, grid_data.min_y);
 			}
 		}
 		pTempBlockTableRecord->close();
 		//工艺卡矩形区域
-		fMinX = scope.fMinX;
-		fMinY = scope.fMinY;
-		fMaxX = scope.fMaxX;
-		fMaxY = scope.fMaxY;
+		frame_rect.topLeft.Set(scope.fMinX, scope.fMaxY);
+		frame_rect.bottomRight.Set(scope.fMaxX, scope.fMinY);
 		//提示信息
 		if (partNoPosArr.GetSize() > 1)
 		{
