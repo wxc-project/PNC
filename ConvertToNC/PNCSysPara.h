@@ -146,6 +146,20 @@ public:
 	BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pBelongModel = NULL);
 	BOOL RecogMkRect(AcDbEntity* pEnt, f3dPoint* ptArr, int nNum);
 	//
+	BOOL IsHasPlateWeldTag(const char* sText);
+	BOOL IsHasPlateBendTag(const char* sText);
+#ifdef __UBOM_ONLY_
+	BOOL IsHasFootNailTag(const char* sText);
+	BOOL IsHasAngleWeldTag(const char* sText);
+	BOOL IsHasAngleBendTag(const char* sText);
+	BOOL IsHasCutAngleTag(const char* sText);
+	BOOL IsHasCutRootTag(const char* sText);
+	BOOL IsHasCutBerTag(const char* sText);
+	BOOL IsHasKaiJiaoTag(const char* sText);
+	BOOL IsHasHeJiaoTag(const char* sText);
+	BOOL IsHasPushFlatTag(const char* sText);
+#endif
+	//
 	DECLARE_PROP_FUNC(CPNCSysPara);
 	int GetPropValueStr(long id, char *valueStr,UINT nMaxStrBufLen=100,CPropTreeItem *pItem=NULL);//通过属性Id获取属性值
 };

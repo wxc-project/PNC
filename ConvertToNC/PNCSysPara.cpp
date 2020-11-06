@@ -958,6 +958,118 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 	}
 	return TRUE;
 }
+BOOL CPNCSysPara::IsHasPlateWeldTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "º¸") || strstr(sText, "weld"))
+		return TRUE;
+	return FALSE;
+}
+//
+BOOL CPNCSysPara::IsHasPlateBendTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "¾í±ß") || strstr(sText, "»ðÇú") ||
+		strstr(sText, "ÍâÇú") || strstr(sText, "ÄÚÇú") ||
+		strstr(sText, "ÕýÇú") || strstr(sText, "·´Çú"))
+		return TRUE;
+	return FALSE;
+}
+#ifdef __UBOM_ONLY_
+BOOL CPNCSysPara::IsHasFootNailTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	CXhChar200 sTemp(sText);
+	if (strstr(sText, "´ø½Å¶¤"))
+		return TRUE;
+	else if (strstr(sText, "½Å¶¤"))
+	{
+		for (char *skey = strtok((char*)sTemp, " ,£¬¡¢"); skey; skey = strtok(NULL, " ,£¬¡¢"))
+		{
+			if (stricmp(skey, "½Å¶¤") == 0)
+				return TRUE;
+		}
+	}
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasAngleWeldTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "Ö÷º¸¼þ") || strstr(sText, "º¸ÓÚ") ||
+		strstr(sText, "º¸½Ó") || strstr(sText, "#)") ||
+		(strstr(sText, "(") && strstr(sText, ")") && strstr(sText, "%d") == NULL) ||
+		(strstr(sText, "£¨") && strstr(sText, "£©") && strstr(sText, "%d") == NULL))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasAngleBendTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "ÖÆÍä") || strstr(sText, "»ðÇú") ||
+		strstr(sText, "ÍâÇú") || strstr(sText, "ÄÚÇú") ||
+		strstr(sText, "ÕýÇú") || strstr(sText, "·´Çú") ||
+		strstr(sText, "ÀâÏß¼Ð½Ç") || strstr(sText, "Ö«Ãæ¼Ð½Ç"))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasCutAngleTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "ÇÐ½Ç") || strstr(sText, "ÇÐÖ«"))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasCutRootTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "Çå¸ù") || strstr(sText, "ÅÙ¸ù") ||
+		strstr(sText, "²ùÐ¾") || strstr(sText, "²ùÐÄ") ||
+		strstr(sText, "ÅÙ½Ç"))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasCutBerTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "²ù±³"))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasKaiJiaoTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "¿ª½Ç"))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasHeJiaoTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "ºÏ½Ç"))
+		return TRUE;
+	return FALSE;
+}
+BOOL CPNCSysPara::IsHasPushFlatTag(const char* sText)
+{
+	if (sText == NULL || strlen(sText) <= 0)
+		return FALSE;
+	if (strstr(sText, "Ñ¹±â") ||
+		strstr(sText, "´ò±â") ||
+		strstr(sText, "ÅÄ±â"))
+		return TRUE;
+	return FALSE;
+}
+#endif
 //////////////////////////////////////////////////////////////////////////
 //
 void PNCSysSetImportDefault()

@@ -3123,7 +3123,7 @@ bool CPlateProcessInfo::UpdateSteelSealPos(GEPOINT &pos)
 	return true;
 }
 //更新钢板加工数
-void CPlateProcessInfo::RefreshPlateNum()
+void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 {
 	if (partNumId == NULL)
 		return;
@@ -3140,32 +3140,19 @@ void CPlateProcessInfo::RefreshPlateNum()
 #else
 		sValueG.Copy(pText->textString());
 #endif
-		if (g_pncSysPara.m_iDimStyle == 1 &&
-			((strstr(sValueG, "数量:") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量:") != NULL) ||
-			(strstr(sValueG, "数量：") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量：") != NULL)))
-		{	//修改钢板加工数 wht 19-08-05
-			sValueS.Printf("%s%d", (char*)g_pncSysPara.m_sPnNumKey, xBomPlate.feature1);
-		}
-		else
-		{
-			for (char* sKey = strtok(sValueG, " \t"); sKey; sKey = strtok(NULL, " \t"))
-			{
-				if (strstr(sKey, "Q"))
-				{
-					sValueM.Copy(sKey);
-					break;
-				}
-			}
-			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)sValueM, xBomPlate.feature1);
-		}
+		CString sTextStr(sValueG), sOldNum, sNewNum;
+		sOldNum.Format("%d", xBomPlate.feature1);
+		sNewNum.Format("%d", nNewNum);
+		sTextStr.Replace(sOldNum, sNewNum);
 #ifdef _ARX_2007
-		pText->setTextString(_bstr_t(sValueS));
+		pText->setTextString(_bstr_t(sTextStr.GetBuffer()));
 #else
-		pText->setTextString(sValueS);
+		pText->setTextString(sTextStr.GetBuffer());
 #endif
 		//修改加工数后设置为红色 wht 20-07-29
 		int color_index = GetNearestACI(RGB(255, 0, 0));
 		pText->setColorIndex(color_index);
+		xBomPlate.feature1 = nNewNum;
 	}
 	else if (pEnt->isKindOf(AcDbMText::desc()))
 	{
@@ -3195,6 +3182,7 @@ void CPlateProcessInfo::RefreshPlateNum()
 				//修改加工数后设置为红色 wht 20-07-29
 				int color_index = GetNearestACI(RGB(255, 0, 0));
 				pMText->setColorIndex(color_index);
+				xBomPlate.feature1 = nNewNum;
 				break;
 			}
 			

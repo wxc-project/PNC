@@ -681,20 +681,22 @@ CBomConfig::~CBomConfig(void)
 void CBomConfig::Init()
 {
 	//TMA
-	g_xBomCfg.m_xTmaTblCfg.m_sFileTypeKeyStr.Empty();
-	g_xBomCfg.m_xTmaTblCfg.m_sBomSheetName.Empty();
-	g_xBomCfg.m_xTmaTblCfg.m_xTblCfg.m_sColIndexArr.Empty();
+	m_xTmaTblCfg.m_sFileTypeKeyStr.Empty();
+	m_xTmaTblCfg.m_sBomSheetName.Empty();
+	m_xTmaTblCfg.m_xTblCfg.m_sColIndexArr.Empty();
 	//ERP
-	g_xBomCfg.m_xErpTblCfg.m_sFileTypeKeyStr.Empty();
-	g_xBomCfg.m_xErpTblCfg.m_sBomSheetName.Empty();
-	g_xBomCfg.m_xErpTblCfg.m_xTblCfg.m_sColIndexArr.Empty();
+	m_xErpTblCfg.m_sFileTypeKeyStr.Empty();
+	m_xErpTblCfg.m_sBomSheetName.Empty();
+	m_xErpTblCfg.m_xTblCfg.m_sColIndexArr.Empty();
 	//PRINT
-	g_xBomCfg.m_xPrintTblCfg.m_sFileTypeKeyStr.Empty();
-	g_xBomCfg.m_xPrintTblCfg.m_sBomSheetName.Empty();
-	g_xBomCfg.m_xPrintTblCfg.m_xTblCfg.m_sColIndexArr.Empty();
+	m_xPrintTblCfg.m_sFileTypeKeyStr.Empty();
+	m_xPrintTblCfg.m_sBomSheetName.Empty();
+	m_xPrintTblCfg.m_xTblCfg.m_sColIndexArr.Empty();
 	//
-	g_xBomCfg.m_sAngleCompareItemArr.Empty();
-	g_xBomCfg.m_sPlateCompareItemArr.Empty();
+	m_sAngleCompareItemArr.Empty();
+	m_sPlateCompareItemArr.Empty();
+	hashCompareItemOfAngle.Empty();
+	hashCompareItemOfPlate.Empty();
 }
 BOOL CBomConfig::IsEqualDefaultProcessFlag(const char* sValue)
 {

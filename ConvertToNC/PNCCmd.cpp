@@ -298,7 +298,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			sName.Copy(sValue);
 			delete[] sValue;
 #endif
-			if(strcmp(sName, "weld") != 0)
+			if(!g_pncSysPara.IsHasPlateWeldTag(sName))
 				continue;
 			AcGePoint3d pos = pReference->position();
 			CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(GEPOINT(pos.x,pos.y));
@@ -326,16 +326,12 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			if (baseInfo.m_idCadEntNum != 0)
 				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 		}
-		//else //焊接字样可能在基本信息中例如：141#正焊
-		{
-			CXhChar100 sText = GetCadTextContent(pEnt);
-			if (strstr(sText, "卷边") || strstr(sText, "火曲") || 
-				strstr(sText, "外曲") || strstr(sText, "内曲")||
-				strstr(sText, "正曲") || strstr(sText, "反曲"))
-				pPlateInfo->xBomPlate.siZhiWan = 1;
-			if (strstr(sText,"焊"))
-				pPlateInfo->xBomPlate.bWeldPart = TRUE;
-		}
+		//焊接字样可能在基本信息中例如：141#正焊
+		CXhChar100 sText = GetCadTextContent(pEnt);
+		if(g_pncSysPara.IsHasPlateBendTag(sText))
+			pPlateInfo->xBomPlate.siZhiWan = 1;
+		if(g_pncSysPara.IsHasPlateWeldTag(sText))
+			pPlateInfo->xBomPlate.bWeldPart = TRUE;
 	}
 	pModel->SplitManyPartNo();
 	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))

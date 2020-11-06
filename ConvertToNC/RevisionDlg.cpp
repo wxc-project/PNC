@@ -403,7 +403,6 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_MANU_NUM) > 0)
 				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
-
 		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_SING_W))
 		{	//ЕЅжи

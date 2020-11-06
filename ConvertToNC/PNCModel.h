@@ -280,7 +280,7 @@ public:
 	bool GetSteelSealPos(GEPOINT &pos);
 	bool UpdateSteelSealPos(GEPOINT &pos);
 	//刷新钢板显示数量
-	void RefreshPlateNum();
+	void RefreshPlateNum(int nNewNum);
 	void RefreshPlateSpec();
 	void RefreshPlateMat();
 	//控制是否需要输出ppi文件 wht 20-10-10
