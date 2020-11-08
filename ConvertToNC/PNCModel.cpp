@@ -3131,63 +3131,82 @@ void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 	AcDbEntity *pEnt = NULL;
 	XhAcdbOpenAcDbEntity(pEnt, partNumId, AcDb::kForWrite);
 	CAcDbObjLife entLife(pEnt);
-	CXhChar100 sValueG, sValueS, sValueM;
+	CString sSrcText, sDesText;
+	sSrcText = GetCadTextContent(pEnt), sDesText;
+	if (sSrcText.GetLength() <= 0)
+		return;
+	sDesText = sSrcText;
+	//获取件数的若干个关键码
+	CXhChar50 sNumKey = g_pncSysPara.m_sPnNumKey, sNumSubStr;
+	std::vector<CXhChar16> numKeyArr;
+	for (char* sKey = strtok(sNumKey, "|"); sKey; sKey = strtok(NULL, "|"))
+		numKeyArr.push_back(CXhChar16(sKey));
+	//解析字符串，获取件数所在位置
+	if (pEnt->isKindOf(AcDbMText::desc()))
+	{
+		CXhChar200 sContents(sSrcText);
+		for (char* sSubStr = strtok(sContents, "\\P"); sSubStr; sSubStr = strtok(NULL, "\\P"))
+		{
+			if (strstr(sSubStr, numKeyArr[0]) && strstr(sSubStr, CXhChar16("%d", xBomPlate.nSumPart)))
+			{
+				sNumSubStr.Copy(sSubStr);
+				break;
+			}
+		}
+	}
+	else
+	{
+		CXhChar100 sContents(sSrcText);
+		sContents.Replace("　", " ");
+		if (g_pncSysPara.m_iDimStyle == 0 || strstr(sContents, g_pncSysPara.m_sPnKey))
+			sContents.Replace(g_pncSysPara.m_sPnKey, "| ");
+		for (char* sSubStr = strtok(sContents, " \t"); sSubStr; sSubStr = strtok(NULL, " \t"))
+		{
+			for (size_t i = 0; i < numKeyArr.size(); i++)
+			{
+				if (strstr(sSubStr, numKeyArr[i]) && strstr(sSubStr, CXhChar16("%d", xBomPlate.nSumPart)))
+				{
+					sNumSubStr.Copy(sSubStr);
+					break;
+				}
+			}
+		}
+	}
+	if (sNumSubStr.GetLength() <= 0)
+	{
+		logerr.Log("钢板(%s),更新加工数失败!");
+		return;
+	}
+	//更新加工数
+	CString sNewSubStr = sNumSubStr;
+	sNewSubStr.Replace(CXhChar16("%d", xBomPlate.nSumPart), CXhChar16("%d", nNewNum));
+	sDesText.Replace(sNumSubStr, sNewSubStr);
 	if (pEnt->isKindOf(AcDbText::desc()))
 	{
 		AcDbText* pText = (AcDbText*)pEnt;
 #ifdef _ARX_2007
-		sValueG.Copy(_bstr_t(pText->textString()));
+		pText->setTextString(_bstr_t(sDesText.GetBuffer()));
 #else
-		sValueG.Copy(pText->textString());
-#endif
-		CString sTextStr(sValueG), sOldNum, sNewNum;
-		sOldNum.Format("%d", xBomPlate.feature1);
-		sNewNum.Format("%d", nNewNum);
-		sTextStr.Replace(sOldNum, sNewNum);
-#ifdef _ARX_2007
-		pText->setTextString(_bstr_t(sTextStr.GetBuffer()));
-#else
-		pText->setTextString(sTextStr.GetBuffer());
+		pText->setTextString(sDesText.GetBuffer());
 #endif
 		//修改加工数后设置为红色 wht 20-07-29
 		int color_index = GetNearestACI(RGB(255, 0, 0));
 		pText->setColorIndex(color_index);
-		xBomPlate.feature1 = nNewNum;
 	}
 	else if (pEnt->isKindOf(AcDbMText::desc()))
 	{
-		CXhChar500 sContents;
 		AcDbMText *pMText = (AcDbMText*)pEnt;
 #ifdef _ARX_2007
-		sContents.Copy(_bstr_t(pMText->contents()));
+		pMText->setContents(_bstr_t(sDesText.GetBuffer()));
 #else
-		sContents.Copy(pMText->contents());
+		pMText->setContents(sDesText.GetBuffer());
 #endif
-		CString sText(sContents);
-		for (char* sKey = strtok(sContents, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
-		{
-			CXhChar200 sTemp(sKey);
-			if (g_pncSysPara.m_iDimStyle == 1 &&
-				((strstr(sTemp, "数量:") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量:") != NULL) ||
-				(strstr(sTemp, "数量：") != NULL && strstr(g_pncSysPara.m_sPnNumKey, "数量：") != NULL)))
-			{
-				sTemp.Replace("\\P", "");
-				sValueS.Printf("%s%d", (char*)g_pncSysPara.m_sPnNumKey, xBomPlate.feature1);
-				sText.Replace(sTemp, sValueS);	//更新数量行 wht 19-08-13
-#ifdef _ARX_2007
-				pMText->setContents(_bstr_t(sText));
-#else
-				pMText->setContents(sText);
-#endif
-				//修改加工数后设置为红色 wht 20-07-29
-				int color_index = GetNearestACI(RGB(255, 0, 0));
-				pMText->setColorIndex(color_index);
-				xBomPlate.feature1 = nNewNum;
-				break;
-			}
-			
-		}
+		//修改加工数后设置为红色 wht 20-07-29
+		int color_index = GetNearestACI(RGB(255, 0, 0));
+		pMText->setColorIndex(color_index);
 	}
+	//
+	xBomPlate.nSumPart = nNewNum;
 	m_ciModifyState |= MODIFY_MANU_NUM;
 }
 //更新钢板规格
@@ -3251,7 +3270,7 @@ void CPlateProcessInfo::RefreshPlateSpec()
 					break;
 				}
 			}
-			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)sValueM, xBomPlate.feature1);
+			sValueS.Printf("-%.0f %s %d件", xPlate.m_fThick, (char*)sValueM, xBomPlate.nSumPart);
 		}
 #ifdef _ARX_2007
 		pText->setTextString(_bstr_t(sValueS));

@@ -155,7 +155,7 @@ void PRINT_SCOPE::Init(CAngleProcessInfo *pAngle)
 	m_sTowerType.Copy(m_pAngle->m_sTowerType);
 	m_sMaterial.Copy(m_pAngle->m_xAngle.sMaterial);
 	m_nNumPreTower = m_pAngle->m_xAngle.GetPartNum();
-	m_nManuNum = m_pAngle->m_xAngle.feature1;
+	m_nManuNum = m_pAngle->m_xAngle.nSumPart;
 }
 void PRINT_SCOPE::Init(CPlateProcessInfo *pPlate)
 {
@@ -177,7 +177,7 @@ void PRINT_SCOPE::Init(CPlateProcessInfo *pPlate)
 	m_sTowerType.Copy(m_pPlate->m_xBaseInfo.m_sTaType);
 	m_sMaterial.Copy(m_pPlate->xBomPlate.sMaterial);
 	m_nNumPreTower = m_pPlate->xBomPlate.GetPartNum();
-	m_nManuNum = m_pPlate->xBomPlate.feature1;
+	m_nManuNum = m_pPlate->xBomPlate.nSumPart;
 }
 
 CXhChar500 PRINT_SCOPE::GetPartFileName(PLOT_CFG* pPlotCfg, const char* extension)

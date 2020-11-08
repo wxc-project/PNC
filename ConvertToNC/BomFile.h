@@ -34,6 +34,7 @@ public:
 	const static char* KEY_SPEC;		//= "Spec";
 	const static char* KEY_LEN;			//= "Length";
 	const static char* KEY_WIDE;		//= "Width";
+	const static char* KEY_TA_NUM;		//= "TaNum";
 	const static char* KEY_SING_N;		//= "SingNum";
 	const static char* KEY_MANU_N;		//= "ManuNum"
 	const static char* KEY_SING_W;		//= "SingWeight"

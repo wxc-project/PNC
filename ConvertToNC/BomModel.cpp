@@ -236,8 +236,12 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 			hashBoolByPropName.SetValue(CBomConfig::KEY_SING_N, TRUE);
 		//加工数
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_MANU_NUM) &&
-			pSrcPart->feature1 != pDesPart->feature1)
+			pSrcPart->nSumPart != pDesPart->nSumPart)
 			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
+		//基数
+		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_TA_MUM) &&
+			pSrcPart->nTaNum != pDesPart->nTaNum)
+			hashBoolByPropName.SetValue(CBomConfig::KEY_TA_NUM, TRUE);
 		//总重
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_MANU_WEIGHT) &&
 			fabs(pSrcPart->fSumWeight - pDesPart->fSumWeight) > 0)
@@ -307,7 +311,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 		}
 		//加工数
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::T_MANU_NUM) &&
-			pSrcPart->feature1 != pDesPart->feature1)
+			pSrcPart->nSumPart != pDesPart->nSumPart)
 			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
 		//总重
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::T_MANU_WEIGHT) &&
@@ -577,9 +581,9 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 				}
 				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_MANU_N))
 				{	//加工数
-					map.SetValueAt(iRow, iCol, COleVariant((long)pResult->pOrgPart->feature1));
+					map.SetValueAt(iRow, iCol, COleVariant((long)pResult->pOrgPart->nSumPart));
 					if (bDiff)
-						map.SetValueAt(iRow + 1, iCol, COleVariant((long)pResult->pLoftPart->feature1));
+						map.SetValueAt(iRow + 1, iCol, COleVariant((long)pResult->pLoftPart->nSumPart));
 				}
 				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_MANU_W))
 				{	//加工重量
@@ -738,7 +742,7 @@ void CProjectTowerType::AddDwgLackPartSheet(LPDISPATCH pSheet, int iCompareType)
 		map.SetValueAt(index,2,COleVariant(CBomModel::QueryMatMarkIncQuality(pResult->pLoftPart)));
 		map.SetValueAt(index,3,COleVariant(CXhChar50("%.0f",pResult->pLoftPart->length)));
 		map.SetValueAt(index,4,COleVariant((long)pResult->pLoftPart->GetPartNum()));
-		map.SetValueAt(index,5,COleVariant((long)pResult->pLoftPart->feature1));
+		map.SetValueAt(index,5,COleVariant((long)pResult->pLoftPart->nSumPart));
 		index++;
 	}
 	_snprintf(cell_end,15,"F%d",index+1);

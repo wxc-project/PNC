@@ -37,8 +37,9 @@ public:
 	static const BYTE MODIFY_MANU_NUM	= 0x01;
 	static const BYTE MODIFY_SINGLE_NUM = 0x02;
 	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
-	static const BYTE MODIFY_DES_GUIGE = 0x08;
-	static const BYTE MODIFY_DES_MAT = 0x10;
+	static const BYTE MODIFY_DES_GUIGE	= 0x08;
+	static const BYTE MODIFY_DES_MAT	= 0x10;
+	static const BYTE MODIFY_TA_MUM		= 0x20;
 	BYTE m_ciModifyState;
 public:
 	CAngleProcessInfo();
