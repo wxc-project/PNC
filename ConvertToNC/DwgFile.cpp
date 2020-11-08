@@ -455,7 +455,7 @@ void CAngleProcessInfo::RefreshAngleNum()
 {
 	CLockDocumentLife lockCurDocLife;
 	f3dPoint data_pt=GetAngleDataPos(ITEM_TYPE_SUM_PART_NUM);
-	CXhChar16 sPartNum("%d",m_xAngle.feature1);
+	CXhChar16 sPartNum("%d",m_xAngle.nSumPart);
 	if(partNumId==NULL)
 	{	//添加角钢加工数
 		AcDbBlockTableRecord *pBlockTableRecord=GetBlockTableRecord();
@@ -802,8 +802,8 @@ void CDwgFileInfo::ModifyPlateDwgPartNum()
 			continue;
 		}
 		//加工数不同进行修改
-		if(pInfo->xBomPlate.feature1!= pLoftBom->feature1)
-			pInfo->RefreshPlateNum(pLoftBom->feature1);
+		if(pInfo->xBomPlate.nSumPart != pLoftBom->nSumPart)
+			pInfo->RefreshPlateNum(pLoftBom->nSumPart);
 	}
 	if(bFinish)
 		AfxMessageBox("钢板加工数修改完毕!");
@@ -975,9 +975,9 @@ void CDwgFileInfo::ModifyAngleDwgPartNum()
 			logerr.Log("TMA材料表中没有%s角钢",(char*)sPartNo);
 			continue;
 		}
-		if (pJgInfo->m_xAngle.feature1 != pBomJg->feature1)
+		if (pJgInfo->m_xAngle.nSumPart != pBomJg->nSumPart)
 		{
-			pJgInfo->m_xAngle.feature1 = pBomJg->feature1;	//加工数
+			pJgInfo->m_xAngle.nSumPart = pBomJg->nSumPart;	//加工数
 			pJgInfo->RefreshAngleNum();
 		}
 	}

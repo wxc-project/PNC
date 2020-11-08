@@ -229,10 +229,10 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	for(int i=iStartRow;i<= nRowCount;i++)
 	{
 		VARIANT value;
-		int nSingleNum = 0, nProcessNum = 0;
+		int nSingleNum = 0, nProcessNum = 0, nTaNum = 0;
 		double fLength = 0, fWeight = 0, fSumWeight = 0;
 		CXhChar100 sPartNo, sMaterial, sSpec, sNote, sReplaceSpec, sValue;
-		CXhChar100 sSingleNum, sProcessNum;
+		CXhChar100 sSingleNum, sProcessNum, sTaNum;
 		BOOL bCutAngle = FALSE, bCutRoot = FALSE, bCutBer = FALSE, bPushFlat = FALSE;
 		BOOL bKaiJiao = FALSE, bHeJiao = FALSE, bWeld = FALSE, bZhiWan = FALSE, bFootNail = FALSE;
 		short siSubType = 0;
@@ -321,6 +321,15 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			fLength = (float)atof(VariantToString(value));
+		}
+		//基数
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::T_TA_MUM);
+		if (pColIndex)
+		{
+			sheetContentMap.GetValueAt(i, *pColIndex, value);
+			sTaNum = VariantToString(value);
+			if (sTaNum.GetLength() > 0)
+				nTaNum = atoi(sTaNum);
 		}
 		//单基数
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::T_SING_NUM);
@@ -475,7 +484,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			{
 				hashBomPartByRepeatLabel.SetValue(sPartNo, pBomPart);
 				//添加sPartNo对应的第一个构件 wht 20-05-28
-				repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, pBomPart->feature1));
+				repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, pBomPart->nSumPart));
 			}
 			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, atoi(sProcessNum)));
 		}
@@ -489,7 +498,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			pBomPart = m_hashPartByPartNo.Add(sPartNo, cls_id);
 			pBomPart->siSubType = siSubType;
 			pBomPart->SetPartNum(nSingleNum);
-			pBomPart->feature1 = nProcessNum;
+			pBomPart->nSumPart = nProcessNum;
+			pBomPart->nTaNum = nTaNum;
 			pBomPart->sPartNo.Copy(sPartNo);
 			pBomPart->sSpec.Copy(sSpec);
 			pBomPart->sMaterial = sMaterial;
@@ -542,7 +552,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		}
 		else
 		{	//件号重复，加工数按累加计算 wht 19-09-15
-			pBomPart->feature1 += nProcessNum;
+			pBomPart->nSumPart += nProcessNum;
 		}
 	}
 	if (repeatPartLabelArr.GetSize() > 0)
@@ -650,6 +660,7 @@ const char* CBomConfig::KEY_SPEC		= "Spec";
 const char* CBomConfig::KEY_LEN			= "Length";
 const char* CBomConfig::KEY_WIDE		= "Width";
 const char* CBomConfig::KEY_SING_N		= "SingNum";
+const char* CBomConfig::KEY_TA_NUM		= "TaNum";
 const char* CBomConfig::KEY_MANU_N		= "ManuNum";
 const char* CBomConfig::KEY_SING_W		= "SingWeight";
 const char* CBomConfig::KEY_MANU_W		= "SumWeight";
@@ -857,6 +868,8 @@ int CBomConfig::InitBomTitle()
 	m_xBomTitleArr.push_back(BOM_TITLE(KEY_SPEC, "规格", 70));
 	m_xBomTitleArr.push_back(BOM_TITLE(KEY_MAT, "材质", 53));
 	m_xBomTitleArr.push_back(BOM_TITLE(KEY_LEN, "长度", 50));
+	if(hashColIndex.GetValue(CBomTblTitleCfg::T_TA_MUM))
+		m_xBomTitleArr.push_back(BOM_TITLE(KEY_TA_NUM, "基数", 52));
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_SING_NUM))
 		m_xBomTitleArr.push_back(BOM_TITLE(KEY_SING_N, "单基数", 52));
 	if (hashColIndex.GetValue(CBomTblTitleCfg::T_MANU_NUM))

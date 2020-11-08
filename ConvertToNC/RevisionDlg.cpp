@@ -388,6 +388,14 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_LEN))
 				lpInfo->SetSubItemColor(i, clr);
 		}
+		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_TA_NUM))
+		{	//基数
+			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->nTaNum), TRUE);
+			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_TA_NUM))
+				lpInfo->SetSubItemColor(i, clr);
+			if ((modifyFlag & CAngleProcessInfo::MODIFY_TA_MUM) > 0)
+				lpInfo->SetSubItemColor(i, RGB(255, 90, 90));
+		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_SING_N))
 		{	//单基数
 			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->GetPartNum()), TRUE);
@@ -398,7 +406,7 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MANU_N))
 		{	//加工数
-			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->feature1), TRUE);
+			lpInfo->SetSubItemText(i, CXhChar50("%d", pPart->nSumPart), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MANU_N))
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_MANU_NUM) > 0)

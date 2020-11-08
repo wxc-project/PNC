@@ -113,8 +113,8 @@ void CBomExport::ExportExcelFile(CProjectTowerType *pPrjTowerType)
 			pAngleInfo->m_xAngle.ToBuffer(buffer);
 			buffer.SeekToBegin();
 			pNode->pDataObj->FromBuffer(buffer);
-			if (pNode->pDataObj->GetPartNum() <= 0 && pAngleInfo->m_xAngle.feature1>0)
-				pNode->pDataObj->SetPartNum(pAngleInfo->m_xAngle.feature1);
+			if (pNode->pDataObj->GetPartNum() <= 0 && pAngleInfo->m_xAngle.nSumPart >0)
+				pNode->pDataObj->SetPartNum(pAngleInfo->m_xAngle.nSumPart);
 			if (pNode->pDataObj->fPieceWeight <= 0)
 			{
 				double fUnitWeight = 0;

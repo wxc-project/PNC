@@ -541,7 +541,7 @@ void COptimalSortDlg::RefeshListCtrl()
 		else
 			lpInfo->SetSubItemText(2,pPart->GetSpec(),TRUE);		//规格
 		lpInfo->SetSubItemText(3,pPart->GetPartNo(),TRUE);		//件号
-		lpInfo->SetSubItemText(4,CXhChar50("%d",pPart->feature1),TRUE);	//件数
+		lpInfo->SetSubItemText(4,CXhChar50("%d",pPart->nSumPart),TRUE);	//件数
 		CXhChar500 sNotes = pPart->sNotes;
 		if (!bValidPrintBom&&sNotes.GetLength() <= 0)
 			sNotes = GetProcessNotes(pPart);
