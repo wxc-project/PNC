@@ -3156,6 +3156,20 @@ void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 	}
 	else
 	{
+		if (strstr(g_pncSysPara.m_sPnNumKey, "件") || 
+			strstr(g_pncSysPara.m_sPnNumKey, "块"))
+		{	//数量标识前或后带有空格
+			for (size_t i = 0; i < numKeyArr.size(); i++)
+			{
+				if (strstr(sSrcText, numKeyArr[i]) == NULL)
+					continue;
+				int iPos = sSrcText.Find(numKeyArr[i]);
+				if (iPos > 1 && sSrcText[iPos - 1] == ' ')
+					sSrcText.Delete(iPos - 1);
+			}
+			sDesText = sSrcText;
+		}
+		//
 		CXhChar100 sContents(sSrcText);
 		sContents.Replace("　", " ");
 		if (g_pncSysPara.m_iDimStyle == 0 || strstr(sContents, g_pncSysPara.m_sPnKey))
@@ -3174,7 +3188,7 @@ void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 	}
 	if (sNumSubStr.GetLength() <= 0)
 	{
-		logerr.Log("钢板(%s),更新加工数失败!");
+		logerr.Log("钢板(%s),更新加工数失败!",(char*)GetPartNo());
 		return;
 	}
 	//更新加工数

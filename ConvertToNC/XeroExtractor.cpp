@@ -382,7 +382,19 @@ void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
 	for (char* sKey = strtok(sNumKey, "|"); sKey; sKey = strtok(NULL, "|"))
 		numKeyArr.push_back(CXhChar16(sKey));
 	//解析字符串，获取件数值
-	CXhChar100 str,sValue(sText);
+	CString ss(sText);
+	if (strstr(m_sPnNumKey, "件")|| strstr(m_sPnNumKey, "块"))
+	{	//数量标识前或后带有空格
+		for (size_t i = 0; i < numKeyArr.size(); i++)
+		{
+			if (strstr(ss, numKeyArr[i]) == NULL)
+				continue;
+			int iPos = ss.Find(numKeyArr[i]);
+			if (iPos > 1 && ss[iPos - 1] == ' ')
+				ss.Delete(iPos - 1);
+		}
+	}
+	CXhChar100 str, sValue(ss.GetBuffer());
 	sValue.Replace("　"," ");
 	if(m_iDimStyle==0 || strstr(sValue,m_sPnKey))
 		sValue.Replace(m_sPnKey,"| ");
