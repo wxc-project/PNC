@@ -1,6 +1,6 @@
 #include "StdAfx.h"
 #include "BomExport.h"
-#include "BomModel.h"
+#include "PNCModel.h"
 #include "PathManager.h"
 #include "MD5.H"
 #include "LocalFeatureDef.h"

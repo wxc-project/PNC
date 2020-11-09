@@ -5,7 +5,7 @@
 #include "PNCSysPara.h"
 #include "PNCSysSettingDlg.h"
 #include "InputMKRectDlg.h"
-#include "BomModel.h"
+#include "PncModel.h"
 #include "RevisionDlg.h"
 #include "LicFuncDef.h"
 #include "folder_dialog.h"

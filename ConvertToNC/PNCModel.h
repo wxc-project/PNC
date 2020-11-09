@@ -1,317 +1,8 @@
 #pragma once
-#include "XeroExtractor.h"
-#include "ProcessPart.h"
-#include "ArrayList.h"
+#include "XeroNcPart.h"
+#include "BomFile.h"
+#include "TblDef.h"
 #include "PNCDocReactor.h"
-#include "..\..\LDS\LDS\BOM\BOM.h"
-
-//////////////////////////////////////////////////////////////////////////
-//
-enum ENTITY_TYPE {
-	TYPE_OTHER = 0,
-	TYPE_LINE,
-	TYPE_ARC,
-	TYPE_CIRCLE,
-	TYPE_ELLIPSE,
-	TYPE_SPLINE,
-	TYPE_POLYLINE,
-	TYPE_TEXT,
-	TYPE_MTEXT,
-	TYPE_BLOCKREF,
-	TYPE_DIM_D
-};
-struct CAD_ENTITY {
-	ENTITY_TYPE ciEntType;
-	unsigned long idCadEnt;
-	char sText[100];	//ciEntType==TYPE_TEXT时记录文本内容 wht 18-12-30
-	GEPOINT pos;
-	double m_fSize;
-	//
-	CAD_ENTITY(ULONG idEnt = 0);
-	bool IsInScope(GEPOINT &pt);
-};
-struct CAD_LINE : public CAD_ENTITY
-{
-	BYTE m_ciSerial;
-	GEPOINT m_ptStart, m_ptEnd;
-	GEPOINT vertex;
-	BOOL m_bReverse;
-	BOOL m_bMatch;
-public:
-	CAD_LINE(ULONG lineId = 0);
-	CAD_LINE(AcDbObjectId id, double len);
-	CAD_LINE(AcDbObjectId id, GEPOINT &start, GEPOINT &end) { Init(id, start, end); }
-	void Init(AcDbObjectId id, GEPOINT &start, GEPOINT &end);
-	BOOL UpdatePos();
-	//
-	static int compare_func(const CAD_LINE& obj1, const CAD_LINE& obj2)
-	{
-		if (obj1.m_bMatch && !obj2.m_bMatch)
-			return -1;
-		else if (!obj1.m_bMatch && obj2.m_bMatch)
-			return 1;
-		else
-		{
-			if (obj1.m_ciSerial > obj2.m_ciSerial)
-				return 1;
-			else if (obj1.m_ciSerial < obj2.m_ciSerial)
-				return -1;
-			else
-				return 0;
-		}
-	}
-};
-class CBoltEntGroup
-{
-public:
-	static const BYTE BOLT_BLOCK		=0;
-	static const BYTE BOLT_CIRCLE		=1;
-	static const BYTE BOLT_TRIANGLE		=2;
-	static const BYTE BOLT_SQUARE		=3;
-	static const BYTE BOLT_WAIST_ROUND	=4;
-	BYTE m_ciType;		//0.图块|1.圆圈|2.三角形|3.正方形|4.腰圆孔
-	ULONG m_idEnt;
-	BOOL m_bMatch;		//是否匹配到钢板
-	float m_fPosX;
-	float m_fPosY;
-	float m_fHoleD;
-	vector<ULONG> m_xLineArr;
-	vector<ULONG> m_xCirArr;
-	vector<ULONG> m_xArcArr;
-public:
-	CBoltEntGroup();
-	//
-	double GetWaistLen();
-	GEPOINT GetWaistVec();
-};
-struct BASIC_INFO {
-	char m_cMat;
-	char m_cQuality;			//质量等级
-	int m_nThick;
-	int m_nNum;
-	long m_idCadEntNum;
-	CXhChar16 m_sPartNo;
-	CXhChar50 m_sTaStampNo;		//钢印号
-	CXhChar50 m_sTaType;		//塔型
-	CXhChar100 m_sPrjCode;		//工程编号
-	BASIC_INFO() { m_nThick = m_nNum = 0; m_cMat = 0; m_cQuality = 0; m_idCadEntNum = 0; }
-};
-struct PROJECT_INFO
-{
-	CXhChar100 m_sCompanyName;	//设计单位
-	CXhChar100 m_sPrjCode;		//工程编号
-	CXhChar100 m_sPrjName;		//工程名称
-	CXhChar50 m_sTaType;		//塔型
-	CXhChar50 m_sTaNum;			//基数
-	CXhChar50 m_sTaAlias;		//代号（塔规格）
-	CXhChar50 m_sTaStampNo;		//钢印号
-	CXhChar100 m_sTaskNo;		//任务号
-	CXhChar100 m_sContractNo;	//合同号
-	CXhChar100 m_sMatStandard;	//材料标准
-};
-//////////////////////////////////////////////////////////////////////////
-//CPlateObject
-class CPlateObject
-{
-protected:
-	POLYGON region;
-public:
-	struct CIR_PLATE {
-		BOOL m_bCirclePlate;	//是否为圆型板
-		GEPOINT cir_center;
-		GEPOINT norm, column_norm;
-		double m_fRadius;
-		double m_fInnerR;
-		CIR_PLATE() {
-			m_bCirclePlate = FALSE;
-			m_fRadius = m_fInnerR = 0;
-			norm.Set(0, 0, 1);
-			column_norm.Set(0, 0, 1);
-		}
-	}cir_plate_para;
-	struct VERTEX {
-		GEPOINT pos;
-		char ciEdgeType;	//1:普通直边 2:圆弧 3:椭圆弧
-		bool m_bWeldEdge;
-		bool m_bRollEdge;
-		short manu_space;
-		union ATTACH_DATA {	//简单附加数
-			DWORD dwParam;
-			long  lParam;
-			void* pParam;
-		}tag;
-		struct ARC_PARAM {	//圆弧参数
-			double radius;		//指定圆弧半径(椭圆需要)
-			double fSectAngle;	//指定扇形角(圆弧需要)
-			GEPOINT center, work_norm, column_norm;
-		}arc;
-		VERTEX() {
-			ciEdgeType = 1;
-			m_bWeldEdge = m_bRollEdge = false;
-			manu_space = 0;
-			arc.radius = arc.fSectAngle = 0;
-			tag.dwParam = 0;
-		}
-	};
-	ATOM_LIST<VERTEX> vertexList;
-	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
-protected:
-	BOOL IsValidVertexs();
-	void ReverseVertexs();
-	void DeleteAssisstPts();
-	void UpdateVertexPropByArc(f3dArcLine& arcLine, int type);
-	void CreateRgn();
-public:
-	CPlateObject();
-	~CPlateObject();
-
-	void EmptyVertexs() {
-		vertexList.Empty();
-		region.Empty();
-	}
-	//
-	virtual bool IsInPlate(const double* poscoord);
-	virtual bool IsInPlate(const double* start, const double* end);
-	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
-	virtual BOOL RecogWeldLine(f3dLine slop_line);
-	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 2; }
-	virtual BOOL IsClose(int* pIndex = NULL);
-};
-//CPlateProcessInfo
-class CPNCModel;
-class CPlateProcessInfo : public CPlateObject
-{
-	struct LAYOUT_VERTEX{
-		int index;			//轮廓点索引
-		GEPOINT srcPos;		//轮廓点坐标
-		GEPOINT offsetPos;	//相对于最小包络记性左上角的偏移位置
-		LAYOUT_VERTEX(){index=0;}
-		void Init() {
-			index = 0;
-			srcPos.Set();
-			offsetPos.Set();
-		}
-	};
-private:
-	GECS ucs;
-	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
-	CPNCModel* _pBelongModel;
-	LAYOUT_VERTEX datumStartVertex,datumEndVertex;	//布局基准轮廓点
-public:
-	BOOL m_bEnableReactor;
-	CProcessPlate xPlate;
-	PART_PLATE xBomPlate;
-	AcDbObjectId partNoId;
-	AcDbObjectId partNumId;
-	AcDbObjectId plateInfoBlockRefId;
-	BOOL m_bIslandDetection;	//是否开启孤岛检测 wht 19-01-03
-	GEPOINT dim_pos,dim_vec;
-	CXhChar200 m_sRelatePartNo;
-	BASIC_INFO m_xBaseInfo;
-	CHashSet<AcDbObjectId> pnTxtIdList;
-	ATOM_LIST<BOLT_INFO> boltList;
-	//钢板关联实体
-	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;	
-	CHashSet<CAD_ENTITY*> m_xHashInvalidBoltCir;		//记录无效的圆圈，方便后期输出对比
-	CHashList<CAD_LINE> m_hashCloneEdgeEntIdByIndex;
-	CHashList<ULONG> m_hashColneEntIdBySrcId;
-	ARRAY_LIST<ULONG> m_cloneEntIdList;
-	ARRAY_LIST<ULONG> m_newAddEntIdList;
-	AcDbObjectId m_layoutBlockId;	//自动排版时添加的块引用
-	BOOL m_bNeedExtract;	//记录当前构件是否需要提取，分批多次提取时使用 wht 19-04-02
-	//加工数、单基数、总重修改状态 wht 20-07-29
-	static const BYTE MODIFY_MANU_NUM	= 0x01;
-	static const BYTE MODIFY_SINGLE_NUM = 0x02;
-	static const BYTE MODIFY_SUM_WEIGHT = 0x04;
-	static const BYTE MODIFY_DES_SPEC	= 0x08;
-	static const BYTE MODIFY_DES_MAT	= 0x10;
-	BYTE m_ciModifyState;
-	//
-	f2dRect m_rectCard;			//工艺卡矩形框，用于批量打印 wht 20.01.27
-	BOOL m_bHasCard;			//判断钢板是否带工艺卡框 wht 20.01.27
-	static const DWORD ERROR_NORMAL					= 0x0;	//无错误
-	static const DWORD ERROR_TEXT_OUTSIDE_OF_PLATE	= 0x01;	//文字超边
-	static const DWORD ERROR_REPEAT_PART_LABEL		= 0x02;	//重复件号
-	static const DWORD ERROR_TEXT_INSIDE_OF_HOLE	= 0x04;	//孔内文字
-	static const DWORD ERROR_LABEL_INSIDE_OF_HOLE	= 0x08;	//孔内件号
-	DWORD m_dwErrorType;
-	DWORD m_dwCorrectState;	//与错误状态配对使用，暂时只用来记录文字缩放是否修正成功 wht 19.12.24
-	//属性定义区
-	CPNCModel* get_pBelongModel() const;
-	CPNCModel* set_pBelongModel(CPNCModel* pBelongModel);
-	__declspec(property(put = set_pBelongModel, get = get_pBelongModel)) CPNCModel* m_pBelongModel;
-private:
-	void InitBtmEdgeIndex();
-	void BuildPlateUcs();
-	void PreprocessorBoltEnt(int* piInvalidCirCountForText, int* piInvalidCirCountForLabel,
-							 CHashStrList<CXhChar16>* pHashPartLabelByLabel);
-	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
-	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
-	bool RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list);
-public:
-	CPlateProcessInfo();
-	//
-	CXhChar16 GetPartNo() { return xPlate.GetPartNo(); }
-	//获取钢板相关区域
-	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
-	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL);
-	SCOPE_STRU GetPlateScope(BOOL bVertexOnly,BOOL bDisplayMK=TRUE);
-	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
-	void CreateRgnByText();
-	//初始化钢板轮廓边信息
-	void InitProfileByBPolyCmd(double fMinExtern,double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
-	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
-	BOOL InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle);
-	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);
-	BOOL InitProfileByAcdbLineList(ARRAY_LIST<CAD_LINE>& xLineArr);
-	BOOL InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr);
-	//更新钢板信息
-	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
-	void ExtractPlateRelaEnts();
-	BOOL UpdatePlateInfo(BOOL bRelatePN=FALSE);
-	void UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelByLabel = NULL);
-	void CheckProfileEdge();
-	//生成中性文件
-	void InitPPiInfo();
-	void CreatePPiFile(const char* file_path);
-	void CopyAttributes(CPlateProcessInfo* pSrcPlate);
-	//绘制钢板
-	bool InitLayoutVertexByBottomEdgeIndex(f2dRect &rect);
-	void InitEdgeEntIdMap();
-	void InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType);
-	bool DrawPlate(f3dPoint *pOrgion=NULL,BOOL bCreateDimPos=FALSE,BOOL bDrawAsBlock=FALSE,
-				   GEPOINT *pPlateCenter=NULL,double scale=0,BOOL bSupportRotation=TRUE);
-	void DrawPlateProfile(f3dPoint *pOrgion = NULL);
-	//钢板钢印位置处理
-	void InitMkPos(GEPOINT &mk_pos, GEPOINT &mk_vec);
-	bool SyncSteelSealPos();
-	bool AutoCorrectedSteelSealPos();
-	bool GetSteelSealPos(GEPOINT &pos);
-	bool UpdateSteelSealPos(GEPOINT &pos);
-	//刷新钢板显示数量
-	void RefreshPlateNum(int nNewNum);
-	void RefreshPlateSpec();
-	void RefreshPlateMat();
-	void FillPlateNum(int nNewNum);
-	//控制是否需要输出ppi文件 wht 20-10-10
-	static BOOL m_bCreatePPIFile;
-};
-//////////////////////////////////////////////////////////////////////////
-//
-class CPlateReactorLife
-{	//钢板反应器生命周期控制类
-	CPlateProcessInfo *m_pPlateInfo;
-public:
-	CPlateReactorLife(CPlateProcessInfo *pPlate, BOOL bEnable) {
-		m_pPlateInfo = pPlate;
-		if (m_pPlateInfo)
-			m_pPlateInfo->m_bEnableReactor = bEnable;
-	}
-	~CPlateReactorLife() {
-		if (m_pPlateInfo)
-			m_pPlateInfo->m_bEnableReactor = !m_pPlateInfo->m_bEnableReactor;
-	}
-};
 //////////////////////////////////////////////////////////////////////////
 //CPNCModel
 class CPNCModel
@@ -421,5 +112,204 @@ public:
 	void DividPlatesByMat();
 	void DividPlatesByPartNo();
 };
+
+#ifdef __UBOM_ONLY_
+
+struct PART_LABEL_DIM {
+	CAD_ENTITY m_xCirEnt;
+	CAD_ENTITY m_xInnerText;
+	BOOL IsPartLabelDim();
+	SEGI GetSegI();
+};
+//////////////////////////////////////////////////////////////////////////
+//CDwgFileInfo
+class CProjectTowerType;
+class CDwgFileInfo
+{
+private:
+	CProjectTowerType* m_pProject;
+	CHashList<CAngleProcessInfo> m_hashJgInfo;
+	CPNCModel m_xPncMode;
+	CBomFile m_xPrintBomFile;	//DWG文件对应的打印清单 wht 20-07-21
+public:
+	CXhChar100 m_sDwgName;
+	CXhChar500 m_sFileName;	//文件名称
+	BOOL RetrieveAngles(BOOL bSupportSelectEnts = FALSE);
+	BOOL RetrievePlates(BOOL bSupportSelectEnts = FALSE);
+protected:
+	void InsertSubJgCard(CAngleProcessInfo* pJgInfo);
+	void DimGridData(AcDbBlockTableRecord *pBlockTableRecord, GEPOINT orgPt, GRID_DATA_STRU& grid_data, const char* sText);
+public:
+	CDwgFileInfo();
+	~CDwgFileInfo();
+	//
+	void SetBelongModel(CProjectTowerType *pProject) { m_pProject = pProject; }
+	CProjectTowerType* BelongModel() const { return m_pProject; }
+	//角钢DWG操作
+	int GetAngleNum() { return m_hashJgInfo.GetNodeNum(); }
+	void EmptyJgList() { m_hashJgInfo.Empty(); }
+	CAngleProcessInfo* EnumFirstJg() { return m_hashJgInfo.GetFirst(); }
+	CAngleProcessInfo* EnumNextJg() { return m_hashJgInfo.GetNext(); }
+	CAngleProcessInfo* FindAngleByPt(f3dPoint data_pos);
+	CAngleProcessInfo* FindAngleByPartNo(const char* sPartNo);
+	void ModifyAngleDwgPartNum();
+	void ModifyAngleDwgSingleNum();
+	void ModifyAngleDwgSumWeight();
+	void ModifyAngleDwgSpec();
+	void ModifyAngleDwgMaterial();
+	void FillAngleDwgData();
+	//钢板DWG操作
+	int GetPlateNum() { return m_xPncMode.GetPlateNum(); }
+	void EmptyPlateList() { m_xPncMode.Empty(); }
+	CPlateProcessInfo* EnumFirstPlate() { return m_xPncMode.EnumFirstPlate(FALSE); }
+	CPlateProcessInfo* EnumNextPlate() { return m_xPncMode.EnumNextPlate(FALSE); }
+	CPlateProcessInfo* FindPlateByPt(f3dPoint text_pos);
+	CPlateProcessInfo* FindPlateByPartNo(const char* sPartNo);
+	void ModifyPlateDwgPartNum();
+	void ModifyPlateDwgSpec();
+	void ModifyPlateDwgMaterial();
+	void FillPlateDwgData();
+	CPNCModel *GetPncModel() { return &m_xPncMode; }
+	//打印清单
+	BOOL ImportPrintBomExcelFile(const char* sFileName);
+	void EmptyPrintBom() { m_xPrintBomFile.Empty(); }
+	int PrintBomPartCount() { return m_xPrintBomFile.GetPartNum(); }
+	BOMPART* EnumFirstPrintPart() { return m_xPrintBomFile.EnumFirstPart(); }
+	BOMPART* EnumNextPrintPart() { return m_xPrintBomFile.EnumNextPart(); }
+};
+//////////////////////////////////////////////////////////////////////////
+//CProjectTowerType
+class CProjectTowerType
+{
+public:
+	//用于标记比较类型
+	static const int COMPARE_BOM_FILE = 1;
+	static const int COMPARE_DWG_FILE = 2;
+	static const int COMPARE_ALL_DWGS = 3;
+	//
+	struct COMPARE_PART_RESULT
+	{
+		BOMPART *pOrgPart;
+		BOMPART *pLoftPart;
+		CHashStrList<BOOL> hashBoolByPropName;
+		COMPARE_PART_RESULT() { pOrgPart = NULL; pLoftPart = NULL; };
+	};
+private:
+	void CompareData(BOMPART* pLoftPart, BOMPART* pDesPart, CHashStrList<BOOL> &hashBoolByPropName);
+	void AddDwgLackPartSheet(LPDISPATCH pSheet, int iCompareType);
+	void AddCompareResultSheet(LPDISPATCH pSheet, int index, int iCompareType);
+public:
+	DWORD key;
+	PROJECT_INFO m_xPrjInfo;
+	CXhChar100 m_sProjName;
+	CBomFile m_xLoftBom, m_xOrigBom;
+	ATOM_LIST<CDwgFileInfo> dwgFileList;
+	CHashStrList<COMPARE_PART_RESULT> m_hashCompareResultByPartNo;
+public:
+	CProjectTowerType();
+	~CProjectTowerType();
+	//
+	void SetKey(DWORD keyID) { key = keyID; }
+	void ReadProjectFile(CString sFilePath);
+	void WriteProjectFile(CString sFilePath);
+	BOOL ModifyErpBomPartNo(BYTE ciMatCharPosType);
+	BOOL ModifyTmaBomPartNo(BYTE ciMatCharPosType);
+	CPlateProcessInfo *FindPlateInfoByPartNo(const char* sPartNo);
+	CAngleProcessInfo *FindAngleInfoByPartNo(const char* sPartNo);
+	//初始化操作
+	BOOL ReadTowerPrjInfo(const char* sFileName);
+	void InitBomInfo(const char* sFileName, BOOL bLoftBom);
+	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName);
+	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
+	void DeleteDwgBomInfo(CDwgFileInfo* pDwgInfo);
+	//校审操作
+	int CompareOrgAndLoftParts();
+	int CompareLoftAndPartDwgs(BYTE ciTypeJ0_P1_A2 = 2);
+	int CompareLoftAndPartDwg(const char* sFileName);
+	void ExportCompareResult(int iCompare);
+	//校审结果操作
+	DWORD GetResultCount() { return m_hashCompareResultByPartNo.GetNodeNum(); }
+	COMPARE_PART_RESULT* GetResult(const char* part_no) { return m_hashCompareResultByPartNo.GetValue(part_no); }
+	COMPARE_PART_RESULT* EnumFirstResult() { return m_hashCompareResultByPartNo.GetFirst(); }
+	COMPARE_PART_RESULT* EnumNextResult() { return m_hashCompareResultByPartNo.GetNext(); }
+};
+//////////////////////////////////////////////////////////////////////////
+//CUbomModel
+enum CLIENT_SERIAL {
+	ID_AnHui_HongYuan = 1,		//安徽宏源0x0F
+	ID_AnHui_TingYang = 2,		//安徽汀阳0X1D
+	ID_SiChuan_ChengDu = 3,		//中电建成都铁塔0X04
+	ID_JiangSu_HuaDian = 4,		//江苏华电0x01
+	ID_ChengDu_DongFang = 5,	//成都东方0X24
+	ID_QingDao_HaoMai = 6,		//青岛豪迈0X4D
+	ID_QingDao_QLGJG = 7,		//青岛强力刚结构0x4C
+	ID_QingDao_ZAILI = 8,		//青岛载力0x4D
+	ID_WUZHOU_DINGYI = 9,		//五洲鼎益0X05
+	ID_SHANDONG_HAUAN = 10,		//山东华安0X40
+	ID_QingDao_DingXing = 11,	//青岛鼎兴0x4C
+	ID_QingDao_BaiSiTe = 12,	//青岛百斯特0x4C
+	ID_QingDao_HuiJinTong = 13,	//青岛汇金通0x4C
+	ID_LuoYang_LongYu = 14,		//洛阳龙羽0x4C
+	ID_JiangSu_DianZhuang = 15,	//江苏电装0x5F
+	ID_HeNan_YongGuang = 16,	//河南永光0x4C
+	ID_GuangDong_AnHeng = 17,	//广东安恒0x4C
+	ID_GuangDong_ChanTao = 18,	//广东禅涛0x4C
+	ID_ChongQing_JiangDian = 19,//重庆江电0x44
+	ID_QingDao_WuXiao = 20,		//青岛武晓0x44
+	ID_OTHER = 100,
+};
+class CUbomModel
+{
+public:
+	//功能模块
+	static const BYTE FUNC_BOM_COMPARE = 1;	//0X00000001料单校审
+	static const BYTE FUNC_BOM_AMEND = 2;	//0X00000002修正料单
+	static const BYTE FUNC_DWG_COMPARE = 3;	//0X00000004DWG数据校审
+	static const BYTE FUNC_DWG_AMEND_SUM_NUM = 4;	//0X00000008修正加工数
+	static const BYTE FUNC_DWG_AMEND_WEIGHT = 5;	//0X00000010修正重量
+	static const BYTE FUNC_DWG_AMEND_SING_N = 6;	//0X00000020修正单基数
+	static const BYTE FUNC_DWG_BATCH_PRINT = 7;	//0x00000040批量打印 wht 20-05-26
+	static const BYTE FUNC_DWG_AMEND_SPEC = 8;	//0x00000080修正规格
+	static const BYTE FUNC_DWG_AMEND_MAT = 9;	//0x00000100修正材质
+	static const BYTE FUNC_DWG_AMEND_TA_NUM = 10;	//0x00000200修正基数
+	static const BYTE FUNC_DWG_FILL_DADA = 11;	//0x00000400填充数据
+	DWORD m_dwFunctionFlag;
+	//定制客户
+	UINT m_uiCustomizeSerial;
+	CXhChar50 m_sCustomizeName;
+	std::map<CString, int> m_xMapClientInfo;
+	std::multimap<int, CString> m_xMapClientCfgFile;
+	//配置参数
+	double m_fMaxLenErr;				//长度最大误差值
+	BOOL m_bCmpQualityLevel;			//质量等级校审
+	BOOL m_bEqualH_h;					//Q345是否等于Q355
+	BOOL m_bExeRppWhenArxLoad;			//加载Arx后执行rpp命令，显示对话框 wht 20-04-24
+	BOOL m_bExtractPltesWhenOpenFile;	//打开钢板文件后执行提取操作,默认为TRUE wht 20-07-29
+	BOOL m_bExtractAnglesWhenOpenFile;	//打开角钢文件后执行提取操作,默认为TRUE wht 20-07-29
+	UINT m_uiJgCadPartLabelMat;			//角钢工艺卡提取件号材质符:	0:不添加材质符	1:左侧	2:右侧
+	CXhChar100 m_sJgCadName;			//角钢工艺卡名称
+	CXhChar50 m_sJgCadPartLabel;		//角钢工艺卡中的件号标题
+	CXhChar50 m_sJgCardBlockName;		//角钢工艺卡块名称 wht 19-09-24
+	CXhChar500 m_sNotPrintFilter;		//支持设置批量打印时不需要打印的构件 wht 20-07-27
+	BYTE m_ciPrintSortType;				//0.按料单排序|1.按件号排序
+	std::map<CString, CString> m_xMapPrjCell;	//指定单元格的工程信息
+	//数据存储
+	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
+public:
+	CUbomModel(void);
+	~CUbomModel(void);
+	//
+	void InitBomModel();
+	bool IsValidFunc(int iFuncType);
+	BOOL IsJgCardBlockName(const char* sBlockName);
+	BOOL IsPartLabelTitle(const char* sText);
+	BOOL IsNeedPrint(BOMPART *pPart, const char* sNotes);
+	//
+	static CXhChar16 QueryMatMarkIncQuality(BOMPART *pPart);
+};
+#endif
 //////////////////////////////////////////////////////////////////////////
 extern CPNCModel model;
+#ifdef __UBOM_ONLY_
+extern CUbomModel g_xUbomModel;
+#endif

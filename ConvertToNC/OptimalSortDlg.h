@@ -1,7 +1,7 @@
 #pragma once
 #include ".\resource.h"
 #include "supergridctrl.h"
-#include "BomModel.h"
+#include "PNCModel.h"
 #include "ArrayList.h"
 #include "BatchPrint.h"
 #include "MemberProperty.h"

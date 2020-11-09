@@ -6,6 +6,7 @@
 #include "LogFile.h"
 #include "DefCard.h"
 #include "ProcessPart.h"
+#include "PNCModel.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -534,7 +535,6 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 //////////////////////////////////////////////////////////////////////////
 //CJgCardExtractor
 #ifdef __UBOM_ONLY_
-#include "BomModel.h"
 CJgCardExtractor::CJgCardExtractor()
 {
 	fTextHigh = 0;

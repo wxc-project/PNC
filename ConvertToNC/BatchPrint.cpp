@@ -41,7 +41,7 @@ static CXhChar500 GetTempFileFolderPath(bool bEmpty,const char* subFolder)
 }
 
 //////////////////////////////////////////////////////////////////////////
-//
+//PLOT_CFG
 const char *PLOT_CFG::TOWER_TYPE		= "塔型";
 const char *PLOT_CFG::PART_LABEL		= "件号";
 const char *PLOT_CFG::MAT_MARK			= "材质";
@@ -65,6 +65,175 @@ CXhChar500 PLOT_CFG::GetPngFileNameByTemplate(const char* sTowerType, const char
 	else
 		sFileName.Copy(sPartLabel);
 	return sFileName;
+}
+
+//////////////////////////////////////////////////////////////////////////
+//CPrintSet
+CString CPrintSet::GetPrintDeviceCmbItemStr()
+{
+	CString sDeviceStr;
+	CLockDocumentLife lock;
+	AcApLayoutManager* pLayMan = (AcApLayoutManager*)acdbHostApplicationServices()->layoutManager();
+	//get the active layout
+	AcDbLayout* pLayout = pLayMan ? pLayMan->findLayoutNamed(pLayMan->findActiveLayout(TRUE), TRUE) : NULL;
+	AcDbPlotSettingsValidator* pPsv = acdbHostApplicationServices()->plotSettingsValidator();
+	if (pLayout && pPsv)
+	{
+		pPsv->refreshLists(pLayout);        //refresh the Plot Config list
+		AcArray<const ACHAR*> mDeviceList;
+		pPsv->plotDeviceList(mDeviceList);  //get all the Plot Configurations
+		sDeviceStr.Empty();
+		for (int i = 0; i < mDeviceList.length(); i++)
+		{
+			CString sTemp = mDeviceList.at(i);
+			if (sDeviceStr.GetLength() > 0)
+				sDeviceStr.AppendChar('|');
+			sDeviceStr.Append(sTemp);
+		}
+	}
+	if (pLayout)
+		pLayout->close();
+	return sDeviceStr;
+}
+
+CString CPrintSet::GetPaperSizeCmbItemStr(const char* sDeviceName)
+{
+	CString sMediaNameStr;
+	CLockDocumentLife lock;
+	AcApLayoutManager* pLayMan = (AcApLayoutManager*)acdbHostApplicationServices()->layoutManager();
+	//get the active layout
+	AcDbLayout* pLayout = pLayMan ? pLayMan->findLayoutNamed(pLayMan->findActiveLayout(TRUE), TRUE) : NULL;
+	AcDbPlotSettingsValidator* pPsv = acdbHostApplicationServices()->plotSettingsValidator();
+	if (pLayout && pPsv && sDeviceName)
+	{
+		pPsv->refreshLists(pLayout);        //refresh the Plot Config list
+		AcArray<const ACHAR*> mDeviceList;
+		pPsv->plotDeviceList(mDeviceList);  //get all the Plot Configurations
+		BOOL bValidName = FALSE;
+		for (int i = 0; i < mDeviceList.length(); i++)
+		{
+			CString sTemp = mDeviceList.at(i);
+			if (sTemp.CompareNoCase(sDeviceName) == 0)
+			{
+				bValidName = TRUE;
+				break;
+			}
+		}
+		if (bValidName)
+		{
+#ifdef _ARX_2007
+			pPsv->setPlotCfgName(pLayout, _bstr_t(sDeviceName));
+#else
+			pPsv->setPlotCfgName(pLayout, sDeviceName);
+#endif
+			//list all the paper sizes in the given Plot configuration
+			AcArray<const ACHAR*> mMediaList;
+			pPsv->canonicalMediaNameList(pLayout, mMediaList);
+			for (int i = 0; i < mMediaList.length(); i++)
+			{
+				CString sTemp = mMediaList.at(i);
+				if (sMediaNameStr.GetLength() > 0)
+					sMediaNameStr.AppendChar('|');
+				sMediaNameStr.Append(sTemp);
+			}
+		}
+	}
+	if (pLayout)
+		pLayout->close();
+	return sMediaNameStr;
+}
+
+CXhChar500 CPrintSet::GetPlotCfgName(bool bPromptInfo)
+{	//判断打印机是否合理
+	CXhChar500 sPlotCfgName;
+	AcApLayoutManager* pLayMan = NULL;
+	pLayMan = (AcApLayoutManager*)acdbHostApplicationServices()->layoutManager();
+	AcDbLayout* pLayout = pLayMan->findLayoutNamed(pLayMan->findActiveLayout(TRUE), TRUE);
+	if (pLayout != NULL)
+	{
+		pLayout->close();
+		AcDbPlotSettings* pPlotSetting = (AcDbPlotSettings*)pLayout;
+		Acad::ErrorStatus retCode;
+#ifdef _ARX_2007
+		const ACHAR* sValue;
+		retCode = pPlotSetting->getPlotCfgName(sValue);
+		if (sValue != NULL)
+			sPlotCfgName.Copy((char*)_bstr_t(sValue));
+#else
+		char* sValue;
+		retCode = pPlotSetting->getPlotCfgName(sValue);
+		if (sValue != NULL)
+			sPlotCfgName.Copy(sValue);
+#endif
+		if (retCode != Acad::eOk || stricmp(sPlotCfgName, "无") == 0)
+		{	//获取输出设备名称
+			if (bPromptInfo)
+			{
+#ifdef _ARX_2007
+				acutPrintf(L"\n当前激活打印设备不可用,请优先进行页面设置!");
+#else
+				acutPrintf("\n当前激活打印设备不可用,请优先进行页面设置!");
+#endif
+			}
+			sPlotCfgName.Empty();
+		}
+	}
+	return sPlotCfgName;
+}
+
+BOOL CPrintSet::SetPlotMedia(PLOT_CFG *pPlotCfg, bool bPromptInfo)
+{
+	CLockDocumentLife lock;
+	AcApLayoutManager* pLayMan = (AcApLayoutManager*)acdbHostApplicationServices()->layoutManager();
+	//get the active layout
+	AcDbLayout* pLayout = pLayMan ? pLayMan->findLayoutNamed(pLayMan->findActiveLayout(TRUE), TRUE) : NULL;
+	AcDbPlotSettingsValidator* pPsv = acdbHostApplicationServices()->plotSettingsValidator();
+	if (pLayout && pPsv)
+	{
+		pPsv->refreshLists(pLayout);        //refresh the Plot Config list
+		//
+		//AcArray<const ACHAR*> mDeviceList;
+		//pPsv->plotDeviceList(mDeviceList);  //get all the Plot Configurations
+		//ACHAR* m_strDevice = _T("DWF6 ePlot.pc3");//打印机名字
+#ifdef _ARX_2007
+		Acad::ErrorStatus es = pPsv->setPlotCfgName(pLayout, _bstr_t(pPlotCfg->m_sDeviceName));     //设置打印设备
+#else
+		Acad::ErrorStatus es = pPsv->setPlotCfgName(pLayout, pPlotCfg->m_sDeviceName);            //设置打印设备
+#endif
+		if (es != Acad::eOk)
+		{	//获取输出设备名称
+			if (bPromptInfo)
+			{
+				CXhChar500 sError("\n名称:%s,设置错误，请在设置中确认后重试！", (char*)pPlotCfg->m_sDeviceName);
+#ifdef _ARX_2007
+				acutPrintf(_bstr_t(sError));
+#else
+				acutPrintf(sError);
+#endif
+			}
+			pLayout->close();
+			return FALSE;
+		}
+		//ACHAR* m_mediaName = _T("ISO A4");//图纸名称
+#ifdef _ARX_2007
+		pPsv->setCanonicalMediaName(pLayout, _bstr_t(pPlotCfg->m_sPaperSize));//设置图纸尺寸
+		pPsv->setCurrentStyleSheet(pLayout, L"monochrome.ctb");//设置打印样式表
+#else
+		pPsv->setCanonicalMediaName(pLayout, pPlotCfg->m_sPaperSize);//设置图纸尺寸
+		pPsv->setCurrentStyleSheet(pLayout, _T("monochrome.ctb"));//设置打印样式表
+#endif
+		pPsv->setPlotType(pLayout, AcDbPlotSettings::kWindow);//设置打印范围为窗口
+		pPsv->setPlotWindowArea(pLayout, 100, 100, 200, 200);//设置打印范围,超出给范围的将打不出来
+		pPsv->setPlotCentered(pLayout, true);//是否居中打印
+		pPsv->setUseStandardScale(pLayout, true);//设置是否采用标准比例
+		pPsv->setStdScaleType(pLayout, AcDbPlotSettings::kScaleToFit);//布满图纸
+		pPsv->setPlotRotation(pLayout, AcDbPlotSettings::k0degrees);//设置打印方向
+		//
+		pLayout->close();
+		return (es == Acad::eOk);
+	}
+	else
+		return FALSE;
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -212,7 +381,6 @@ SCOPE_STRU PRINT_SCOPE::GetCadEntScope()
 	scope.fMinZ = scope.fMaxZ = 0;
 	return scope;
 }
-
 //////////////////////////////////////////////////////////////////////////
 // CBatchPrint
 PLOT_CFG CBatchPrint::m_xPdfPlotCfg;
@@ -375,83 +543,4 @@ bool CBatchPrint::Print()
 		PrintProcessCardToPDF();
 	return true;
 }
-
-/*
-//批量打印
-void batPlot()
-{	// 取得当前layout
-	AcDbLayoutManager* pLayoutManager = acdbHostApplicationServices()->layoutManager(); //取得布局管理器对象
-	AcDbLayout* pLayout = pLayoutManager->findLayoutNamed(pLayoutManager->findActiveLayout(TRUE), TRUE);//获得当前布局
-	AcDbObjectId  m_layoutId = pLayout->objectId();//获得布局的Id
-	//获得打印机验证器对象
-	AcDbPlotSettingsValidator* pPSV = acdbHostApplicationServices()->plotSettingsValidator();
-	pPSV->refreshLists(pLayout);
-	//打印机设置
-	ACHAR* m_strDevice = _T("DWF6 ePlot.pc3");//打印机名字
-	pPSV->setPlotCfgName(pLayout, m_strDevice);//设置打印设备
-	ACHAR* m_mediaName = _T("ISO A4");//图纸名称
-	pPSV->setCanonicalMediaName(pLayout, m_mediaName);//设置图纸尺寸
-	pPSV->setPlotType(pLayout, AcDbPlotSettings::kWindow);//设置打印范围为窗口
-	pPSV->setPlotWindowArea(pLayout, 100, 100, 200, 200);//设置打印范围,超出给范围的将打不出来
-	pPSV->setCurrentStyleSheet(pLayout, _T("JSTRI.ctb"));//设置打印样式表
-	pPSV->setPlotCentered(pLayout, true);//是否居中打印
-	pPSV->setUseStandardScale(pLayout, true);//设置是否采用标准比例
-	pPSV->setStdScaleType(pLayout, AcDbPlotSettings::kScaleToFit);//布满图纸
-	pPSV->setPlotRotation(pLayout, AcDbPlotSettings::k90degrees);//设置打印方向
-	//pPSV->setPlotViewName(pLayout,_T("打印1"));
-	//准备打印/////////////////////////////////////////////////////////////////////////
-	AcPlPlotEngine* pEngine = NULL;
-	if (AcPlPlotFactory::createPublishEngine(pEngine) != Acad::eOk)
-	{
-		acedAlert(_T("打印失败!"));
-		return;
-	}
-	// 打印进度对话框
-	AcPlPlotProgressDialog* pPlotProgDlg = acplCreatePlotProgressDialog(acedGetAcadFrame()->m_hWnd, false, 1);
-	pPlotProgDlg->setPlotMsgString(AcPlPlotProgressDialog::kDialogTitle, _T("lot API Progress"));
-	pPlotProgDlg->setPlotMsgString(AcPlPlotProgressDialog::kCancelJobBtnMsg, _T("Cancel Job"));
-	pPlotProgDlg->setPlotMsgString(AcPlPlotProgressDialog::kCancelSheetBtnMsg, _T("Cancel Sheet"));
-	pPlotProgDlg->setPlotMsgString(AcPlPlotProgressDialog::kSheetSetProgressCaption, _T("Job Progress"));
-	pPlotProgDlg->setPlotMsgString(AcPlPlotProgressDialog::kSheetProgressCaption, _T("Sheet Progress"));
-	pPlotProgDlg->setPlotProgressRange(0, 100);
-	pPlotProgDlg->onBeginPlot();
-	pPlotProgDlg->setIsVisible(true);
-	//begin plot
-	Acad::ErrorStatus es = pEngine->beginPlot(pPlotProgDlg);
-	AcPlPlotPageInfo pageInfo;//打印页信息
-	AcPlPlotInfo plotInfo; //打印信息
-	// 设置布局
-	plotInfo.setLayout(m_layoutId);
-	// 重置参数
-	plotInfo.setOverrideSettings(pLayout);
-	AcPlPlotInfoValidator validator;//创建打印信息验证器
-	validator.setMediaMatchingPolicy(AcPlPlotInfoValidator::kMatchEnabled);
-	es = validator.validate(plotInfo);
-	// begin document
-	const TCHAR* szDocName = acDocManager->curDocument()->fileName();//获得当前的文件名
-	es = pEngine->beginDocument(plotInfo, szDocName, NULL, 1, true, NULL);
-	//给打印机和进度对话框发送消息
-	pPlotProgDlg->onBeginSheet();
-	pPlotProgDlg->setSheetProgressRange(0, 100);
-	pPlotProgDlg->setSheetProgressPos(0);
-	//begin page
-	es = pEngine->beginPage(pageInfo, plotInfo, true);
-	es = pEngine->beginGenerateGraphics();
-	es = pEngine->endGenerateGraphics();
-	//end page
-	es = pEngine->endPage();
-	pPlotProgDlg->setSheetProgressPos(100);
-	pPlotProgDlg->onEndSheet();
-	pPlotProgDlg->setPlotProgressPos(100);
-	//end document
-	es = pEngine->endDocument();
-	//end plot
-	es = pEngine->endPlot();
-	//返回资源
-	pEngine->destroy();
-	pEngine = NULL;
-	pPlotProgDlg->destroy();
-	pLayout->close();
-}
-*/
 #endif

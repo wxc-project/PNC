@@ -3779,9 +3779,10 @@
     <ClCompile Include="BatchPrint.cpp" />
     <ClCompile Include="BomExport.cpp" />
     <ClCompile Include="BomFile.cpp" />
-    <ClCompile Include="BomModel.cpp" />
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
+    <ClCompile Include="XeroNcAngle.cpp" />
+    <ClCompile Include="XeroNcPlate.cpp" />
     <ClCompile Include="CadObjLife.cpp" />
     <ClCompile Include="ConvertToNC.cpp" />
     <ClCompile Include="DrawDamBoard.cpp" />
@@ -3801,7 +3802,6 @@
     <ClCompile Include="PNCSysPara.cpp" />
     <ClCompile Include="PNCSysSettingDlg.cpp" />
     <ClCompile Include="PolygonObject.cpp" />
-    <ClCompile Include="PrintSet.cpp" />
     <ClCompile Include="PrintSetDlg.cpp" />
     <ClCompile Include="RevisionDlg.cpp" />
     <ClCompile Include="SelColorDlg.cpp" />
@@ -3926,7 +3926,6 @@
     <ClInclude Include="BatchPrint.h" />
     <ClInclude Include="BomExport.h" />
     <ClInclude Include="BomFile.h" />
-    <ClInclude Include="BomModel.h" />
     <ClInclude Include="CADCallBackDlg.h" />
     <ClInclude Include="CadHighlightEntManager.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\ColorSelectComboBox.h" />
@@ -4106,6 +4105,7 @@
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\XhLicAgent\XhLicAgent.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
+    <ClInclude Include="XeroNcPart.h" />
     <ClInclude Include="CadObjLife.h" />
     <ClInclude Include="DrawDamBoard.h" />
     <ClInclude Include="DrawUnit.h" />

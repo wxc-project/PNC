@@ -64,6 +64,9 @@
     <Filter Include="PNC">
       <UniqueIdentifier>{6c32be16-96b4-4c06-94e5-996a16da9de6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Model">
+      <UniqueIdentifier>{c3a16cd3-e32a-4c09-a4cb-25214fa8497c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="ConvertToNC.cpp">
@@ -99,9 +102,6 @@
     <ClCompile Include="PNCCmd.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="PNCModel.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="FilterLayerDlg.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -113,9 +113,6 @@
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\ListViewComparer.cpp">
       <Filter>ToolCode</Filter>
-    </ClCompile>
-    <ClCompile Include="XeroExtractor.cpp">
-      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\SquareTree.cpp">
       <Filter>ToolCode</Filter>
@@ -252,12 +249,6 @@
     <ClCompile Include="RevisionDlg.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
-    <ClCompile Include="DwgFile.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
-    <ClCompile Include="BomModel.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\ProcessPart.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
@@ -321,12 +312,6 @@
     <ClCompile Include="TestCode.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="BatchPrint.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
-    <ClCompile Include="PrintSet.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
     <ClCompile Include="CadObjLife.cpp">
       <Filter>UBOM</Filter>
     </ClCompile>
@@ -336,20 +321,11 @@
     <ClCompile Include="InputAnValDlg.cpp">
       <Filter>PNC</Filter>
     </ClCompile>
-    <ClCompile Include="BomExport.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\LDS\LDS\BOM\BOM.cpp">
-      <Filter>UBOM</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ToolKits\TowerCad\LocalFeatureDef.cpp">
       <Filter>TowerCad</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\MD5.CPP">
       <Filter>ToolCode</Filter>
-    </ClCompile>
-    <ClCompile Include="BomFile.cpp">
-      <Filter>UBOM</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ToolKits\ToolCode\Expression.cpp">
       <Filter>ToolCode</Filter>
@@ -377,6 +353,33 @@
     </ClCompile>
     <ClCompile Include="..\..\XhLmd-dll\AES\aes.cpp">
       <Filter>XhLicAgent\AES</Filter>
+    </ClCompile>
+    <ClCompile Include="PNCModel.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="DwgFile.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\LDS\LDS\BOM\BOM.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="BomFile.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="BomExport.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="BatchPrint.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="XeroExtractor.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="XeroNcAngle.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
+    <ClCompile Include="XeroNcPlate.cpp">
+      <Filter>Model</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -419,9 +422,6 @@
     <ClInclude Include="PNCCmd.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PNCModel.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="FilterLayerDlg.h">
       <Filter>头文件</Filter>
     </ClInclude>
@@ -436,9 +436,6 @@
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\Hash64Table.h">
       <Filter>ToolCode</Filter>
-    </ClInclude>
-    <ClInclude Include="XeroExtractor.h">
-      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h">
       <Filter>ToolCode</Filter>
@@ -557,9 +554,6 @@
     <ClInclude Include="RevisionDlg.h">
       <Filter>UBOM</Filter>
     </ClInclude>
-    <ClInclude Include="BomModel.h">
-      <Filter>UBOM</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\ProcessPart.h">
       <Filter>TowerCad</Filter>
     </ClInclude>
@@ -623,9 +617,6 @@
     <ClInclude Include="TestCode.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="BatchPrint.h">
-      <Filter>UBOM</Filter>
-    </ClInclude>
     <ClInclude Include="CadObjLife.h">
       <Filter>UBOM</Filter>
     </ClInclude>
@@ -638,20 +629,11 @@
     <ClInclude Include="InputAnValDlg.h">
       <Filter>PNC</Filter>
     </ClInclude>
-    <ClInclude Include="BomExport.h">
-      <Filter>UBOM</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\LDS\LDS\BOM\BOM.h">
-      <Filter>UBOM</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\ToolKits\TowerCad\LocalFeatureDef.h">
       <Filter>TowerCad</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\MD5.H">
       <Filter>ToolCode</Filter>
-    </ClInclude>
-    <ClInclude Include="BomFile.h">
-      <Filter>UBOM</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ToolKits\ToolCode\Expression.h">
       <Filter>ToolCode</Filter>
@@ -676,6 +658,27 @@
     </ClInclude>
     <ClInclude Include="..\..\XhLmd\DES\DES.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PNCModel.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\LDS\LDS\BOM\BOM.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="BomFile.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="BomExport.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="BatchPrint.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="XeroExtractor.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="XeroNcPart.h">
+      <Filter>Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

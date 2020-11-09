@@ -170,3 +170,8 @@ void PNCSysSetImportDefault();
 void PNCSysSetExportDefault();
 bool PNCSysSetImportDefault(FILE* fp);
 bool PNCSysSetExportDefault(FILE* fp);
+#ifdef __UBOM_ONLY_
+void TraversalUbomConfigFiles();
+void ImportUbomConfigFile(const char* file_path = NULL);
+void ExportUbomConfigFile();
+#endif

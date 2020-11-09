@@ -2,8 +2,7 @@
 #include "f_ent.h"
 #include "f_ent_list.h"
 #include "adsdef.h"
-#include "XhCharString.h"
-#include "BomModel.h"
+#include "XeroNcPart.h"
 
 #ifdef __UBOM_ONLY_
 struct PLOT_CFG
@@ -66,7 +65,6 @@ public:
 	CXhChar500 GetPartFileName(PLOT_CFG *pPlotCfg,const char* extension);
 	SCOPE_STRU GetCadEntScope();
 };
-
 
 class CBatchPrint
 {

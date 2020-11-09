@@ -377,7 +377,7 @@ static CSuperGridCtrl::CTreeItem *InsertPartToList(CSuperGridCtrl &list,CSuperGr
 		}
 		else if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_MAT))
 		{	//材质
-			lpInfo->SetSubItemText(i, CBomModel::QueryMatMarkIncQuality(pPart), TRUE);
+			lpInfo->SetSubItemText(i, CUbomModel::QueryMatMarkIncQuality(pPart), TRUE);
 			if (pHashBoolByPropName&&pHashBoolByPropName->GetValue(CBomConfig::KEY_MAT))
 				lpInfo->SetSubItemColor(i, clr);
 			if ((modifyFlag & CAngleProcessInfo::MODIFY_DES_MAT) > 0)
@@ -896,15 +896,15 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 	}
 	else if (pItemInfo->itemType == BOM_GROUP)
 	{
-		if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_COMPARE)||
-			g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE))
+		if(g_xUbomModel.IsValidFunc(CUbomModel::FUNC_BOM_COMPARE)||
+			g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_COMPARE))
 			pMenu->AppendMenu(MF_STRING, ID_IMPORT_BOM_FILE, "加载料单文件");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_COMPARE))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_BOM_COMPARE))
 		{	//料单校审功能
 			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, "料单数据校审");
 			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出校审结果");
 		}
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_AMEND))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_BOM_AMEND))
 			pMenu->AppendMenu(MF_STRING, ID_MODIFY_ERP_FILE, "修正BOM数据");
 	}
 	else if (pItemInfo->itemType == BOM_ITEM)
@@ -914,7 +914,7 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			 pItemInfo->itemType == PART_GROUP)
 	{
 		pMenu->AppendMenu(MF_STRING, ID_IMPORT_DWG_FILE, "加载DWG文件");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_COMPARE))
 		{
 			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, "DWG漏号检测");
 			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出检测结果");
@@ -922,22 +922,22 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 	}
 	else if (pItemInfo->itemType == ANGLE_DWG_ITEM || pItemInfo->itemType == PLATE_DWG_ITEM)
 	{
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_COMPARE))
 		{
 			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, "进行数据校核");
 			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出校审结果");
 		}
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SUM_NUM))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_SUM_NUM))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_PART_NUM, "更新加工数");
-		if(g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SING_N))
+		if(g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_SING_N))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_SINGLE_NUM, "更新单基数");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_WEIGHT))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_WEIGHT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SPEC))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_SPEC))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_GUIGE, "更新规格");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_MAT))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_MAT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_MAT, "更新材质");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_FILL_DADA))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_FILL_DADA))
 		{
 			if(pItemInfo->itemType == ANGLE_DWG_ITEM)
 				pMenu->AppendMenu(MF_STRING, ID_FILL_DWG_DATA, "更新杆图");
@@ -951,7 +951,7 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		else
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_PLATES, "分批提取钢板");
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_BATCH_PRINT))
 		{
 			pMenu->AppendMenu(MF_SEPARATOR);
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_PRINT_PART, "批量打印");
@@ -965,25 +965,25 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 		pMenu->AppendMenu(MF_STRING, ID_BATCH_RETRIEVED_PLATES, "分批提取钢板");
 		pMenu->AppendMenu(MF_STRING, ID_EMPTY_PLATE_RETRIEVED_RESLUT, "清空钢板数据");
 		pMenu->AppendMenu(MF_SEPARATOR);
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_COMPARE))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_COMPARE))
 		{
 			pMenu->AppendMenu(MF_STRING, ID_COMPARE_DATA, "进行数据校核");
 			pMenu->AppendMenu(MF_STRING, ID_EXPORT_COMPARE_RESULT, "导出校审结果");
 		}
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SUM_NUM))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_SUM_NUM))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_PART_NUM, "更新加工数");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SING_N))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_SING_N))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_SINGLE_NUM, "更新单基数");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_WEIGHT))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_WEIGHT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_WEIGHT, "更新总重");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_SPEC))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_SPEC))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_GUIGE, "更新规格");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_MAT))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_AMEND_MAT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_MAT, "更新材质");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_FILL_DADA))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_FILL_DADA))
 			pMenu->AppendMenu(MF_STRING, ID_FILL_DWG_DATA, "更新数据");
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_BATCH_PRINT))
 		{
 			pMenu->AppendMenu(MF_SEPARATOR);
 			pMenu->AppendMenu(MF_STRING, ID_BATCH_PRINT_PART, "批量打印");
@@ -1160,14 +1160,14 @@ void CRevisionDlg::OnImportBomFile()
 	CFileDialog dlg(TRUE,"xls","物料清单.xls",
 		OFN_HIDEREADONLY|OFN_OVERWRITEPROMPT|OFN_ALLOWMULTISELECT,
 		"BOM文件|*.xls;*.xlsx;*.xlsm|Excel(*.xls)|*.xls|Excel(*.xlsx)|*.xlsx|Excel(*.xlsm)|*.xlsm|所有文件(*.*)|*.*||");
-	if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_COMPARE))
+	if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_BOM_COMPARE))
 		dlg.m_ofn.lpstrTitle = "选择待校审的料表组";
 	else
 		dlg.m_ofn.lpstrTitle = "选择单个物料清单";
 	if(dlg.DoModal()!=IDOK)
 		return;
 	CProjectTowerType* pProject=GetProject(hSelectedItem);
-	if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_BOM_COMPARE))
+	if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_BOM_COMPARE))
 	{	//导入料表组
 		POSITION pos = dlg.GetStartPosition();
 		while (pos)
@@ -1225,7 +1225,7 @@ void CRevisionDlg::OnImportBomFile()
 		else
 			logerr.Log("加载物料清单失败!");
 		//读取料单特定信息
-		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_FILL_DADA))
+		if (g_xUbomModel.IsValidFunc(CUbomModel::FUNC_DWG_FILL_DADA))
 			pProject->ReadTowerPrjInfo(sFilePath);
 	}	
 }

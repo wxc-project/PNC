@@ -534,7 +534,7 @@ void COptimalSortDlg::RefeshListCtrl()
 			continue;
 		CListCtrlItemInfo *lpInfo=new CListCtrlItemInfo();
 		lpInfo->SetSubItemText(0,pPart->GetPartTypeName(FALSE),TRUE);
-		CXhChar16 sMat= CBomModel::QueryMatMarkIncQuality(pPart);
+		CXhChar16 sMat= CUbomModel::QueryMatMarkIncQuality(pPart);
 		lpInfo->SetSubItemText(1,sMat,TRUE);//材质	
 		if(pPart->wide==0&& pPart->thick>0)
 			lpInfo->SetSubItemText(2, CXhChar16("-%d",(int)pPart->thick), TRUE);	//规格
@@ -1001,7 +1001,7 @@ void COptimalSortDlg::InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pP
 				m_nJiaCount++;	//附件归属为夹具
 		}
 	}
-	CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(pCurPart);
+	CXhChar16 sMat = CUbomModel::QueryMatMarkIncQuality(pCurPart);
 	if (strstr(sMat, "Q235") != NULL)
 		m_nQ235Count++;
 	else if (strstr(sMat, "Q345") != NULL)
@@ -1066,7 +1066,7 @@ void COptimalSortDlg::InitByProcessPlate(CPlateProcessInfo* pPlateInfo, BOMPART 
 	}
 	else
 		m_nPlateCount++;
-	CXhChar16 sMat = CBomModel::QueryMatMarkIncQuality(pCurPart);
+	CXhChar16 sMat = CUbomModel::QueryMatMarkIncQuality(pCurPart);
 	if (strstr(sMat, "Q235") != NULL)
 		m_nQ235Count++;
 	else if (strstr(sMat, "Q345") != NULL)
