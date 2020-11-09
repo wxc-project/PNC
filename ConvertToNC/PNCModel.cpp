@@ -1242,8 +1242,8 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				xPlate.m_nSingleNum = xPlate.m_nProcessNum = baseInfo.m_nNum;
 			if (baseInfo.m_idCadEntNum != 0)
 				partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
-			if (baseInfo.m_sTaType.GetLength() > 0 && m_pBelongModel->m_sTaType.GetLength() <= 0)
-				m_pBelongModel->m_sTaType.Copy(baseInfo.m_sTaType);
+			if (baseInfo.m_sTaType.GetLength() > 0 && m_pBelongModel->m_xPrjInfo.m_sTaType.GetLength() <= 0)
+				m_pBelongModel->m_xPrjInfo.m_sTaType.Copy(baseInfo.m_sTaType);
 			if(baseInfo.m_sPartNo.GetLength()>0&&bRelatePN)
 			{
 				if(xPlate.GetPartNo().GetLength()<=0)
@@ -3426,6 +3426,44 @@ void CPlateProcessInfo::RefreshPlateMat()
 	}
 	m_ciModifyState |= MODIFY_DES_MAT;
 }
+//补充钢板加工数
+void CPlateProcessInfo::FillPlateNum(int nNewNum)
+{
+	if (g_pncSysPara.m_iDimStyle != 0 || partNoId == NULL)
+		return;	
+	CLockDocumentLife lockCurDocLife;
+	AcDbEntity *pEnt = NULL;
+	XhAcdbOpenAcDbEntity(pEnt, partNoId, AcDb::kForWrite);
+	CAcDbObjLife entLife(pEnt);
+	CString sContent = GetCadTextContent(pEnt), sNum;
+	if (sContent.GetLength() <= 0)
+		return;
+	sNum.Format(" (%d件)", nNewNum);
+	sContent += sNum;
+	if (pEnt->isKindOf(AcDbText::desc()))
+	{
+		AcDbText* pText = (AcDbText*)pEnt;
+#ifdef _ARX_2007
+		pText->setTextString(_bstr_t(sContent.GetBuffer()));
+#else
+		pText->setTextString(sContent.GetBuffer());
+#endif
+		int color_index = GetNearestACI(RGB(255, 0, 0));
+		pText->setColorIndex(color_index);
+	}
+	else if (pEnt->isKindOf(AcDbMText::desc()))
+	{
+		AcDbMText *pMText = (AcDbMText*)pEnt;
+#ifdef _ARX_2007
+		pMText->setContents(_bstr_t(sContent.GetBuffer()));
+#else
+		pMText->setContents(sContent.GetBuffer());
+#endif
+	}
+	//
+	xBomPlate.nSumPart = nNewNum;
+	m_ciModifyState |= MODIFY_MANU_NUM;
+}
 SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 {
 	SCOPE_STRU scope;
@@ -5184,15 +5222,15 @@ void CPNCModel::WritePrjTowerInfoToCfgFile(const char* cfg_file_path)
 	FILE *fp=fopen(cfg_file_path,"wt");
 	if(fp==NULL)
 		return;
-	if(m_sPrjName.GetLength()>0)
-		fprintf(fp,"PROJECT_NAME=%s\n",(char*)m_sPrjName);
-	if(m_sPrjCode.GetLength()>0)
-		fprintf(fp,"PROJECT_CODE=%s\n",(char*)m_sPrjCode);
-	if(m_sTaType.GetLength()>0)
-		fprintf(fp,"TOWER_NAME=%s\n",(char*)m_sTaType);
-	if(m_sTaAlias.GetLength()>0)
-		fprintf(fp,"TOWER_CODE=%s\n",(char*)m_sTaAlias);
-	if(m_sTaStampNo.GetLength()>0)
-		fprintf(fp,"STAMP_NO=%s\n",(char*)m_sTaStampNo);
+	if(m_xPrjInfo.m_sPrjName.GetLength()>0)
+		fprintf(fp,"PROJECT_NAME=%s\n",(char*)m_xPrjInfo.m_sPrjName);
+	if(m_xPrjInfo.m_sPrjCode.GetLength()>0)
+		fprintf(fp,"PROJECT_CODE=%s\n",(char*)m_xPrjInfo.m_sPrjCode);
+	if(m_xPrjInfo.m_sTaType.GetLength()>0)
+		fprintf(fp,"TOWER_NAME=%s\n",(char*)m_xPrjInfo.m_sTaType);
+	if(m_xPrjInfo.m_sTaAlias.GetLength()>0)
+		fprintf(fp,"TOWER_CODE=%s\n",(char*)m_xPrjInfo.m_sTaAlias);
+	if(m_xPrjInfo.m_sTaStampNo.GetLength()>0)
+		fprintf(fp,"STAMP_NO=%s\n",(char*)m_xPrjInfo.m_sTaStampNo);
 	fclose(fp);
 }

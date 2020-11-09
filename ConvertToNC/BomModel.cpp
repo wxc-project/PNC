@@ -81,6 +81,72 @@ void CProjectTowerType::WriteProjectFile(CString sFilePath)
 		file.Write(&ibValue,sizeof(int));
 	}
 }
+//从料单中读取杆塔的工程信息
+BOOL CProjectTowerType::ReadTowerPrjInfo(const char* sFileName)
+{
+	DisplayCadProgress(0, "读取杆塔工程信息......");
+	CExcelOperObject excelobj;
+	if (!excelobj.OpenExcelFile(sFileName))
+	{
+		DisplayCadProgress(100);
+		return FALSE;
+	}
+	_Worksheet   excel_sheet;    // 工作表
+	Sheets       excel_sheets;
+	LPDISPATCH   pWorksheets = excelobj.GetWorksheets();
+	ASSERT(pWorksheets != NULL);
+	excel_sheets.AttachDispatch(pWorksheets);
+	LPDISPATCH pWorksheet = excel_sheets.GetItem(COleVariant((short)1));
+	excel_sheet.AttachDispatch(pWorksheet);
+	VARIANT value;
+	//
+	DisplayCadProgress(10);
+	CString sCell = g_xUbomModel.m_xMapPrjCell["工程名称"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sPrjName = VariantToString(value);
+	//
+	DisplayCadProgress(25);
+	sCell= g_xUbomModel.m_xMapPrjCell["工程塔型"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sTaType = VariantToString(value);
+	//
+	DisplayCadProgress(40);
+	sCell = g_xUbomModel.m_xMapPrjCell["材料标准"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sMatStandard = VariantToString(value);
+	//
+	DisplayCadProgress(55);
+	sCell = g_xUbomModel.m_xMapPrjCell["下达单号"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sTaskNo = VariantToString(value);
+	//
+	DisplayCadProgress(70);
+	sCell = g_xUbomModel.m_xMapPrjCell["塔规格"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sTaAlias = VariantToString(value);
+	//
+	DisplayCadProgress(80);
+	sCell = g_xUbomModel.m_xMapPrjCell["合同号"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sContractNo = VariantToString(value);
+	//
+	DisplayCadProgress(95);
+	sCell = g_xUbomModel.m_xMapPrjCell["基数"];
+	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
+	if (value.vt != VT_EMPTY)
+		m_xPrjInfo.m_sTaNum = VariantToString(value);
+	//
+	excel_sheet.ReleaseDispatch();
+	excel_sheets.ReleaseDispatch();
+	DisplayCadProgress(100);
+	return TRUE;
+}
 //初始化BOM信息
 void CProjectTowerType::InitBomInfo(const char* sFileName,BOOL bLoftBom)
 {
@@ -950,6 +1016,15 @@ CBomModel::CBomModel(void)
 	m_xMapClientInfo["广东禅涛"] = ID_GuangDong_ChanTao;
 	m_xMapClientInfo["重庆江电"] = ID_ChongQing_JiangDian;
 	m_xMapClientInfo["青岛武晓"] = ID_QingDao_WuXiao;
+	//初始化成都铁塔ERP料单中的指定单元
+	m_xMapPrjCell["工程名称"] = "D1";
+	m_xMapPrjCell["工程塔型"] = "F1";
+	m_xMapPrjCell["材料标准"] = "H1";
+	m_xMapPrjCell["下达单号"] = "L1";
+	m_xMapPrjCell["塔规格"] = "J1";
+	m_xMapPrjCell["合同号"] = "B1";
+	m_xMapPrjCell["基数"] = "N1";
+	
 }
 CBomModel::~CBomModel(void)
 {
@@ -978,50 +1053,10 @@ void CBomModel::InitBomModel()
 }
 bool CBomModel::IsValidFunc(int iFuncType)
 {
-	if (iFuncType == CBomModel::FUNC_BOM_COMPARE)
-		return (GetSingleWord(CBomModel::FUNC_BOM_COMPARE)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_BOM_AMEND)
-		return (GetSingleWord(CBomModel::FUNC_BOM_AMEND)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_COMPARE)
-		return (GetSingleWord(CBomModel::FUNC_DWG_COMPARE)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SUM_NUM)
-		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_SUM_NUM)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SPEC)
-		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_SPEC)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_MAT)
-		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_MAT)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_WEIGHT)
-		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_WEIGHT)&m_dwFunctionFlag) > 0;
-	else if(iFuncType==CBomModel::FUNC_DWG_AMEND_SING_N)
-		return (GetSingleWord(CBomModel::FUNC_DWG_AMEND_SING_N)&m_dwFunctionFlag) > 0;
-	else if (iFuncType == CBomModel::FUNC_DWG_BATCH_PRINT)
-		return (GetSingleWord(CBomModel::FUNC_DWG_BATCH_PRINT)&m_dwFunctionFlag) > 0;
+	if (iFuncType > 0)
+		return (m_dwFunctionFlag&GetSingleWord(iFuncType)) > 0;
 	else
 		return false;
-}
-DWORD CBomModel::AddFuncType(int iFuncType)
-{
-	DWORD dwFlag = 0;
-	if (iFuncType == CBomModel::FUNC_BOM_COMPARE)
-		dwFlag = GetSingleWord(CBomModel::FUNC_BOM_COMPARE);
-	else if (iFuncType == CBomModel::FUNC_BOM_AMEND)
-		dwFlag = GetSingleWord(CBomModel::FUNC_BOM_AMEND);
-	else if (iFuncType == CBomModel::FUNC_DWG_COMPARE)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_COMPARE);
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SUM_NUM)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_SUM_NUM);
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SPEC)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_SPEC);
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_MAT)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_MAT);
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_WEIGHT)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_WEIGHT);
-	else if (iFuncType == CBomModel::FUNC_DWG_AMEND_SING_N)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_AMEND_SING_N);
-	else if (iFuncType == CBomModel::FUNC_DWG_BATCH_PRINT)
-		dwFlag = GetSingleWord(CBomModel::FUNC_DWG_BATCH_PRINT);
-	m_dwFunctionFlag |= dwFlag;
-	return m_dwFunctionFlag;
 }
 CXhChar16 CBomModel::QueryMatMarkIncQuality(BOMPART *pPart)
 {

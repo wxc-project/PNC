@@ -191,6 +191,7 @@ BEGIN_MESSAGE_MAP(CRevisionDlg, CDialog)
 	ON_COMMAND(ID_REFRESH_SINGLE_NUM, OnRefreshSingleNum)
 	ON_COMMAND(ID_REFRESH_GUIGE, OnRefreshSpec)
 	ON_COMMAND(ID_REFRESH_MAT, OnRefreshMat)
+	ON_COMMAND(ID_FILL_DWG_DATA,OnFillDwgData)
 	ON_COMMAND(ID_MODIFY_ERP_FILE,OnModifyErpFile)
 	ON_COMMAND(ID_BATCH_PRINT_PART, OnBatchPrintPart)
 	ON_COMMAND(ID_EMPTY_PLATE_RETRIEVED_RESLUT, OnEmptyRetrievedPlates)
@@ -936,6 +937,13 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_GUIGE, "更新规格");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_MAT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_MAT, "更新材质");
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_FILL_DADA))
+		{
+			if(pItemInfo->itemType == ANGLE_DWG_ITEM)
+				pMenu->AppendMenu(MF_STRING, ID_FILL_DWG_DATA, "更新杆图");
+			else
+				pMenu->AppendMenu(MF_STRING, ID_FILL_DWG_DATA, "更新板图");
+		}
 		if(pMenu->GetMenuItemCount()>0)
 			pMenu->AppendMenu(MF_SEPARATOR);
 		if (pItemInfo->itemType == ANGLE_DWG_ITEM)
@@ -972,6 +980,8 @@ void CRevisionDlg::ContextMenu(CWnd *pWnd, CPoint point)
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_GUIGE, "更新规格");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_AMEND_MAT))
 			pMenu->AppendMenu(MF_STRING, ID_REFRESH_MAT, "更新材质");
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_FILL_DADA))
+			pMenu->AppendMenu(MF_STRING, ID_FILL_DWG_DATA, "更新数据");
 		pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "删除文件");
 		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_BATCH_PRINT))
 		{
@@ -1214,6 +1224,9 @@ void CRevisionDlg::OnImportBomFile()
 		}
 		else
 			logerr.Log("加载物料清单失败!");
+		//读取料单特定信息
+		if (g_xUbomModel.IsValidFunc(CBomModel::FUNC_DWG_FILL_DADA))
+			pProject->ReadTowerPrjInfo(sFilePath);
 	}	
 }
 //导入DWG文件
@@ -1428,6 +1441,26 @@ void CRevisionDlg::OnRefreshMat()
 		pDwgInfo->ModifyAngleDwgMaterial();
 	if (pDwgInfo->GetPlateNum() > 0)
 		pDwgInfo->ModifyPlateDwgMaterial();
+#ifdef _ARX_2007
+	SendCommandToCad(L"RE ");
+#else
+	SendCommandToCad("RE ");
+#endif
+	RefreshListCtrl(hSelItem);
+}
+//成都铁塔长定制填充杆图和板图
+void CRevisionDlg::OnFillDwgData()
+{
+	CLogErrorLife logErrLife;
+	HTREEITEM hSelItem = m_treeCtrl.GetSelectedItem();
+	TREEITEM_INFO *pItemInfo = (TREEITEM_INFO*)m_treeCtrl.GetItemData(hSelItem);
+	if (pItemInfo == NULL)
+		return;
+	CDwgFileInfo* pDwgInfo = (CDwgFileInfo*)pItemInfo->dwRefData;
+	if (pDwgInfo->GetAngleNum() > 0)
+		pDwgInfo->FillAngleDwgData();
+	if (pDwgInfo->GetPlateNum() > 0)
+		pDwgInfo->FillPlateDwgData();
 #ifdef _ARX_2007
 	SendCommandToCad(L"RE ");
 #else

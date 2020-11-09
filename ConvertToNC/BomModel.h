@@ -3,6 +3,7 @@
 #include "XhCharString.h"
 #include "BomFile.h"
 #include "PNCModel.h"
+#include "tbldef.h"
 #include <map>
 
 #ifdef __UBOM_ONLY_
@@ -50,7 +51,9 @@ public:
 	bool PtInDataRect(BYTE data_type, const double* poscoord);
 	bool PtInDrawRect(const double* poscoord);
 	bool PtInAngleRgn(const double* poscoord);
-	f3dPoint GetAngleDataPos(BYTE data_type);
+	GEPOINT GetAngleDataPos(BYTE data_type);
+	GEPOINT GetJgCardPosL_B();
+	CXhChar100 GetJgProcessInfo();
 	SCOPE_STRU GetCADEntScope();
 	//
 	void RefreshAngleNum();
@@ -81,7 +84,8 @@ public:
 	BOOL RetrieveAngles(BOOL bSupportSelectEnts =FALSE);
 	BOOL RetrievePlates(BOOL bSupportSelectEnts =FALSE);
 protected:
-	int GetDrawingVisibleEntSet(CHashSet<AcDbObjectId> &entSet);
+	void InsertSubJgCard(CAngleProcessInfo* pJgInfo);
+	void DimGridData(AcDbBlockTableRecord *pBlockTableRecord, GEPOINT orgPt, GRID_DATA_STRU& grid_data, const char* sText);
 public:
 	CDwgFileInfo();
 	~CDwgFileInfo();
@@ -100,6 +104,7 @@ public:
 	void ModifyAngleDwgSumWeight();
 	void ModifyAngleDwgSpec();
 	void ModifyAngleDwgMaterial();
+	void FillAngleDwgData();
 	//钢板DWG操作
 	int GetPlateNum(){return m_xPncMode.GetPlateNum();}
 	void EmptyPlateList() { m_xPncMode.Empty(); }
@@ -110,6 +115,7 @@ public:
 	void ModifyPlateDwgPartNum();
 	void ModifyPlateDwgSpec();
 	void ModifyPlateDwgMaterial();
+	void FillPlateDwgData();
 	CPNCModel *GetPncModel() { return &m_xPncMode; }
 	//打印清单
 	BOOL ImportPrintBomExcelFile(const char* sFileName);
@@ -141,6 +147,7 @@ private:
 	void AddCompareResultSheet(LPDISPATCH pSheet, int index, int iCompareType);
 public:
 	DWORD key;
+	PROJECT_INFO m_xPrjInfo;
 	CXhChar100 m_sProjName;
 	CBomFile m_xLoftBom,m_xOrigBom;
 	ATOM_LIST<CDwgFileInfo> dwgFileList;
@@ -157,6 +164,7 @@ public:
 	CPlateProcessInfo *FindPlateInfoByPartNo(const char* sPartNo);
 	CAngleProcessInfo *FindAngleInfoByPartNo(const char* sPartNo);
 	//初始化操作
+	BOOL ReadTowerPrjInfo(const char* sFileName);
 	void InitBomInfo(const char* sFileName,BOOL bLoftBom);
 	CDwgFileInfo* AppendDwgBomInfo(const char* sFileName);
 	CDwgFileInfo* FindDwgBomInfo(const char* sFileName);
@@ -201,15 +209,17 @@ class CBomModel
 {
 public:
 	//功能模块
-	static const BYTE FUNC_BOM_COMPARE		 = 1;	//0X01料单校审
-	static const BYTE FUNC_BOM_AMEND		 = 2;	//0X02修正料单
-	static const BYTE FUNC_DWG_COMPARE		 = 3;	//0X04DWG数据校审
-	static const BYTE FUNC_DWG_AMEND_SUM_NUM = 4;	//0X08修正加工数
-	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X10修正重量
-	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X20修正单基数
-	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x40批量打印 wht 20-05-26
-	static const BYTE FUNC_DWG_AMEND_SPEC	 = 8;	//0x80修正规格
-	static const BYTE FUNC_DWG_AMEND_MAT	 = 9;	//0x100修正材质
+	static const BYTE FUNC_BOM_COMPARE		 = 1;	//0X00000001料单校审
+	static const BYTE FUNC_BOM_AMEND		 = 2;	//0X00000002修正料单
+	static const BYTE FUNC_DWG_COMPARE		 = 3;	//0X00000004DWG数据校审
+	static const BYTE FUNC_DWG_AMEND_SUM_NUM = 4;	//0X00000008修正加工数
+	static const BYTE FUNC_DWG_AMEND_WEIGHT	 = 5;	//0X00000010修正重量
+	static const BYTE FUNC_DWG_AMEND_SING_N  = 6;	//0X00000020修正单基数
+	static const BYTE FUNC_DWG_BATCH_PRINT	 = 7;	//0x00000040批量打印 wht 20-05-26
+	static const BYTE FUNC_DWG_AMEND_SPEC	 = 8;	//0x00000080修正规格
+	static const BYTE FUNC_DWG_AMEND_MAT	 = 9;	//0x00000100修正材质
+	static const BYTE FUNC_DWG_AMEND_TA_NUM  = 10;	//0x00000200修正基数
+	static const BYTE FUNC_DWG_FILL_DADA	 = 11;	//0x00000400填充数据
 	DWORD m_dwFunctionFlag;
 	//定制客户
 	UINT m_uiCustomizeSerial;
@@ -229,6 +239,7 @@ public:
 	CXhChar50 m_sJgCardBlockName;		//角钢工艺卡块名称 wht 19-09-24
 	CXhChar500 m_sNotPrintFilter;		//支持设置批量打印时不需要打印的构件 wht 20-07-27
 	BYTE m_ciPrintSortType;				//0.按料单排序|1.按件号排序
+	std::map<CString, CString> m_xMapPrjCell;	//指定单元格的工程信息
 	//数据存储
 	CHashListEx<CProjectTowerType> m_xPrjTowerTypeList;
 public:
@@ -237,7 +248,6 @@ public:
 	//
 	void InitBomModel();
 	bool IsValidFunc(int iFuncType);
-	DWORD AddFuncType(int iFuncType);
 	BOOL IsJgCardBlockName(const char* sBlockName);
 	BOOL IsPartLabelTitle(const char* sText);
 	BOOL IsNeedPrint(BOMPART *pPart, const char* sNotes);
