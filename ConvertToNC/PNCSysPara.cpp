@@ -613,8 +613,6 @@ BOOL CPNCSysPara::RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo)
 				sText.Replace("：", "");
 				basicInfo.m_sTaStampNo.Copy(sText);
 			}
-			else if (sTag.EqualNoCase("孔径"))
-				basicInfo.m_sBoltStr.Copy(sText);
 			else if (sTag.EqualNoCase("工程代码"))
 			{
 				sText.Replace("工程代码", "");

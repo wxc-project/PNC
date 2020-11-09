@@ -165,12 +165,12 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			pPlateProcess->xPlate.m_nSingleNum = baseInfo.m_nNum;
 			pPlateProcess->xPlate.mkpos = dim_pos;
 			pPlateProcess->xPlate.mkVec = dim_vec;
-			if (pModel->m_sTaStampNo.GetLength() <= 0 && baseInfo.m_sTaStampNo.GetLength() > 0)
-				pModel->m_sTaStampNo.Copy(baseInfo.m_sTaStampNo);
-			if (pModel->m_sTaType.GetLength() <= 0 && baseInfo.m_sTaType.GetLength() > 0)
-				pModel->m_sTaType.Copy(baseInfo.m_sTaType);
-			if (pModel->m_sPrjCode.GetLength() <= 0 && baseInfo.m_sPrjCode.GetLength() > 0)
-				pModel->m_sPrjCode.Copy(baseInfo.m_sPrjCode);
+			if (pModel->m_xPrjInfo.m_sTaStampNo.GetLength() <= 0 && baseInfo.m_sTaStampNo.GetLength() > 0)
+				pModel->m_xPrjInfo.m_sTaStampNo.Copy(baseInfo.m_sTaStampNo);
+			if (pModel->m_xPrjInfo.m_sTaType.GetLength() <= 0 && baseInfo.m_sTaType.GetLength() > 0)
+				pModel->m_xPrjInfo.m_sTaType.Copy(baseInfo.m_sTaType);
+			if (pModel->m_xPrjInfo.m_sPrjCode.GetLength() <= 0 && baseInfo.m_sPrjCode.GetLength() > 0)
+				pModel->m_xPrjInfo.m_sPrjCode.Copy(baseInfo.m_sPrjCode);
 		}
 		else
 		{
@@ -237,7 +237,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		GetCurWorkPath(file_path);
 		pModel->CreatePlatePPiFile(file_path);
 		//写工程塔型配置文件 wht 19-01-12
-		if (pModel->m_sTaType.GetLength() > 0)
+		if (pModel->m_xPrjInfo.m_sTaType.GetLength() > 0)
 		{
 			CString cfg_path = file_path + "config.ini";
 			cfg_path.Format("%sconfig.ini", file_path);

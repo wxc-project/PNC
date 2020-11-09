@@ -91,14 +91,23 @@ struct BASIC_INFO {
 	int m_nNum;
 	long m_idCadEntNum;
 	CXhChar16 m_sPartNo;
+	CXhChar50 m_sTaStampNo;		//钢印号
+	CXhChar50 m_sTaType;		//塔型
+	CXhChar100 m_sPrjCode;		//工程编号
+	BASIC_INFO() { m_nThick = m_nNum = 0; m_cMat = 0; m_cQuality = 0; m_idCadEntNum = 0; }
+};
+struct PROJECT_INFO
+{
+	CXhChar100 m_sCompanyName;	//设计单位
 	CXhChar100 m_sPrjCode;		//工程编号
 	CXhChar100 m_sPrjName;		//工程名称
 	CXhChar50 m_sTaType;		//塔型
-	CXhChar50 m_sTaAlias;		//代号
+	CXhChar50 m_sTaNum;			//基数
+	CXhChar50 m_sTaAlias;		//代号（塔规格）
 	CXhChar50 m_sTaStampNo;		//钢印号
-	CXhChar200 m_sBoltStr;		//螺栓字符串
 	CXhChar100 m_sTaskNo;		//任务号
-	BASIC_INFO() { m_nThick = m_nNum = 0; m_cMat = 0; m_cQuality = 0; m_idCadEntNum = 0; }
+	CXhChar100 m_sContractNo;	//合同号
+	CXhChar100 m_sMatStandard;	//材料标准
 };
 //////////////////////////////////////////////////////////////////////////
 //CPlateObject
@@ -283,6 +292,7 @@ public:
 	void RefreshPlateNum(int nNewNum);
 	void RefreshPlateSpec();
 	void RefreshPlateMat();
+	void FillPlateNum(int nNewNum);
 	//控制是否需要输出ppi文件 wht 20-10-10
 	static BOOL m_bCreatePPIFile;
 };
@@ -312,12 +322,7 @@ public:
 	CHashSet<AcDbObjectId> m_xAllEntIdSet;
 	CHashSet<AcDbObjectId> m_xAllLineHash;
 	CHashStrList<CBoltEntGroup> m_xBoltEntHash;
-	CXhChar100 m_sCompanyName;	//设计单位
-	CXhChar100 m_sPrjCode;		//工程编号
-	CXhChar100 m_sPrjName;		//工程名称
-	CXhChar50 m_sTaType;		//塔型
-	CXhChar50 m_sTaAlias;		//代号
-	CXhChar50 m_sTaStampNo;		//钢印号
+	PROJECT_INFO m_xPrjInfo;
 	CXhChar500 m_sWorkPath;		//当前模型对应的工作路径 wht 19-04-02
 	CString m_sCurWorkFile;		//当前正在操作的文件
 	static const float ASSIST_RADIUS;

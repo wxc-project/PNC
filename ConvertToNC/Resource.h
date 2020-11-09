@@ -136,13 +136,14 @@
 #define ID_EMPTY_PLATE_RETRIEVED_RESLUT 32798
 #define ID_REFRESH_GUIGE                32799
 #define ID_REFRESH_MAT                  32800
+#define ID_FILL_DWG_DATA                32801
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
-#define _APS_NEXT_COMMAND_VALUE         32801
+#define _APS_NEXT_COMMAND_VALUE         32802
 #define _APS_NEXT_CONTROL_VALUE         158
 #define _APS_NEXT_SYMED_VALUE           102
 #endif
