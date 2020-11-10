@@ -229,16 +229,17 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 			m_xAngle.sSpec.Replace(" ", "");
 			sSpec = m_xAngle.sSpec;
 		}
-		//
-		double fWidth = 0, fThick = 0;
 		//从规格中提取材质 wht 19-08-05
+		double fWidth = 0, fThick = 0;
 		CXhChar16 sMaterial;
 		CProcessPart::RestoreSpec(sSpec, &fWidth, &fThick, sMaterial);
 		if (sMaterial.GetLength() > 0)
 		{
+			sMaterial.Remove(' ');
 			m_xAngle.cMaterial = CProcessPart::QueryBriefMatMark(sMaterial);
 			m_xAngle.cQualityLevel = CProcessPart::QueryBriefQuality(sMaterial);
 			m_xAngle.sSpec.Replace(sMaterial, "");
+			m_xAngle.sSpec.Remove(' ');
 		}
 		m_xAngle.wide = (float)fWidth;
 		m_xAngle.thick = (float)fThick;
@@ -293,14 +294,12 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 	else if (PtInDataRect(ITEM_TYPE_MAKE_BEND, data_pos))
 	{	//制弯
 		cType = ITEM_TYPE_MAKE_BEND;
-		if (g_pncSysPara.IsHasAngleBendTag(sValue))
-			m_xAngle.siZhiWan = 1;
+		m_xAngle.siZhiWan = (strlen(sValue) > 0)?1:0;
 	}
 	else if (PtInDataRect(ITEM_TYPE_WELD, data_pos))
 	{	//焊接
 		cType = ITEM_TYPE_WELD;
-		if (g_pncSysPara.IsHasAngleWeldTag(sValue))
-			m_xAngle.bWeldPart = TRUE;
+		m_xAngle.bWeldPart = strlen(sValue) > 0;
 	}
 	else if (PtInDataRect(ITEM_TYPE_CUT_ANGLE_S_X, data_pos) ||
 		PtInDataRect(ITEM_TYPE_CUT_ANGLE_S_Y, data_pos) ||
@@ -333,11 +332,11 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 		cType = ITEM_TYPE_PUSH_FLAT;
 		if (m_xAngle.nPushFlat == 0)
 			m_xAngle.nPushFlat = (strlen(sValue) > 0) ? 1 : 0;
-	}
-	else if (PtInDataRect(ITEM_TYPE_WELD, data_pos))
-	{	//焊接
-		cType = ITEM_TYPE_WELD;
-		m_xAngle.bWeldPart = strlen(sValue) > 0;
+		if (g_xUbomModel.m_uiCustomizeSerial == ID_SiChuan_ChengDu)
+		{	//中电建成都铁塔特殊要求:压扁也属于弯曲工艺
+			if (m_xAngle.nPushFlat > 0)
+				m_xAngle.siZhiWan = 1;
+		}
 	}
 	else if (PtInDataRect(ITEM_TYPE_KAIJIAO, data_pos))
 	{	//开角
