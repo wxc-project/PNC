@@ -80,8 +80,8 @@ public:
 	BOM_FILE_CFG m_xPrintTblCfg;
 	CXhChar500 m_sAngleCompareItemArr;	//角钢校审项
 	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
-	CHashStrList<BOOL> hashCompareItemOfAngle;
-	CHashStrList<BOOL> hashCompareItemOfPlate;
+	map<int,BOOL> hashCompareItemOfAngle;
+	map<int,BOOL> hashCompareItemOfPlate;
 public:
 	CBomConfig(void);
 	~CBomConfig(void);
@@ -103,8 +103,8 @@ public:
 	BOOL IsTmaBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
 	BOOL IsErpBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
 	BOOL IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
-	BOOL IsAngleCompareItem(const char* title) { return (hashCompareItemOfAngle.GetValue(title)!=NULL); }
-	BOOL IsPlateCompareItem(const char* title) { return (hashCompareItemOfPlate.GetValue(title) != NULL); }
+	BOOL IsAngleCompareItem(int iCol) { return hashCompareItemOfAngle[iCol]; }
+	BOOL IsPlateCompareItem(int iCol) { return hashCompareItemOfPlate[iCol]; }
 	size_t GetBomTitleCount() { return m_xBomTitleArr.size(); }
 	BOOL IsTitleCol(int index, const char*title);
 	CXhChar16 GetTitleKey(int index);
