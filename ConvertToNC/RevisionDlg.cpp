@@ -1768,18 +1768,15 @@ void CRevisionDlg::OnCbnSelchangeCmbCfg()
 	cfg_file += "配置\\";
 	cfg_file += sCfgName;
 	ImportUbomConfigFile(cfg_file);
-#ifdef __ALFA_TEST_
-	int nWidth = g_xBomCfg.InitBomTitle();
+	//
+	g_xBomCfg.InitBomTitle();
 	RefreshTreeCtrl();
 	RefreshListCtrl(NULL);
+#ifdef __ALFA_TEST_
 	//更新CAD显示标题
 	CXhChar100 sWndText("UBOM");
 	sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');
 	::SetWindowText(adsw_acadMainWnd(), sWndText);
-#else
-	//同一个客户显示的数据列相同，仅刷新界面即可
-	RefreshTreeCtrl();
-	RefreshListCtrl(NULL);
 #endif
 }
 #endif
