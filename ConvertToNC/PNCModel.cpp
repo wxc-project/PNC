@@ -2019,7 +2019,8 @@ CDwgFileInfo* CProjectTowerType::FindDwgBomInfo(const char* sFileName)
 	return pDwgInfo;
 }
 //
-void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashStrList<BOOL> &hashBoolByPropName)
+void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, 
+				CHashStrList<BOOL> &hashBoolByPropName,BOOL bBomToBom /*= FALSE*/)
 {
 	hashBoolByPropName.Empty();
 	//规格
@@ -2054,6 +2055,16 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart, CHashS
 	//质量等级
 	if (g_xUbomModel.m_bCmpQualityLevel && pSrcPart->cQualityLevel != pDesPart->cQualityLevel)
 		hashBoolByPropName.SetValue(CBomConfig::KEY_MAT, TRUE);
+	//单基数(双料单对比特殊处理)
+	if (bBomToBom && pSrcPart->GetPartNum() != pDesPart->GetPartNum() &&
+		(g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_SING_NUM) ||
+		g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::T_SING_NUM)))
+		hashBoolByPropName.SetValue(CBomConfig::KEY_SING_N, TRUE);
+	//加工数(双料单对比特殊处理)
+	if(bBomToBom && pSrcPart->nSumPart!=pDesPart->nSumPart &&
+		(g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::T_MANU_NUM) ||
+			g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::T_MANU_NUM)))
+		hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
 	//角钢定制校审项
 	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::ANGLE)
 	{
@@ -2184,7 +2195,7 @@ int CProjectTowerType::CompareOrgAndLoftParts()
 		else
 		{	//2. 对比同一件号构件属性
 			hashBoolByPropName.Empty();
-			CompareData(pLoftPart, pOrgPart, hashBoolByPropName);
+			CompareData(pLoftPart, pOrgPart, hashBoolByPropName, TRUE);
 			if (hashBoolByPropName.GetNodeNum() > 0)//结点数量
 			{
 				COMPARE_PART_RESULT *pResult = m_hashCompareResultByPartNo.Add(pLoftPart->sPartNo);

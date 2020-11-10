@@ -195,7 +195,7 @@ public:
 		COMPARE_PART_RESULT() { pOrgPart = NULL; pLoftPart = NULL; };
 	};
 private:
-	void CompareData(BOMPART* pLoftPart, BOMPART* pDesPart, CHashStrList<BOOL> &hashBoolByPropName);
+	void CompareData(BOMPART* pLoftPart, BOMPART* pDesPart, CHashStrList<BOOL> &hashBoolByPropName, BOOL bBomToBom = FALSE);
 	void AddDwgLackPartSheet(LPDISPATCH pSheet, int iCompareType);
 	void AddCompareResultSheet(LPDISPATCH pSheet, int index, int iCompareType);
 public:
