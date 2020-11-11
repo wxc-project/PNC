@@ -50,16 +50,13 @@ BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
 		CVariant2dArray sheetContentMap(1, 1);
 		if (!CExcelOper::GetExcelContentOfSpecifySheet(file_path, sheetContentMap, 1, 52))
 			return FALSE;
-
-		VARIANT value;
 		BOOL bValid = FALSE;
-		for (size_t iCol = 0; iCol < CBomTblTitleCfg::BomColMap.size(); iCol++)
+		for (TitleColPtr pColS=CBomTblTitleCfg::ColIterS(); pColS != CBomTblTitleCfg::ColIterE(); pColS++)
 		{
-			CXhChar50 sCol(CBomTblTitleCfg::GetColName(iCol));
-			DWORD* pColIndex = hashColIndex.GetValue(sCol);
+			DWORD* pColIndex = hashColIndex.GetValue(pColS->second);
 			if (pColIndex == NULL)
 				continue;
-			bValid = FALSE;
+			VARIANT value;
 			for (int iRow = 0; iRow < 10; iRow++)
 			{
 				sheetContentMap.GetValueAt(iRow, *pColIndex, value);
@@ -67,7 +64,7 @@ BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
 					continue;
 				CString str(value.bstrVal);
 				str.Remove('\n');
-				if (!bValid && CBomTblTitleCfg::IsMatchTitle(iCol, str))
+				if (!bValid && CBomTblTitleCfg::IsMatchTitle(pColS->first, str))
 				{
 					bValid = TRUE;
 					break;
@@ -170,7 +167,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	for(int i=iStartRow;i<= nRowCount;i++)
 	{
 		VARIANT value;
-		int nSingleNum = 0, nProcessNum = 0, nTaNum = 0;
+		int nSingleNum = 0, nProcessNum = 0, nTaNum = 0, nLsNum = 0;
 		double fLength = 0, fWeight = 0, fSumWeight = 0;
 		CXhChar100 sPartNo, sMaterial, sSpec, sNote, sReplaceSpec, sValue;
 		CXhChar100 sSingleNum, sProcessNum, sTaNum;
@@ -289,6 +286,13 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			sProcessNum = VariantToString(value);
 			if(sProcessNum.GetLength()>0)
 				nProcessNum = atoi(sProcessNum);
+		}
+		//螺栓数
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_LS_NUM));
+		if (pColIndex)
+		{
+			sheetContentMap.GetValueAt(i, *pColIndex, value);
+			nLsNum = atoi(VariantToString(value));
 		}
 		//单基重量
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_SING_WEIGHT));
@@ -441,6 +445,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			pBomPart->SetPartNum(nSingleNum);
 			pBomPart->nSumPart = nProcessNum;
 			pBomPart->nTaNum = nTaNum;
+			pBomPart->nMSumLs = nLsNum;
 			pBomPart->sPartNo.Copy(sPartNo);
 			pBomPart->sSpec.Copy(sSpec);
 			pBomPart->sMaterial = sMaterial;
@@ -595,26 +600,6 @@ CString CBomFile::GetPartNumStr()
 
 //////////////////////////////////////////////////////////////////////////
 //CBomImportCfg
-const char* CBomConfig::KEY_PN			= "PartNo";
-const char* CBomConfig::KEY_MAT			= "Material";
-const char* CBomConfig::KEY_SPEC		= "Spec";
-const char* CBomConfig::KEY_LEN			= "Length";
-const char* CBomConfig::KEY_WIDE		= "Width";
-const char* CBomConfig::KEY_SING_N		= "SingNum";
-const char* CBomConfig::KEY_TA_NUM		= "TaNum";
-const char* CBomConfig::KEY_MANU_N		= "ManuNum";
-const char* CBomConfig::KEY_SING_W		= "SingWeight";
-const char* CBomConfig::KEY_MANU_W		= "SumWeight";
-const char* CBomConfig::KEY_WELD		= "Weld";
-const char* CBomConfig::KEY_ZHI_WAN		= "ZhiWan";
-const char* CBomConfig::KEY_CUT_ANGLE	= "CutAngle";
-const char* CBomConfig::KEY_CUT_ROOT	= "CutRoot";
-const char* CBomConfig::KEY_CUT_BER		= "CutBer";
-const char* CBomConfig::KEY_PUSH_FLAT	= "PushFlat";
-const char* CBomConfig::KEY_KAI_JIAO	= "KaiJiao";
-const char* CBomConfig::KEY_HE_JIAO		= "HeJiao";
-const char* CBomConfig::KEY_FOO_NAIL	= "FootNail";
-const char* CBomConfig::KEY_NOTES		= "Notes";
 CBomConfig::CBomConfig(void)
 {
 	m_sProcessDescArr[TYPE_ZHI_WAN].Copy("火曲|卷边|制弯|");
@@ -647,10 +632,11 @@ void CBomConfig::Init()
 	//
 	m_sAngleCompareItemArr.Empty();
 	m_sPlateCompareItemArr.Empty();
-	for (size_t iCol = 0; iCol < CBomTblTitleCfg::BomColMap.size(); iCol++)
+	//
+	for (TitleColPtr iter=CBomTblTitleCfg::ColIterS(); iter!=CBomTblTitleCfg::ColIterE(); iter++)
 	{
-		hashCompareItemOfAngle[iCol] = FALSE;
-		hashCompareItemOfPlate[iCol] = FALSE;
+		hashCompareItemOfAngle[iter->first] = FALSE;
+		hashCompareItemOfPlate[iter->first] = FALSE;
 	}
 }
 BOOL CBomConfig::IsEqualDefaultProcessFlag(const char* sValue)
@@ -739,36 +725,14 @@ bool CBomConfig::ExtractAngleCompareItems()
 	{
 		if (strlen(skey) <= 0)
 			continue;
-		if (strstr(skey, "件号"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_PART_NO] = TRUE;
-		else if (strstr(skey, "材质"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_MATERIAL] = TRUE;
-		else if (strstr(skey, "规格"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_SPEC] = TRUE;
-		else if (strstr(skey, "单基数"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_SING_NUM] = TRUE;
-		else if (strstr(skey, "加工数"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_MANU_NUM] = TRUE;
-		else if (strstr(skey, "长度"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_LEN] = TRUE;
-		else if (strstr(skey, "焊接"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_WELD] = TRUE;
-		else if (strstr(skey, "制弯"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_ZHI_WAN] = TRUE;
-		else if (strstr(skey, "切角"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_CUT_ANGLE] = TRUE;
-		else if (strstr(skey, "刨根"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_CUT_ROOT] = TRUE;
-		else if (strstr(skey, "铲背"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_CUT_BER] = TRUE;
-		else if (strstr(skey, "打扁"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_PUSH_FLAT] = TRUE;
-		else if (strstr(skey, "开角"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_KAI_JIAO] = TRUE;
-		else if (strstr(skey, "合角"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_HE_JIAO] = TRUE;
-		else if (strstr(skey, "脚钉"))
-			hashCompareItemOfAngle[CBomTblTitleCfg::I_FOOT_NAIL] = TRUE;
+		for (TitleColPtr iter = CBomTblTitleCfg::ColIterS(); iter != CBomTblTitleCfg::ColIterE(); iter++)
+		{
+			if (CBomTblTitleCfg::IsMatchTitle(iter->first, skey))
+			{
+				hashCompareItemOfAngle[iter->first] = TRUE;
+				break;
+			}
+		}
 	}
 	return hashCompareItemOfAngle[CBomTblTitleCfg::I_PART_NO]==TRUE;
 }
@@ -781,24 +745,14 @@ bool CBomConfig::ExtractPlateCompareItems()
 	{
 		if (strlen(skey) <= 0)
 			continue;
-		if (strstr(skey, "件号"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_PART_NO] = TRUE;
-		else if (strstr(skey, "材质"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_MATERIAL] = TRUE;
-		else if (strstr(skey, "规格"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_SPEC] = TRUE;
-		else if (strstr(skey, "单基数"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_SING_NUM] = TRUE;
-		else if (strstr(skey, "加工数"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_MANU_NUM] = TRUE;
-		else if (strstr(skey, "长度"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_LEN] = TRUE;
-		else if (strstr(skey, "宽度"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_WIDE] = TRUE;
-		else if (strstr(skey, "焊接"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_WELD] = TRUE;
-		else if (strstr(skey, "制弯"))
-			hashCompareItemOfPlate[CBomTblTitleCfg::I_ZHI_WAN] = TRUE;
+		for (TitleColPtr iter = CBomTblTitleCfg::ColIterS(); iter != CBomTblTitleCfg::ColIterE(); iter++)
+		{
+			if (CBomTblTitleCfg::IsMatchTitle(iter->first, skey))
+			{
+				hashCompareItemOfPlate[iter->first] = TRUE;
+				break;
+			}
+		}
 	}
 	return hashCompareItemOfPlate[CBomTblTitleCfg::I_PART_NO]==TRUE;
 }
@@ -808,36 +762,46 @@ int CBomConfig::InitBomTitle()
 	m_xTmaTblCfg.m_xTblCfg.GetRealColIndex(mapRealCol);
 	//初始化显示列
 	m_xBomTitleArr.clear();
-	m_xBomTitleArr.push_back(BOM_TITLE(KEY_PN, "件号", 75));
-	m_xBomTitleArr.push_back(BOM_TITLE(KEY_SPEC, "规格", 70));
-	m_xBomTitleArr.push_back(BOM_TITLE(KEY_MAT, "材质", 53));
-	m_xBomTitleArr.push_back(BOM_TITLE(KEY_LEN, "长度", 50));
-	if(mapRealCol[CBomTblTitleCfg::I_TA_NUM]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_TA_NUM, "基数", 52));
-	if (mapRealCol[CBomTblTitleCfg::I_SING_NUM]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_SING_N, "单基数", 52));
-	if (mapRealCol[CBomTblTitleCfg::I_MANU_NUM]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_MANU_N, "加工数", 52));
-	if (mapRealCol[CBomTblTitleCfg::I_SING_WEIGHT]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_SING_W, "单重", 52));
-	if (mapRealCol[CBomTblTitleCfg::I_MANU_WEIGHT]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_MANU_W, "总重", 65));
-	if (mapRealCol[CBomTblTitleCfg::I_WELD]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_WELD, "焊接", 44));
-	if (mapRealCol[CBomTblTitleCfg::I_ZHI_WAN]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_ZHI_WAN, "制弯", 44));
-	if (mapRealCol[CBomTblTitleCfg::I_CUT_ANGLE]>0)
-	{	//角钢工艺信息
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_ANGLE, "切角", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_PUSH_FLAT, "打扁", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_BER, "铲背", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_CUT_ROOT, "刨根", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_KAI_JIAO, "开角", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_HE_JIAO, "合角", 44));
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_FOO_NAIL, "带脚钉", 50));
-	}
-	if (mapRealCol[CBomTblTitleCfg::I_NOTES]>0)
-		m_xBomTitleArr.push_back(BOM_TITLE(KEY_NOTES, "备注", 150));
+	if (mapRealCol[CBomTblTitleCfg::I_PART_NO] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_PART_NO, 75));
+	if (mapRealCol[CBomTblTitleCfg::I_SPEC] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_SPEC, 70));
+	if (mapRealCol[CBomTblTitleCfg::I_MATERIAL] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_MATERIAL, 50));
+	if (mapRealCol[CBomTblTitleCfg::I_LEN] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_LEN, 50));
+	if (mapRealCol[CBomTblTitleCfg::I_TA_NUM] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_TA_NUM, 50));
+	if (mapRealCol[CBomTblTitleCfg::I_SING_NUM] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_SING_NUM, 52));
+	if (mapRealCol[CBomTblTitleCfg::I_MANU_NUM] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_MANU_NUM, 52));
+	if (mapRealCol[CBomTblTitleCfg::I_SING_WEIGHT] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_SING_WEIGHT, 50));
+	if (mapRealCol[CBomTblTitleCfg::I_MANU_WEIGHT] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_MANU_WEIGHT, 65));
+	if (mapRealCol[CBomTblTitleCfg::I_LS_NUM] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_LS_NUM, 50));
+	if (mapRealCol[CBomTblTitleCfg::I_WELD] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_WELD, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_ZHI_WAN] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_ZHI_WAN, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_CUT_ANGLE] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_CUT_ANGLE, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_PUSH_FLAT] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_PUSH_FLAT, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_CUT_BER] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_CUT_BER, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_CUT_ROOT] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_CUT_ROOT, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_KAI_JIAO] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_KAI_JIAO, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_HE_JIAO] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_HE_JIAO, 40));
+	if (mapRealCol[CBomTblTitleCfg::I_FOOT_NAIL] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_FOOT_NAIL, 50));
+	if (mapRealCol[CBomTblTitleCfg::I_NOTES] > 0)
+		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_NOTES, 150));
 	//初始化角钢校审项目
 	std::map<int, int>::iterator iterS, iterE = mapRealCol.end();
 	if (!ExtractAngleCompareItems())
@@ -871,25 +835,28 @@ BOOL CBomConfig::IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox /*= F
 	return m_xPrintTblCfg.IsCurFormat(sFilePath, bDisplayMsgBox);
 }
 
-BOOL CBomConfig::IsTitleCol(int index, const char*title_key)
+BOOL CBomConfig::IsTitleCol(int index, int iCfgCol)
 {
-	if (index < 0 || index >= (int)m_xBomTitleArr.size() || title_key ==NULL)
+	if (index < 0 || index >= (int)m_xBomTitleArr.size())
 		return FALSE;
-	return m_xBomTitleArr[index].m_sKey.Equal(title_key);
-}
-CXhChar16 CBomConfig::GetTitleKey(int index)
-{
-	if (index < 0 || index >= (int)GetBomTitleCount())
-		return CXhChar16();
-	else
-		return m_xBomTitleArr[index].m_sKey;
+	return m_xBomTitleArr[index].m_iCfgCol == iCfgCol;
 }
 CXhChar16 CBomConfig::GetTitleName(int index)
 {
 	if (index < 0 || index >= (int)GetBomTitleCount())
 		return CXhChar16();
 	else
-		return m_xBomTitleArr[index].m_sTitle;
+	{
+		int iCfgCol = m_xBomTitleArr[index].m_iCfgCol;
+		return CXhChar16(CBomTblTitleCfg::GetColName(iCfgCol));
+	}
+}
+CXhChar16 CBomConfig::GetCfgColName(int iCfgCol)
+{
+	if (iCfgCol < CBomTblTitleCfg::GetColNum())
+		return CXhChar16(CBomTblTitleCfg::GetColName(iCfgCol));
+	else
+		return CXhChar16();
 }
 int CBomConfig::GetTitleWidth(int index)
 {

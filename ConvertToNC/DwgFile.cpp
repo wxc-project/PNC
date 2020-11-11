@@ -402,7 +402,7 @@ void CDwgFileInfo::DimGridData(AcDbBlockTableRecord *pBlockTableRecord, GEPOINT 
 	DimText(pBlockTableRecord, dimPos, sText, TextStyleTable::hzfs.textStyleId, grid_data.fTextHigh, 0, hMode, vMode);
 }
 //插入角钢工艺子卡
-void CDwgFileInfo::InsertSubJgCard(CAngleProcessInfo* pJgInfo)
+void CDwgFileInfo::InsertSubJgCard(CAngleProcessInfo* pJgInfo, BOMPART* pBomPart)
 {
 	CLockDocumentLife lockCurDocLife;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();//定义块表记录指针
@@ -442,21 +442,22 @@ void CDwgFileInfo::InsertSubJgCard(CAngleProcessInfo* pJgInfo)
 			}
 			if (grid_data.type_id == ITEM_TYPE_SUM_PART_NUM)
 			{	//加工数
-				CXhChar50 ss("%d", pJgInfo->m_xAngle.nSumPart);
+				CXhChar50 ss("%d", pBomPart->nSumPart);
 				DimGridData(pBlockTableRecord, org_pt, grid_data, ss);
 				pEnt->erase();
 				pEnt->close();
 			}
 			else if (grid_data.type_id == ITEM_TYPE_SUM_WEIGHT)
 			{	//总重
-				CXhChar50 ss("%g", pJgInfo->m_xAngle.fSumWeight);
+				CXhChar50 ss("%g", pBomPart->fSumWeight);
 				DimGridData(pBlockTableRecord, org_pt, grid_data, ss);
 				pEnt->erase();
 				pEnt->close();
 			}
 			else if (grid_data.type_id == ITEM_TYPE_LSSUM_NUM)
 			{	//总孔数
-				CXhChar50 ss("%d", pJgInfo->m_xAngle.nMSumLs);
+				int nTaNum = atoi(BelongModel()->m_xPrjInfo.m_sTaNum);
+				CXhChar50 ss("%d", pBomPart->nMSumLs*nTaNum);
 				DimGridData(pBlockTableRecord, org_pt, grid_data, ss);
 				pEnt->erase();
 				pEnt->close();
@@ -568,7 +569,7 @@ void CDwgFileInfo::FillAngleDwgData()
 			continue;
 		}
 		//
-		InsertSubJgCard(pJgInfo);
+		InsertSubJgCard(pJgInfo,pLoftBom);
 	}
 	DisplayCadProgress(100);
 }

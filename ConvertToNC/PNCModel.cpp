@@ -1885,7 +1885,12 @@ BOOL CProjectTowerType::ReadTowerPrjInfo(const char* sFileName)
 	sCell = g_xUbomModel.m_xMapPrjCell["下达单号"];
 	CExcelOper::GetRangeValue(excel_sheet, sCell.GetBuffer(), NULL, value);
 	if (value.vt != VT_EMPTY)
-		m_xPrjInfo.m_sTaskNo = VariantToString(value);
+	{
+		if (value.vt == VT_R8)
+			m_xPrjInfo.m_sTaskNo.Printf("%.0f", value.dblVal);
+		else
+			m_xPrjInfo.m_sTaskNo = VariantToString(value);
+	}	
 	//
 	DisplayCadProgress(70);
 	sCell = g_xUbomModel.m_xMapPrjCell["塔规格"];
@@ -2044,27 +2049,27 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart,
 
 	if (cPartType2 != cPartType1 ||
 		sSpec1.CompareNoCase(sSpec2) != 0) //stricmp(pSrcPart->sSpec, pDesPart->sSpec) != 0)
-		hashBoolByPropName.SetValue(CBomConfig::KEY_SPEC, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_SPEC), TRUE);
 	//材质
 	if (toupper(pSrcPart->cMaterial) != toupper(pDesPart->cMaterial))
-		hashBoolByPropName.SetValue(CBomConfig::KEY_MAT, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MATERIAL), TRUE);
 	else if (pSrcPart->cMaterial != pDesPart->cMaterial && !g_xUbomModel.m_bEqualH_h)
-		hashBoolByPropName.SetValue(CBomConfig::KEY_MAT, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MATERIAL), TRUE);
 	if (pSrcPart->cMaterial == 'A' && !pSrcPart->sMaterial.Equal(pDesPart->sMaterial))
-		hashBoolByPropName.SetValue(CBomConfig::KEY_MAT, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MATERIAL), TRUE);
 	//质量等级
 	if (g_xUbomModel.m_bCmpQualityLevel && pSrcPart->cQualityLevel != pDesPart->cQualityLevel)
-		hashBoolByPropName.SetValue(CBomConfig::KEY_MAT, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MATERIAL), TRUE);
 	//单基数(双料单对比特殊处理)
 	if (bBomToBom && pSrcPart->GetPartNum() != pDesPart->GetPartNum() &&
 		(g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_SING_NUM) ||
 		g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::I_SING_NUM)))
-		hashBoolByPropName.SetValue(CBomConfig::KEY_SING_N, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_SING_NUM), TRUE);
 	//加工数(双料单对比特殊处理)
 	if(bBomToBom && pSrcPart->nSumPart!=pDesPart->nSumPart &&
 		(g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_MANU_NUM) ||
 		g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::I_MANU_NUM)))
-		hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
+		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MANU_NUM), TRUE);
 	//角钢定制校审项
 	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::ANGLE)
 	{
@@ -2073,69 +2078,73 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart,
 		//单基数
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_SING_NUM) &&
 			pSrcPart->GetPartNum() != pDesPart->GetPartNum())
-			hashBoolByPropName.SetValue(CBomConfig::KEY_SING_N, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_SING_NUM), TRUE);
 		//加工数
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_MANU_NUM) &&
 			pSrcPart->nSumPart != pDesPart->nSumPart)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MANU_NUM), TRUE);
 		//基数
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_TA_NUM) &&
 			pSrcPart->nTaNum != pDesPart->nTaNum)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_TA_NUM, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_TA_NUM), TRUE);
+		//螺栓数
+		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_LS_NUM) &&
+			pSrcPart->nMSumLs != pDesPart->nMSumLs)
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_LS_NUM), TRUE);
 		//总重
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_MANU_WEIGHT) &&
 			fabs(pSrcPart->fSumWeight - pDesPart->fSumWeight) > 0)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_W, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MANU_WEIGHT), TRUE);
 		//焊接
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_WELD) &&
 			pSrcPart->bWeldPart != pDesPart->bWeldPart)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_WELD, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_WELD), TRUE);
 		//制弯
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_ZHI_WAN) &&
 			pSrcPart->siZhiWan != pDesPart->siZhiWan)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_ZHI_WAN, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_ZHI_WAN), TRUE);
 		//长度对比
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_LEN))
 		{
 			if (g_xUbomModel.m_uiCustomizeSerial == ID_JiangSu_HuaDian)
 			{	//江苏华电要求图纸长度大于放样长度
 				if (pSrcPart->length > pDesPart->length)
-					hashBoolByPropName.SetValue(CBomConfig::KEY_LEN, TRUE);
+					hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_LEN), TRUE);
 			}
 			else
 			{	//判断数值是否相等
 				if (fabsl(pSrcPart->length - pDesPart->length) > g_xUbomModel.m_fMaxLenErr)
-					hashBoolByPropName.SetValue(CBomConfig::KEY_LEN, TRUE);
+					hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_LEN), TRUE);
 			}
 		}
 		//切角
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_CUT_ANGLE) &&
 			pSrcJg->bCutAngle != pDesJg->bCutAngle)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_CUT_ANGLE, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_CUT_ANGLE), TRUE);
 		//压扁
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_PUSH_FLAT) &&
 			pSrcJg->nPushFlat != pDesJg->nPushFlat)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_PUSH_FLAT, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_PUSH_FLAT), TRUE);
 		//铲背
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_CUT_BER) &&
 			pSrcJg->bCutBer != pDesJg->bCutBer)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_CUT_BER, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_CUT_BER), TRUE);
 		//刨根
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_CUT_ROOT) &&
 			pSrcJg->bCutRoot != pDesJg->bCutRoot)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_CUT_ROOT, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_CUT_ROOT), TRUE);
 		//开角
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_KAI_JIAO) &&
 			pSrcJg->bKaiJiao != pDesJg->bKaiJiao)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_KAI_JIAO, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_KAI_JIAO), TRUE);
 		//合角
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_HE_JIAO) &&
 			pSrcJg->bHeJiao != pDesJg->bHeJiao)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_HE_JIAO, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_HE_JIAO), TRUE);
 		//脚钉
 		if (g_xBomCfg.IsAngleCompareItem(CBomTblTitleCfg::I_FOOT_NAIL) &&
 			pSrcJg->bHasFootNail != pDesJg->bHasFootNail)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_FOO_NAIL, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_FOOT_NAIL), TRUE);
 	}
 	//钢板定制校审项
 	if (pSrcPart->cPartType == pDesPart->cPartType && pSrcPart->cPartType == BOMPART::PLATE)
@@ -2147,24 +2156,24 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart,
 			pSrcPart->GetPartNum() != pDesPart->GetPartNum())
 		{	//青岛豪迈不比较单基数
 			if (g_xUbomModel.m_uiCustomizeSerial != ID_QingDao_HaoMai)
-				hashBoolByPropName.SetValue(CBomConfig::KEY_SING_N, TRUE);
+				hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_SING_NUM), TRUE);
 		}
 		//加工数
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::I_MANU_NUM) &&
 			pSrcPart->nSumPart != pDesPart->nSumPart)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_N, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MANU_NUM), TRUE);
 		//总重
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::I_MANU_WEIGHT) &&
 			fabs(pSrcPart->fSumWeight - pDesPart->fSumWeight) > 0)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_MANU_W, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_MANU_WEIGHT), TRUE);
 		//焊接
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::I_WELD) &&
 			pSrcPart->bWeldPart != pDesPart->bWeldPart)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_WELD, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_WELD), TRUE);
 		//制弯
 		if (g_xBomCfg.IsPlateCompareItem(CBomTblTitleCfg::I_ZHI_WAN) &&
 			pSrcPart->siZhiWan != pDesPart->siZhiWan)
-			hashBoolByPropName.SetValue(CBomConfig::KEY_ZHI_WAN, TRUE);
+			hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_ZHI_WAN), TRUE);
 	}
 }
 //比对BOM信息 0.相同 1.不同 2.文件有误
@@ -2364,7 +2373,7 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 		CStringArray str_arr;
 		for (size_t i = 0; i < g_xBomCfg.GetBomTitleCount(); i++)
 		{
-			if (g_xBomCfg.IsTitleCol(i, CBomConfig::KEY_NOTES))
+			if (g_xBomCfg.IsTitleCol(i, CBomTblTitleCfg::I_NOTES))
 				continue;	//备注不显示
 			str_arr.Add(g_xBomCfg.GetTitleName(i));
 		}
@@ -2386,58 +2395,58 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 			int iCol = 0;
 			for (size_t ii = 0; ii < g_xBomCfg.GetBomTitleCount(); ii++)
 			{
-				if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_NOTES))
+				if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_NOTES))
 					continue;	//备注不显示
 				BOOL bDiff = FALSE;
-				if (pResult->hashBoolByPropName.GetValue(g_xBomCfg.GetTitleKey(ii)))
+				if (pResult->hashBoolByPropName.GetValue(g_xBomCfg.GetTitleName(ii)))
 					bDiff = TRUE;
-				if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_PN))
+				if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_PART_NO))
 				{	//件号
 					map.SetValueAt(iRow, iCol, COleVariant(pResult->pOrgPart->sPartNo));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_SPEC))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_SPEC))
 				{	//规格
 					map.SetValueAt(iRow, iCol, COleVariant(pResult->pOrgPart->sSpec));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, COleVariant(pResult->pLoftPart->sSpec));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_MAT))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_MATERIAL))
 				{	//材质
 					map.SetValueAt(iRow, iCol, COleVariant(CUbomModel::QueryMatMarkIncQuality(pResult->pOrgPart)));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, COleVariant(CUbomModel::QueryMatMarkIncQuality(pResult->pLoftPart)));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_LEN))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_LEN))
 				{	//长度
 					map.SetValueAt(iRow, iCol, COleVariant(CXhChar50("%.1f", pResult->pOrgPart->length)));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, COleVariant(CXhChar50("%.1f", pResult->pLoftPart->length)));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_SING_N))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_SING_NUM))
 				{	//单基数
 					map.SetValueAt(iRow, iCol, COleVariant((long)pResult->pOrgPart->GetPartNum()));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, COleVariant((long)pResult->pLoftPart->GetPartNum()));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_MANU_N))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_MANU_NUM))
 				{	//加工数
 					map.SetValueAt(iRow, iCol, COleVariant((long)pResult->pOrgPart->nSumPart));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, COleVariant((long)pResult->pLoftPart->nSumPart));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_MANU_W))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_MANU_WEIGHT))
 				{	//加工重量
 					map.SetValueAt(iRow, iCol, COleVariant(CXhChar50("%.1f", pResult->pOrgPart->fSumWeight)));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, COleVariant(CXhChar50("%.1f", pResult->pLoftPart->fSumWeight)));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_WELD))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_WELD))
 				{	//焊接
 					map.SetValueAt(iRow, iCol, pResult->pOrgPart->bWeldPart ? COleVariant("*") : COleVariant(""));
 					if (bDiff)
 						map.SetValueAt(iRow + 1, iCol, pResult->pLoftPart->bWeldPart ? COleVariant("*") : COleVariant(""));
 				}
-				else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_ZHI_WAN))
+				else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_ZHI_WAN))
 				{	//制弯
 					map.SetValueAt(iRow, iCol, pResult->pOrgPart->siZhiWan > 0 ? COleVariant("*") : COleVariant(""));
 					if (bDiff)
@@ -2447,43 +2456,43 @@ void CProjectTowerType::AddCompareResultSheet(LPDISPATCH pSheet, int iSheet, int
 				{
 					PART_ANGLE* pOrgJg = (PART_ANGLE*)pResult->pOrgPart;
 					PART_ANGLE* pLoftJg = (PART_ANGLE*)pResult->pLoftPart;
-					if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_CUT_ANGLE))
+					if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_CUT_ANGLE))
 					{	//切角
 						map.SetValueAt(iRow, iCol, pOrgJg->bCutAngle ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bCutAngle ? COleVariant("*") : COleVariant(""));
 					}
-					else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_PUSH_FLAT))
+					else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_PUSH_FLAT))
 					{	//打扁
 						map.SetValueAt(iRow, iCol, pOrgJg->nPushFlat > 0 ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->nPushFlat > 0 ? COleVariant("*") : COleVariant(""));
 					}
-					else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_CUT_BER))
+					else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_CUT_BER))
 					{	//铲背
 						map.SetValueAt(iRow, iCol, pOrgJg->bCutBer ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bCutBer ? COleVariant("*") : COleVariant(""));
 					}
-					else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_CUT_ROOT))
+					else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_CUT_ROOT))
 					{	//刨根
 						map.SetValueAt(iRow, iCol, pOrgJg->bCutRoot ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bCutRoot ? COleVariant("*") : COleVariant(""));
 					}
-					else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_KAI_JIAO))
+					else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_KAI_JIAO))
 					{	//开角
 						map.SetValueAt(iRow, iCol, pOrgJg->bKaiJiao ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bKaiJiao ? COleVariant("*") : COleVariant(""));
 					}
-					else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_HE_JIAO))
+					else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_HE_JIAO))
 					{	//合角
 						map.SetValueAt(iRow, iCol, pOrgJg->bHeJiao ? COleVariant("*") : COleVariant(""));
 						if (bDiff)
 							map.SetValueAt(iRow + 1, iCol, pLoftJg->bHeJiao ? COleVariant("*") : COleVariant(""));
 					}
-					else if (g_xBomCfg.IsTitleCol(ii, CBomConfig::KEY_FOO_NAIL))
+					else if (g_xBomCfg.IsTitleCol(ii, CBomTblTitleCfg::I_FOOT_NAIL))
 					{	//带脚钉
 						map.SetValueAt(iRow, iCol, pOrgJg->bHasFootNail ? COleVariant("*") : COleVariant(""));
 						if (bDiff)

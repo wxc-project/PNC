@@ -3445,7 +3445,7 @@ void CPlateProcessInfo::FillPlateNum(int nNewNum)
 #else
 		pText->setTextString(sContent.GetBuffer());
 #endif
-		int color_index = GetNearestACI(RGB(255, 0, 0));
+		int color_index = GetNearestACI(RGB(228, 0, 127));
 		pText->setColorIndex(color_index);
 	}
 	else if (pEnt->isKindOf(AcDbMText::desc()))
@@ -3456,6 +3456,8 @@ void CPlateProcessInfo::FillPlateNum(int nNewNum)
 #else
 		pMText->setContents(sContent.GetBuffer());
 #endif
+		int color_index = GetNearestACI(RGB(228, 0, 127));
+		pMText->setColorIndex(color_index);
 	}
 	//
 	xBomPlate.nSumPart = nNewNum;

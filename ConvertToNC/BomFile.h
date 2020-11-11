@@ -29,26 +29,6 @@ class CBomConfig
 	bool ExtractAngleCompareItems();
 	bool ExtractPlateCompareItems();
 public:
-	const static char* KEY_PN;			//= "PartNo";
-	const static char* KEY_MAT;			//= "Material";
-	const static char* KEY_SPEC;		//= "Spec";
-	const static char* KEY_LEN;			//= "Length";
-	const static char* KEY_WIDE;		//= "Width";
-	const static char* KEY_TA_NUM;		//= "TaNum";
-	const static char* KEY_SING_N;		//= "SingNum";
-	const static char* KEY_MANU_N;		//= "ManuNum"
-	const static char* KEY_SING_W;		//= "SingWeight"
-	const static char* KEY_MANU_W;		//= "SumWeight"
-	const static char* KEY_WELD;		//= "Weld"
-	const static char* KEY_ZHI_WAN;		//= "ZhiWan"
-	const static char* KEY_CUT_ANGLE;	//= "CutAngle"
-	const static char* KEY_CUT_ROOT;	//= "CutRoot"
-	const static char* KEY_CUT_BER;		//= "CutBer"
-	const static char* KEY_PUSH_FLAT;	//= "PushFlat"
-	const static char* KEY_KAI_JIAO;	//= "KaiJiao"
-	const static char* KEY_HE_JIAO;		//= "HeJiao"
-	const static char* KEY_FOO_NAIL;	//= "FootNail"
-	const static char* KEY_NOTES;		//= "NOTE"
 	//工艺描述
 	const static BYTE TYPE_ZHI_WAN		= 0;
 	const static BYTE TYPE_CUT_ANGLE	= 1;
@@ -63,18 +43,15 @@ public:
 	//
 	struct BOM_TITLE
 	{
-		CXhChar16 m_sKey;
-		CXhChar16 m_sTitle;
+		int m_iCfgCol;
 		int m_nWidth;	//标题宽度
 		//
-		BOM_TITLE(const char* sKey, const char* sTile, int nWidth)
+		BOM_TITLE(int iCfgCol, int nWidth)
 		{
-			m_sKey.Copy(sKey);
-			m_sTitle.Copy(sTile);
+			m_iCfgCol = iCfgCol;
 			m_nWidth = nWidth;
 		}
 	};
-	vector<BOM_TITLE> m_xBomTitleArr;
 	BOM_FILE_CFG m_xTmaTblCfg;
 	BOM_FILE_CFG m_xErpTblCfg;
 	BOM_FILE_CFG m_xPrintTblCfg;
@@ -82,12 +59,18 @@ public:
 	CXhChar500 m_sPlateCompareItemArr;	//钢板校审项
 	map<int,BOOL> hashCompareItemOfAngle;
 	map<int,BOOL> hashCompareItemOfPlate;
+	vector<BOM_TITLE> m_xBomTitleArr;
 public:
 	CBomConfig(void);
 	~CBomConfig(void);
 	//
 	void Init();
 	int InitBomTitle();
+	size_t GetBomTitleCount() { return m_xBomTitleArr.size(); }
+	BOOL IsTitleCol(int index, int iCfgCol);
+	CXhChar16 GetTitleName(int index);
+	CXhChar16 GetCfgColName(int iCfgCol);
+	int GetTitleWidth(int index);
 	//
 	BOOL IsEqualDefaultProcessFlag(const char* sValue);
 	BOOL IsEqualProcessFlag(const char* sValue);
@@ -105,11 +88,6 @@ public:
 	BOOL IsPrintBomFile(const char* sFilePath, BOOL bDisplayMsgBox = FALSE);
 	BOOL IsAngleCompareItem(int iCol) { return hashCompareItemOfAngle[iCol]; }
 	BOOL IsPlateCompareItem(int iCol) { return hashCompareItemOfPlate[iCol]; }
-	size_t GetBomTitleCount() { return m_xBomTitleArr.size(); }
-	BOOL IsTitleCol(int index, const char*title);
-	CXhChar16 GetTitleKey(int index);
-	CXhChar16 GetTitleName(int index);
-	int GetTitleWidth(int index);
 };
 //////////////////////////////////////////////////////////////////////////
 //CBomFile

@@ -285,6 +285,11 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 		else
 			m_xAngle.nSumPart = atoi(sValue);
 	}
+	else if (PtInDataRect(ITEM_TYPE_LSSUM_NUM, data_pos))
+	{	//ÂÝË¨×ÜÊý
+		cType = ITEM_TYPE_LSSUM_NUM;
+		m_xAngle.nMSumLs = atoi(sValue);
+	}
 	else if (PtInDataRect(ITEM_TYPE_PART_NOTES, data_pos))
 	{	//±¸×¢
 		cType = ITEM_TYPE_PART_NOTES;

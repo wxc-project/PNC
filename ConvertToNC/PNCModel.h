@@ -137,7 +137,7 @@ public:
 	BOOL RetrieveAngles(BOOL bSupportSelectEnts = FALSE);
 	BOOL RetrievePlates(BOOL bSupportSelectEnts = FALSE);
 protected:
-	void InsertSubJgCard(CAngleProcessInfo* pJgInfo);
+	void InsertSubJgCard(CAngleProcessInfo* pJgInfo, BOMPART* pBomPart);
 	void DimGridData(AcDbBlockTableRecord *pBlockTableRecord, GEPOINT orgPt, GRID_DATA_STRU& grid_data, const char* sText);
 public:
 	CDwgFileInfo();
