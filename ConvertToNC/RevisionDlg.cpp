@@ -244,10 +244,10 @@ BOOL CRevisionDlg::OnInitDialog()
 		pClientCmb->SetCurSel(nSel);
 	//初始化配置下拉框
 	CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
-	multimap<int, CString>::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
-	multimap<int, CString>::iterator iterL = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
+	multimap<int, std::pair<CString, CString> >::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
+	multimap<int, std::pair<CString, CString> >::iterator iterL = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
 	for (; iterF != iterL; iterF++)
-		pCfgCmb->AddString(iterF->second);
+		pCfgCmb->AddString(iterF->second.second);
 	pCfgCmb->SetCurSel(0);
 #else
 	CRect tree_rect, cmb_rect;
@@ -267,11 +267,19 @@ BOOL CRevisionDlg::OnInitDialog()
 	else
 	{
 		CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
-		multimap<int, CString>::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
-		multimap<int, CString>::iterator iterL = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
-		for (; iterF != iterL; iterF++)
-			pCfgCmb->AddString(iterF->second);
-		pCfgCmb->SetCurSel(0);
+		multimap<int, std::pair<CString,CString> >::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
+		multimap<int, std::pair<CString, CString> >::iterator iterL = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
+		int iCurSel = -1, index = 0;
+		for (; iterF != iterL; iterF++, index++)
+		{
+			pCfgCmb->AddString(iterF->second.second);
+			if (iterF->second.first.CompareNoCase(g_xUbomModel.m_sCustomizeName) == 0)
+				iCurSel = index;
+		}
+		if (iCurSel > -1)
+			pCfgCmb->SetCurSel(iCurSel);
+		else
+			pCfgCmb->SetCurSel(0);
 	}
 	m_treeCtrl.MoveWindow(tree_rect);
 #endif
@@ -1715,10 +1723,10 @@ void CRevisionDlg::OnCbnSelchangeCmbClient()
 	//更新配置文件
 	CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
 	pCfgCmb->ResetContent();
-	multimap<int, CString>::iterator iterS = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
-	multimap<int, CString>::iterator iterE = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
+	multimap<int, std::pair<CString, CString> >::iterator iterS = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
+	multimap<int, std::pair<CString, CString> >::iterator iterE = g_xUbomModel.m_xMapClientCfgFile.upper_bound(g_xUbomModel.m_uiCustomizeSerial);
 	for (; iterS != iterE; iterS++)
-		pCfgCmb->AddString(iterS->second);
+		pCfgCmb->AddString(iterS->second.second);
 	pCfgCmb->SetCurSel(0);
 	if (pCfgCmb->GetCount() > 0)
 		OnCbnSelchangeCmbCfg();

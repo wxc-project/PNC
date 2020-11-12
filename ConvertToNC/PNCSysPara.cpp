@@ -1486,6 +1486,7 @@ void TraversalUbomConfigFiles()
 			continue;
 		//读取文件，获取客户ID
 		int nClientId = 0;
+		CString sClientName;
 		char line_txt[MAX_PATH] = "";
 		while (!feof(fp))
 		{
@@ -1502,7 +1503,16 @@ void TraversalUbomConfigFiles()
 			{
 				skey = strtok(NULL, ";");
 				nClientId = atoi(skey);
-				g_xUbomModel.m_xMapClientCfgFile.insert(std::make_pair(nClientId, file_name));
+			}
+			else if (_stricmp(key_word, "CLIENT_NAME") == 0)
+			{
+				skey = strtok(NULL, ";");
+				sClientName = skey;
+			}
+			if (nClientId > 0 && sClientName.GetLength() > 0)
+			{
+				std::pair<CString, CString> item = std::make_pair(sClientName, file_name);
+				g_xUbomModel.m_xMapClientCfgFile.insert(std::make_pair(nClientId, item));
 				break;
 			}
 		}

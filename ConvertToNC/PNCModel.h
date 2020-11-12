@@ -278,7 +278,7 @@ public:
 	UINT m_uiCustomizeSerial;
 	CXhChar50 m_sCustomizeName;
 	std::map<CString, int> m_xMapClientInfo;
-	std::multimap<int, CString> m_xMapClientCfgFile;
+	std::multimap<int, std::pair<CString,CString> > m_xMapClientCfgFile;
 	//配置参数
 	double m_fMaxLenErr;				//长度最大误差值
 	BOOL m_bCmpQualityLevel;			//质量等级校审
