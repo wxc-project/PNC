@@ -441,8 +441,8 @@ void CDwgFileInfo::InsertSubJgCard(CAngleProcessInfo* pJgInfo, BOMPART* pBomPart
 				continue;
 			}
 			if (grid_data.type_id == ITEM_TYPE_SUM_PART_NUM)
-			{	//加工数
-				CXhChar50 ss("%d", pBomPart->nSumPart);
+			{	//总件数
+				CXhChar50 ss("%d", pBomPart->feature1);
 				DimGridData(pBlockTableRecord, org_pt, grid_data, ss);
 				pEnt->erase();
 				pEnt->close();
@@ -456,8 +456,7 @@ void CDwgFileInfo::InsertSubJgCard(CAngleProcessInfo* pJgInfo, BOMPART* pBomPart
 			}
 			else if (grid_data.type_id == ITEM_TYPE_LSSUM_NUM)
 			{	//总孔数
-				int nTaNum = atoi(BelongModel()->m_xPrjInfo.m_sTaNum);
-				CXhChar50 ss("%d", pBomPart->nMSumLs*nTaNum);
+				CXhChar50 ss("%d", pBomPart->feature2);
 				DimGridData(pBlockTableRecord, org_pt, grid_data, ss);
 				pEnt->erase();
 				pEnt->close();

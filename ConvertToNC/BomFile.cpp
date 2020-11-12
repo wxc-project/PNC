@@ -167,7 +167,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 	for(int i=iStartRow;i<= nRowCount;i++)
 	{
 		VARIANT value;
-		int nSingleNum = 0, nProcessNum = 0, nTaNum = 0, nLsNum = 0;
+		int nSingleNum = 0, nProcessNum = 0, nTaNum = 0, nLsNum = 0, nPnSumNum = 0, nLsSumNum = 0;
 		double fLength = 0, fWeight = 0, fSumWeight = 0;
 		CXhChar100 sPartNo, sMaterial, sSpec, sNote, sReplaceSpec, sValue;
 		CXhChar100 sSingleNum, sProcessNum, sTaNum;
@@ -293,6 +293,20 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		{
 			sheetContentMap.GetValueAt(i, *pColIndex, value);
 			nLsNum = atoi(VariantToString(value));
+		}
+		//加工总数
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_SUM_NUM));
+		if (pColIndex)
+		{
+			sheetContentMap.GetValueAt(i, *pColIndex, value);
+			nPnSumNum = atoi(VariantToString(value));
+		}
+		//螺栓总数
+		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_LS_SUM_NUM));
+		if (pColIndex)
+		{
+			sheetContentMap.GetValueAt(i, *pColIndex, value);
+			nLsSumNum = atoi(VariantToString(value));
 		}
 		//单基重量
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_SING_WEIGHT));
@@ -456,6 +470,8 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			pBomPart->fSumWeight = fSumWeight;
 			pBomPart->wide = fWidth;
 			pBomPart->thick = fThick;
+			pBomPart->feature1 = nPnSumNum;
+			pBomPart->feature2 = nLsSumNum;
 			strcpy(pBomPart->sNotes, sNote);
 			if (bZhiWan)
 				pBomPart->siZhiWan = 1;
