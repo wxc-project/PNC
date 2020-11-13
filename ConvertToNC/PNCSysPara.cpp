@@ -997,10 +997,10 @@ BOOL CPNCSysPara::IsHasAngleWeldTag(const char* sText)
 {
 	if (sText == NULL || strlen(sText) <= 0)
 		return FALSE;
-	if (strstr(sText, "主焊件") || strstr(sText, "焊于") ||
-		strstr(sText, "焊接") || strstr(sText, "#)") ||
-		(strstr(sText, "(") && strstr(sText, ")") && strstr(sText, "%d") == NULL) ||
-		(strstr(sText, "（") && strstr(sText, "）") && strstr(sText, "%d") == NULL))
+	if (strstr(sText, "主焊件") || 
+		strstr(sText, "焊于") ||
+		strstr(sText, "焊接")||
+		strstr(sText, "电焊"))
 		return TRUE;
 	return FALSE;
 }
