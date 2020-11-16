@@ -2778,7 +2778,8 @@ void CPlateProcessInfo::CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX
 		pDestVertex->pos = GEPOINT(curPt + vec * offset);
 	}
 }
-f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVertexList/*=NULL*/)
+f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVertexList/*=NULL*/, 
+				double dfMaxRectW /*= 0*/)
 {
 	f2dRect rect;
 	rect.SetRect(f2dPoint(0, 0), f2dPoint(0, 0));
@@ -2854,8 +2855,10 @@ f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVe
 				ptList.append(ptE);
 			}
 		}
-		if (minarea > scope.wide()*scope.high())
-		{
+		if(minarea <= scope.wide()*scope.high())
+			continue;
+		if (dfMaxRectW == 0 || (dfMaxRectW > 0 && scope.high() < dfMaxRectW))
+		{	//用户指定了打印排版图框的宽度时，需保证钢板的最小矩形区域的高度小于指定宽度 wxc-20.11.16
 			minarea = scope.wide()*scope.high();
 			min_scope = scope;
 			minUcs = tmucs;

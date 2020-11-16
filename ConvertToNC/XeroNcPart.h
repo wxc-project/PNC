@@ -254,7 +254,7 @@ public:
 	CXhChar16 GetPartNo() { return xPlate.GetPartNo(); }
 	//获取钢板相关区域
 	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
-	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL);
+	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL, double dfMaxRectW = 0);
 	SCOPE_STRU GetPlateScope(BOOL bVertexOnly, BOOL bDisplayMK = TRUE);
 	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
 	void CreateRgnByText();

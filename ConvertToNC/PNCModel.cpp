@@ -1456,6 +1456,7 @@ void CPNCModel::DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 	int minDistance = g_pncSysPara.m_nMinDistance;
 	int hight = g_pncSysPara.m_nMapWidth;
 	int paperLen = (g_pncSysPara.m_nMapLength <= 0) ? 100000 : g_pncSysPara.m_nMapLength;
+	int paperWidth = (hight <= 0) ? 0 : hight;
 	CSortedModel sortedModel(this,bOnlyNewExtractedPlate);
 	sortedModel.DividPlatesByPartNo();
 	double paperX = 0, paperY = 0;
@@ -1465,7 +1466,7 @@ void CPNCModel::DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 		for (CPlateProcessInfo *pPlate = pGroup->EnumFirstPlate(); pPlate; pPlate = pGroup->EnumNextPlate())
 		{
 			fPtList ptList;
-			minRect = pPlate->GetMinWrapRect((double)minDistance, &ptList);
+			minRect = pPlate->GetMinWrapRect((double)minDistance, &ptList, paperWidth);
 			CDrawingRect *pRect = hashDrawingRectByLabel.Add(pPlate->GetPartNo());
 			pRect->m_pDrawing = pPlate;
 			pRect->height = minRect.Height();
