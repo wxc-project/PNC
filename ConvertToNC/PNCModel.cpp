@@ -27,6 +27,8 @@ CPNCModel model;
 #ifdef __UBOM_ONLY_
 CUbomModel g_xUbomModel;
 #endif
+const double SQRT_2 = 1.414213562373095;
+const double SQRT_3 = 1.732050807568877;
 //////////////////////////////////////////////////////////////////////////
 //
 int compare_func(const CXhChar16& str1, const CXhChar16& str2)
@@ -201,7 +203,7 @@ bool CPNCModel::AppendBoltEntsByBlock(ULONG idBlockEnt)
 	BOLT_BLOCK* pBoltD = g_pncSysPara.GetBlotBlockByName(sName);
 	if (pBoltD == NULL)
 		return false;	//非设置的螺栓图块
-	SCOPE_STRU scope;
+	double fHoleD = 0, fScale = pReference->scaleFactors().sx;
 	AcDbBlockTableRecordIterator *pIterator = NULL;
 	pTempBlockTableRecord->newIterator(pIterator);
 	for (; !pIterator->done(); pIterator->step())
@@ -211,27 +213,56 @@ bool CPNCModel::AppendBoltEntsByBlock(ULONG idBlockEnt)
 		if (pSubEnt == NULL)
 			continue;
 		pSubEnt->close();
-		AcDbCircle acad_cir;
 		if (pSubEnt->isKindOf(AcDbCircle::desc()))
 		{
 			AcDbCircle *pCir = (AcDbCircle*)pSubEnt;
-			acad_cir.setCenter(pCir->center());
-			acad_cir.setNormal(pCir->normal());
-			acad_cir.setRadius(pCir->radius());
-			VerifyVertexByCADEnt(scope, &acad_cir);
+			if (fHoleD < pCir->radius() * 2)
+				fHoleD = pCir->radius() * 2;
 		}
 		else if (pSubEnt->isKindOf(AcDbPolyline::desc()))
 		{	//按照外切圆处理，多段线区域的中心为块的坐标
 			AcDbPolyline *pPolyLine = (AcDbPolyline*)pSubEnt;
-			if (pPolyLine->numVerts() <= 0)
+			if (pPolyLine->numVerts() <= 0 || !pPolyLine->isClosed())
 				continue;
 			AcGePoint3d point;
 			pPolyLine->getPointAt(0, point);
 			double fRadius = GEPOINT(point.x, point.y).mod();
-			acad_cir.setCenter(AcGePoint3d(0, 0, 0));
-			acad_cir.setNormal(AcGeVector3d(0, 0, 1));
-			acad_cir.setRadius(fRadius);
-			VerifyVertexByCADEnt(scope, &acad_cir);
+			if (fHoleD < fRadius * 2)
+				fHoleD = fRadius * 2;
+		}
+		else if (pSubEnt->isKindOf(AcDbLine::desc()))
+		{	//直线段(处理三角|方形)
+			AcDbLine* pLine = (AcDbLine*)pSubEnt;
+			AcGePoint3d startPt, endPt;
+			pLine->getStartPoint(startPt);
+			pLine->getEndPoint(endPt);
+			GEPOINT ptC,ptS, ptE, ptM, line_vec, up_vec, dw_vec;
+			ptS.Set(startPt.x, startPt.y, 0);
+			ptE.Set(endPt.x, endPt.y, 0);
+			ptM = (ptS + ptE) * 0.5;
+			line_vec = (ptE - ptS).normalized();
+			up_vec.Set(-line_vec.y, line_vec.x, line_vec.z);
+			normalize(up_vec);
+			dw_vec = up_vec * -1;
+			double fLen = DISTANCE(ptS, ptE);
+			for (int i = 0; i < 4; i++)
+			{
+				if(i==0)
+					ptC = ptM + up_vec * (0.5*fLen / SQRT_3);
+				else if(i==1)
+					ptC = ptM + dw_vec * (0.5*fLen / SQRT_3);
+				else if(i==2)
+					ptC = ptM + up_vec * 0.5*fLen;
+				else
+					ptC = ptM + dw_vec * 0.5*fLen;
+				if (ptC.IsEqual(GEPOINT(0, 0, 0), 0.5))
+				{
+					double fSize = (i < 2) ? (fLen / SQRT_3 * 2) : (fLen * SQRT_2);
+					if (fHoleD < fSize)
+						fHoleD = fSize;
+					break;
+				}
+			}
 		}
 		else
 			continue;
@@ -241,10 +272,13 @@ bool CPNCModel::AppendBoltEntsByBlock(ULONG idBlockEnt)
 		delete pIterator;
 		pIterator = NULL;
 	}
-	double fHoleD = 0, fScale = pReference->scaleFactors().sx;
-	fHoleD = max(scope.wide(), scope.high());
-	fHoleD = fabs(fHoleD*fScale);
+	if (fHoleD <= 0)
+	{
+		logerr.Log("螺栓图块(%s),计算螺栓直径失败!", (char*)sName);
+		return false;
+	}
 	//添加螺栓块
+	fHoleD = fabs(fHoleD*fScale);
 	CXhChar50 sKey("%d", pEnt->id().asOldId());
 	CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(sKey);
 	if (pBoltEnt == NULL)
@@ -303,8 +337,6 @@ bool CPNCModel::AppendBoltEntsByCircle(ULONG idCirEnt)
 	}
 	return true;
 }
-const double SQRT_2 = 1.414213562373095;
-const double SQRT_3 = 1.732050807568877;
 //根据多段线提取螺栓
 bool CPNCModel::AppendBoltEntsByPolyline(ULONG idPolyline)
 {
