@@ -160,6 +160,29 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		logerr.Log("料单没有设置读取列信息,请查看配置文件!");
 		return FALSE;
 	}
+	BOOL bValid = FALSE;
+	for (TitleColPtr pColS = CBomTblTitleCfg::ColIterS(); pColS != CBomTblTitleCfg::ColIterE(); pColS++)
+	{
+		DWORD* pColIndex = hashColIndex.GetValue(pColS->second);
+		if (pColIndex == NULL)
+			continue;
+		VARIANT value;
+		for (int iRow = 0; iRow < 10; iRow++)
+		{
+			sheetContentMap.GetValueAt(iRow, *pColIndex, value);
+			if (value.vt == VT_EMPTY)
+				continue;
+			CString str(value.bstrVal);
+			str.Remove('\n');
+			if (!bValid && CBomTblTitleCfg::IsMatchTitle(pColS->first, str))
+			{
+				bValid = TRUE;
+				break;
+			}
+		}
+		if (!bValid)
+			return FALSE;
+	}
 	//2.获取Excel所有单元格的值
 	CStringArray repeatPartLabelArr;
 	CHashStrList<BOMPART*> hashBomPartByRepeatLabel;
@@ -579,7 +602,7 @@ BOOL CBomFile::ImportExcelFile(BOM_FILE_CFG *pTblCfg)
 		{
 			DisplayCadProgress(70 + iSheet);
 			CVariant2dArray sheetContentMap(1, 1);
-			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet);
+			CExcelOper::GetExcelContentOfSpecifySheet(&excelobj, sheetContentMap, iSheet, 30);
 			if (ParseSheetContent(sheetContentMap, hashColIndexByColTitle, iStartRow))
 				nValidSheetCount++;
 		}

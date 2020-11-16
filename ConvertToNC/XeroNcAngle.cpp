@@ -123,9 +123,9 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 		if (CProcessPart::QuerySteelMatIndex(m_xAngle.cMaterial) > 0)
 		{
 			if (g_xUbomModel.m_uiJgCadPartLabelMat == 1)	 //前
-				m_xAngle.sPartNo.InsertBefore(m_xAngle.cMaterial, 0);
+				m_xAngle.sPartNo.InsertBefore(toupper(m_xAngle.cMaterial), 0);
 			else if (g_xUbomModel.m_uiJgCadPartLabelMat == 2)//后
-				m_xAngle.sPartNo.Append(m_xAngle.cMaterial);
+				m_xAngle.sPartNo.Append(toupper(m_xAngle.cMaterial));
 		}
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_MAT, data_pos))
@@ -145,9 +145,9 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 		if (CProcessPart::QuerySteelMatIndex(m_xAngle.cMaterial) > 0)
 		{
 			if (g_xUbomModel.m_uiJgCadPartLabelMat == 1)	 //前
-				m_xAngle.sPartNo.InsertBefore(m_xAngle.cMaterial, 0);
+				m_xAngle.sPartNo.InsertBefore(toupper(m_xAngle.cMaterial), 0);
 			else if (g_xUbomModel.m_uiJgCadPartLabelMat == 2)//后
-				m_xAngle.sPartNo.Append(m_xAngle.cMaterial);
+				m_xAngle.sPartNo.Append(toupper(m_xAngle.cMaterial));
 		}
 	}
 	else if (PtInDataRect(ITEM_TYPE_DES_GUIGE, data_pos))
