@@ -209,10 +209,14 @@ BOOL CPlateExtractor::IsMatchThickRule(const char* sText)
 		return FALSE;
 	if(m_iDimStyle==0)
 		return IsMatchPNRule(sText);
-	if(strstr(sText,m_sThickKey))
-		return TRUE;
-	else
-		return FALSE;
+	//处理规格还有多个键值的情况：厚度:|板厚: wxc-2020.11.17
+	CXhChar50 sThickKey = m_sThickKey;
+	for (char* sKey = strtok(sThickKey, "|"); sKey; sKey = strtok(NULL, "|"))
+	{
+		if (strstr(sText, sKey))
+			return TRUE;
+	}
+	return FALSE;
 }
 //材质关键字可以不设置，默认为"Q2"|"Q3"|"Q4" wxc-2020.11.3
 BOOL CPlateExtractor::IsMatchMatRule(const char* sText)
@@ -315,6 +319,12 @@ BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 }
 void CPlateExtractor::ParseThickText(const char* sText,int& nThick)
 {
+	//获取件数的若干个关键码
+	CXhChar50 sThickKey = m_sThickKey;
+	std::vector<CXhChar16> thickKeyArr;
+	for (char* sKey = strtok(sThickKey, "|"); sKey; sKey = strtok(NULL, "|"))
+		thickKeyArr.push_back(CXhChar16(sKey));
+	//
 	CXhChar100 str,sValue(sText);
 	sValue.Replace("　"," ");
 	if(m_iDimStyle==0)
@@ -322,36 +332,40 @@ void CPlateExtractor::ParseThickText(const char* sText,int& nThick)
 	//for(char* sKey=strtok(sValue," \t\\P");sKey;sKey=strtok(NULL," \t\\P"))
 	for(char* sKey=strtok(sValue," \t");sKey;sKey=strtok(NULL," \t"))
 	{
-		if(strstr(sKey,m_sThickKey)==NULL||strstr(sKey,"|"))
-			continue;
-		//查看厚度标识符的位置
-		UINT i,index=0;
-		for(i=0;i<strlen(sKey);i++)
+		for (size_t ii = 0; ii < thickKeyArr.size(); ii++)
 		{
-			if(sKey[i]==m_sThickKey[0])
+			CXhChar16 sThickKey = thickKeyArr[ii];
+			if (strstr(sKey, sThickKey) == NULL || strstr(sKey, "|"))
+				continue;
+			//查看厚度标识符的位置
+			UINT i, index = 0;
+			for (i = 0; i < strlen(sKey); i++)
 			{
-				index=i;
-				break;
+				if (sKey[i] == sThickKey[0])
+				{
+					index = i;
+					break;
+				}
 			}
+			if (index > 0 && sKey[index - 1] != ' ')
+			{	//厚度标识符在字符串中间
+				if (strstr(sKey, "Q") == NULL)
+					continue;	//
+				CXhChar50 sGroupStr(sKey), sMat, sThick;
+				sGroupStr.Replace(sThickKey, " ");
+				sscanf(sGroupStr, "%s%s", (char*)sMat, (char*)sThick);
+				sprintf(sKey, "%s%s", (char*)sThickKey, (char*)sThick);
+			}
+			//解析字符串
+			str.Copy(sKey);
+			if (strstr(str, "mm"))
+				str.Replace("mm", "");
+			str.Replace(sThickKey, "| ");
+			int nValue = 0;
+			sscanf(str, "%s%d", (char*)sValue, &nValue);
+			if (nValue > 0)
+				nThick = nValue;
 		}
-		if(index>0 && sKey[index-1]!=' ')
-		{	//厚度标识符在字符串中间
-			if(strstr(sKey,"Q")==NULL)
-				continue;	//
-			CXhChar50 sGroupStr(sKey),sMat,sThick;
-			sGroupStr.Replace(m_sThickKey," ");
-			sscanf(sGroupStr,"%s%s",(char*)sMat,(char*)sThick);
-			sprintf(sKey,"%s%s",(char*)m_sThickKey,(char*)sThick);
-		}
-		//解析字符串
-		str.Copy(sKey);
-		if(strstr(str,"mm"))
-			str.Replace("mm","");
-		str.Replace(m_sThickKey,"| ");
-		int nValue = 0;
-		sscanf(str,"%s%d",(char*)sValue,&nValue);
-		if (nValue > 0)
-			nThick = nValue;
 	}
 }
 void CPlateExtractor::ParseMatText(const char* sText,char& cMat,char& cQuality)
