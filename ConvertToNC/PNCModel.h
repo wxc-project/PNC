@@ -53,6 +53,7 @@ public:
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }
 	bool PopPlateStack() { return m_hashPlateInfo.pop_stack(); }
+	BOOL DeletePlate(const char* sPartNo) { return m_hashPlateInfo.DeleteNode(sPartNo); }
 	CPlateProcessInfo* PartFromPartNo(const char* sPartNo) { return m_hashPlateInfo.GetValue(sPartNo); }
 	CPlateProcessInfo* AppendPlate(char* sPartNo){return m_hashPlateInfo.Add(sPartNo);}
 	CPlateProcessInfo* GetPlateInfo(char* sPartNo){return m_hashPlateInfo.GetValue(sPartNo);}

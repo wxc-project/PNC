@@ -3782,6 +3782,7 @@
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
     <ClCompile Include="XeroNcAngle.cpp" />
+    <ClCompile Include="XeroNcPart.cpp" />
     <ClCompile Include="XeroNcPlate.cpp" />
     <ClCompile Include="CadObjLife.cpp" />
     <ClCompile Include="ConvertToNC.cpp" />

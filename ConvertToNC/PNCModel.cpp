@@ -1305,7 +1305,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		CPlateProcessInfo* pCurPlateInfo = NULL;
 		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
 		{
-			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+			if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 				continue;
 			pCurPlateInfo->EmptyVertexs();
 			for (CPlateObject::VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
@@ -1323,7 +1323,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		CPlateProcessInfo* pCurPlateInfo = NULL;
 		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
 		{
-			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+			if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 				continue;
 			pCurPlateInfo->EmptyVertexs();
 			CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
@@ -1369,7 +1369,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 				CPlateProcessInfo* pCurPlateInfo = NULL;
 				for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
 				{
-					if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+					if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 						continue;
 					pCurPlateInfo->EmptyVertexs();
 					CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
@@ -1422,7 +1422,7 @@ void CPNCModel::MergeManyPartNo()
 		m_hashPlateInfo.push_stack();
 		for(CPlateProcessInfo* pTemPlate=EnumNextPlate(TRUE);pTemPlate;pTemPlate=EnumNextPlate(TRUE))
 		{
-			if(!pPlateProcess->IsInPlate(pTemPlate->dim_pos))
+			if(!pPlateProcess->IsInPartRgn(pTemPlate->dim_pos))
 				continue;
 			if(pPlateProcess->m_sRelatePartNo.GetLength()<=0)
 				pPlateProcess->m_sRelatePartNo.Copy(pTemPlate->GetPartNo());
@@ -1794,7 +1794,7 @@ CPlateProcessInfo* CPNCModel::GetPlateInfo(GEPOINT text_pos)
 	CPlateProcessInfo* pPlateInfo = NULL;
 	for (pPlateInfo = m_hashPlateInfo.GetFirst(); pPlateInfo; pPlateInfo = m_hashPlateInfo.GetNext())
 	{
-		if (pPlateInfo->IsInPlate(text_pos))
+		if (pPlateInfo->IsInPartRgn(text_pos))
 			break;
 	}
 	return pPlateInfo;

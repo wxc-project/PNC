@@ -49,7 +49,7 @@ CPlateProcessInfo* CDwgFileInfo::FindPlateByPt(f3dPoint text_pos)
 	CPlateProcessInfo* pPlateInfo=NULL;
 	for(pPlateInfo=m_xPncMode.EnumFirstPlate(FALSE);pPlateInfo;pPlateInfo=m_xPncMode.EnumNextPlate(FALSE))
 	{
-		if(pPlateInfo->IsInPlate(text_pos))
+		if(pPlateInfo->IsInPartRgn(text_pos))
 			break;
 	}
 	return pPlateInfo;
@@ -160,6 +160,7 @@ void CDwgFileInfo::FillPlateDwgData()
 {
 	if (m_xPncMode.GetPlateNum() <= 0)
 		return;
+	std::vector<CPlateProcessInfo*> vectorInvalidPlate;
 	int index = 1, nNum = m_xPncMode.GetPlateNum() + 1;
 	DisplayCadProgress(0, "填充钢板加工数信息");
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(), index++)
@@ -170,6 +171,7 @@ void CDwgFileInfo::FillPlateDwgData()
 		if (pLoftBom == NULL)
 		{
 			logerr.Log("料单数据中没有%s钢板", (char*)sPartNo);
+			vectorInvalidPlate.push_back(pInfo);
 			continue;
 		}
 		if (pLoftBom->nSumPart <= 0)
@@ -184,6 +186,20 @@ void CDwgFileInfo::FillPlateDwgData()
 		}
 		//补充钢板的加工数
 		pInfo->FillPlateNum(pLoftBom->nSumPart);
+	}
+	//从DWG文件中删除不需要的样板
+	for (size_t i = 0; i < vectorInvalidPlate.size(); i++)
+	{
+		if (!vectorInvalidPlate[i]->IsValid())
+		{
+			logerr.Log("(%s)钢板轮廓点提取失败,无法删除!", (char*)vectorInvalidPlate[i]->GetPartNo());
+			continue;
+		}
+		//删除该钢板的关联图元
+		vectorInvalidPlate[i]->ExtractRelaEnts();
+		vectorInvalidPlate[i]->EraseRelaEnts();
+		//删除该该钢板
+		m_xPncMode.DeletePlate(vectorInvalidPlate[i]->GetPartNo());
 	}
 	DisplayCadProgress(100);
 }
@@ -219,7 +235,7 @@ CAngleProcessInfo* CDwgFileInfo::FindAngleByPt(f3dPoint data_pos)
 	CAngleProcessInfo* pJgInfo=NULL;
 	for(pJgInfo=m_hashJgInfo.GetFirst();pJgInfo;pJgInfo=m_hashJgInfo.GetNext())
 	{
-		if(pJgInfo->PtInAngleRgn(data_pos))
+		if(pJgInfo->IsInPartRgn(data_pos))
 			break;
 	}
 	return pJgInfo;
@@ -555,6 +571,7 @@ void CDwgFileInfo::FillAngleDwgData()
 {
 	if (m_hashJgInfo.GetNodeNum() <= 0)
 		return;
+	std::vector<CAngleProcessInfo*> vectorInvalidJg;
 	int index = 1, nNum = m_hashJgInfo.GetNodeNum() + 1;
 	DisplayCadProgress(0, "填充角钢工艺卡信息......");
 	for (CAngleProcessInfo* pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg(), index++)
@@ -565,10 +582,20 @@ void CDwgFileInfo::FillAngleDwgData()
 		if (pLoftBom == NULL)
 		{
 			logerr.Log("料单数据中没有%s角钢", (char*)sPartNo);
+			vectorInvalidJg.push_back(pJgInfo);
 			continue;
 		}
 		//
 		InsertSubJgCard(pJgInfo,pLoftBom);
+	}
+	//从DWG文件中删除不需要的角钢工艺卡
+	for (size_t i = 0; i < vectorInvalidJg.size(); i++)
+	{
+		//删除关联图元
+		vectorInvalidJg[i]->ExtractRelaEnts();
+		vectorInvalidJg[i]->EraseRelaEnts();
+		//删除该角钢
+		m_hashJgInfo.DeleteNode(vectorInvalidJg[i]->keyId.handle());
 	}
 	DisplayCadProgress(100);
 }
@@ -659,7 +686,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		CAngleProcessInfo* pJgInfo = NULL;
 		for (pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())
 		{
-			if (pJgInfo->PtInAngleRgn(testPt))
+			if (pJgInfo->IsInPartRgn(testPt))
 				break;
 		}
 		if (pJgInfo == NULL)
@@ -670,6 +697,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 			//根据工艺卡模板中件号标记点计算该角钢工艺卡的原点位置
 			GEPOINT orig_pt = g_pncSysPara.GetJgCardOrigin(testPt);
 			pJgInfo->keyId = entId;
+			pJgInfo->m_bInJgBlock = false;
 			pJgInfo->SetOrig(orig_pt);
 		}
 	}
@@ -754,6 +782,10 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 			else
 				hashJgByPartNo.SetValue(pJgInfo->m_xAngle.sPartNo, TRUE);
 		}
+#ifdef __ALFA_TEST_
+		if(!pJgInfo->m_bInJgBlock)
+			logerr.Log("(%s)角钢工艺卡是打碎的!", (char*)pJgInfo->m_xAngle.sPartNo);
+#endif
 	}
 	m_hashJgInfo.Clean();
 	if(m_hashJgInfo.GetNodeNum()<=0)

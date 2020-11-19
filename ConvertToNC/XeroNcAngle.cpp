@@ -24,6 +24,7 @@ CAngleProcessInfo::CAngleProcessInfo()
 	sumWeightId = NULL;
 	m_ciModifyState = 0;
 	m_ciType = TYPE_JG;
+	m_bInJgBlock = true;
 }
 CAngleProcessInfo::~CAngleProcessInfo()
 {
@@ -43,8 +44,8 @@ SCOPE_STRU CAngleProcessInfo::GetCADEntScope()
 	scope.VerifyVertex(rect.bottomRight);
 	return scope;
 }
-//判断坐标点是否在角钢工艺卡内
-bool CAngleProcessInfo::PtInAngleRgn(const double* poscoord)
+//
+void CAngleProcessInfo::CreateRgn()
 {
 	f2dRect rect = g_pncSysPara.frame_rect;
 	rect.topLeft.x += orig_pt.x;
@@ -52,11 +53,21 @@ bool CAngleProcessInfo::PtInAngleRgn(const double* poscoord)
 	rect.bottomRight.x += orig_pt.x;
 	rect.bottomRight.y += orig_pt.y;
 	//
-	f2dPoint pt(poscoord);
-	if (rect.PtInRect(pt))
-		return true;
-	else
-		return false;
+	f3dPoint ptArr[4];
+	ptArr[0].Set(rect.topLeft.x, rect.topLeft.y, 0);
+	ptArr[1].Set(rect.bottomRight.x, rect.topLeft.y, 0);
+	ptArr[2].Set(rect.bottomRight.x, rect.bottomRight.y, 0);
+	ptArr[3].Set(rect.topLeft.x, rect.bottomRight.y, 0);
+	m_xPolygon.CreatePolygonRgn(ptArr, 4);
+}
+void CAngleProcessInfo::ExtractRelaEnts()
+{
+	EmptyRelaEnts();
+	AppendRelaEntity(keyId.asOldId());
+	vector<GEPOINT> vectorPt;
+	for (int i = 0; i < m_xPolygon.GetVertexCount(); i++)
+		vectorPt.push_back(m_xPolygon.GetVertexAt(i));
+	CCadPartObject::ExtractRelaEnts(vectorPt);
 }
 //判断坐标点是否在指定类型的数据框中
 bool CAngleProcessInfo::PtInDataRect(BYTE data_type, const double* poscoord)

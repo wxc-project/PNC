@@ -381,6 +381,9 @@
     <ClCompile Include="XeroNcPlate.cpp">
       <Filter>Model</Filter>
     </ClCompile>
+    <ClCompile Include="XeroNcPart.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">

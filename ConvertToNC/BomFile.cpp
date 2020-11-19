@@ -62,7 +62,7 @@ BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
 				sheetContentMap.GetValueAt(iRow, *pColIndex, value);
 				if (value.vt == VT_EMPTY)
 					continue;
-				CString str(value.bstrVal);
+				CString str = VariantToString(value);
 				str.Remove('\n');
 				if (!bValid && CBomTblTitleCfg::IsMatchTitle(pColS->first, str))
 				{
@@ -172,7 +172,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			sheetContentMap.GetValueAt(iRow, *pColIndex, value);
 			if (value.vt == VT_EMPTY)
 				continue;
-			CString str(value.bstrVal);
+			CString str= VariantToString(value);
 			str.Remove('\n');
 			if (!bValid && CBomTblTitleCfg::IsMatchTitle(pColS->first, str))
 			{
