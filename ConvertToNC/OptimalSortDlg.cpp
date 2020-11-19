@@ -104,18 +104,7 @@ static int CompareBomPartPtrFunc3(const PART_PTR& partPtr1, const PART_PTR& part
 		return 1;
 	else if (ciPartType1 < ciPartType2)
 		return -1;
-	else if(ciPartType1==BOMPART::ANGLE)
-	{
-		AngleInfoPtr pAngleInfo1 = (CAngleProcessInfo*)partPtr1->feature2;
-		AngleInfoPtr pAngleInfo2 = (CAngleProcessInfo*)partPtr2->feature2;
-		if (pAngleInfo1&&pAngleInfo2)
-		{
-			if (pAngleInfo1->m_ciType > pAngleInfo2->m_ciType)
-				return 1;
-			else if (pAngleInfo1->m_ciType < pAngleInfo2->m_ciType)
-				return -1;
-		}
-	}
+	
 	return CompareBomPartPtrFunc(partPtr1, partPtr2, FALSE);
 }
 //解析宽度,厚度字符串
@@ -622,19 +611,15 @@ bool COptimalSortDlg::IsFillTheFilter(CAngleProcessInfo* pJgInfo, BOMPART *pPart
 		pCurPart = &pJgInfo->m_xAngle;
 	if (pJgInfo != NULL)
 	{
-		if (!m_bSelJg && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JG)
+		if (!m_bSelJg && pJgInfo->m_xAngle.cPartType == BOMPART::ANGLE)
 			return false;
-		if (!m_bSelPlate && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_PLATE)
+		if (!m_bSelPlate && pJgInfo->m_xAngle.cPartType == BOMPART::PLATE)
 			return false;
-		if (!m_bSelYg && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_YG)
+		if (!m_bSelTube && pJgInfo->m_xAngle.cPartType == BOMPART::TUBE)
 			return false;
-		if (!m_bSelTube && pJgInfo->m_ciType == CAngleProcessInfo::TYPE_TUBE)
+		if (!m_bSelFlat&&pJgInfo->m_xAngle.cPartType == BOMPART::FLAT)
 			return false;
-		if (!m_bSelFlat&&pJgInfo->m_ciType == CAngleProcessInfo::TYPE_FLAT)
-			return false;
-		if (!m_bSelJig&&pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JIG)
-			return false;
-		if (!m_bSelGgs&&pJgInfo->m_ciType == CAngleProcessInfo::TYPE_GGS)
+		if ((!m_bSelJig && !m_bSelGgs && !m_bSelYg) && pJgInfo->m_xAngle.cPartType == BOMPART::ACCESSORY)
 			return false;
 	}
 	else
@@ -643,13 +628,11 @@ bool COptimalSortDlg::IsFillTheFilter(CAngleProcessInfo* pJgInfo, BOMPART *pPart
 			return false;
 		if (!m_bSelPlate && pCurPart->cPartType == BOMPART::PLATE)
 			return false;
-		if (!m_bSelYg && pCurPart->cPartType == BOMPART::ROUND)
-			return false;
 		if (!m_bSelTube && pCurPart->cPartType == BOMPART::TUBE)
 			return false;
 		if (!m_bSelFlat && pCurPart->cPartType == BOMPART::FLAT)
 			return false;
-		if ((!m_bSelJig && !m_bSelGgs) && pCurPart->cPartType == BOMPART::ACCESSORY)
+		if ((!m_bSelJig && !m_bSelGgs && !m_bSelYg) && pCurPart->cPartType == BOMPART::ACCESSORY)
 			return false;
 	}
 	if (pCurPart == NULL)
@@ -915,7 +898,7 @@ void COptimalSortDlg::InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pP
 		return;
 	if (pJgInfo && pCurPart==&pJgInfo->m_xAngle)
 	{	//未导入打印清单，以工艺卡数据为准
-		if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JG)
+		if (pJgInfo->m_xAngle.cPartType == BOMPART::ANGLE)
 		{
 			m_nJgCount++;
 			if (IsOtherNotesAngle(pJgInfo, pPart))
@@ -944,16 +927,19 @@ void COptimalSortDlg::InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pP
 				m_nOtherNotes++;
 			else if (IsCommonAngle(pJgInfo, pPart))
 				m_nCommonAngle++;
-			if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_YG)
-				m_nYGCount++;
-			else if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_TUBE)
+			if (pJgInfo->m_xAngle.cPartType == BOMPART::TUBE)
 				m_nTubeCount++;
-			else if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_JIG)
-				m_nJiaCount++;
-			else if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_FLAT)
+			else if (pJgInfo->m_xAngle.cPartType == BOMPART::FLAT)
 				m_nFlatCount++;
-			else if (pJgInfo->m_ciType == CAngleProcessInfo::TYPE_GGS)
-				m_nGgsCount++;
+			else if (pJgInfo->m_xAngle.cPartType == BOMPART::ACCESSORY)
+			{
+				if (pJgInfo->m_xAngle.siSubType == BOMPART::SUB_TYPE_ROUND)
+					m_nYGCount++;
+				if (pJgInfo->m_xAngle.siSubType == BOMPART::SUB_TYPE_STAY_ROPE)
+					m_nJiaCount++;
+				if (pJgInfo->m_xAngle.siSubType == BOMPART::SUB_TYPE_STEEL_GRATING)
+					m_nGgsCount++;
+			}
 		}
 	}
 	else
@@ -988,17 +974,19 @@ void COptimalSortDlg::InitByProcessAngle(CAngleProcessInfo* pJgInfo, BOMPART *pP
 				m_nOtherNotes++;
 			else if (IsCommonAngle(pJgInfo, pPart))
 				m_nCommonAngle++;
-
-			if (pCurPart->cPartType == BOMPART::ROUND)
-				m_nYGCount++;
-			else if (pCurPart->cPartType == BOMPART::TUBE)
+			if (pCurPart->cPartType == BOMPART::TUBE)
 				m_nTubeCount++;
 			else if (pCurPart->cPartType == BOMPART::PLATE)
 				m_nPlateCount++;
 			else if (pCurPart->cPartType == BOMPART::FLAT)
 				m_nFlatCount++;
 			else if (pCurPart->cPartType == BOMPART::ACCESSORY)
-				m_nJiaCount++;	//附件归属为夹具
+			{
+				if(pCurPart->siSubType==BOMPART::SUB_TYPE_ROUND)
+					m_nYGCount++;
+				else
+					m_nJiaCount++;	//附件归属为夹具
+			}
 		}
 	}
 	CXhChar16 sMat = CUbomModel::QueryMatMarkIncQuality(pCurPart);
@@ -1052,16 +1040,19 @@ void COptimalSortDlg::InitByProcessPlate(CPlateProcessInfo* pPlateInfo, BOMPART 
 		{
 			if (IsOtherNotesAngle((CAngleProcessInfo*)NULL, pCurPart))
 				m_nOtherNotes++;
-			if (pCurPart->cPartType == BOMPART::ROUND)
-				m_nYGCount++;
-			else if (pCurPart->cPartType == BOMPART::TUBE)
+			if (pCurPart->cPartType == BOMPART::TUBE)
 				m_nTubeCount++;
 			else if (pCurPart->cPartType == BOMPART::PLATE)
 				m_nPlateCount++;
 			else if (pCurPart->cPartType == BOMPART::FLAT)
 				m_nFlatCount++;
 			else if (pCurPart->cPartType == BOMPART::ACCESSORY)
-				m_nJiaCount++;	//附件归属为夹具
+			{
+				if(pCurPart->siSubType==BOMPART::SUB_TYPE_ROUND)
+					m_nYGCount++;
+				else
+					m_nJiaCount++;	//附件归属为夹具
+			}
 		}
 	}
 	else

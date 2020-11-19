@@ -320,10 +320,10 @@ void CPlateProcessInfo::CreateRgnByText()
 	RotateVectorAroundVector(dim_vec, angle, text_norm);
 	//
 	ARRAY_LIST<f3dPoint> vertexList;
-	vertexList.append(f3dPoint(dim_pos + dim_norm * height*1.5 - dim_vec * len * 2));
-	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 2 - dim_vec * len * 2));
-	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 2 + dim_vec * len * 2));
-	vertexList.append(f3dPoint(dim_pos + dim_norm * height*1.5 + dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos + dim_norm * height * 3 - dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 3 - dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 3 + dim_vec * len * 2));
+	vertexList.append(f3dPoint(dim_pos + dim_norm * height * 3 + dim_vec * len * 2));
 	m_xPolygon.CreatePolygonRgn(vertexList.m_pData, vertexList.GetSize());
 }
 //¼ì²â¸Ö°åÔ­Í¼µÄÂÖÀª×´Ì¬£ºÊÇ·ñ±ÕºÏ

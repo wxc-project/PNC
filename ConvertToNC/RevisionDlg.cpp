@@ -663,7 +663,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				{
 					DisplayCadProgress(int(100 * index / nNum));
 					pResult = pProject->GetResult(keyStrArr[index]);
-					if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
+					if (pResult->pOrgPart && pResult->pOrgPart->cPartType != BOMPART::PLATE)
 					{
 						CAngleProcessInfo *pAngleInfo = pDwgFile->FindAngleByPartNo(pResult->pOrgPart->sPartNo);
 						pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL);
@@ -687,7 +687,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 							}
 						}
 					}
-					else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType == BOMPART::ANGLE)
+					else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType != BOMPART::PLATE)
 					{
 						pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
 						pItem->SetBkColor(RGB(128, 128, 255));

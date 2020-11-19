@@ -214,36 +214,37 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_SPEC));
 		sheetContentMap.GetValueAt(i,*pColIndex,value);
 		sSpec=VariantToString(value);
+		sSpec.Replace("¡Á", "*");
+		sSpec.Replace("x", "*");
+		sSpec.Replace("X", "*");
 		if (strstr(sSpec, "L") || strstr(sSpec, "¡Ï"))
 		{
 			cls_id = BOMPART::ANGLE;
 			if (strstr(sSpec, "¡Ï"))
 				sSpec.Replace("¡Ï", "L");
-			if (strstr(sSpec, "¡Á"))
-				sSpec.Replace("¡Á", "*");
-			if (strstr(sSpec, "x"))
-				sSpec.Replace("x", "*");
-			if (strstr(sSpec, "X"))
-				sSpec.Replace("X", "*");
 		}
 		else if (strstr(sSpec, "-"))
 		{
 			cls_id = BOMPART::PLATE;
-			if (strstr(sSpec, "x")|| strstr(sSpec, "X"))
+			if (strstr(sSpec, "*"))
 			{
-				char *skey = strtok((char*)sSpec, "x,X");
+				char *skey = strtok((char*)sSpec, "*");
 				sSpec.Copy(skey);
 			}
 		}
-		else //if(strstr(sSpec,"¦Õ"))
-		{
+		else if ((strstr(sSpec, "¦Õ") || strstr(sSpec, "¦µ")) && strstr(sSpec, "*"))
 			cls_id = BOMPART::TUBE;
-			CXhChar100 sTemp(sSpec);
-			int hits = sTemp.Replace("¦Õ", " ");
-			hits += sTemp.Replace("¦µ", " ");
-			hits += sTemp.Replace("/", " ");
-			if (hits == 2)
+		else
+		{
+			cls_id = BOMPART::ACCESSORY;
+			if (strstr(sSpec, "/"))
 				siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
+			else if (strstr(sSpec, "¦Õ") || strstr(sSpec, "¦µ"))
+				siSubType = BOMPART::SUB_TYPE_ROUND;
+			else if (strstr(sSpec, "C"))
+				siSubType = BOMPART::SUB_TYPE_STAY_ROPE;
+			else if (strstr(sSpec, "G"))
+				siSubType = BOMPART::SUB_TYPE_STEEL_GRATING;
 		}
 		//ÀàÐÍ
 		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_PARTTYPE));

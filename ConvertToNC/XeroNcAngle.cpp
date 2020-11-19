@@ -23,7 +23,6 @@ CAngleProcessInfo::CAngleProcessInfo()
 	singleNumId = NULL;
 	sumWeightId = NULL;
 	m_ciModifyState = 0;
-	m_ciType = TYPE_JG;
 	m_bInJgBlock = true;
 }
 CAngleProcessInfo::~CAngleProcessInfo()
@@ -164,63 +163,48 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 	else if (PtInDataRect(ITEM_TYPE_DES_GUIGE, data_pos))
 	{	//设计规格，带%时使用CXhCharTempl类会出错 wht 20-08-05	
 		cType = ITEM_TYPE_DES_GUIGE;
-		BOOL bHasMultipleSign = FALSE;
-		CString sSpec(sValue);	//CXhChar50 sSpec(sValue);
-		if (strstr(sSpec, "∠"))
-			sSpec.Replace("∠", "L");
-		if (strstr(sSpec, "×"))
-		{
-			sSpec.Replace("×", "*");
-			bHasMultipleSign = TRUE;
-		}
-		if (strstr(sSpec, "x"))
-		{
-			sSpec.Replace("x", "*");
-			bHasMultipleSign = TRUE;
-		}
-		if (strstr(sSpec, "X"))
-		{
-			sSpec.Replace("X", "*");
-			bHasMultipleSign = TRUE;
-		}
+		CString sSpec(sValue);
+		sSpec.Replace("∠", "L");
+		sSpec.Replace("×", "*");
+		sSpec.Replace("x", "*");
+		sSpec.Replace("X", "*");
+		sSpec.Replace("%%%%C", "Φ");
+		sSpec.Replace("%%%%c", "Φ");
+		sSpec.Replace("%%C", "Φ");
+		sSpec.Replace("%%c", "Φ");
+		sSpec.Replace("%C", "Φ");
+		sSpec.Replace("%c", "Φ");
 		m_xAngle.sSpec.Copy(sSpec);
 		//根据规格识别构件类型
-		if (strstr(sSpec, "∠") || strstr(sSpec, "L"))	//角钢
-			m_ciType = TYPE_JG;
+		if (strstr(sSpec, "L") && strstr(sSpec, "*"))	//角钢
+			m_xAngle.cPartType = BOMPART::ANGLE;
 		else if (strstr(sSpec, "-"))
-		{
-			m_ciType = TYPE_PLATE; //m_ciType = TYPE_FLAT;
-			m_xAngle.siSubType = BOMPART::SUB_TYPE_COMMON_PLATE;
+			m_xAngle.cPartType = BOMPART::PLATE;
+		else if ((strstr(sSpec, "Φ") || strstr(sSpec, "Φ")) && strstr(sSpec, "*"))
+			m_xAngle.cPartType = BOMPART::TUBE;
+		else if (strstr(sSpec, "/"))
+		{	//套管附件
+			m_xAngle.cPartType = BOMPART::ACCESSORY;
+			m_xAngle.siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
 		}
-		else if (strstr(sSpec, "%c") || strstr(sSpec, "%C") || strstr(sSpec, "/"))
-		{	//钢管/圆钢
-			sSpec.Replace("%%%%C", "Φ");
-			sSpec.Replace("%%%%c", "Φ");
-			sSpec.Replace("%%C", "Φ");
-			sSpec.Replace("%%c", "Φ");
-			sSpec.Replace("%C", "Φ");
-			sSpec.Replace("%c", "Φ");
-			if (strstr(sSpec, "/"))
-			{
-				m_ciType = TYPE_WIRE_TUBE;	//套管
-				m_xAngle.siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
-			}
-			else if (bHasMultipleSign)
-			{
-				m_ciType = TYPE_TUBE;		//钢管
-				m_xAngle.siSubType = BOMPART::SUB_TYPE_TUBE_MAIN;
-			}
-			else
-				m_ciType = TYPE_YG;
-			m_xAngle.sSpec.Copy(sSpec);
+		else if (strstr(sSpec, "Φ"))
+		{	//圆钢
+			m_xAngle.cPartType = BOMPART::ACCESSORY;
+			m_xAngle.siSubType = BOMPART::SUB_TYPE_ROUND;
 		}
 		else if (strstr(sSpec, "C"))
-			m_ciType = TYPE_JIG;
+		{	//夹具
+			m_xAngle.cPartType = BOMPART::ACCESSORY;
+			m_xAngle.siSubType = BOMPART::SUB_TYPE_STAY_ROPE;
+		}
 		else if (strstr(sSpec, "G"))
-			m_ciType = TYPE_GGS;
+		{	//钢格栅
+			m_xAngle.cPartType = BOMPART::ACCESSORY;
+			m_xAngle.siSubType = BOMPART::SUB_TYPE_STEEL_GRATING;
+		}
 		else
 		{	//默认按角钢处理(40*3)
-			m_ciType = TYPE_JG;
+			m_xAngle.cPartType = BOMPART::ANGLE;
 			if (sSpec.GetLength() > 0 && sSpec[0] == 'Q')
 			{	//Q420B 250x20
 				char sText[MAX_PATH];
