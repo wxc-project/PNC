@@ -667,7 +667,6 @@ void CPlateProcessInfo::ExtractRelaEnts()
 	}*/
 #endif
 	vector<GEPOINT> vectorProfilePt;
-	struct resbuf* pList = NULL, *pPoly = NULL;
 	for (VERTEX* pVer = list.GetFirst(); pVer; pVer = list.GetNext())
 		vectorProfilePt.push_back(pVer->pos);
 	CCadPartObject::ExtractRelaEnts(vectorProfilePt);
@@ -3076,6 +3075,8 @@ void CPlateProcessInfo::FillPlateNum(int nNewNum)
 	CLockDocumentLife lockCurDocLife;
 	AcDbEntity *pEnt = NULL;
 	XhAcdbOpenAcDbEntity(pEnt, partNoId, AcDb::kForWrite);
+	if (pEnt == NULL)
+		return;
 	CAcDbObjLife entLife(pEnt);
 	CString sContent = GetCadTextContent(pEnt), sNum;
 	if (sContent.GetLength() <= 0)
