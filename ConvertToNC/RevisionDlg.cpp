@@ -237,11 +237,14 @@ BOOL CRevisionDlg::OnInitDialog()
 	CComboBox* pClientCmb = (CComboBox*)GetDlgItem(IDC_CMB_CLIENT);
 	std::map<CString, int>::iterator iterS = g_xUbomModel.m_xMapClientInfo.begin();
 	std::map<CString, int>::iterator iterE = g_xUbomModel.m_xMapClientInfo.end();
-	for (; iterS != iterE; ++iterS)
+	int i = 0, iCurSel = -1;
+	for (; iterS != iterE; ++iterS, ++i)
+	{
 		pClientCmb->AddString(iterS->first);
-	int nSel = pClientCmb->FindString(0, g_xUbomModel.m_sCustomizeName);
-	if (nSel >= 0)
-		pClientCmb->SetCurSel(nSel);
+		if (iCurSel < 0 && iterS->second == g_xUbomModel.m_uiCustomizeSerial)
+			iCurSel = i;
+	}
+	pClientCmb->SetCurSel(iCurSel);
 	//初始化配置下拉框
 	CComboBox* pCfgCmb = (CComboBox*)GetDlgItem(IDC_CMB_CFG);
 	multimap<int, std::pair<CString, CString> >::iterator iterF = g_xUbomModel.m_xMapClientCfgFile.lower_bound(g_xUbomModel.m_uiCustomizeSerial);
@@ -660,7 +663,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 				{
 					DisplayCadProgress(int(100 * index / nNum));
 					pResult = pProject->GetResult(keyStrArr[index]);
-					if (pResult->pOrgPart && pResult->pOrgPart->cPartType == BOMPART::ANGLE)
+					if (pResult->pOrgPart && pResult->pOrgPart->cPartType != BOMPART::PLATE)
 					{
 						CAngleProcessInfo *pAngleInfo = pDwgFile->FindAngleByPartNo(pResult->pOrgPart->sPartNo);
 						pItem = InsertPartToList(m_xListReport, NULL, pResult->pOrgPart, NULL);
@@ -684,7 +687,7 @@ void CRevisionDlg::RefreshListCtrl(HTREEITEM hItem,BOOL bCompared/*=FALSE*/)
 							}
 						}
 					}
-					else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType == BOMPART::ANGLE)
+					else if (pResult->pOrgPart == NULL && pResult->pLoftPart && pResult->pLoftPart->cPartType != BOMPART::PLATE)
 					{
 						pItem = InsertPartToList(m_xListReport, NULL, pResult->pLoftPart, NULL);
 						pItem->SetBkColor(RGB(128, 128, 255));

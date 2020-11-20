@@ -1074,11 +1074,7 @@ void PNCSysSetImportDefault()
 {
 	char file_name[MAX_PATH] = "";
 	GetAppPath(file_name);
-#ifndef __UBOM_ONLY_
 	strcat(file_name, "rule.set");
-#else
-	strcat(file_name, "ubom.cfg");
-#endif
 	FILE* fp = fopen(file_name, "rt");
 	if (fp == NULL)
 		return;
@@ -1893,8 +1889,10 @@ void ImportUbomConfigFile(const char* file_path/*=NULL*/)
 		CBatchPrint::m_xPdfPlotCfg.m_sDeviceName.Copy("DWG To PDF.pc3");
 	if (CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.GetLength() <= 0)
 		CBatchPrint::m_xPaperPlotCfg.m_sPaperSize.Copy("A4");
-	//导出UBOM下的钢板提取规则设置
-	PNCSysSetExportDefault();
+	if (file_path == NULL)
+	{	//导入特定设置的钢板提取规则rule.set
+		PNCSysSetImportDefault();
+	}
 }
 void ExportUbomConfigFile()
 {

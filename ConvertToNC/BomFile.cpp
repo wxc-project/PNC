@@ -62,7 +62,7 @@ BOOL BOM_FILE_CFG ::IsCurFormat(const char* file_path, BOOL bDisplayMsgBox)
 				sheetContentMap.GetValueAt(iRow, *pColIndex, value);
 				if (value.vt == VT_EMPTY)
 					continue;
-				CString str(value.bstrVal);
+				CString str = VariantToString(value);
 				str.Remove('\n');
 				if (!bValid && CBomTblTitleCfg::IsMatchTitle(pColS->first, str))
 				{
@@ -172,7 +172,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			sheetContentMap.GetValueAt(iRow, *pColIndex, value);
 			if (value.vt == VT_EMPTY)
 				continue;
-			CString str(value.bstrVal);
+			CString str= VariantToString(value);
 			str.Remove('\n');
 			if (!bValid && CBomTblTitleCfg::IsMatchTitle(pColS->first, str))
 			{
@@ -214,36 +214,37 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_SPEC));
 		sheetContentMap.GetValueAt(i,*pColIndex,value);
 		sSpec=VariantToString(value);
+		sSpec.Replace("×", "*");
+		sSpec.Replace("x", "*");
+		sSpec.Replace("X", "*");
 		if (strstr(sSpec, "L") || strstr(sSpec, "∠"))
 		{
 			cls_id = BOMPART::ANGLE;
 			if (strstr(sSpec, "∠"))
 				sSpec.Replace("∠", "L");
-			if (strstr(sSpec, "×"))
-				sSpec.Replace("×", "*");
-			if (strstr(sSpec, "x"))
-				sSpec.Replace("x", "*");
-			if (strstr(sSpec, "X"))
-				sSpec.Replace("X", "*");
 		}
 		else if (strstr(sSpec, "-"))
 		{
 			cls_id = BOMPART::PLATE;
-			if (strstr(sSpec, "x")|| strstr(sSpec, "X"))
+			if (strstr(sSpec, "*"))
 			{
-				char *skey = strtok((char*)sSpec, "x,X");
+				char *skey = strtok((char*)sSpec, "*");
 				sSpec.Copy(skey);
 			}
 		}
-		else //if(strstr(sSpec,"φ"))
-		{
+		else if ((strstr(sSpec, "φ") || strstr(sSpec, "Φ")) && strstr(sSpec, "*"))
 			cls_id = BOMPART::TUBE;
-			CXhChar100 sTemp(sSpec);
-			int hits = sTemp.Replace("φ", " ");
-			hits += sTemp.Replace("Φ", " ");
-			hits += sTemp.Replace("/", " ");
-			if (hits == 2)
+		else
+		{
+			cls_id = BOMPART::ACCESSORY;
+			if (strstr(sSpec, "/"))
 				siSubType = BOMPART::SUB_TYPE_TUBE_WIRE;
+			else if (strstr(sSpec, "φ") || strstr(sSpec, "Φ"))
+				siSubType = BOMPART::SUB_TYPE_ROUND;
+			else if (strstr(sSpec, "C"))
+				siSubType = BOMPART::SUB_TYPE_STAY_ROPE;
+			else if (strstr(sSpec, "G"))
+				siSubType = BOMPART::SUB_TYPE_STEEL_GRATING;
 		}
 		//类型
 		pColIndex = hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_PARTTYPE));
@@ -720,6 +721,16 @@ BOOL CBomConfig::IsHasTheProcess(const char* sValue, BYTE ciType)
 	if ((ciType == TYPE_HE_JIAO || ciType == TYPE_KAI_JIAO) &&
 		(strstr(sValue, "°") || strstr(sValue, "度")))
 	{	//从备注文字中解析开合角度 wht 20-08-20
+		BOOL bKaiJiao = strstr(sValue, "开角") != NULL;
+		BOOL bHeJiao = strstr(sValue, "合角") != NULL;
+		if (bKaiJiao || bHeJiao)
+		{
+			if ((bKaiJiao && ciType == TYPE_KAI_JIAO) ||
+				(bHeJiao && ciType == TYPE_HE_JIAO))
+				return TRUE;
+			else
+				return FALSE;
+		}
 		CXhChar500 sTempValue;	//+4.5°、-4.5°用构造函数传入会丢失°
 		sTempValue.Copy(sValue);
 		for (char *skey = strtok((char*)sTempValue, " ,，、"); skey; skey = strtok(NULL, " ,，、"))

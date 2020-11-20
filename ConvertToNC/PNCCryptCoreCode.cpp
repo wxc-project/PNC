@@ -77,13 +77,12 @@ DWORD Shell_OpenAcDbEnt(DWORD dwParam)
 	return 0;
 }
 //No.2 Procedure Item
-CAD_ENTITY* __AppendRelaEntity(CPNCModel *pBelongModel, AcDbEntity* pEnt, 
-							   CHashList<CAD_ENTITY>* pHashRelaEntIdList);
+CAD_ENTITY* __AppendRelaEntity(AcDbEntity* pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList);
 DWORD Shell_AppendRelaEntity(DWORD dwParam)
 {
 	Shell_AppendRelaEntity_Para *pPara = (Shell_AppendRelaEntity_Para*)dwParam;
 	if (pPara)
-		pPara->m_pRetEnt = __AppendRelaEntity(pPara->m_pBelongModel,pPara->m_pEnt,pPara->m_pHashRelaEntIdList);
+		pPara->m_pRetEnt = __AppendRelaEntity(pPara->m_pEnt,pPara->m_pHashRelaEntIdList);
 	return 0;
 }
 //No.3 Procedure Item

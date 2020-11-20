@@ -348,8 +348,6 @@ void InitApplication()
 	}
 	//加载菜单项
 	RegisterServerComponents();
-	//读取配置文件
-	PNCSysSetImportDefault();
 	//读取本地化特征功能配置文件
 	separator = SearchChar(lic_file, '.', true);
 	strcpy(separator, CXhChar16("%d.fac", DogSerialNo()));
@@ -364,11 +362,14 @@ void InitApplication()
 	}
 	//显示对话框
 #ifndef __UBOM_ONLY_
+	//读取配置文件
+	PNCSysSetImportDefault();
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
 	g_xPNCDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 #else
+	//读取配置文件
 	TraversalUbomConfigFiles();
-	ImportUbomConfigFile();	//读取配置文件
+	ImportUbomConfigFile();
 	CXhChar100 sWndText("UBOM");
 	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)
 		sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');

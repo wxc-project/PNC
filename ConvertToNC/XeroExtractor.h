@@ -5,6 +5,7 @@
 #include "XhCharString.h"
 #include "BoltBlockRecog.h"
 #include <vector>
+#include <list>
 #include <map>
 #include <set>
 using std::vector;

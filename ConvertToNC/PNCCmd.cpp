@@ -216,7 +216,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
 	{
 		DisplayCadProgress(int(100 * nSum / nNum));
-		pPlateProcess->ExtractPlateRelaEnts();
+		pPlateProcess->ExtractRelaEnts();
 		pPlateProcess->CheckProfileEdge();
 		pPlateProcess->UpdateBoltHoles(&hashPartLabelByLabel);
 		if(!pPlateProcess->UpdatePlateInfo())
@@ -267,7 +267,12 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(TRUE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(TRUE))
 	{	
 		if(!pPlateProcess->IsValid())
+		{
 			pPlateProcess->CreateRgnByText();
+#ifdef __ALFA_TEST_
+			logerr.Log("(%s)钢板的轮廓点提取失败!", (char*)pPlateProcess->GetPartNo());
+#endif
+		}
 	}
 	//
 	pModel->MergeManyPartNo();

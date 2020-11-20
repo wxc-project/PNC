@@ -5,6 +5,9 @@
 #include "HashTable.h"
 #include "XhCharString.h"
 #include "..\..\LDS\LDS\BOM\BOM.h"
+
+#define  LEN_SCALE		0.8
+#define  MIN_DISTANCE	25
 //////////////////////////////////////////////////////////////////////////
 //
 enum ENTITY_TYPE {
@@ -110,11 +113,34 @@ struct PROJECT_INFO
 	CXhChar100 m_sMatStandard;	//材料标准
 };
 //////////////////////////////////////////////////////////////////////////
+//CCadPartObject
+class CCadPartObject {
+	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;
+protected:
+	POLYGON m_xPolygon;
+	//
+	void AppendRelaEntity(long idEnt);
+	void AppendRelaEntity(AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
+	void ExtractRelaEnts(vector<GEPOINT>& ptArr);
+public:
+	CCadPartObject();
+	~CCadPartObject();
+	//
+	void EraseRelaEnts();	//删除DWG文件中的图元
+	void EmptyRelaEnts() { m_xHashRelaEntIdList.Empty(); }
+	int GetRelaEntCount() { return m_xHashRelaEntIdList.GetNodeNum(); }
+	CAD_ENTITY* EnumFirstRelaEnt() { return m_xHashRelaEntIdList.GetFirst(); }
+	CAD_ENTITY* EnumNextRelaEnt() { return m_xHashRelaEntIdList.GetNext(); }
+	bool IsInPartRgn(const double* poscoord);
+	bool IsInPartRgn(const double* start, const double* end);
+	//
+	virtual void CreateRgn() = 0;
+	virtual void ExtractRelaEnts() = 0;
+};
+//////////////////////////////////////////////////////////////////////////
 //CPlateObject
 class CPlateObject
 {
-protected:
-	POLYGON region;
 public:
 	struct CIR_PLATE {
 		BOOL m_bCirclePlate;	//是否为圆型板
@@ -160,18 +186,10 @@ protected:
 	void ReverseVertexs();
 	void DeleteAssisstPts();
 	void UpdateVertexPropByArc(f3dArcLine& arcLine, int type);
-	void CreateRgn();
 public:
 	CPlateObject();
 	~CPlateObject();
-
-	void EmptyVertexs() {
-		vertexList.Empty();
-		region.Empty();
-	}
 	//
-	virtual bool IsInPlate(const double* poscoord);
-	virtual bool IsInPlate(const double* start, const double* end);
 	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
 	virtual BOOL RecogWeldLine(f3dLine slop_line);
 	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 2; }
@@ -179,7 +197,7 @@ public:
 };
 //CPlateProcessInfo
 class CPNCModel;
-class CPlateProcessInfo : public CPlateObject
+class CPlateProcessInfo : public CPlateObject,public CCadPartObject
 {
 	struct LAYOUT_VERTEX {
 		int index;			//轮廓点索引
@@ -245,19 +263,24 @@ private:
 	void BuildPlateUcs();
 	void PreprocessorBoltEnt(int* piInvalidCirCountForText, int* piInvalidCirCountForLabel,
 		CHashStrList<CXhChar16>* pHashPartLabelByLabel);
-	CAD_ENTITY* AppendRelaEntity(AcDbEntity *pEnt, CHashList<CAD_ENTITY>* pHashRelaEntIdList = NULL);
 	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
 	bool RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list);
 public:
 	CPlateProcessInfo();
 	//
 	CXhChar16 GetPartNo() { return xPlate.GetPartNo(); }
+	void EmptyVertexs() {
+		vertexList.Empty();
+		m_xPolygon.Empty();
+	}
 	//获取钢板相关区域
 	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
 	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL, double dfMaxRectW = 0);
 	SCOPE_STRU GetPlateScope(BOOL bVertexOnly, BOOL bDisplayMK = TRUE);
 	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
 	void CreateRgnByText();
+	void CreateRgn();
+	void ExtractRelaEnts();
 	//初始化钢板轮廓边信息
 	void InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
@@ -267,7 +290,6 @@ public:
 	BOOL InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr);
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
-	void ExtractPlateRelaEnts();
 	BOOL UpdatePlateInfo(BOOL bRelatePN = FALSE);
 	void UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelByLabel = NULL);
 	void CheckProfileEdge();
@@ -296,6 +318,7 @@ public:
 	//控制是否需要输出ppi文件 wht 20-10-10
 	static BOOL m_bCreatePPIFile;
 };
+typedef CPlateProcessInfo::VERTEX PLATE_VER;
 //////////////////////////////////////////////////////////////////////////
 //
 class CPlateReactorLife
@@ -316,23 +339,13 @@ public:
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
-class CAngleProcessInfo
+class CAngleProcessInfo :public CCadPartObject
 {
 private:
 	f3dPoint orig_pt;
 	//
 	void InitProcessInfo(const char* sValue);
 public:
-	static const BYTE TYPE_JG = 1;		//角钢
-	static const BYTE TYPE_YG = 2;		//圆钢
-	static const BYTE TYPE_TUBE = 3;	//钢管
-	static const BYTE TYPE_FLAT = 4;	//扁铁
-	static const BYTE TYPE_JIG = 5;		//夹具
-	static const BYTE TYPE_GGS = 6;		//钢格栅
-	static const BYTE TYPE_PLATE = 7;	//钢板
-	static const BYTE TYPE_WIRE_TUBE = 8;//套管
-	BYTE m_ciType;				//
-	//
 	PART_ANGLE m_xAngle;
 	AcDbObjectId keyId;
 	AcDbObjectId partNumId;		//加工数ID
@@ -341,6 +354,7 @@ public:
 	AcDbObjectId specId;		//规格ID
 	AcDbObjectId materialId;	//材质ID
 	CXhChar200 m_sTowerType;
+	bool m_bInJgBlock;
 	//加工数、单基数、总重修改状态 wht 20-07-29
 	static const BYTE MODIFY_MANU_NUM = 0x01;
 	static const BYTE MODIFY_SINGLE_NUM = 0x02;
@@ -357,11 +371,12 @@ public:
 	BYTE InitAngleInfo(f3dPoint data_pos, const char* sValue);
 	bool PtInDataRect(BYTE data_type, const double* poscoord);
 	bool PtInDrawRect(const double* poscoord);
-	bool PtInAngleRgn(const double* poscoord);
 	GEPOINT GetAngleDataPos(BYTE data_type);
 	GEPOINT GetJgCardPosL_B();
 	CXhChar100 GetJgProcessInfo();
 	SCOPE_STRU GetCADEntScope();
+	void CreateRgn();
+	void ExtractRelaEnts();
 	//
 	void RefreshAngleNum();
 	void RefreshAngleSingleNum();

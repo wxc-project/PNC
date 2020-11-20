@@ -1305,7 +1305,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		CPlateProcessInfo* pCurPlateInfo = NULL;
 		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
 		{
-			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+			if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 				continue;
 			pCurPlateInfo->EmptyVertexs();
 			for (CPlateObject::VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
@@ -1323,7 +1323,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		CPlateProcessInfo* pCurPlateInfo = NULL;
 		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
 		{
-			if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+			if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 				continue;
 			pCurPlateInfo->EmptyVertexs();
 			CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
@@ -1369,7 +1369,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 				CPlateProcessInfo* pCurPlateInfo = NULL;
 				for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
 				{
-					if (!tem_plate.IsInPlate(pCurPlateInfo->dim_pos))
+					if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 						continue;
 					pCurPlateInfo->EmptyVertexs();
 					CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
@@ -1422,7 +1422,7 @@ void CPNCModel::MergeManyPartNo()
 		m_hashPlateInfo.push_stack();
 		for(CPlateProcessInfo* pTemPlate=EnumNextPlate(TRUE);pTemPlate;pTemPlate=EnumNextPlate(TRUE))
 		{
-			if(!pPlateProcess->IsInPlate(pTemPlate->dim_pos))
+			if(!pPlateProcess->IsInPartRgn(pTemPlate->dim_pos))
 				continue;
 			if(pPlateProcess->m_sRelatePartNo.GetLength()<=0)
 				pPlateProcess->m_sRelatePartNo.Copy(pTemPlate->GetPartNo());
@@ -1794,7 +1794,7 @@ CPlateProcessInfo* CPNCModel::GetPlateInfo(GEPOINT text_pos)
 	CPlateProcessInfo* pPlateInfo = NULL;
 	for (pPlateInfo = m_hashPlateInfo.GetFirst(); pPlateInfo; pPlateInfo = m_hashPlateInfo.GetNext())
 	{
-		if (pPlateInfo->IsInPlate(text_pos))
+		if (pPlateInfo->IsInPartRgn(text_pos))
 			break;
 	}
 	return pPlateInfo;
@@ -2065,22 +2065,7 @@ void CProjectTowerType::CompareData(BOMPART* pSrcPart, BOMPART* pDesPart,
 	CString sSpec1(pSrcPart->GetSpec()), sSpec2(pDesPart->GetSpec());
 	sSpec1 = sSpec1.Trim();
 	sSpec2 = sSpec2.Trim();
-	BYTE cPartType1 = pSrcPart->cPartType;
-	if (pSrcPart->siSubType == BOMPART::SUB_TYPE_COMMON_PLATE)
-		cPartType1 = BOMPART::PLATE;
-	else if (pSrcPart->siSubType == BOMPART::SUB_TYPE_TUBE_WIRE ||
-		pSrcPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN ||
-		pSrcPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN)
-		cPartType1 = BOMPART::TUBE;
-	BYTE cPartType2 = pDesPart->cPartType;
-	if (pDesPart->siSubType == BOMPART::SUB_TYPE_COMMON_PLATE)
-		cPartType2 = BOMPART::PLATE;
-	else if (pDesPart->siSubType == BOMPART::SUB_TYPE_TUBE_WIRE ||
-		pDesPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN ||
-		pDesPart->siSubType == BOMPART::SUB_TYPE_TUBE_MAIN)
-		cPartType2 = BOMPART::TUBE;
-
-	if (cPartType2 != cPartType1 ||
+	if (pSrcPart->cPartType != pDesPart->cPartType ||
 		sSpec1.CompareNoCase(sSpec2) != 0) //stricmp(pSrcPart->sSpec, pDesPart->sSpec) != 0)
 		hashBoolByPropName.SetValue(g_xBomCfg.GetCfgColName(CBomTblTitleCfg::I_SPEC), TRUE);
 	//²ÄÖÊ
