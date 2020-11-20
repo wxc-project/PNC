@@ -390,6 +390,7 @@ void CCadPartObject::EraseRelaEnts()
 {
 	if (m_xHashRelaEntIdList.GetNodeNum() <= 0)
 		return;
+	CLockDocumentLife lockCurDocLife;
 	for (CAD_ENTITY* pRelaEnt = EnumFirstRelaEnt(); pRelaEnt; pRelaEnt = EnumNextRelaEnt())
 	{
 		AcDbEntity *pEnt = NULL;
@@ -400,6 +401,5 @@ void CCadPartObject::EraseRelaEnts()
 			pEnt->close();
 		}
 	}
-	//
 	m_xHashRelaEntIdList.Empty();
 }

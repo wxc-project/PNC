@@ -721,6 +721,16 @@ BOOL CBomConfig::IsHasTheProcess(const char* sValue, BYTE ciType)
 	if ((ciType == TYPE_HE_JIAO || ciType == TYPE_KAI_JIAO) &&
 		(strstr(sValue, "°") || strstr(sValue, "度")))
 	{	//从备注文字中解析开合角度 wht 20-08-20
+		BOOL bKaiJiao = strstr(sValue, "开角") != NULL;
+		BOOL bHeJiao = strstr(sValue, "合角") != NULL;
+		if (bKaiJiao || bHeJiao)
+		{
+			if ((bKaiJiao && ciType == TYPE_KAI_JIAO) ||
+				(bHeJiao && ciType == TYPE_HE_JIAO))
+				return TRUE;
+			else
+				return FALSE;
+		}
 		CXhChar500 sTempValue;	//+4.5°、-4.5°用构造函数传入会丢失°
 		sTempValue.Copy(sValue);
 		for (char *skey = strtok((char*)sTempValue, " ,，、"); skey; skey = strtok(NULL, " ,，、"))
