@@ -32,6 +32,7 @@ public:
 	BOOL m_bBriefMat;	//简化材质
 	BOOL m_bMaterial;	//材质
 	BOOL m_bThick;		//厚度
+	BOOL m_bSeparator;	//分隔符
 protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 	virtual BOOL OnInitDialog();
@@ -53,4 +54,7 @@ protected:
 	afx_msg void OnChkMaterial();
 	afx_msg void OnChkThick();
 	afx_msg void OnChkBriefMat();
+	afx_msg void OnChkSeparator();
+public:
+	CString m_sCmbSeparator;
 };

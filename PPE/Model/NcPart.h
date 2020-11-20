@@ -66,6 +66,7 @@ public:
 public:
 	static BOOL m_bDeformedProfile;		//考虑火曲变形
 	static CString m_sExportPartInfoKeyStr;	//钢板输出明细
+	static CString m_sSpecialSeparator;	//指定的分割符
 public:
 	static void DeformedPlateProfile(CProcessPlate *pPlate);
 	static int GetLineLenFromExpression(double fThick, const char* sValue);

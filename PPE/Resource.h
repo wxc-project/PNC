@@ -108,12 +108,15 @@
 #define IDC_CHK_MAT2                    1032
 #define IDC_CHK_BRIEF_MAT               1032
 #define IDC_RAD_FLAME                   1033
+#define IDC_CHK_SEPARATOR               1033
 #define IDC_RAD_PLASMA                  1034
 #define IDC_RAD_PUNCH                   1035
 #define IDC_RAD_DRILL                   1036
 #define IDC_FILTER_LIST                 1037
 #define IDC_BTN_ADD_ITEM                1038
 #define IDC_CHK_WAIST                   1039
+#define IDC_COMBO1                      1040
+#define IDC_CMB_SEPARATOR               1040
 #define IDC_RADIO13                     1058
 #define IDC_RADIO14                     1059
 #define IDC_TAB_GROUP                   1080
@@ -255,9 +258,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        171
+#define _APS_NEXT_RESOURCE_VALUE        172
 #define _APS_NEXT_COMMAND_VALUE         33021
-#define _APS_NEXT_CONTROL_VALUE         1040
+#define _APS_NEXT_CONTROL_VALUE         1041
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

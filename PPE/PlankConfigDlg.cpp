@@ -13,6 +13,7 @@ IMPLEMENT_DYNAMIC(CPlankConfigDlg, CDialog)
 
 CPlankConfigDlg::CPlankConfigDlg(CWnd* pParent /*=nullptr*/)
 	: CDialog(IDD_PLANK_CONFIG_DLG, pParent)
+	, m_sCmbSeparator(_T(""))
 {
 	m_bCompName = FALSE;
 	m_bPrjCode = FALSE;
@@ -27,6 +28,7 @@ CPlankConfigDlg::CPlankConfigDlg(CWnd* pParent /*=nullptr*/)
 	m_bMaterial = FALSE;
 	m_bThick = FALSE;
 	m_bBriefMat = FALSE;
+	m_bSeparator = FALSE;
 	m_sEditLine = "";
 }
 
@@ -51,6 +53,8 @@ void CPlankConfigDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Check(pDX, IDC_CHK_BRIEF_MAT, m_bBriefMat);
 	DDX_Check(pDX, IDC_CHK_MAT, m_bMaterial);
 	DDX_Check(pDX, IDC_CHK_THICK, m_bThick);
+	DDX_Check(pDX, IDC_CHK_SEPARATOR, m_bSeparator);
+	DDX_CBString(pDX, IDC_CMB_SEPARATOR, m_sCmbSeparator);
 }
 
 
@@ -71,6 +75,7 @@ BEGIN_MESSAGE_MAP(CPlankConfigDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_MAT, OnChkMaterial)
 	ON_BN_CLICKED(IDC_CHK_THICK, OnChkThick)
 	ON_BN_CLICKED(IDC_CHK_BRIEF_MAT, &CPlankConfigDlg::OnChkBriefMat)
+	ON_BN_CLICKED(IDC_CHK_SEPARATOR, OnChkSeparator)
 END_MESSAGE_MAP()
 
 
@@ -90,6 +95,7 @@ BOOL CPlankConfigDlg::OnInitDialog()
 			UpdateCheckStateByName(token, TRUE);
 	}
 	UpdateCheckBoxEnableState();
+	m_sCmbSeparator = CNCPart::m_sSpecialSeparator;
 	UpdateData(FALSE);
 	return TRUE;
 }
@@ -99,6 +105,7 @@ void CPlankConfigDlg::OnOK()
 	UpdateData();
 	CListBox *pListBox = (CListBox*)GetDlgItem(IDC_LIST_PART_INFO);
 	CNCPart::m_sExportPartInfoKeyStr = "";
+	CNCPart::m_sSpecialSeparator = "";
 	for (int i = 0; i < pListBox->GetCount(); i++)
 	{
 		CString ss;
@@ -108,6 +115,7 @@ void CPlankConfigDlg::OnOK()
 		else
 			CNCPart::m_sExportPartInfoKeyStr += "\n" + ss;
 	}
+	CNCPart::m_sSpecialSeparator = m_sCmbSeparator;
 	//
 	SaveDimStyleToFile(g_sysPara.nc.m_sPlateConfigFilePath);
 	CDialog::OnOK();
@@ -143,6 +151,8 @@ void CPlankConfigDlg::UpdateCheckStateByName(const char *sName, BOOL bValue)
 		m_bThick = bValue;
 	else if (stricmp(sName, "简化材质字符") == 0)
 		m_bBriefMat = bValue;
+	else if (stricmp(sName, "分隔符") == 0)
+		m_bSeparator = bValue;
 
 	UpdateData(FALSE);
 }
@@ -162,6 +172,7 @@ void CPlankConfigDlg::UpdateCheckBoxEnableState()
 	GetDlgItem(IDC_CHK_BRIEF_MAT)->EnableWindow(!m_bBriefMat);
 	GetDlgItem(IDC_CHK_MAT)->EnableWindow(!m_bMaterial);
 	GetDlgItem(IDC_CHK_THICK)->EnableWindow(!m_bThick);
+	GetDlgItem(IDC_CHK_SEPARATOR)->EnableWindow(!m_bSeparator);
 }
 
 void CPlankConfigDlg::OnBnAddEditLine()
@@ -332,6 +343,16 @@ void CPlankConfigDlg::OnChkThick()
 	GetDlgItem(IDC_E_EDIT_LINE)->SetWindowText(m_sEditLine);
 }
 
+void CPlankConfigDlg::OnChkSeparator()
+{
+	GetDlgItem(IDC_CHK_SEPARATOR)->EnableWindow(FALSE);
+	if (m_sEditLine.GetLength() > 0)
+		m_sEditLine += "&分隔符";
+	else
+		m_sEditLine = "分隔符";
+	GetDlgItem(IDC_E_EDIT_LINE)->SetWindowText(m_sEditLine);
+}
+
 BOOL CPlankConfigDlg::SaveDimStyleToFile(const char* file_path)
 {
 	CBuffer buffer;
@@ -345,6 +366,7 @@ BOOL CPlankConfigDlg::SaveDimStyleToFile(const char* file_path)
 		stack.Increment();
 	}
 	stack.VerifyAndRestore();
+	buffer.WriteString(CNCPart::m_sSpecialSeparator);
 	//
 	FILE *fp = fopen(file_path, "wb");
 	if (fp == NULL)
@@ -372,6 +394,7 @@ BOOL CPlankConfigDlg::LoadDimStyleFromFile(const char* file_path)
 	fclose(fp);
 	//
 	CNCPart::m_sExportPartInfoKeyStr.Empty();
+	CNCPart::m_sSpecialSeparator.Empty();
 	buffer.SeekToBegin();
 	CXhChar200 sRow;
 	int n = buffer.ReadInteger();
@@ -382,5 +405,7 @@ BOOL CPlankConfigDlg::LoadDimStyleFromFile(const char* file_path)
 			CNCPart::m_sExportPartInfoKeyStr += "\n";
 		CNCPart::m_sExportPartInfoKeyStr.Append(sRow);
 	}
+	buffer.ReadString(sRow);
+	CNCPart::m_sSpecialSeparator = sRow;
 	return TRUE;
 }

@@ -109,6 +109,7 @@ static void RemoveCollinearPoint(CProcessPlate *pPlate)
 //////////////////////////////////////////////////////////////////////////
 BOOL CNCPart::m_bDeformedProfile = FALSE;
 CString CNCPart::m_sExportPartInfoKeyStr;
+CString CNCPart::m_sSpecialSeparator="";
 //ttp格式
 //13字节文件名称
 //1字节标识为（0x80）标识钢板
@@ -472,6 +473,11 @@ void CNCPart::ParseNoteInfo(const char* sPartInfoKeyStr, CStringArray& sNoteArr,
 					sNotes.Append(' ');
 				sTemp.Printf("%.0f", pPlate->GetThick());
 				sNotes.Append(sTemp);
+			}
+			else if (stricmp(token, "分隔符") == 0)
+			{
+				if(m_sSpecialSeparator.GetLength()>0)
+					sNotes.Append(m_sSpecialSeparator);
 			}
 			sPrevProp.Copy(token);
 		}
