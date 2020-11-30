@@ -32,7 +32,12 @@ struct CAD_ENTITY {
 	//
 	CAD_ENTITY(ULONG idEnt = 0);
 	bool IsInScope(GEPOINT &pt);
+	//进行排序，方便STL的使用
+	bool friend operator <(const CAD_ENTITY &item1, const CAD_ENTITY &item2){
+		return item1.idCadEnt > item2.idCadEnt;
+	}
 };
+typedef CAD_ENTITY* CAD_ENT_PTR;
 struct CAD_LINE : public CAD_ENTITY
 {
 	BYTE m_ciSerial;
@@ -131,6 +136,9 @@ public:
 	int GetRelaEntCount() { return m_xHashRelaEntIdList.GetNodeNum(); }
 	CAD_ENTITY* EnumFirstRelaEnt() { return m_xHashRelaEntIdList.GetFirst(); }
 	CAD_ENTITY* EnumNextRelaEnt() { return m_xHashRelaEntIdList.GetNext(); }
+	CAD_ENTITY* AddRelaEnt(long hKey, CAD_ENTITY ent) {
+		return m_xHashRelaEntIdList.SetValue(hKey, ent);
+	}
 	bool IsInPartRgn(const double* poscoord);
 	bool IsInPartRgn(const double* start, const double* end);
 	//
@@ -229,8 +237,6 @@ public:
 	CHashSet<AcDbObjectId> pnTxtIdList;
 	ATOM_LIST<BOLT_INFO> boltList;
 	//钢板关联实体
-	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;
-	CHashSet<CAD_ENTITY*> m_xHashInvalidBoltCir;		//记录无效的圆圈，方便后期输出对比
 	CHashList<CAD_LINE> m_hashCloneEdgeEntIdByIndex;
 	CHashList<ULONG> m_hashColneEntIdBySrcId;
 	ARRAY_LIST<ULONG> m_cloneEntIdList;
@@ -261,8 +267,6 @@ public:
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
-	void PreprocessorBoltEnt(int* piInvalidCirCountForText, int* piInvalidCirCountForLabel,
-		CHashStrList<CXhChar16>* pHashPartLabelByLabel);
 	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
 	bool RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list);
 public:
@@ -291,7 +295,7 @@ public:
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	BOOL UpdatePlateInfo(BOOL bRelatePN = FALSE);
-	void UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelByLabel = NULL);
+	void UpdateBoltHoles();
 	void CheckProfileEdge();
 	//生成中性文件
 	void InitPPiInfo();

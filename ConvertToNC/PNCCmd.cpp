@@ -210,15 +210,12 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	int nSum = 0;
 	nNum = pModel->GetPlateNum();
 	DisplayCadProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
-	CHashStrList<CXhChar16> hashPartLabelByLabel;
-	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(FALSE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(FALSE))
-		hashPartLabelByLabel.SetValue(pPlateProcess->GetPartNo(), pPlateProcess->GetPartNo());
 	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
 	{
 		DisplayCadProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractRelaEnts();
 		pPlateProcess->CheckProfileEdge();
-		pPlateProcess->UpdateBoltHoles(&hashPartLabelByLabel);
+		pPlateProcess->UpdateBoltHoles();
 		if(!pPlateProcess->UpdatePlateInfo())
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
 		if (pPlateProcess->IsValid())

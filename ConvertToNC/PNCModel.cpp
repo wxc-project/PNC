@@ -255,7 +255,7 @@ bool CPNCModel::AppendBoltEntsByBlock(ULONG idBlockEnt)
 					ptC = ptM + up_vec * 0.5*fLen;
 				else
 					ptC = ptM + dw_vec * 0.5*fLen;
-				if (ptC.IsEqual(GEPOINT(0, 0, 0), 0.5))
+				if (ptC.IsEqual(GEPOINT(0, 0, 0), EPS2))
 				{
 					double fSize = (i < 2) ? (fLen / SQRT_3 * 2) : (fLen * SQRT_2);
 					if (fHoleD < fSize)
