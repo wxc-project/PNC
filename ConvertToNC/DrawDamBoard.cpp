@@ -194,7 +194,7 @@ void CDamBoardManager::DrawAllDamBoard(CPNCModel *pModel)
 	if(pModel==NULL)
 		return;
 	EraseAllDamBoard();
-	for(CPlateProcessInfo *pPlate=pModel->EnumFirstPlate(FALSE);pPlate;pPlate=pModel->EnumNextPlate(FALSE))
+	for(CPlateProcessInfo *pPlate=pModel->EnumFirstPlate();pPlate;pPlate=pModel->EnumNextPlate())
 		DrawDamBoard(pPlate);
 }
 void CDamBoardManager::EraseAllDamBoard()
@@ -209,7 +209,7 @@ void CDamBoardManager::DrawAllSteelSealRect(CPNCModel *pModel)
 	if(pModel==NULL)
 		return;
 	EraseAllSteelSealRect();
-	for(CPlateProcessInfo *pPlate=pModel->EnumFirstPlate(FALSE);pPlate;pPlate=pModel->EnumNextPlate(FALSE))
+	for(CPlateProcessInfo *pPlate=pModel->EnumFirstPlate();pPlate;pPlate=pModel->EnumNextPlate())
 		DrawSteelSealRect(pPlate);
 }
 void CDamBoardManager::EraseAllSteelSealRect()

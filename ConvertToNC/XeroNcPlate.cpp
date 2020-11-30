@@ -22,11 +22,11 @@ static char THIS_FILE[] = __FILE__;
 //////////////////////////////////////////////////////////////////////////
 //静态函数
 //过滤重复点
-static BOOL IsHasVertex(ATOM_LIST<CPlateObject::VERTEX>& tem_vertes, GEPOINT pt)
+static BOOL IsHasVertex(ATOM_LIST<VERTEX>& tem_vertes, GEPOINT pt)
 {
 	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
 	{
-		CPlateObject::VERTEX* pVer = tem_vertes.GetByIndex(i);
+		VERTEX* pVer = tem_vertes.GetByIndex(i);
 		if (pVer->pos.IsEqual(pt, EPS2))
 			return TRUE;
 	}
@@ -59,17 +59,31 @@ static BOOL IsInSector(double start_ang, double sector_ang, double verify_ang, B
 		return FALSE;
 }
 //////////////////////////////////////////////////////////////////////////
-//CPlateObject
-CPlateObject::CPlateObject()
+//CPlateProcessInfo
+BOOL CPlateProcessInfo::m_bCreatePPIFile = TRUE;	//默认输出ppi文件 wht 20-10-10
+CPlateProcessInfo::CPlateProcessInfo()
 {
-
+	boltList.Empty();
+	m_bIslandDetection = FALSE;
+	plateInfoBlockRefId = 0;
+	partNoId = 0;
+	partNumId = 0;
+	m_bEnableReactor = TRUE;
+	m_ciModifyState = 0;
 }
-CPlateObject::~CPlateObject()
+CPNCModel* CPlateProcessInfo::get_pBelongModel() const
 {
-	vertexList.Empty();
+	if (_pBelongModel == NULL)
+		return &model;
+	return _pBelongModel;
+}
+CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
+{
+	_pBelongModel = pBelongModel;
+	return _pBelongModel;
 }
 //判断提取成功的轮廓点是否按逆时针排序
-BOOL CPlateObject::IsValidVertexs()
+BOOL CPlateProcessInfo::IsValidVertexs()
 {
 	if (!IsValid())
 		return FALSE;
@@ -91,7 +105,7 @@ BOOL CPlateObject::IsValidVertexs()
 	else
 		return FALSE;
 }
-void CPlateObject::ReverseVertexs()
+void CPlateProcessInfo::ReverseVertexs()
 {
 	int n = vertexList.GetNodeNum();
 	ARRAY_LIST<VERTEX> vertexArr;
@@ -111,7 +125,7 @@ void CPlateObject::ReverseVertexs()
 		*pVertex = vertexArr[i];
 	}
 }
-void CPlateObject::DeleteAssisstPts()
+void CPlateProcessInfo::DeleteAssisstPts()
 {	//去除辅助型顶点
 	for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
 	{
@@ -120,7 +134,7 @@ void CPlateObject::DeleteAssisstPts()
 	}
 	vertexList.Clean();
 }
-void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
+void CPlateProcessInfo::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
 {
 	BOOL bFind = FALSE;
 	int i = 0, iStart = -1, iEnd = -1;
@@ -172,11 +186,11 @@ void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
 		vertexList.DeleteAt(i);
 	vertexList.Clean();
 }
-BOOL CPlateObject::RecogWeldLine(const double* ptS, const double* ptE)
+BOOL CPlateProcessInfo::RecogWeldLine(const double* ptS, const double* ptE)
 {
 	return RecogWeldLine(f3dLine(ptS, ptE));
 }
-BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
+BOOL CPlateProcessInfo::RecogWeldLine(f3dLine slop_line)
 {
 	f3dPoint slop_vec = slop_line.endPt - slop_line.startPt;
 	normalize(slop_vec);
@@ -204,7 +218,7 @@ BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
 	}
 	return FALSE;
 }
-BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
+BOOL CPlateProcessInfo::IsClose(int* pIndex /*= NULL*/)
 {
 	if (!IsValid())
 		return FALSE;
@@ -243,31 +257,6 @@ BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
 		}
 	}
 	return TRUE;
-}
-//////////////////////////////////////////////////////////////////////////
-//CPlateProcessInfo
-BOOL CPlateProcessInfo::m_bCreatePPIFile = TRUE;	//默认输出ppi文件 wht 20-10-10
-CPlateProcessInfo::CPlateProcessInfo()
-{
-	boltList.Empty();
-	m_bIslandDetection = FALSE;
-	plateInfoBlockRefId = 0;
-	partNoId = 0;
-	partNumId = 0;
-	m_bEnableReactor = TRUE;
-	m_bNeedExtract = FALSE;
-	m_ciModifyState = 0;
-}
-CPNCModel* CPlateProcessInfo::get_pBelongModel() const
-{
-	if (_pBelongModel == NULL)
-		return &model;
-	return _pBelongModel;
-}
-CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
-{
-	_pBelongModel = pBelongModel;
-	return _pBelongModel;
 }
 //
 void CPlateProcessInfo::CreateRgn()
@@ -1041,8 +1030,6 @@ bool CPlateProcessInfo::RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list)
 //
 void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bSendCommand /*= FALSE*/)
 {
-	if (!m_bNeedExtract)
-		return;
 #ifdef __ALFA_TEST_
 	//用于测试查看文本的坐标位置
 	/*CLockDocumentLife lockCurDocument;
@@ -1766,8 +1753,8 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 	dim_pos = pSrcPlate->dim_pos;
 	dim_vec = pSrcPlate->dim_vec;
 	EmptyVertexs();
-	CPlateObject::VERTEX* pSrcVertex = NULL;
-	for (CPlateObject::VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
+	VERTEX* pSrcVertex = NULL;
+	for (VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
 		pSrcVertex = pSrcPlate->vertexList.GetNext())
 		vertexList.append(*pSrcVertex);
 	boltList.Empty();

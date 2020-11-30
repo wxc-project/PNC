@@ -152,7 +152,6 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		//
 		CPlateProcessInfo* pPlateProcess = pModel->AppendPlate(sPartNo);
 		pPlateProcess->m_pBelongModel = pModel;
-		pPlateProcess->m_bNeedExtract = TRUE;	//选择CAD实体包括当前件号时设置位需要提取
 		pPlateProcess->dim_pos = dim_pos;
 		pPlateProcess->dim_vec = dim_vec;
 		if (baseInfo.m_sPartNo.GetLength() > 0)
@@ -210,7 +209,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	int nSum = 0;
 	nNum = pModel->GetPlateNum();
 	DisplayCadProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
-	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=pModel->EnumNextPlate(TRUE),nSum++)
+	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate();pPlateProcess;pPlateProcess=pModel->EnumNextPlate(),nSum++)
 	{
 		DisplayCadProgress(int(100 * nSum / nNum));
 		pPlateProcess->ExtractRelaEnts();
@@ -220,9 +219,6 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
 		if (pPlateProcess->IsValid())
 			pPlateProcess->InitPPiInfo();
-		//移至DrawPlate之后进行修改NeedExtract状态，解决多次提取每次都绘制所有钢板的问题 wht 20-10-11
-		//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
-		//pPlateProcess->m_bNeedExtract = FALSE;
 	}
 	DisplayCadProgress(100);
 	//将提取的钢板信息导出到中性文件中
@@ -242,12 +238,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		}
 	}
 	//绘制提取的钢板外形--支持排版
-	pModel->DrawPlates(!CPlateProcessInfo::m_bCreatePPIFile);
-	//绘制完成之后将钢板设置为已提取，支持只绘制新提取的钢板 wht 20-10-11
-	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(TRUE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(TRUE), nSum++)
-	{	//完成提取后统一设置钢板提取状态为FALSE wht 19-06-17
-		pPlateProcess->m_bNeedExtract = FALSE;
-	}
+	pModel->DrawPlates();
 	//通过菜单提取的钢板需更新构件列表
 	if (CPNCModel::m_bSendCommand == FALSE)
 	{
@@ -635,7 +626,7 @@ void InsertMKRect()
 //通过读取Txt文件绘制外形
 //ReadVertexArrFromFile
 //////////////////////////////////////////////////////////////////////////
-bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& vertexArr)
+bool ReadVertexArrFromFile(const char* filePath, vector <VERTEX>& vertexArr)
 {
 	if (filePath == NULL)
 		return false;
@@ -659,7 +650,7 @@ bool ReadVertexArrFromFile(const char* filePath, vector <CPlateObject::VERTEX>& 
 		if (skey == NULL)
 			continue;
 		double x = 0, y = 0, i = 0, j = 0;
-		CPlateObject::VERTEX vertrex;
+		VERTEX vertrex;
 		if (strstr(skey, "G00"))
 		{	//快速定位点
 			if (bHasX)
@@ -768,7 +759,7 @@ void DrawProfileByTxtFile()
 	if (dlg.DoModal() != IDOK)
 		return;
 	//
-	vector <CPlateObject::VERTEX> vertexArr;
+	vector <VERTEX> vertexArr;
 	ReadVertexArrFromFile(dlg.GetPathName(), vertexArr);
 	//
 	DRAGSET.ClearEntSet();
@@ -777,8 +768,8 @@ void DrawProfileByTxtFile()
 	int n = vertexArr.size();
 	for (int i = 0; i < n-1; i++)
 	{
-		CPlateObject::VERTEX curVer = vertexArr.at(i);
-		CPlateObject::VERTEX nxtVer = vertexArr.at((i + 1) % n);
+		VERTEX curVer = vertexArr.at(i);
+		VERTEX nxtVer = vertexArr.at((i + 1) % n);
 		CreateAcadPoint(pBlockTableRecord, curVer.pos);
 		DimText(pBlockTableRecord, curVer.pos, CXhChar16("%d", i),
 			TextStyleTable::hzfs.textStyleId, 2, 0, AcDb::kTextCenter, AcDb::kTextVertMid);
