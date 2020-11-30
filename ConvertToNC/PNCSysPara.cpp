@@ -912,25 +912,29 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 				CAcDbObjLife entObj(pEnt);
 				if (pEnt->isKindOf(AcDbPolyline::desc()))
 				{
-					AcGePoint3d location;
 					AcDbPolyline* pPolyLine = (AcDbPolyline*)pEnt;
+					if (pPolyLine->numVerts() != nNum)
+						continue;
 					for (int iVertIndex = 0; iVertIndex < nNum; iVertIndex++)
 					{
+						AcGePoint3d location;
 						pPolyLine->getPointAt(iVertIndex, location);
-						ptArr[iVertIndex].Set(location.x, location.y, location.z);
+						ptArr[iVertIndex].Set(location.x, location.y, 0);
 						ptArr[iVertIndex].x *= scaleXYZ.sx;
 						ptArr[iVertIndex].y *= scaleXYZ.sy;
-						ptArr[iVertIndex].z *= scaleXYZ.sz;
 					}
 					break;
 				}
 			}
 			pTempBlockTableRecord->close();
 			//更新钢印区实际坐标
+			GEPOINT norm = scaleXYZ.sz < 0 ? f3dPoint(0, 0, -1) : f3dPoint(0, 0, 1);
 			for (int i = 0; i < nNum; i++)
 			{
+				if (scaleXYZ.sz < 0)		//图块有翻转，需调整钢印区四个轮廓点坐标
+					ptArr[i].x *= -1;		
 				if (fabs(rot_angle) > 0)	//图块有旋转角度
-					rotate_point_around_axis(ptArr[i], rot_angle, f3dPoint(), 100 * f3dPoint(0, 0, 1));
+					rotate_point_around_axis(ptArr[i], rot_angle, f3dPoint(), 100 * norm);
 				ptArr[i] += orig;
 			}
 		}

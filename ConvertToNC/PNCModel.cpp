@@ -54,9 +54,7 @@ CPNCModel::~CPNCModel()
 void CPNCModel::Empty()
 {
 	m_hashPlateInfo.Empty();
-	m_hashSolidLineTypeId.Empty();
 	m_xAllEntIdSet.Empty();
-	m_xAllLineHash.Empty();
 	m_xBoltEntHash.Empty();
 	m_sCurWorkFile.Empty();
 }
@@ -255,7 +253,7 @@ bool CPNCModel::AppendBoltEntsByBlock(ULONG idBlockEnt)
 					ptC = ptM + up_vec * 0.5*fLen;
 				else
 					ptC = ptM + dw_vec * 0.5*fLen;
-				if (ptC.IsEqual(GEPOINT(0, 0, 0), 0.5))
+				if (ptC.IsEqual(GEPOINT(0, 0, 0), EPS2))
 				{
 					double fSize = (i < 2) ? (fLen / SQRT_3 * 2) : (fLen * SQRT_2);
 					if (fHoleD < fSize)
@@ -312,7 +310,7 @@ bool CPNCModel::AppendBoltEntsByCircle(ULONG idCirEnt)
 	if (fDiameter > g_pncSysPara.m_nMaxHoleD)
 	{	//超过最大圆直径，判断是否按环板处理
 		CPlateProcessInfo* pPlateInfo = NULL;
-		for (pPlateInfo = EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = EnumNextPlate(FALSE))
+		for (pPlateInfo = EnumFirstPlate(); pPlateInfo; pPlateInfo = EnumNextPlate())
 		{
 			double fDist = DISTANCE(pPlateInfo->dim_pos, center);
 			if (fDist < pCircle->radius())
@@ -814,13 +812,14 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 {
 	//添加一个特定图层
 	CLockDocumentLife lockCurDocumentLife;
+	CHashSet<AcDbObjectId> hashSolidLineTypeId;	//记录有效的实体线型id wht 19-01-03
 	AcDbObjectId idSolidLine, idNewLayer;
 	CXhChar16 sNewLayer("pnc_layer"),sLineType=g_pncSysPara.m_sProfileLineType;
 	CreateNewLayer(sNewLayer, sLineType, AcDb::kLnWt013, 1, idNewLayer, idSolidLine);
-	m_hashSolidLineTypeId.SetValue(idSolidLine.asOldId(), idSolidLine);
+	hashSolidLineTypeId.SetValue(idSolidLine.asOldId(), idSolidLine);
 	AcDbObjectId lineTypeId=GetLineTypeId("人民币");
 	if(lineTypeId.isValid())
-		m_hashSolidLineTypeId.SetValue(lineTypeId.asOldId(),lineTypeId);
+		hashSolidLineTypeId.SetValue(lineTypeId.asOldId(),lineTypeId);
 #ifdef __TIMER_COUNT_
 	DWORD dwPreTick = timer.Start();
 #endif
@@ -844,7 +843,7 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_LINETYPE)
 		{	//按线型过滤
 			AcDbObjectId lineId = GetEntLineTypeId(pEnt);
-			if (lineId.isValid() && m_hashSolidLineTypeId.GetValue(lineId.asOldId()) == NULL)
+			if (lineId.isValid() && hashSolidLineTypeId.GetValue(lineId.asOldId()) == NULL)
 			{
 				selectedEntIdSet.DeleteNode(objId.asOldId());
 				continue;
@@ -1055,7 +1054,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	//提取轮廓边元素,记录框选区域
 	SCOPE_STRU scope;
 	AcDbEntity *pEnt = NULL;
-	CHashSet<AcDbObjectId> hashScreenProfileId;
+	CHashSet<AcDbObjectId> hashScreenProfileId, hashAllLineId;
 	ATOM_LIST<f3dArcLine> arrArcLine;
 	int index = 1, nNum = selectedEntIdSet.GetNodeNum() * 2;
 	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext(),index++)
@@ -1081,7 +1080,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			//
 			scope.VerifyVertex(ptS);
 			scope.VerifyVertex(ptE);
-			m_xAllLineHash.SetValue(objId.asOldId(), objId);
+			hashAllLineId.SetValue(objId.asOldId(), objId);
 		}
 		else if (pEnt->isKindOf(AcDbArc::desc()))
 		{
@@ -1102,7 +1101,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 				arrArcLine.append(arc_line);
 				//
 				scope.VerityArcLine(arc_line);
-				m_xAllLineHash.SetValue(objId.asOldId(), objId);
+				hashAllLineId.SetValue(objId.asOldId(), objId);
 			}
 			else
 				logerr.Log("ArcLine error");
@@ -1133,7 +1132,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 				arrArcLine.append(arc_line);
 				//
 				scope.VerityArcLine(arc_line);
-				m_xAllLineHash.SetValue(objId.asOldId(), objId);
+				hashAllLineId.SetValue(objId.asOldId(), objId);
 			}
 			else
 				logerr.Log("Ellipse error");
@@ -1183,7 +1182,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 			}
 			else
 			{	//不闭合的多段线,可能为钢板轮廓的一部分
-				m_xAllLineHash.SetValue(objId.asOldId(), objId);
+				hashAllLineId.SetValue(objId.asOldId(), objId);
 				int nVertNum = pPline->numVerts();
 				for (int iVertIndex = 0; iVertIndex < nVertNum; iVertIndex++)
 				{
@@ -1216,7 +1215,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 							arrArcLine.append(arc_line);
 							//
 							scope.VerityArcLine(arc_line);
-							m_xAllLineHash.SetValue(objId.asOldId(), objId);
+							hashAllLineId.SetValue(objId.asOldId(), objId);
 						}
 						else
 							logerr.Log("ArcLine error");
@@ -1262,7 +1261,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 		if (pItem->m_nPixelNum > 1)
 			hashScreenProfileId.SetValue(pItem->m_idRelaObj, MkCadObjId(pItem->m_idRelaObj));
 	}
-	InitPlateVextexs(hashScreenProfileId);
+	InitPlateVextexs(hashScreenProfileId, hashAllLineId);
 #ifdef __TIMER_COUNT_
 	timer.Relay(5, dwPreTick);
 	timer.End();
@@ -1274,7 +1273,7 @@ void CPNCModel::ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	logerr.Log("Summary time cost =%.3f", (timer.GetEndTicks() - timer.GetStartTicks())*0.001);
 #endif
 }
-void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
+void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts, CHashSet<AcDbObjectId>& hashAllLines)
 {
 	CHashSet<AcDbObjectId> acdbPolylineSet;
 	CHashSet<AcDbObjectId> acdbArclineSet;
@@ -1303,12 +1302,12 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		if (!tem_plate.InitProfileByAcdbPolyLine(objId))
 			continue;
 		CPlateProcessInfo* pCurPlateInfo = NULL;
-		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
+		for (pCurPlateInfo = EnumFirstPlate(); pCurPlateInfo; pCurPlateInfo = EnumNextPlate())
 		{
 			if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 				continue;
 			pCurPlateInfo->EmptyVertexs();
-			for (CPlateObject::VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
+			for (VERTEX* pVer = tem_plate.vertexList.GetFirst(); pVer;
 				pVer = tem_plate.vertexList.GetNext())
 				pCurPlateInfo->vertexList.append(*pVer);
 			break;
@@ -1321,12 +1320,12 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		if (!tem_plate.InitProfileByAcdbCircle(objId))
 			continue;
 		CPlateProcessInfo* pCurPlateInfo = NULL;
-		for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
+		for (pCurPlateInfo = EnumFirstPlate(); pCurPlateInfo; pCurPlateInfo = EnumNextPlate())
 		{
 			if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 				continue;
 			pCurPlateInfo->EmptyVertexs();
-			CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
+			VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
 			for (pVer = tem_plate.vertexList.GetFirst(); pVer; pVer = tem_plate.vertexList.GetNext())
 				pCurPlateInfo->vertexList.append(*pVer);
 			//圆环信息
@@ -1349,8 +1348,8 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 		}
 		else
 		{	//第二次从所有轮廓图元中提取剩余的闭合外形
-			line_arr.SetSize(0, m_xAllLineHash.GetNodeNum());
-			for (objId = m_xAllLineHash.GetFirst(); objId; objId = m_xAllLineHash.GetNext())
+			line_arr.SetSize(0, hashAllLines.GetNodeNum());
+			for (objId = hashAllLines.GetFirst(); objId; objId = hashAllLines.GetNext())
 				line_arr.append(CAD_LINE(objId.asOldId()));
 		}
 		for (int i = 0; i < line_arr.GetSize(); i++)
@@ -1367,12 +1366,12 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 			if (bSucceed)
 			{	//匹配成功,将轮廓点放入对应的钢板内
 				CPlateProcessInfo* pCurPlateInfo = NULL;
-				for (pCurPlateInfo = EnumFirstPlate(FALSE); pCurPlateInfo; pCurPlateInfo = EnumNextPlate(FALSE))
+				for (pCurPlateInfo = EnumFirstPlate(); pCurPlateInfo; pCurPlateInfo = EnumNextPlate())
 				{
 					if (!tem_plate.IsInPartRgn(pCurPlateInfo->dim_pos))
 						continue;
 					pCurPlateInfo->EmptyVertexs();
-					CPlateObject::VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
+					VERTEX* pVer = NULL, *pFirVer = tem_plate.vertexList.GetFirst();
 					for (pVer = tem_plate.vertexList.GetFirst(); pVer;pVer = tem_plate.vertexList.GetNext())
 						pCurPlateInfo->vertexList.append(*pVer);
 					//圆环信息
@@ -1394,7 +1393,7 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 				if (index == 0)
 				{	//记录第一次提取匹配失败的轮廓线
 					if (bSucceed)
-						m_xAllLineHash.DeleteNode(line_arr[i].idCadEnt);
+						hashAllLines.DeleteNode(line_arr[i].idCadEnt);
 					else
 						hashUnmatchLine.SetValue(line_arr[i].idCadEnt, line_arr[i]);
 				}
@@ -1414,13 +1413,13 @@ void CPNCModel::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts)
 //处理钢板一板多号的情况
 void CPNCModel::MergeManyPartNo()
 {
-	for(CPlateProcessInfo* pPlateProcess=EnumFirstPlate(TRUE);pPlateProcess;pPlateProcess=EnumNextPlate(TRUE))
+	for(CPlateProcessInfo* pPlateProcess=EnumFirstPlate();pPlateProcess;pPlateProcess=EnumNextPlate())
 	{
 		if(!pPlateProcess->IsValid())
 			continue;
 		pPlateProcess->pnTxtIdList.SetValue(pPlateProcess->partNoId.asOldId(),pPlateProcess->partNoId);
 		m_hashPlateInfo.push_stack();
-		for(CPlateProcessInfo* pTemPlate=EnumNextPlate(TRUE);pTemPlate;pTemPlate=EnumNextPlate(TRUE))
+		for(CPlateProcessInfo* pTemPlate=EnumNextPlate();pTemPlate;pTemPlate=EnumNextPlate())
 		{
 			if(!pPlateProcess->IsInPartRgn(pTemPlate->dim_pos))
 				continue;
@@ -1475,7 +1474,7 @@ void CPNCModel::CreatePlatePPiFile(const char* work_path)
 	}
 }
 //自动排版
-void CPNCModel::DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+void CPNCModel::DrawPlatesToLayout()
 {
 	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
@@ -1489,7 +1488,7 @@ void CPNCModel::DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 	int hight = g_pncSysPara.m_nMapWidth;
 	int paperLen = (g_pncSysPara.m_nMapLength <= 0) ? 100000 : g_pncSysPara.m_nMapLength;
 	int paperWidth = (hight <= 0) ? 0 : hight;
-	CSortedModel sortedModel(this,bOnlyNewExtractedPlate);
+	CSortedModel sortedModel(this);
 	sortedModel.DividPlatesByPartNo();
 	double paperX = 0, paperY = 0;
 	for (CSortedModel::PARTGROUP* pGroup = sortedModel.hashPlateGroup.GetFirst(); pGroup;pGroup = sortedModel.hashPlateGroup.GetNext())
@@ -1564,7 +1563,7 @@ void CPNCModel::DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 	DragEntSet(base, "请点取构件图的插入点");
 #endif
 }
-void CPNCModel::DrawPlatesToFiltrate(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+void CPNCModel::DrawPlatesToFiltrate()
 {
 	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
@@ -1575,7 +1574,7 @@ void CPNCModel::DrawPlatesToFiltrate(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 	DRAGSET.ClearEntSet();
 	f3dPoint datum_pos;
 	double fSegSpace = 0;
-	CSortedModel sortedModel(this, bOnlyNewExtractedPlate);
+	CSortedModel sortedModel(this);
 	if (g_pncSysPara.m_ciGroupType == 1)
 		sortedModel.DividPlatesBySeg();			//根据段号对钢板进行分组
 	else if (g_pncSysPara.m_ciGroupType == 2)
@@ -1612,7 +1611,7 @@ void CPNCModel::DrawPlatesToFiltrate(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 #endif
 }
 //钢板对比
-void CPNCModel::DrawPlatesToCompare(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+void CPNCModel::DrawPlatesToCompare()
 {
 	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
@@ -1623,7 +1622,7 @@ void CPNCModel::DrawPlatesToCompare(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 	DRAGSET.ClearEntSet();
 	f3dPoint datum_pos;
 	double fSegSpace = 0;
-	CSortedModel sortedModel(this, bOnlyNewExtractedPlate);
+	CSortedModel sortedModel(this);
 	sortedModel.DividPlatesBySeg();			//根据段号对钢板进行分组
 	for (CSortedModel::PARTGROUP* pGroup = sortedModel.hashPlateGroup.GetFirst(); pGroup;
 		pGroup = sortedModel.hashPlateGroup.GetNext())
@@ -1670,7 +1669,7 @@ void CPNCModel::DrawPlatesToCompare(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 #endif
 }
 //下料预审
-void CPNCModel::DrawPlatesToProcess(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+void CPNCModel::DrawPlatesToProcess()
 {
 	CLockDocumentLife lockCurDocumentLife;
 	if (m_hashPlateInfo.GetNodeNum() <= 0)
@@ -1679,7 +1678,7 @@ void CPNCModel::DrawPlatesToProcess(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 		return;
 	}
 	DRAGSET.ClearEntSet();
-	CSortedModel sortedModel(this, bOnlyNewExtractedPlate);
+	CSortedModel sortedModel(this);
 	int nSegCount = 0;
 	SEGI prevSegI, curSegI;
 	f3dPoint datum_pos;
@@ -1743,11 +1742,11 @@ void CPNCModel::DrawPlatesToProcess(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 #endif
 }
 //钢板相关图元克隆
-void CPNCModel::DrawPlatesToClone(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+void CPNCModel::DrawPlatesToClone()
 {
 	CLockDocumentLife lockCurDocumentLife;
 	DRAGSET.ClearEntSet();
-	for (CPlateProcessInfo *pPlate = EnumFirstPlate(bOnlyNewExtractedPlate); pPlate; pPlate = EnumNextPlate(bOnlyNewExtractedPlate))
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
 		pPlate->DrawPlate();
 #ifdef __DRAG_ENT_
 	SCOPE_STRU scope;
@@ -1760,7 +1759,7 @@ void CPNCModel::DrawPlatesToClone(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 #endif
 }
 //
-void CPNCModel::DrawPlates(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+void CPNCModel::DrawPlates()
 {
 	if(m_hashPlateInfo.GetNodeNum()<=0)
 	{
@@ -1768,20 +1767,20 @@ void CPNCModel::DrawPlates(BOOL bOnlyNewExtractedPlate /*= FALSE*/)
 		return;
 	}
 	if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PRINT)
-		return DrawPlatesToLayout(bOnlyNewExtractedPlate);
+		return DrawPlatesToLayout();
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
-		return DrawPlatesToProcess(bOnlyNewExtractedPlate);
+		return DrawPlatesToProcess();
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
-		return DrawPlatesToCompare(bOnlyNewExtractedPlate);
+		return DrawPlatesToCompare();
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_FILTRATE)
-		return DrawPlatesToFiltrate(bOnlyNewExtractedPlate);
+		return DrawPlatesToFiltrate();
 	else
-		return DrawPlatesToClone(bOnlyNewExtractedPlate);
+		return DrawPlatesToClone();
 }
 
 CPlateProcessInfo* CPNCModel::GetPlateInfo(AcDbObjectId partNoEntId)
 {
-	for (CPlateProcessInfo *pPlate = EnumFirstPlate(FALSE); pPlate; pPlate = EnumNextPlate(FALSE))
+	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
 	{
 		if (pPlate->partNoId == partNoEntId)
 			return pPlate;

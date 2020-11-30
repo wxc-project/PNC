@@ -8,14 +8,7 @@
 class CPNCModel
 {
 	CHashStrList<CPlateProcessInfo> m_hashPlateInfo;
-	CHashSet<AcDbObjectId> m_hashSolidLineTypeId;	//记录有效的实体线型id wht 19-01-03
 public:
-	CHashSet<AcDbObjectId> m_xAllEntIdSet;
-	CHashSet<AcDbObjectId> m_xAllLineHash;
-	CHashStrList<CBoltEntGroup> m_xBoltEntHash;
-	PROJECT_INFO m_xPrjInfo;
-	CXhChar500 m_sWorkPath;		//当前模型对应的工作路径 wht 19-04-02
-	CString m_sCurWorkFile;		//当前正在操作的文件
 	static const float ASSIST_RADIUS;
 	static const float DIST_ERROR;
 	static const float WELD_MAX_HEIGHT;
@@ -23,12 +16,18 @@ public:
 	//
 	static CString MakePosKeyStr(GEPOINT pos);
 	static double StandardHoleD(double fDiameter);
+public:
+	CHashSet<AcDbObjectId> m_xAllEntIdSet;
+	CHashStrList<CBoltEntGroup> m_xBoltEntHash;
+	PROJECT_INFO m_xPrjInfo;
+	CString m_sCurWorkFile;		//当前正在操作的文件
 private:
 	bool AppendBoltEntsByBlock(ULONG idBlockEnt);
 	bool AppendBoltEntsByCircle(ULONG idCirEnt);
 	bool AppendBoltEntsByPolyline(ULONG idPolyline);
 	bool AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine);
 	bool AppendBoltEntsByAloneLines(vector<CAD_LINE> vectorAloneLine);
+	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts, CHashSet<AcDbObjectId>& hashAllLines);
 public:
 	CPNCModel(void);
 	~CPNCModel(void);
@@ -38,17 +37,16 @@ public:
 	void ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet);
 	void FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols);
-	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts);
 	void MergeManyPartNo();
 	void SplitManyPartNo();
 	void CreatePlatePPiFile(const char* work_path);
 	//绘制钢板
-	void DrawPlates(BOOL bOnlyNewExtractedPlate=FALSE);
-	void DrawPlatesToLayout(BOOL bOnlyNewExtractedPlate = FALSE);
-	void DrawPlatesToCompare(BOOL bOnlyNewExtractedPlate = FALSE);
-	void DrawPlatesToProcess(BOOL bOnlyNewExtractedPlate = FALSE);
-	void DrawPlatesToClone(BOOL bOnlyNewExtractedPlate = FALSE);
-	void DrawPlatesToFiltrate(BOOL bOnlyNewExtractedPlate = FALSE);
+	void DrawPlates();
+	void DrawPlatesToLayout();
+	void DrawPlatesToCompare();
+	void DrawPlatesToProcess();
+	void DrawPlatesToClone();
+	void DrawPlatesToFiltrate();
 	//
 	int GetPlateNum(){return m_hashPlateInfo.GetNodeNum();}
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }
@@ -59,30 +57,8 @@ public:
 	CPlateProcessInfo* GetPlateInfo(char* sPartNo){return m_hashPlateInfo.GetValue(sPartNo);}
 	CPlateProcessInfo* GetPlateInfo(AcDbObjectId partNoEntId);
 	CPlateProcessInfo* GetPlateInfo(GEPOINT text_pos);
-	CPlateProcessInfo* EnumFirstPlate(BOOL bOnlyNewExtractedPlate)
-	{
-		if (bOnlyNewExtractedPlate)
-		{
-			CPlateProcessInfo* pPlate = m_hashPlateInfo.GetFirst();
-			while (pPlate&&!pPlate->m_bNeedExtract)
-				pPlate = m_hashPlateInfo.GetNext();
-			return pPlate;
-		}
-		else
-			return m_hashPlateInfo.GetFirst();
-	}
-	CPlateProcessInfo* EnumNextPlate(BOOL bOnlyNewExtractedPlate)
-	{
-		if (bOnlyNewExtractedPlate)
-		{
-			CPlateProcessInfo* pPlate = m_hashPlateInfo.GetNext();
-			while (pPlate&&!pPlate->m_bNeedExtract)
-				pPlate = m_hashPlateInfo.GetNext();
-			return pPlate;
-		}
-		else
-			return m_hashPlateInfo.GetNext();
-	}
+	CPlateProcessInfo* EnumFirstPlate(){return m_hashPlateInfo.GetFirst();}
+	CPlateProcessInfo* EnumNextPlate(){return m_hashPlateInfo.GetNext();}
 	void WritePrjTowerInfoToCfgFile(const char* cfg_file_path);
 };
 //////////////////////////////////////////////////////////////////////////
@@ -103,7 +79,7 @@ public:
 	};
 	CHashStrList<PARTGROUP> hashPlateGroup;
 public:
-	CSortedModel(CPNCModel *pModel, BOOL bOnlyNewExtractedPlate = FALSE);
+	CSortedModel(CPNCModel *pModel);
 	//
 	CPlateProcessInfo *EnumFirstPlate();
 	CPlateProcessInfo *EnumNextPlate();

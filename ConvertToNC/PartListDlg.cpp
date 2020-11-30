@@ -389,7 +389,7 @@ void CPartListDlg::OnRetrievedPlate()
 	CPNCModel tempMode;
 	CPNCModel::m_bSendCommand = TRUE;
 	SmartExtractPlate(&tempMode,TRUE);
-	CPlateProcessInfo* pFirstPlate = tempMode.EnumFirstPlate(FALSE);
+	CPlateProcessInfo* pFirstPlate = tempMode.EnumFirstPlate();
 	if (tempMode.GetPlateNum() != 1 || 
 		!sPartNo.Equal(pFirstPlate->GetPartNo())||
 		!pFirstPlate->IsValid())
@@ -418,7 +418,7 @@ void CPartListDlg::OnBnClickedBtnExtract()
 		SmartExtractPlate(&tempMode, TRUE);
 		//Êý¾Ý¿½±´
 		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
-		for (pSrcPlate = tempMode.EnumFirstPlate(FALSE); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate(FALSE))
+		for (pSrcPlate = tempMode.EnumFirstPlate(); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate())
 		{
 			pDestPlate = model.GetPlateInfo(pSrcPlate->GetPartNo());
 			if (pDestPlate == NULL)
@@ -513,7 +513,7 @@ void CPartListDlg::OnBnClickedBtnExportDxf()
 	CLockDocumentLife lock;
 	CString sDxfFolderPath,sFilePath;
 	GetCurWorkPath(sDxfFolderPath,TRUE,"DXF");
-	for(CPlateProcessInfo *pPlate=model.EnumFirstPlate(FALSE);pPlate;pPlate=model.EnumNextPlate(FALSE))
+	for(CPlateProcessInfo *pPlate=model.EnumFirstPlate();pPlate;pPlate=model.EnumNextPlate())
 	{
 		ARRAY_LIST<AcDbObjectId> entIdList;
 		for(ULONG *pId=pPlate->m_cloneEntIdList.GetFirst();pId;pId=pPlate->m_cloneEntIdList.GetNext())

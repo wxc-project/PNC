@@ -13,12 +13,12 @@ int ComparePlatePtrByPartNo(const CPlateInfoPtr &plate1, const CPlateInfoPtr &pl
 }
 //////////////////////////////////////////////////////////////////////////
 // CSortedModel
-CSortedModel::CSortedModel(CPNCModel *pModel, BOOL bOnlyNewExtractedPlate /*= FALSE*/)
+CSortedModel::CSortedModel(CPNCModel *pModel)
 {
 	if (pModel == NULL)
 		return;
 	platePtrList.Empty();
-	for (CPlateProcessInfo *pPlate = pModel->EnumFirstPlate(bOnlyNewExtractedPlate); pPlate; pPlate = pModel->EnumNextPlate(bOnlyNewExtractedPlate))
+	for (CPlateProcessInfo *pPlate = pModel->EnumFirstPlate(); pPlate; pPlate = pModel->EnumNextPlate())
 		platePtrList.append(pPlate);
 	CHeapSort<CPlateInfoPtr>::HeapSort(platePtrList.m_pData, platePtrList.Size(), ComparePlatePtrByPartNo);
 }

@@ -22,11 +22,11 @@ static char THIS_FILE[] = __FILE__;
 //////////////////////////////////////////////////////////////////////////
 //静态函数
 //过滤重复点
-static BOOL IsHasVertex(ATOM_LIST<CPlateObject::VERTEX>& tem_vertes, GEPOINT pt)
+static BOOL IsHasVertex(ATOM_LIST<VERTEX>& tem_vertes, GEPOINT pt)
 {
 	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
 	{
-		CPlateObject::VERTEX* pVer = tem_vertes.GetByIndex(i);
+		VERTEX* pVer = tem_vertes.GetByIndex(i);
 		if (pVer->pos.IsEqual(pt, EPS2))
 			return TRUE;
 	}
@@ -59,17 +59,31 @@ static BOOL IsInSector(double start_ang, double sector_ang, double verify_ang, B
 		return FALSE;
 }
 //////////////////////////////////////////////////////////////////////////
-//CPlateObject
-CPlateObject::CPlateObject()
+//CPlateProcessInfo
+BOOL CPlateProcessInfo::m_bCreatePPIFile = TRUE;	//默认输出ppi文件 wht 20-10-10
+CPlateProcessInfo::CPlateProcessInfo()
 {
-
+	boltList.Empty();
+	m_bIslandDetection = FALSE;
+	plateInfoBlockRefId = 0;
+	partNoId = 0;
+	partNumId = 0;
+	m_bEnableReactor = TRUE;
+	m_ciModifyState = 0;
 }
-CPlateObject::~CPlateObject()
+CPNCModel* CPlateProcessInfo::get_pBelongModel() const
 {
-	vertexList.Empty();
+	if (_pBelongModel == NULL)
+		return &model;
+	return _pBelongModel;
+}
+CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
+{
+	_pBelongModel = pBelongModel;
+	return _pBelongModel;
 }
 //判断提取成功的轮廓点是否按逆时针排序
-BOOL CPlateObject::IsValidVertexs()
+BOOL CPlateProcessInfo::IsValidVertexs()
 {
 	if (!IsValid())
 		return FALSE;
@@ -91,7 +105,7 @@ BOOL CPlateObject::IsValidVertexs()
 	else
 		return FALSE;
 }
-void CPlateObject::ReverseVertexs()
+void CPlateProcessInfo::ReverseVertexs()
 {
 	int n = vertexList.GetNodeNum();
 	ARRAY_LIST<VERTEX> vertexArr;
@@ -111,7 +125,7 @@ void CPlateObject::ReverseVertexs()
 		*pVertex = vertexArr[i];
 	}
 }
-void CPlateObject::DeleteAssisstPts()
+void CPlateProcessInfo::DeleteAssisstPts()
 {	//去除辅助型顶点
 	for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
 	{
@@ -120,7 +134,7 @@ void CPlateObject::DeleteAssisstPts()
 	}
 	vertexList.Clean();
 }
-void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
+void CPlateProcessInfo::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
 {
 	BOOL bFind = FALSE;
 	int i = 0, iStart = -1, iEnd = -1;
@@ -172,11 +186,11 @@ void CPlateObject::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
 		vertexList.DeleteAt(i);
 	vertexList.Clean();
 }
-BOOL CPlateObject::RecogWeldLine(const double* ptS, const double* ptE)
+BOOL CPlateProcessInfo::RecogWeldLine(const double* ptS, const double* ptE)
 {
 	return RecogWeldLine(f3dLine(ptS, ptE));
 }
-BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
+BOOL CPlateProcessInfo::RecogWeldLine(f3dLine slop_line)
 {
 	f3dPoint slop_vec = slop_line.endPt - slop_line.startPt;
 	normalize(slop_vec);
@@ -204,7 +218,7 @@ BOOL CPlateObject::RecogWeldLine(f3dLine slop_line)
 	}
 	return FALSE;
 }
-BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
+BOOL CPlateProcessInfo::IsClose(int* pIndex /*= NULL*/)
 {
 	if (!IsValid())
 		return FALSE;
@@ -243,31 +257,6 @@ BOOL CPlateObject::IsClose(int* pIndex /*= NULL*/)
 		}
 	}
 	return TRUE;
-}
-//////////////////////////////////////////////////////////////////////////
-//CPlateProcessInfo
-BOOL CPlateProcessInfo::m_bCreatePPIFile = TRUE;	//默认输出ppi文件 wht 20-10-10
-CPlateProcessInfo::CPlateProcessInfo()
-{
-	boltList.Empty();
-	m_bIslandDetection = FALSE;
-	plateInfoBlockRefId = 0;
-	partNoId = 0;
-	partNumId = 0;
-	m_bEnableReactor = TRUE;
-	m_bNeedExtract = FALSE;
-	m_ciModifyState = 0;
-}
-CPNCModel* CPlateProcessInfo::get_pBelongModel() const
-{
-	if (_pBelongModel == NULL)
-		return &model;
-	return _pBelongModel;
-}
-CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
-{
-	_pBelongModel = pBelongModel;
-	return _pBelongModel;
 }
 //
 void CPlateProcessInfo::CreateRgn()
@@ -336,7 +325,7 @@ void CPlateProcessInfo::CheckProfileEdge()
 	//修订钢板圆弧轮廓边信息
 	AcDbEntity *pEnt = NULL;
 	CHashSet<CAD_ENTITY*> xRelaLineSet;
-	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
 		pEnt = objLife.GetEnt();
@@ -418,16 +407,90 @@ void CPlateProcessInfo::CheckProfileEdge()
 	}
 }
 //更新钢板的螺栓孔信息
-void CPlateProcessInfo::UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelByLabel /*= NULL*/)
+void CPlateProcessInfo::UpdateBoltHoles()
 {
 	if (!IsValid())
 		return;
-	//
 	boltList.Empty();
-	//从单个图元(图块、圆圈)中提取螺栓信息
-	int nInvalidCirCountForText = 0;
-	int nPartLabelCount = 0;
-	PreprocessorBoltEnt(&nInvalidCirCountForText, &nPartLabelCount, pHashPartLabelByLabel);
+	//筛选同一位置包含多个图符或圆圈，同一圆心只保留直径最大的圆，以及件号圆圈
+	std::map<CString, CAD_ENT_PTR> mapCirAndBlock;
+	std::map<CString, CAD_ENT_PTR>::iterator iter;
+	std::set<CAD_ENT_PTR> setInvalidBoltCir;
+	for (CAD_ENTITY *pEnt = EnumFirstRelaEnt(); pEnt; pEnt = EnumNextRelaEnt())
+	{
+		if (pEnt->ciEntType != TYPE_BLOCKREF && pEnt->ciEntType != TYPE_CIRCLE)
+			continue;	//仅处理螺栓图块和圆
+		if (pEnt->ciEntType == TYPE_BLOCKREF)
+		{
+			if (pEnt->m_fSize == 0 || strlen(pEnt->sText) <= 0)
+				continue;	//非螺栓图块
+		}
+		else if (pEnt->ciEntType == TYPE_CIRCLE)
+		{
+			CAcDbObjLife objLife(MkCadObjId(pEnt->idCadEnt));
+			AcDbObjectId idCircleLineType = GetEntLineTypeId(objLife.GetEnt());
+			if (idCircleLineType.isValid() && idCircleLineType != GetLineTypeId("CONTINUOUS"))
+			{	//根据制图规范，螺栓圆圈应该都是实线 wxc 20-06-19
+				setInvalidBoltCir.insert(pEnt);
+				continue;
+			}
+			if ((cir_plate_para.m_bCirclePlate && cir_plate_para.cir_center.IsEqual(pEnt->pos)) ||
+				(pEnt->m_fSize<0 || pEnt->m_fSize>g_pncSysPara.m_nMaxHoleD))
+			{	//环型板的同心圆和直径超过设定的最大直径的圆都不可能时螺栓孔 wxc 20-04-15
+				setInvalidBoltCir.insert(pEnt);
+				continue;
+			}
+		}
+		CString sPosKey = CPNCModel::MakePosKeyStr(pEnt->pos);
+		iter = mapCirAndBlock.find(sPosKey);
+		if (iter == mapCirAndBlock.end())
+			mapCirAndBlock.insert(std::make_pair(sPosKey, pEnt));
+		else
+		{
+			if (iter->second->m_fSize > pEnt->m_fSize)
+				setInvalidBoltCir.insert(pEnt);
+			else
+			{
+				setInvalidBoltCir.insert(iter->second);
+				mapCirAndBlock[sPosKey] = pEnt;
+			}
+		}
+	}
+	int nInvalidCirCountForText = 0, nPartLabelCount = 0;
+	if (g_pncSysPara.IsFilterPartNoCir())
+	{
+		for (CAD_ENTITY *pEnt = EnumFirstRelaEnt(); pEnt; pEnt = EnumNextRelaEnt())
+		{
+			if (pEnt->ciEntType != TYPE_TEXT && pEnt->ciEntType != TYPE_MTEXT)
+				continue;
+			//标注字符串中包含"钻孔或冲孔"，
+			if (strstr(pEnt->sText, "钻") != NULL || strstr(pEnt->sText, "冲") != NULL ||
+				strstr(pEnt->sText, "Φ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
+				strstr(pEnt->sText, "%%c") != NULL || strstr(pEnt->sText, "焊") != NULL)
+				continue;
+			//排除件号标注圆圈
+			for (iter = mapCirAndBlock.begin(); iter != mapCirAndBlock.end(); iter++)
+			{
+				if (iter->second->ciEntType == TYPE_BLOCKREF)
+					continue;	//螺栓图符内有文字时不需要过滤 wht 19-12-10
+				if (g_pncSysPara.m_fPartNoCirD > 0 &&
+					fabs(iter->second->m_fSize - g_pncSysPara.m_fPartNoCirD) >= EPS2)
+					continue;	//用户指定件号圆圈孔径时，不满足孔径的不过滤 wxc-20-07-23
+				SCOPE_STRU scope;
+				double r = iter->second->m_fSize*0.5;
+				scope.fMinX = iter->second->pos.x - r;
+				scope.fMaxX = iter->second->pos.x + r;
+				scope.fMinY = iter->second->pos.y - r;
+				scope.fMaxY = iter->second->pos.y + r;
+				scope.fMinZ = scope.fMaxZ = 0;
+				if (scope.IsIncludePoint(pEnt->pos))
+				{
+					setInvalidBoltCir.insert(iter->second);
+					nInvalidCirCountForText++;
+				}
+			}
+		}
+	}
 	if (nInvalidCirCountForText > 0)
 	{
 		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！", (char*)xPlate.GetPartNo(), nInvalidCirCountForText);
@@ -435,16 +498,14 @@ void CPlateProcessInfo::UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelB
 		if (nInvalidCirCountForText > nPartLabelCount)
 			m_dwErrorType |= ERROR_TEXT_INSIDE_OF_HOLE;
 	}
-	AcDbEntity *pEnt = NULL;
-	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+	//从单个图元(图块、圆圈)中提取螺栓信息
+	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
-		if (m_xHashInvalidBoltCir.GetValue((DWORD)pRelaObj))
-		{
-			//m_xHashRelaEntIdList.DeleteCursor();	//不能直接删除关联图元，否则绘制模块丢失图元
+		if (setInvalidBoltCir.find(pRelaObj)!=setInvalidBoltCir.end())
 			continue;	//过滤掉无效的螺栓实体（大圆内的小圆、件号标注） wht 19-07-20
-		}
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
-		if ((pEnt = objLife.GetEnt()) == NULL)
+		AcDbEntity *pEnt = objLife.GetEnt();
+		if (pEnt == NULL)
 			continue;
 		BOLT_HOLE boltInfo;
 		if (!g_pncSysPara.RecogBoltHole(pEnt, boltInfo, m_pBelongModel))
@@ -532,7 +593,7 @@ void CPlateProcessInfo::UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelB
 	//统一处理根据特殊孔文字标注更新螺栓孔信息	wxc-2020.5.9
 	if (g_pncSysPara.IsRecogHoleDimText())
 	{
-		for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+		for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 		{
 			if (pRelaObj->ciEntType != TYPE_TEXT &&
 				pRelaObj->ciEntType != TYPE_DIM_D)
@@ -563,7 +624,8 @@ void CPlateProcessInfo::UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelB
 			double org_hole_d = pCurBolt->bolt_d + pCurBolt->hole_d_increment;
 			double org_hole_d2 = org_hole_d;
 			CAcDbObjLife objLife(MkCadObjId(pCurBolt->feature));
-			if ((pEnt = objLife.GetEnt()) && pEnt->isKindOf(AcDbBlockReference::desc()))
+			AcDbEntity *pEnt = objLife.GetEnt();
+			if (pEnt && pEnt->isKindOf(AcDbBlockReference::desc()))
 			{
 				CBoltEntGroup* pLsBlockEnt = m_pBelongModel->m_xBoltEntHash.GetValue(CXhChar50("%d", pEnt->id().asOldId()));
 				if (pLsBlockEnt)
@@ -639,13 +701,7 @@ void CPlateProcessInfo::ExtractRelaEnts()
 		//通过像素识别的轮廓边已记录了关联图元
 		if (pVer->tag.lParam == 0 || pVer->tag.lParam == -1)
 			continue;
-		AcDbEntity *pEnt = NULL;
-		XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(pVer->tag.dwParam), AcDb::kForRead);
-		if (pEnt)
-		{
-			AppendRelaEntity(pEnt);
-			pEnt->close();
-		}
+		AppendRelaEntity(pVer->tag.lParam);
 	}
 	ZoomAcadView(scope, 10);
 	//根据闭合区域拾取归属于钢板的图元集合
@@ -672,101 +728,6 @@ void CPlateProcessInfo::ExtractRelaEnts()
 	CCadPartObject::ExtractRelaEnts(vectorProfilePt);
 }
 
-void CPlateProcessInfo::PreprocessorBoltEnt(int* piInvalidCirCountForText, int* piInvalidCirCountForLabel,
-	CHashStrList<CXhChar16>* pHashPartLabelByLabel)
-{	//合并圆心相同的圆，同一圆心只保留直径最大的圆
-	CHashStrList<CAD_ENTITY*> hashEntPtrByCenterStr;	//记录圆心对应的直径最大的螺栓实体
-	m_xHashInvalidBoltCir.Empty();
-	for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
-	{
-		if (pEnt->ciEntType != TYPE_BLOCKREF &&
-			pEnt->ciEntType != TYPE_CIRCLE)
-			continue;	//仅处理螺栓图块和圆
-		if (pEnt->ciEntType == TYPE_BLOCKREF)
-		{
-			if (pEnt->m_fSize == 0 || strlen(pEnt->sText) <= 0)
-				continue;	//非螺栓图块
-		}
-		else if (pEnt->ciEntType == TYPE_CIRCLE)
-		{
-			CAcDbObjLife objLife(MkCadObjId(pEnt->idCadEnt));
-			AcDbObjectId idCircleLineType = GetEntLineTypeId(objLife.GetEnt());
-			if (idCircleLineType.isValid() && idCircleLineType != GetLineTypeId("CONTINUOUS"))
-			{	//根据制图规范，螺栓圆圈应该都是实线 wxc 20-06-19
-				m_xHashInvalidBoltCir.SetValue((DWORD)pEnt, pEnt);
-				continue;
-			}
-			if ((cir_plate_para.m_bCirclePlate && cir_plate_para.cir_center.IsEqual(pEnt->pos)) ||
-				(pEnt->m_fSize<0 || pEnt->m_fSize>g_pncSysPara.m_nMaxHoleD))
-			{	//环型板的同心圆和直径超过100的圆都不可能时螺栓孔 wxc 20-04-15
-				m_xHashInvalidBoltCir.SetValue((DWORD)pEnt, pEnt);
-				continue;
-			}
-		}
-		//同一个位置有多个螺栓图符或圆孔时，取直径最大的螺栓图符或圆孔，避免添加重叠螺栓 wht 19 - 11 - 25
-		CXhChar50 sKey("%.2f,%.2f,%.2f", pEnt->pos.x, pEnt->pos.y, pEnt->pos.z);
-		CAD_ENTITY **ppEntPtr = hashEntPtrByCenterStr.GetValue(sKey);
-		if (ppEntPtr)
-		{
-			if ((*ppEntPtr)->m_fSize > pEnt->m_fSize)
-			{	//pEnt直径较小为螺栓内圆需要忽略
-				m_xHashInvalidBoltCir.SetValue((DWORD)pEnt, pEnt);
-			}
-			else
-			{	//**ppEntPtr螺栓直径较小为螺栓内圆需要忽略
-				m_xHashInvalidBoltCir.SetValue((DWORD)(*ppEntPtr), *ppEntPtr);
-				hashEntPtrByCenterStr.DeleteNode(sKey);
-				hashEntPtrByCenterStr.SetValue(sKey, pEnt);
-			}
-		}
-		else
-			hashEntPtrByCenterStr.SetValue(sKey, pEnt);
-	}
-	if (g_pncSysPara.IsFilterPartNoCir())
-	{
-		int nInvalidCount = 0;
-		int nInvalidCountForLabel = 0;
-		for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
-		{
-			if (pEnt->ciEntType != TYPE_TEXT && pEnt->ciEntType != TYPE_MTEXT)
-				continue;
-			//标注字符串中包含"钻孔或冲孔"，
-			if (strstr(pEnt->sText, "钻") != NULL || strstr(pEnt->sText, "冲") != NULL ||
-				strstr(pEnt->sText, "Φ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
-				strstr(pEnt->sText, "%%c") != NULL || strstr(pEnt->sText, "焊") != NULL)
-				continue;
-			//排除件号标注圆圈
-			SCOPE_STRU scope;
-			for (CAD_ENTITY **ppCirEnt = hashEntPtrByCenterStr.GetFirst(); ppCirEnt; ppCirEnt = hashEntPtrByCenterStr.GetNext())
-			{
-				CAD_ENTITY *pCirEnt = *ppCirEnt;
-				if (pCirEnt->ciEntType == TYPE_BLOCKREF)
-					continue;	//螺栓图符内有文字时不需要过滤 wht 19-12-10
-				if (g_pncSysPara.m_fPartNoCirD > 0 && fabs(pCirEnt->m_fSize - g_pncSysPara.m_fPartNoCirD) >= EPS2)
-					continue;	//用户指定件号圆圈孔径时，不满足孔径的不过滤 wxc-20-07-23
-				scope.ClearScope();
-				double r = pCirEnt->m_fSize*0.5;
-				scope.fMinX = pCirEnt->pos.x - r;
-				scope.fMaxX = pCirEnt->pos.x + r;
-				scope.fMinY = pCirEnt->pos.y - r;
-				scope.fMaxY = pCirEnt->pos.y + r;
-				scope.fMinZ = scope.fMaxZ = 0;
-				if (scope.IsIncludePoint(pEnt->pos))
-				{
-					m_xHashInvalidBoltCir.SetValue((DWORD)pCirEnt, pCirEnt);
-					hashEntPtrByCenterStr.DeleteCursor();
-					nInvalidCount++;
-					if (pHashPartLabelByLabel && pHashPartLabelByLabel->GetValue(pEnt->sText))
-						nInvalidCountForLabel++;
-				}
-			}
-		}
-		if (piInvalidCirCountForText)
-			*piInvalidCirCountForText = nInvalidCount;
-		if (piInvalidCirCountForLabel)
-			*piInvalidCirCountForLabel = nInvalidCountForLabel;
-	}
-}
 bool CPlateProcessInfo::RecogRollEdge(CHashSet<CAD_ENTITY*> &rollEdgeDimTextSet, f3dLine &line)
 {	//提取卷边信息
 	CMinDouble minDisBendDim;
@@ -846,7 +807,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	CHashSet<CAD_ENTITY*> rollEdgeDimTextSet;
 	CHashSet<BOOL> weldMarkLineSet;
 	CHashStrList< ATOM_LIST<CAD_LINE> > hashLineArrByPosKeyStr;
-	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
 		if (pRelaObj->ciEntType != TYPE_SPLINE &&
 			pRelaObj->ciEntType != TYPE_TEXT &&
@@ -901,7 +862,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	}
 	xPlate.m_cFaceN = 1;
 	BASIC_INFO baseInfo;
-	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
 		if ((pEnt = objLife.GetEnt()) == NULL)
@@ -1001,7 +962,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			}
 		}
 	}
-	return m_xHashRelaEntIdList.GetNodeNum() > 1;
+	return GetRelaEntCount() > 1;
 }
 f2dRect CPlateProcessInfo::GetPnDimRect(double fRectW /*= 10*/, double fRectH /*= 10*/)
 {
@@ -1069,8 +1030,6 @@ bool CPlateProcessInfo::RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list)
 //
 void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bSendCommand /*= FALSE*/)
 {
-	if (!m_bNeedExtract)
-		return;
 #ifdef __ALFA_TEST_
 	//用于测试查看文本的坐标位置
 	/*CLockDocumentLife lockCurDocument;
@@ -1794,18 +1753,18 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 	dim_pos = pSrcPlate->dim_pos;
 	dim_vec = pSrcPlate->dim_vec;
 	EmptyVertexs();
-	CPlateObject::VERTEX* pSrcVertex = NULL;
-	for (CPlateObject::VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
+	VERTEX* pSrcVertex = NULL;
+	for (VERTEX* pSrcVertex = pSrcPlate->vertexList.GetFirst(); pSrcVertex;
 		pSrcVertex = pSrcPlate->vertexList.GetNext())
 		vertexList.append(*pSrcVertex);
 	boltList.Empty();
 	for (BOLT_INFO* pSrcBolt = pSrcPlate->boltList.GetFirst(); pSrcBolt; pSrcBolt = pSrcPlate->boltList.GetNext())
 		boltList.append(*pSrcBolt);
 	//
-	m_xHashRelaEntIdList.Empty();
-	for (CAD_ENTITY* pSrcCadEnt = pSrcPlate->m_xHashRelaEntIdList.GetFirst(); pSrcCadEnt;
-		pSrcCadEnt = pSrcPlate->m_xHashRelaEntIdList.GetNext())
-		m_xHashRelaEntIdList.SetValue(pSrcCadEnt->idCadEnt, *pSrcCadEnt);
+	EmptyRelaEnts();
+	for (CAD_ENTITY* pSrcCadEnt = pSrcPlate->EnumFirstRelaEnt(); pSrcCadEnt;
+		pSrcCadEnt = pSrcPlate->EnumNextRelaEnt())
+		AddRelaEnt(pSrcCadEnt->idCadEnt, *pSrcCadEnt);
 	m_cloneEntIdList.Empty();
 	for (ULONG *pSrcId = pSrcPlate->m_cloneEntIdList.GetFirst(); pSrcId;
 		pSrcId = pSrcPlate->m_cloneEntIdList.GetNext())
@@ -2082,7 +2041,7 @@ bool CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/, BOOL bCreateDimPos
 	AcDbBlockTableRecord *pCurBlockTblRec = pBlockTableRecord;
 	if (bDrawAsBlock&&pPlateCenter&&DRAGSET.BeginBlockRecord())
 		pCurBlockTblRec = DRAGSET.RecordingBlockTableRecord();
-	for (CAD_ENTITY *pRelaObj = m_xHashRelaEntIdList.GetFirst(); pRelaObj; pRelaObj = m_xHashRelaEntIdList.GetNext())
+	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
 		CAcDbObjLife objLife(MkCadObjId(pRelaObj->idCadEnt));
 		AcDbEntity *pEnt = objLife.GetEnt();
@@ -3118,9 +3077,9 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 		for (unsigned long *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
 			VerifyVertexByCADEntId(scope, MkCadObjId(*pId));
 	}
-	else if (m_xHashRelaEntIdList.GetNodeNum() > 1)
+	else if (GetRelaEntCount() > 1)
 	{
-		for (CAD_ENTITY *pEnt = m_xHashRelaEntIdList.GetFirst(); pEnt; pEnt = m_xHashRelaEntIdList.GetNext())
+		for (CAD_ENTITY *pEnt = EnumFirstRelaEnt(); pEnt; pEnt = EnumNextRelaEnt())
 			VerifyVertexByCADEntId(scope, MkCadObjId(pEnt->idCadEnt));
 	}
 	else

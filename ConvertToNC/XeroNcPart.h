@@ -32,7 +32,12 @@ struct CAD_ENTITY {
 	//
 	CAD_ENTITY(ULONG idEnt = 0);
 	bool IsInScope(GEPOINT &pt);
+	//进行排序，方便STL的使用
+	bool friend operator <(const CAD_ENTITY &item1, const CAD_ENTITY &item2){
+		return item1.idCadEnt > item2.idCadEnt;
+	}
 };
+typedef CAD_ENTITY* CAD_ENT_PTR;
 struct CAD_LINE : public CAD_ENTITY
 {
 	BYTE m_ciSerial;
@@ -131,6 +136,9 @@ public:
 	int GetRelaEntCount() { return m_xHashRelaEntIdList.GetNodeNum(); }
 	CAD_ENTITY* EnumFirstRelaEnt() { return m_xHashRelaEntIdList.GetFirst(); }
 	CAD_ENTITY* EnumNextRelaEnt() { return m_xHashRelaEntIdList.GetNext(); }
+	CAD_ENTITY* AddRelaEnt(long hKey, CAD_ENTITY ent) {
+		return m_xHashRelaEntIdList.SetValue(hKey, ent);
+	}
 	bool IsInPartRgn(const double* poscoord);
 	bool IsInPartRgn(const double* start, const double* end);
 	//
@@ -138,9 +146,50 @@ public:
 	virtual void ExtractRelaEnts() = 0;
 };
 //////////////////////////////////////////////////////////////////////////
-//CPlateObject
-class CPlateObject
+//CPlateProcessInfo
+struct VERTEX {
+	GEPOINT pos;
+	char ciEdgeType;	//1:普通直边 2:圆弧 3:椭圆弧
+	bool m_bWeldEdge;
+	bool m_bRollEdge;
+	short manu_space;
+	union ATTACH_DATA {	//简单附加数
+		DWORD dwParam;
+		long  lParam;
+		void* pParam;
+	}tag;
+	struct ARC_PARAM {	//圆弧参数
+		double radius;		//指定圆弧半径(椭圆需要)
+		double fSectAngle;	//指定扇形角(圆弧需要)
+		GEPOINT center, work_norm, column_norm;
+	}arc;
+	VERTEX() {
+		ciEdgeType = 1;
+		m_bWeldEdge = m_bRollEdge = false;
+		manu_space = 0;
+		arc.radius = arc.fSectAngle = 0;
+		tag.dwParam = 0;
+	}
+};
+class CPNCModel;
+class CPlateProcessInfo : public CCadPartObject
 {
+	struct LAYOUT_VERTEX {
+		int index;			//轮廓点索引
+		GEPOINT srcPos;		//轮廓点坐标
+		GEPOINT offsetPos;	//相对于最小包络记性左上角的偏移位置
+		LAYOUT_VERTEX() { index = 0; }
+		void Init() {
+			index = 0;
+			srcPos.Set();
+			offsetPos.Set();
+		}
+	};
+	//
+	GECS ucs;
+	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
+	CPNCModel* _pBelongModel;
+	LAYOUT_VERTEX datumStartVertex, datumEndVertex;	//布局基准轮廓点
 public:
 	struct CIR_PLATE {
 		BOOL m_bCirclePlate;	//是否为圆型板
@@ -155,67 +204,8 @@ public:
 			column_norm.Set(0, 0, 1);
 		}
 	}cir_plate_para;
-	struct VERTEX {
-		GEPOINT pos;
-		char ciEdgeType;	//1:普通直边 2:圆弧 3:椭圆弧
-		bool m_bWeldEdge;
-		bool m_bRollEdge;
-		short manu_space;
-		union ATTACH_DATA {	//简单附加数
-			DWORD dwParam;
-			long  lParam;
-			void* pParam;
-		}tag;
-		struct ARC_PARAM {	//圆弧参数
-			double radius;		//指定圆弧半径(椭圆需要)
-			double fSectAngle;	//指定扇形角(圆弧需要)
-			GEPOINT center, work_norm, column_norm;
-		}arc;
-		VERTEX() {
-			ciEdgeType = 1;
-			m_bWeldEdge = m_bRollEdge = false;
-			manu_space = 0;
-			arc.radius = arc.fSectAngle = 0;
-			tag.dwParam = 0;
-		}
-	};
-	ATOM_LIST<VERTEX> vertexList;
-	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
-protected:
-	BOOL IsValidVertexs();
-	void ReverseVertexs();
-	void DeleteAssisstPts();
-	void UpdateVertexPropByArc(f3dArcLine& arcLine, int type);
-public:
-	CPlateObject();
-	~CPlateObject();
 	//
-	virtual BOOL RecogWeldLine(const double* ptS, const double* ptE);
-	virtual BOOL RecogWeldLine(f3dLine slop_line);
-	virtual BOOL IsValid() { return vertexList.GetNodeNum() >= 2; }
-	virtual BOOL IsClose(int* pIndex = NULL);
-};
-//CPlateProcessInfo
-class CPNCModel;
-class CPlateProcessInfo : public CPlateObject,public CCadPartObject
-{
-	struct LAYOUT_VERTEX {
-		int index;			//轮廓点索引
-		GEPOINT srcPos;		//轮廓点坐标
-		GEPOINT offsetPos;	//相对于最小包络记性左上角的偏移位置
-		LAYOUT_VERTEX() { index = 0; }
-		void Init() {
-			index = 0;
-			srcPos.Set();
-			offsetPos.Set();
-		}
-	};
-private:
-	GECS ucs;
-	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
-	CPNCModel* _pBelongModel;
-	LAYOUT_VERTEX datumStartVertex, datumEndVertex;	//布局基准轮廓点
-public:
+	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
 	BOOL m_bEnableReactor;
 	CProcessPlate xPlate;
 	PART_PLATE xBomPlate;
@@ -228,15 +218,13 @@ public:
 	BASIC_INFO m_xBaseInfo;
 	CHashSet<AcDbObjectId> pnTxtIdList;
 	ATOM_LIST<BOLT_INFO> boltList;
+	ATOM_LIST<VERTEX> vertexList;
 	//钢板关联实体
-	CHashList<CAD_ENTITY> m_xHashRelaEntIdList;
-	CHashSet<CAD_ENTITY*> m_xHashInvalidBoltCir;		//记录无效的圆圈，方便后期输出对比
 	CHashList<CAD_LINE> m_hashCloneEdgeEntIdByIndex;
 	CHashList<ULONG> m_hashColneEntIdBySrcId;
 	ARRAY_LIST<ULONG> m_cloneEntIdList;
 	ARRAY_LIST<ULONG> m_newAddEntIdList;
 	AcDbObjectId m_layoutBlockId;	//自动排版时添加的块引用
-	BOOL m_bNeedExtract;	//记录当前构件是否需要提取，分批多次提取时使用 wht 19-04-02
 	//加工数、单基数、总重修改状态 wht 20-07-29
 	static const BYTE MODIFY_MANU_NUM = 0x01;
 	static const BYTE MODIFY_SINGLE_NUM = 0x02;
@@ -261,10 +249,12 @@ public:
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
-	void PreprocessorBoltEnt(int* piInvalidCirCountForText, int* piInvalidCirCountForLabel,
-		CHashStrList<CXhChar16>* pHashPartLabelByLabel);
 	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
 	bool RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list);
+	BOOL IsValidVertexs();
+	void ReverseVertexs();
+	void DeleteAssisstPts();
+	void UpdateVertexPropByArc(f3dArcLine& arcLine, int type);
 public:
 	CPlateProcessInfo();
 	//
@@ -273,6 +263,10 @@ public:
 		vertexList.Empty();
 		m_xPolygon.Empty();
 	}
+	BOOL IsValid() { return vertexList.GetNodeNum() >= 2; }
+	BOOL IsClose(int* pIndex = NULL);
+	BOOL RecogWeldLine(const double* ptS, const double* ptE);
+	BOOL RecogWeldLine(f3dLine slop_line);
 	//获取钢板相关区域
 	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
 	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL, double dfMaxRectW = 0);
@@ -291,7 +285,7 @@ public:
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	BOOL UpdatePlateInfo(BOOL bRelatePN = FALSE);
-	void UpdateBoltHoles(CHashStrList<CXhChar16>* pHashPartLabelByLabel = NULL);
+	void UpdateBoltHoles();
 	void CheckProfileEdge();
 	//生成中性文件
 	void InitPPiInfo();
@@ -318,7 +312,6 @@ public:
 	//控制是否需要输出ppi文件 wht 20-10-10
 	static BOOL m_bCreatePPIFile;
 };
-typedef CPlateProcessInfo::VERTEX PLATE_VER;
 //////////////////////////////////////////////////////////////////////////
 //
 class CPlateReactorLife
