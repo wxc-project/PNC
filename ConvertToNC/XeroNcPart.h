@@ -212,7 +212,6 @@ public:
 	AcDbObjectId partNoId;
 	AcDbObjectId partNumId;
 	AcDbObjectId plateInfoBlockRefId;
-	BOOL m_bIslandDetection;	//是否开启孤岛检测 wht 19-01-03
 	GEPOINT dim_pos, dim_vec;
 	CXhChar200 m_sRelatePartNo;
 	BASIC_INFO m_xBaseInfo;
@@ -232,16 +231,6 @@ public:
 	static const BYTE MODIFY_DES_SPEC = 0x08;
 	static const BYTE MODIFY_DES_MAT = 0x10;
 	BYTE m_ciModifyState;
-	//
-	f2dRect m_rectCard;			//工艺卡矩形框，用于批量打印 wht 20.01.27
-	BOOL m_bHasCard;			//判断钢板是否带工艺卡框 wht 20.01.27
-	static const DWORD ERROR_NORMAL = 0x0;	//无错误
-	static const DWORD ERROR_TEXT_OUTSIDE_OF_PLATE = 0x01;	//文字超边
-	static const DWORD ERROR_REPEAT_PART_LABEL = 0x02;	//重复件号
-	static const DWORD ERROR_TEXT_INSIDE_OF_HOLE = 0x04;	//孔内文字
-	static const DWORD ERROR_LABEL_INSIDE_OF_HOLE = 0x08;	//孔内件号
-	DWORD m_dwErrorType;
-	DWORD m_dwCorrectState;	//与错误状态配对使用，暂时只用来记录文字缩放是否修正成功 wht 19.12.24
 	//属性定义区
 	CPNCModel* get_pBelongModel() const;
 	CPNCModel* set_pBelongModel(CPNCModel* pBelongModel);
@@ -276,7 +265,7 @@ public:
 	void CreateRgn();
 	void ExtractRelaEnts();
 	//初始化钢板轮廓边信息
-	void InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bSendCommand = FALSE);//通过bpoly命令提取钢板信息
+	void InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bIslandDetection = FALSE);//通过bpoly命令提取钢板信息
 	BOOL InitProfileBySelEnts(CHashSet<AcDbObjectId>& selectedEntList);//通过选中实体初始化钢板信息
 	BOOL InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle);
 	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);

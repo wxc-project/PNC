@@ -44,31 +44,10 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 {
 	if (pModel == NULL)
 		return;
-	struct resbuf var;
-#ifdef _ARX_2007
-	acedGetVar(L"WORLDUCS", &var);
-#else
-	acedGetVar("WORLDUCS", &var);
-#endif
-	int iRet = var.resval.rint;
-	if (iRet == 0)
-	{	//用户坐标系与世界坐标系不一致，执行ucs命令，修订坐标系 wht 20-04-24
-		if(CPNCModel::m_bSendCommand)
-#ifdef _ARX_2007
-			SendCommandToCad(L"ucs w ");
-#else
-			SendCommandToCad("ucs w ");
-#endif
-		else
-		{
-#ifdef _ARX_2007
-			acedCommand(RTSTR, L"ucs", RTSTR, L"w", RTNONE);
-#else
-			acedCommand(RTSTR, "ucs", RTSTR, "w", RTNONE);
-#endif
-		}
-	}
 	CLogErrorLife logErrLife;
+	//调整坐标系
+	ShiftCSToWCS(TRUE);
+	//框选图元
 	CHashSet<AcDbObjectId> selectedEntList;
 	if (bSupportSelectEnts)
 	{	//进行手动框选
@@ -146,7 +125,6 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		if (pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId))
 		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
 			logerr.Log("件号{%s}有重复请确认!", (char*)sPartNo);
-			pExistPlate->m_dwErrorType |= CPlateProcessInfo::ERROR_REPEAT_PART_LABEL;
 			continue;
 		}
 		//
@@ -252,7 +230,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 	}
 #else
 	//UBOM只需要更新钢板的基本信息
-	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(TRUE); pPlateProcess; pPlateProcess = pModel->EnumNextPlate(TRUE))
+	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(); pPlateProcess; pPlateProcess = pModel->EnumNextPlate())
 	{	
 		if(!pPlateProcess->IsValid())
 		{
@@ -327,7 +305,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			pPlateInfo->xBomPlate.bWeldPart = TRUE;
 	}
 	pModel->SplitManyPartNo();
-	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(FALSE); pPlateInfo; pPlateInfo = pModel->EnumNextPlate(FALSE))
+	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(); pPlateInfo; pPlateInfo = pModel->EnumNextPlate())
 	{
 		pPlateInfo->xBomPlate.sPartNo = pPlateInfo->GetPartNo();
 		pPlateInfo->xBomPlate.cMaterial = pPlateInfo->xPlate.cMaterial;

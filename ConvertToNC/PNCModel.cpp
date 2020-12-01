@@ -989,17 +989,18 @@ void CPNCModel::ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet)
 	for (CPlateProcessInfo* pInfo = m_hashPlateInfo.GetFirst(); pInfo; pInfo = m_hashPlateInfo.GetNext())
 	{
 		//³õÊ¼»¯¹Âµº¼ì²â×´Ì¬
+		BOOL bIslandDetection = FALSE;
 		std::map<CString, CAD_ENTITY>::iterator iter;
 		for (iter = mapCircle.begin(); iter!=mapCircle.end(); ++iter)
 		{
 			if(iter->second.IsInScope(pInfo->dim_pos))
 			{
-				pInfo->m_bIslandDetection = TRUE;
+				bIslandDetection = TRUE;
 				break;
 			}
 		}
 		//Ê¶±ð¸Ö°åÂÖÀª±ß
-		pInfo->InitProfileByBPolyCmd(fMinEdge, fMaxEdge, CPNCModel::m_bSendCommand);
+		pInfo->InitProfileByBPolyCmd(fMinEdge, fMaxEdge, bIslandDetection);
 	}
 #ifdef __TIMER_COUNT_
 	dwPreTick = timer.Relay(4, dwPreTick);

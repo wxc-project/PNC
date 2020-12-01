@@ -138,8 +138,8 @@ public:
 	//¸Ö°åDWG²Ù×÷
 	int GetPlateNum() { return m_xPncMode.GetPlateNum(); }
 	void EmptyPlateList() { m_xPncMode.Empty(); }
-	CPlateProcessInfo* EnumFirstPlate() { return m_xPncMode.EnumFirstPlate(FALSE); }
-	CPlateProcessInfo* EnumNextPlate() { return m_xPncMode.EnumNextPlate(FALSE); }
+	CPlateProcessInfo* EnumFirstPlate() { return m_xPncMode.EnumFirstPlate(); }
+	CPlateProcessInfo* EnumNextPlate() { return m_xPncMode.EnumNextPlate(); }
 	CPlateProcessInfo* FindPlateByPt(f3dPoint text_pos);
 	CPlateProcessInfo* FindPlateByPartNo(const char* sPartNo);
 	void ModifyPlateDwgPartNum();

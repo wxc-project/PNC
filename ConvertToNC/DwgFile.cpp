@@ -47,7 +47,7 @@ BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
 CPlateProcessInfo* CDwgFileInfo::FindPlateByPt(f3dPoint text_pos)
 {
 	CPlateProcessInfo* pPlateInfo=NULL;
-	for(pPlateInfo=m_xPncMode.EnumFirstPlate(FALSE);pPlateInfo;pPlateInfo=m_xPncMode.EnumNextPlate(FALSE))
+	for(pPlateInfo=m_xPncMode.EnumFirstPlate();pPlateInfo;pPlateInfo=m_xPncMode.EnumNextPlate())
 	{
 		if(pPlateInfo->IsInPartRgn(text_pos))
 			break;
@@ -213,7 +213,7 @@ BOOL CDwgFileInfo::RetrievePlates(BOOL bSupportSelectEnts /*= FALSE*/)
 		SmartExtractPlate(&tempMode, TRUE);
 		//数据拷贝
 		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
-		for (pSrcPlate = tempMode.EnumFirstPlate(FALSE); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate(FALSE))
+		for (pSrcPlate = tempMode.EnumFirstPlate(); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate())
 		{
 			pDestPlate = m_xPncMode.GetPlateInfo(pSrcPlate->GetPartNo());
 			if (pDestPlate == NULL)
@@ -603,6 +603,7 @@ void CDwgFileInfo::FillAngleDwgData()
 BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 {
 	CAcModuleResourceOverride resOverride;
+	ShiftCSToWCS(TRUE);
 	//选择所有实体图元
 	CHashSet<AcDbObjectId> allEntIdSet;
 	SelCadEntSet(allEntIdSet, bSupportSelectEnts ? FALSE : TRUE);

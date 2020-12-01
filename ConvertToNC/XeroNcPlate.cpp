@@ -64,7 +64,6 @@ BOOL CPlateProcessInfo::m_bCreatePPIFile = TRUE;	//默认输出ppi文件 wht 20-10-10
 CPlateProcessInfo::CPlateProcessInfo()
 {
 	boltList.Empty();
-	m_bIslandDetection = FALSE;
 	plateInfoBlockRefId = 0;
 	partNoId = 0;
 	partNumId = 0;
@@ -456,7 +455,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 			}
 		}
 	}
-	int nInvalidCirCountForText = 0, nPartLabelCount = 0;
+	int nInvalidCirCountForText = 0;
 	if (g_pncSysPara.IsFilterPartNoCir())
 	{
 		for (CAD_ENTITY *pEnt = EnumFirstRelaEnt(); pEnt; pEnt = EnumNextRelaEnt())
@@ -492,12 +491,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 		}
 	}
 	if (nInvalidCirCountForText > 0)
-	{
 		logerr.Log("%s#钢板，已过滤%d个可能为件号标注的圆，请确认！", (char*)xPlate.GetPartNo(), nInvalidCirCountForText);
-		//件号在圆圈内时不提示 wht 20-09-24
-		if (nInvalidCirCountForText > nPartLabelCount)
-			m_dwErrorType |= ERROR_TEXT_INSIDE_OF_HOLE;
-	}
 	//从单个图元(图块、圆圈)中提取螺栓信息
 	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
@@ -1028,7 +1022,7 @@ bool CPlateProcessInfo::RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list)
 	return bValidCir;
 }
 //
-void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bSendCommand /*= FALSE*/)
+void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExtern, BOOL bIslandDetection /*= FALSE*/)
 {
 #ifdef __ALFA_TEST_
 	//用于测试查看文本的坐标位置
@@ -1067,10 +1061,10 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 		base_pnt[Z] = cur_dim_pos.z;
 		UINT_PTR nTimer = SetTimer(hMainWnd, 1, 100, CloseBoundaryPopupWnd);
 		int resCode = RTNORM;
-		if (bSendCommand)
+		if (CPNCModel::m_bSendCommand)
 		{
 			CXhChar50 sCmd, sPos("%.2f,%.2f", cur_dim_pos.x, cur_dim_pos.y);
-			if (m_bIslandDetection)
+			if (bIslandDetection)
 				sCmd.Printf("-boundary %s\n ", (char*)sPos);
 			else
 				sCmd.Printf("-boundary a i n\n \n%s\n ", (char*)sPos);
@@ -1083,12 +1077,12 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 		else
 		{
 #ifdef _ARX_2007
-			if (m_bIslandDetection)
+			if (bIslandDetection)
 				resCode = acedCommand(RTSTR, L"-boundary", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
 			else
 				resCode = acedCommand(RTSTR, L"-boundary", RTSTR, L"a", RTSTR, L"i", RTSTR, L"n", RTSTR, L"", RTSTR, L"", RTPOINT, base_pnt, RTSTR, L"", RTNONE);
 #else
-			if (m_bIslandDetection)
+			if (bIslandDetection)
 				resCode = acedCommand(RTSTR, "-boundary", RTPOINT, base_pnt, RTSTR, "", RTNONE);
 			else
 				resCode = acedCommand(RTSTR, "-boundary", RTSTR, "a", RTSTR, "i", RTSTR, "n", RTSTR, "", RTSTR, "", RTPOINT, base_pnt, RTSTR, "", RTNONE);
@@ -1105,7 +1099,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 	}
 	if (initLastObjId == plineId)
 	{	//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
-		if (bSendCommand)
+		if (CPNCModel::m_bSendCommand)
 #ifdef _ARX_2007
 			SendCommandToCad(L" \n ");
 #else
@@ -1122,7 +1116,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 		if (pEnt)
 			pEnt->close();
 		//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
-		if (bSendCommand)
+		if (CPNCModel::m_bSendCommand)
 #ifdef _ARX_2007
 			SendCommandToCad(L" \n ");
 #else
