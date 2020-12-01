@@ -640,7 +640,7 @@ static void DrawDxfEnt( IDrawing *pDrawing,PENTITYHEADER pEntityHeader,LPVOID pE
 		break;
 	case ENT_ARC:
 		pArc=(PENTARC)pEntityData;
-		AppendDbArcLine(pDrawing,TRANS_POS(pArc->Point0),pArc->Radius,pArc->StartAngle,pArc->EndAngle,f3dPoint(0,0,1),hiberId);
+		AppendDbArcLine(pDrawing,TRANS_POS(pArc->Point0),pArc->Radius,pArc->StartAngle,pArc->EndAngle,GEPOINT(0,0,1),hiberId);
 		break;
 	case ENT_INSERT:
 		DrawDxfBlockRef(pDrawing,(PENTINSERT)pEntityData,pDxfDrawing,hiberId);

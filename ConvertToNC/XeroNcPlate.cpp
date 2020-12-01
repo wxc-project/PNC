@@ -465,9 +465,9 @@ void CPlateProcessInfo::UpdateBoltHoles()
 			//±ê×¢×Ö·û´®ÖÐ°üº¬"×ê¿×»ò³å¿×"£¬
 			if (strstr(pEnt->sText, "×ê") != NULL || strstr(pEnt->sText, "³å") != NULL ||
 				strstr(pEnt->sText, "¦µ") != NULL || strstr(pEnt->sText, "%%C") != NULL ||
-				strstr(pEnt->sText, "%%c") != NULL || strstr(pEnt->sText, "º¸") != NULL)
+				strstr(pEnt->sText, "%%c") != NULL)
 				continue;
-			//ÅÅ³ý¼þºÅ±ê×¢Ô²È¦
+			//ÅÅ³ý¼þºÅ±ê×¢Ô²È¦(375# £¬ 375 £¬Õýº¸375)
 			for (iter = mapCirAndBlock.begin(); iter != mapCirAndBlock.end(); iter++)
 			{
 				if (iter->second->ciEntType == TYPE_BLOCKREF)
