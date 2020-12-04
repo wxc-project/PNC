@@ -213,9 +213,9 @@ public:
 	AcDbObjectId partNumId;
 	AcDbObjectId plateInfoBlockRefId;
 	GEPOINT dim_pos, dim_vec;
-	CXhChar200 m_sRelatePartNo;
 	BASIC_INFO m_xBaseInfo;
-	CHashSet<AcDbObjectId> pnTxtIdList;
+	CHashSet<AcDbObjectId> relateEntList;	//关联钢板
+	CHashSet<AcDbObjectId> repeatEntList;	//重复件号钢板
 	ATOM_LIST<BOLT_INFO> boltList;
 	ATOM_LIST<VERTEX> vertexList;
 	//钢板关联实体
@@ -244,6 +244,7 @@ private:
 	void ReverseVertexs();
 	void DeleteAssisstPts();
 	void UpdateVertexPropByArc(f3dArcLine& arcLine, int type);
+	CXhChar200 GetRelatePartNo();
 public:
 	CPlateProcessInfo();
 	//
@@ -297,7 +298,7 @@ public:
 	void RefreshPlateNum(int nNewNum);
 	void RefreshPlateSpec();
 	void RefreshPlateMat();
-	void FillPlateNum(int nNewNum);
+	void FillPlateNum(int nNewNum, AcDbObjectId partNoId);
 	//控制是否需要输出ppi文件 wht 20-10-10
 	static BOOL m_bCreatePPIFile;
 };

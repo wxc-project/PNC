@@ -124,6 +124,7 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 		CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(sPartNo);
 		if (pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId))
 		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
+			pExistPlate->repeatEntList.SetValue(entId.asOldId(), entId);
 			logerr.Log("件号{%s}有重复请确认!", (char*)sPartNo);
 			continue;
 		}

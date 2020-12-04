@@ -1418,17 +1418,13 @@ void CPNCModel::MergeManyPartNo()
 	{
 		if(!pPlateProcess->IsValid())
 			continue;
-		pPlateProcess->pnTxtIdList.SetValue(pPlateProcess->partNoId.asOldId(),pPlateProcess->partNoId);
+		pPlateProcess->relateEntList.SetValue(pPlateProcess->partNoId.asOldId(),pPlateProcess->partNoId);
 		m_hashPlateInfo.push_stack();
 		for(CPlateProcessInfo* pTemPlate=EnumNextPlate();pTemPlate;pTemPlate=EnumNextPlate())
 		{
 			if(!pPlateProcess->IsInPartRgn(pTemPlate->dim_pos))
 				continue;
-			if(pPlateProcess->m_sRelatePartNo.GetLength()<=0)
-				pPlateProcess->m_sRelatePartNo.Copy(pTemPlate->GetPartNo());
-			else
-				pPlateProcess->m_sRelatePartNo.Append(CXhChar16(",%s",(char*)pTemPlate->GetPartNo()));
-			pPlateProcess->pnTxtIdList.SetValue(pTemPlate->partNoId.asOldId(),pTemPlate->partNoId);
+			pPlateProcess->relateEntList.SetValue(pTemPlate->partNoId.asOldId(),pTemPlate->partNoId);
 			m_hashPlateInfo.DeleteCursor();
 		}
 		m_hashPlateInfo.pop_stack();
@@ -1440,10 +1436,10 @@ void CPNCModel::SplitManyPartNo()
 {
 	for (CPlateProcessInfo* pPlateInfo =m_hashPlateInfo.GetFirst(); pPlateInfo; pPlateInfo = m_hashPlateInfo.GetNext())
 	{
-		if(pPlateInfo->pnTxtIdList.GetNodeNum() <= 1)
+		if(pPlateInfo->relateEntList.GetNodeNum() <= 1)
 			continue;
 		m_hashPlateInfo.push_stack();
-		for (AcDbObjectId objId = pPlateInfo->pnTxtIdList.GetFirst(); objId; objId = pPlateInfo->pnTxtIdList.GetNext())
+		for (AcDbObjectId objId = pPlateInfo->relateEntList.GetFirst(); objId; objId = pPlateInfo->relateEntList.GetNext())
 		{
 			if (pPlateInfo->partNoId == objId)
 				continue;
@@ -2321,6 +2317,11 @@ int CProjectTowerType::CompareLoftAndPartDwg(const char* sFileName)
 			}
 			else
 			{	//2、对比同一件号构件属性
+				if (g_xUbomModel.m_uiCustomizeSerial == ID_SiChuan_ChengDu)
+				{	//中电建成都铁塔特殊要求:备注中含有“坡口”字符且有刨根工艺的角钢，则忽略该角钢的刨根工艺
+					if (((PART_ANGLE*)pLoftJg)->bCutRoot && strstr(pLoftJg->sNotes, "坡口"))
+						((PART_ANGLE*)pLoftJg)->bCutRoot = FALSE;
+				}
 				CompareData(pLoftJg, pDwgJg, hashBoolByPropName);
 				if (hashBoolByPropName.GetNodeNum() > 0)//结点数量
 				{

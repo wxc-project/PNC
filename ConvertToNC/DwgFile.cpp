@@ -185,7 +185,14 @@ void CDwgFileInfo::FillPlateDwgData()
 			continue;
 		}
 		//补充钢板的加工数
-		pInfo->FillPlateNum(pLoftBom->nSumPart);
+		pInfo->FillPlateNum(pLoftBom->nSumPart, pInfo->partNoId);
+		//处理重复件号钢板
+		for (AcDbObjectId objId = pInfo->repeatEntList.GetFirst(); objId; objId = pInfo->repeatEntList.GetNext())
+		{
+			if (pInfo->partNoId == objId)
+				continue;
+			pInfo->FillPlateNum(pLoftBom->nSumPart, objId);
+		}
 	}
 	//从DWG文件中删除不需要的样板
 	for (size_t i = 0; i < vectorInvalidPlate.size(); i++)

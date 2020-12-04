@@ -81,6 +81,29 @@ CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
 	_pBelongModel = pBelongModel;
 	return _pBelongModel;
 }
+//获取同一钢板区域内的关联件号
+CXhChar200 CPlateProcessInfo::GetRelatePartNo()
+{
+	CXhChar200 sRelatePartNo;
+	for (AcDbObjectId objId = relateEntList.GetFirst(); objId; objId = relateEntList.GetNext())
+	{
+		if(this->partNoId==objId)
+			continue;
+		CAcDbObjLife objLife(objId);
+		AcDbEntity *pEnt = objLife.GetEnt();
+		if (pEnt == NULL)
+			continue;
+		CXhChar16 sPartNo;
+		if (g_pncSysPara.ParsePartNoText(pEnt, sPartNo))
+		{
+			if (sRelatePartNo.GetLength() <= 0)
+				sRelatePartNo.Copy(sPartNo);
+			else
+				sRelatePartNo.Append(CXhChar16(",%s", (char*)sPartNo));
+		}
+	}
+	return sRelatePartNo;
+}
 //判断提取成功的轮廓点是否按逆时针排序
 BOOL CPlateProcessInfo::IsValidVertexs()
 {
@@ -878,11 +901,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			{
 				if (xPlate.GetPartNo().GetLength() <= 0)
 					xPlate.SetPartNo(baseInfo.m_sPartNo);
-				else if (m_sRelatePartNo.GetLength() <= 0)
-					m_sRelatePartNo.Copy(baseInfo.m_sPartNo);
-				else
-					m_sRelatePartNo.Append(CXhChar16(",%s", (char*)baseInfo.m_sPartNo));
-				pnTxtIdList.SetValue(pRelaObj->idCadEnt, MkCadObjId(pRelaObj->idCadEnt));
+				relateEntList.SetValue(pRelaObj->idCadEnt, MkCadObjId(pRelaObj->idCadEnt));
 			}
 			continue;
 		}
@@ -1636,7 +1655,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 void CPlateProcessInfo::InitMkPos(GEPOINT &mk_pos, GEPOINT &mk_vec)
 {
 	GEPOINT dim_pos, dim_vec;
-	for (AcDbObjectId objId = pnTxtIdList.GetFirst(); objId; objId = pnTxtIdList.GetNext())
+	for (AcDbObjectId objId = relateEntList.GetFirst(); objId; objId = relateEntList.GetNext())
 	{
 		CAcDbObjLife objLife(objId);
 		AcDbEntity *pEnt = objLife.GetEnt();
@@ -1710,11 +1729,12 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 		return;	//不输出ppi文件
 	//设置当前工作路径
 	SetCurrentDirectory(file_path);
-	CXhChar100 sAllRelPart(xPlate.GetPartNo());
-	if (g_pncSysPara.m_iPPiMode == 1 && m_sRelatePartNo.GetLength() > 0)
+	CXhChar200 sRelatePartNo = GetRelatePartNo();
+	CXhChar200 sAllRelPart(xPlate.GetPartNo());
+	if (g_pncSysPara.m_iPPiMode == 1 && sRelatePartNo.GetLength() > 0)
 	{	//一板多号模式：一个PPI文件包括多个件号
-		xPlate.m_sRelatePartNo.Copy(m_sRelatePartNo);
-		sAllRelPart.Printf("%s,%s", (char*)xPlate.GetPartNo(), (char*)m_sRelatePartNo);
+		xPlate.m_sRelatePartNo.Copy(sRelatePartNo);
+		sAllRelPart.Printf("%s,%s", (char*)xPlate.GetPartNo(), (char*)sRelatePartNo);
 		sAllRelPart.Replace(",", " ");
 	}
 	CBuffer buffer;
@@ -3021,7 +3041,7 @@ void CPlateProcessInfo::RefreshPlateMat()
 	m_ciModifyState |= MODIFY_DES_MAT;
 }
 //补充钢板加工数
-void CPlateProcessInfo::FillPlateNum(int nNewNum)
+void CPlateProcessInfo::FillPlateNum(int nNewNum, AcDbObjectId partNoId)
 {
 	if (g_pncSysPara.m_iDimStyle != 0 || partNoId == NULL)
 		return;
@@ -3058,9 +3078,11 @@ void CPlateProcessInfo::FillPlateNum(int nNewNum)
 		int color_index = GetNearestACI(RGB(228, 0, 127));
 		pMText->setColorIndex(color_index);
 	}
-	//
-	xBomPlate.nSumPart = nNewNum;
-	m_ciModifyState |= MODIFY_MANU_NUM;
+	if (this->partNoId == partNoId)
+	{
+		xBomPlate.nSumPart = nNewNum;
+		m_ciModifyState |= MODIFY_MANU_NUM;
+	}
 }
 SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 {
