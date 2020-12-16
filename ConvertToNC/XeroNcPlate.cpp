@@ -2355,6 +2355,12 @@ void CPlateProcessInfo::CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX
 			tem_vertes.Clean();
 		}
 	}
+	if (minDistance > -eps && minDistance < eps)
+	{	//轮廓边不进行伸缩
+		for (VERTEX *vertex = tem_vertes.GetFirst(); vertex; vertex = tem_vertes.GetNext())
+			pDestList->append(*vertex);
+		return;
+	}
 	//对直线进行延展
 	for (VERTEX *vertex = tem_vertes.GetFirst(); vertex; vertex = tem_vertes.GetNext())
 	{
@@ -2390,6 +2396,41 @@ void CPlateProcessInfo::CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX
 		//添加新轮廓点并增大轮廓点 wht 19-08-14
 		VERTEX *pDestVertex = pDestList->append();
 		pDestVertex->pos = GEPOINT(curPt + vec * offset);
+	}
+	//去除凹点，交叉点
+	for (;;)
+	{
+		GEPOINT pre, now, next;
+		BOOL bAllProtrusive = TRUE;
+		for (int j = 0; j < pDestList->GetNodeNum(); j++)
+		{
+			if (j == 0)
+				pre = pDestList->GetByIndex(pDestList->GetNodeNum() - 1)->pos;
+			else
+				pre = pDestList->GetByIndex(j - 1)->pos;
+			now = pDestList->GetByIndex(j)->pos;
+			if (j + 1 >= pDestList->GetNodeNum())
+				next = pDestList->GetByIndex(0)->pos;
+			else
+				next = pDestList->GetByIndex(j + 1)->pos;
+			if (DISTANCE(pre, now) < 0.5)
+			{	//两点过于接近删除一点
+				pDestList->DeleteAt(j);
+				j--;
+				continue;
+			}
+			f3dLine line(pre, next);
+			double dd = DistOf2dPtLine(next, pre, now);
+			if (dd < -eps || line.PtInLine(now)>0)
+			{
+				if (dd < -eps)
+					bAllProtrusive = FALSE;
+				pDestList->DeleteAt(j);
+				j--;
+			}
+		}
+		if (bAllProtrusive)	//边界多边形是凸多边形
+			break;
 	}
 }
 f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVertexList/*=NULL*/, 
