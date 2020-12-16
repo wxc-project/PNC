@@ -1674,7 +1674,7 @@ void ImportUbomConfigFile(const char* file_path/*=NULL*/)
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xTmaTblCfg.m_xTblCfg);
 		else if (_stricmp(key_word, "ERP_BOM") == 0)
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xErpTblCfg.m_xTblCfg);
-		else if (_stricmp(key_word, "PRINT_BOM") == 0)
+		else if (_stricmp(key_word, "PRINT_BOM") == 0 || _stricmp(key_word, "JG_BOM") == 0)
 			InitBomTblTitleCfg(skey, &g_xBomCfg.m_xPrintTblCfg.m_xTblCfg);
 		else if (_stricmp(key_word, "TMABomFileKeyStr") == 0)
 		{
