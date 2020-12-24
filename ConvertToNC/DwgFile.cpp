@@ -650,6 +650,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 			continue;
 		//添加角钢记录
 		CAngleProcessInfo* pJgInfo = m_hashJgInfo.Add(entId.handle());
+		pJgInfo->Empty();
 		pJgInfo->keyId = entId;
 		pJgInfo->SetOrig(GEPOINT(pReference->position().x, pReference->position().y));
 	}
@@ -704,6 +705,7 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		{	//添加角钢记录
 			//根据工艺卡模板中件号标记点计算该角钢工艺卡的原点位置
 			GEPOINT orig_pt = g_pncSysPara.GetJgCardOrigin(testPt);
+			pJgInfo->Empty();
 			pJgInfo->keyId = entId;
 			pJgInfo->m_bInJgBlock = false;
 			pJgInfo->SetOrig(orig_pt);
@@ -746,37 +748,38 @@ BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 		}
 	}
 	DisplayCadProgress(100);
-	//根据焊接肋板初始化角钢焊接属性 wht 20-09-29
-	//初始化件号标注文字内容
-	for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
-	{
-		CAD_ENTITY *pCadText = NULL;
-		for (pCadText = cadTextList.GetFirst(); pCadText; pCadText = cadTextList.GetNext())
+	if (!CAngleProcessInfo::bInitGYByGYRect)
+	{	//根据焊接肋板初始化角钢焊接属性 wht 20-09-29
+		//初始化件号标注文字内容
+		for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
 		{
-			if (pLabelDim->m_xCirEnt.IsInScope(pCadText->pos))
+			CAD_ENTITY *pCadText = NULL;
+			for (pCadText = cadTextList.GetFirst(); pCadText; pCadText = cadTextList.GetNext())
 			{
-				pLabelDim->m_xInnerText.ciEntType = pCadText->ciEntType;
-				pLabelDim->m_xInnerText.idCadEnt = pCadText->idCadEnt;
-				pLabelDim->m_xInnerText.m_fSize = pCadText->m_fSize;
-				pLabelDim->m_xInnerText.pos = pCadText->pos;
-				strcpy(pLabelDim->m_xInnerText.sText, pCadText->sText);
-				break;
+				if (pLabelDim->m_xCirEnt.IsInScope(pCadText->pos))
+				{
+					pLabelDim->m_xInnerText.ciEntType = pCadText->ciEntType;
+					pLabelDim->m_xInnerText.idCadEnt = pCadText->idCadEnt;
+					pLabelDim->m_xInnerText.m_fSize = pCadText->m_fSize;
+					pLabelDim->m_xInnerText.pos = pCadText->pos;
+					strcpy(pLabelDim->m_xInnerText.sText, pCadText->sText);
+					break;
+				}
 			}
+			if (pCadText == NULL)	//未找到文字的圆圈需移除
+				labelDimList.DeleteCursor();
 		}
-		if (pCadText == NULL)	//未找到文字的圆圈需移除
-			labelDimList.DeleteCursor();
+		labelDimList.Clean();
+		for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
+		{
+			SEGI segI = pLabelDim->GetSegI();
+			if (segI.iSeg <= 0)
+				continue;
+			CAngleProcessInfo* pJgInfo = FindAngleByPt(pLabelDim->m_xCirEnt.pos);
+			if (pJgInfo && !pJgInfo->m_xAngle.bWeldPart)
+				pJgInfo->m_xAngle.bWeldPart = TRUE;
+		}
 	}
-	labelDimList.Clean();
-	for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
-	{
-		SEGI segI = pLabelDim->GetSegI();
-		if (segI.iSeg <= 0)
-			continue;
-		CAngleProcessInfo* pJgInfo = FindAngleByPt(pLabelDim->m_xCirEnt.pos);
-		if (pJgInfo && !pJgInfo->m_xAngle.bWeldPart)
-			pJgInfo->m_xAngle.bWeldPart = TRUE;
-	}
-
 	//对提取的角钢信息进行合理性检查
 	CHashStrList<BOOL> hashJgByPartNo;
 	for (CAngleProcessInfo* pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())

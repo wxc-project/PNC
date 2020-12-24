@@ -1863,6 +1863,9 @@ void ImportUbomConfigFile(const char* file_path/*=NULL*/)
 		}
 	}
 	fclose(fp);
+	//中电建成都铁塔特殊要求:角钢工艺信息只通过工艺数据点进行提取 wxc-2020.12.24
+	if(g_xUbomModel.m_uiCustomizeSerial== ID_SiChuan_ChengDu)
+		CAngleProcessInfo::bInitGYByGYRect = TRUE;
 	//初始化钢板识别规则
 	for (RECOG_SCHEMA *pSchema = g_pncSysPara.m_recogSchemaList.GetFirst(); pSchema; pSchema = g_pncSysPara.m_recogSchemaList.GetNext())
 	{

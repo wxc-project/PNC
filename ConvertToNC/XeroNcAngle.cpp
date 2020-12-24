@@ -14,6 +14,7 @@ static char THIS_FILE[] = __FILE__;
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo
+bool CAngleProcessInfo::bInitGYByGYRect = FALSE;
 CAngleProcessInfo::CAngleProcessInfo()
 {
 	keyId = NULL;
@@ -28,6 +29,27 @@ CAngleProcessInfo::CAngleProcessInfo()
 CAngleProcessInfo::~CAngleProcessInfo()
 {
 
+}
+void CAngleProcessInfo::Empty()
+{
+	keyId = NULL;
+	partNumId = NULL;
+	keyId = NULL;
+	partNumId = NULL;
+	singleNumId = NULL;
+	sumWeightId = NULL;
+	m_ciModifyState = 0;
+	m_bInJgBlock = true;
+	//角钢工艺信息
+	m_xAngle.bWeldPart = FALSE;
+	m_xAngle.bHasFootNail = FALSE;
+	m_xAngle.bCutAngle = FALSE;
+	m_xAngle.bCutBer = FALSE;
+	m_xAngle.bCutRoot = FALSE;
+	m_xAngle.bKaiJiao = FALSE;
+	m_xAngle.bHeJiao = FALSE;
+	m_xAngle.nPushFlat = 0;
+	m_xAngle.siZhiWan = 0;
 }
 //
 SCOPE_STRU CAngleProcessInfo::GetCADEntScope()
@@ -106,20 +128,23 @@ void CAngleProcessInfo::InitProcessInfo(const char* sValue)
 		m_xAngle.bHasFootNail = TRUE;
 	if (g_pncSysPara.IsHasAngleBendTag(sValue))
 		m_xAngle.siZhiWan = 1;
-	if (g_pncSysPara.IsHasAngleWeldTag(sValue))
-		m_xAngle.bWeldPart = TRUE;
-	if (g_pncSysPara.IsHasCutAngleTag(sValue))
-		m_xAngle.bCutAngle = TRUE;
-	if (g_pncSysPara.IsHasCutRootTag(sValue))
-		m_xAngle.bCutRoot = TRUE;
-	if (g_pncSysPara.IsHasCutBerTag(sValue))
-		m_xAngle.bCutBer = TRUE;
-	if (g_pncSysPara.IsHasPushFlatTag(sValue))
-		m_xAngle.nPushFlat = 0X01;
-	if (g_pncSysPara.IsHasKaiJiaoTag(sValue))
-		m_xAngle.bKaiJiao = TRUE;
-	if (g_pncSysPara.IsHasHeJiaoTag(sValue))
-		m_xAngle.bHeJiao = TRUE;
+	if (!CAngleProcessInfo::bInitGYByGYRect)
+	{	//通过备注信息提取角钢工艺
+		if (g_pncSysPara.IsHasAngleWeldTag(sValue))
+			m_xAngle.bWeldPart = TRUE;
+		if (g_pncSysPara.IsHasCutAngleTag(sValue))
+			m_xAngle.bCutAngle = TRUE;
+		if (g_pncSysPara.IsHasCutRootTag(sValue))
+			m_xAngle.bCutRoot = TRUE;
+		if (g_pncSysPara.IsHasCutBerTag(sValue))
+			m_xAngle.bCutBer = TRUE;
+		if (g_pncSysPara.IsHasPushFlatTag(sValue))
+			m_xAngle.nPushFlat = 0X01;
+		if (g_pncSysPara.IsHasKaiJiaoTag(sValue))
+			m_xAngle.bKaiJiao = TRUE;
+		if (g_pncSysPara.IsHasHeJiaoTag(sValue))
+			m_xAngle.bHeJiao = TRUE;
+	}
 }
 //初始化角钢信息
 BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)

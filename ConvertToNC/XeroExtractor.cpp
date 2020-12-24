@@ -639,6 +639,9 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 			{	//数据点区域
 				mapJgCardRect[grid_data.type_id].topLeft.Set(grid_data.min_x, grid_data.max_y);
 				mapJgCardRect[grid_data.type_id].bottomRight.Set(grid_data.max_x, grid_data.min_y);
+				//字体高度
+				if (fTextHigh <= 0)
+					fTextHigh = grid_data.fTextHigh;
 			}
 		}
 		pTempBlockTableRecord->close();

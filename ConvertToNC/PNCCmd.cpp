@@ -294,9 +294,10 @@ void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHas
 			if (baseInfo.m_nThick > 0)
 				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
 			if (baseInfo.m_nNum > 0)
+			{
 				pPlateInfo->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nProcessNum = baseInfo.m_nNum;
-			if (baseInfo.m_idCadEntNum != 0)
 				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
+			}	
 		}
 		//焊接字样可能在基本信息中例如：141#正焊
 		CXhChar100 sText = GetCadTextContent(pEnt);

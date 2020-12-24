@@ -346,10 +346,12 @@ public:
 	static const BYTE MODIFY_DES_MAT = 0x10;
 	static const BYTE MODIFY_TA_MUM = 0x20;
 	BYTE m_ciModifyState;
+	static bool bInitGYByGYRect;	//角钢工艺信息只通过工艺数据点进行提取
 public:
 	CAngleProcessInfo();
 	~CAngleProcessInfo();
 	//
+	void Empty();
 	void SetOrig(f3dPoint pt) { orig_pt = pt; }
 	BYTE InitAngleInfo(f3dPoint data_pos, const char* sValue);
 	bool PtInDataRect(BYTE data_type, const double* poscoord);
