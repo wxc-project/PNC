@@ -207,18 +207,18 @@ void CNCPlate::InitCutHoleInfo(GEPOINT& prevPt, CProcessPlate& tempPlate)
 			continue;
 		if (fSpecialD > 0 && hole_d < fSpecialD)
 			continue;
+		double dfHoleR = hole_d * 0.5;
 		CUT_HOLE_PATH* pCutHole = m_xCutHole.append();
-		pCutHole->fHoleR = hole_d * 0.5;
+		pCutHole->fHoleR = dfHoleR;
 		pCutHole->orgPt.Set(pBoltInfo->posX, pBoltInfo->posY, 0);
 		//计算点火位置
-		curPt.x = pBoltInfo->posX - hole_d * 0.5 + m_nInLineLen;
-		curPt.y = pBoltInfo->posY + m_nInLineLen;
+		curPt.Set(pBoltInfo->posX - dfHoleR + m_nInLineLen, pBoltInfo->posY);
 		pCutHole->ignitionPt = ProcessPoint(curPt - prevPt);
 		prevPt = curPt;
 		//计算切割路径
 		if (m_bCutFullCircle)
 		{	//切整圆
-			curPt.Set(pBoltInfo->posX - hole_d * 0.5, pBoltInfo->posY, 0);
+			curPt.Set(pBoltInfo->posX - dfHoleR, pBoltInfo->posY, 0);
 			CUT_PT *pCutPt = pCutHole->cutPtArr.append();
 			pCutPt->cByte = CUT_PT::HOLE_CIR;
 			pCutPt->bClockwise = FALSE;
@@ -229,43 +229,36 @@ void CNCPlate::InitCutHoleInfo(GEPOINT& prevPt, CProcessPlate& tempPlate)
 		}
 		else
 		{	//分段切
-			GEPOINT cenPt;
-			double fArcR = 0;
-			int slices = 8, nCutPt = slices + 1;
+			int slices = 8;
 			double fSliceAngle = 2 * Pi / slices;
-			for (int ii = 0; ii <= nCutPt; ii++)
+			//起始点（直线引入）
+			curPt.Set(pBoltInfo->posX - dfHoleR, pBoltInfo->posY, 0);
+			CUT_PT *pCutPt = pCutHole->cutPtArr.append();
+			pCutPt->cByte = CUT_PT::EDGE_LINE;
+			pCutPt->vertex = ProcessPoint(curPt - prevPt);
+			prevPt = curPt;
+			//圆孔上的切割点
+			for (int ii = 1; ii <= slices; ii++)
+			{	
+				curPt = prevPt;
+				rotate_point_around_axis(curPt, fSliceAngle, pCutHole->orgPt, f3dPoint(pBoltInfo->posX, pBoltInfo->posY, 1));
+				CUT_PT *pCutPt = pCutHole->cutPtArr.append();
+				pCutPt->cByte = CUT_PT::EDGE_ARC;
+				pCutPt->bClockwise = FALSE;
+				pCutPt->vertex = ProcessPoint(curPt - prevPt);
+				pCutPt->center = ProcessPoint(pCutHole->orgPt - prevPt);
+				prevPt = curPt;
+			}
+			//结束引出点（圆弧引出）
+			curPt.Set(pBoltInfo->posX - dfHoleR + m_nOutLineLen, pBoltInfo->posY - m_nOutLineLen);
+			f3dArcLine arc_line;
+			if (arc_line.CreateMethod3(prevPt, curPt, f3dPoint(0, 0, 1), m_nOutLineLen, GEPOINT(curPt.x, pBoltInfo->posY, 0)))
 			{
-				if (ii == 0)
-				{	//起始点
-					curPt.x = pBoltInfo->posX - hole_d * 0.5;
-					curPt.y = pBoltInfo->posY;
-					cenPt.Set(curPt.x + m_nInLineLen, curPt.y, 0);
-					fArcR = m_nInLineLen;
-				}
-				else if (ii == nCutPt)
-				{	//结束引出点
-					curPt.x = pBoltInfo->posX - hole_d * 0.5 + m_nOutLineLen;
-					curPt.y = pBoltInfo->posY - m_nOutLineLen;
-					cenPt.Set(curPt.x, pBoltInfo->posY, 0);
-					fArcR = m_nOutLineLen;
-				}
-				else
-				{	//圆孔上的切割点
-					curPt = prevPt;
-					rotate_point_around_axis(curPt, fSliceAngle, pCutHole->orgPt, f3dPoint(pBoltInfo->posX, pBoltInfo->posY, 1));
-					cenPt = pCutHole->orgPt;
-					fArcR = pCutHole->fHoleR;
-				}
-				f3dArcLine arc_line;
-				if (arc_line.CreateMethod3(prevPt, curPt, f3dPoint(0, 0, 1), fArcR, cenPt))
-				{
-					CUT_PT *pCutPt = pCutHole->cutPtArr.append();
-					pCutPt->cByte = CUT_PT::EDGE_ARC;
-					pCutPt->bClockwise = FALSE;
-					pCutPt->vertex = ProcessPoint(curPt - prevPt);
-					pCutPt->center = ProcessPoint(arc_line.Center() - f3dPoint(prevPt));
-					prevPt = curPt;
-				}
+				CUT_PT *pCutPt = pCutHole->cutPtArr.append();
+				pCutPt->cByte = CUT_PT::EDGE_ARC;
+				pCutPt->vertex = ProcessPoint(curPt - prevPt);
+				pCutPt->center = ProcessPoint(arc_line.Center() - prevPt);
+				prevPt = curPt;
 			}
 		}
 	}
@@ -795,7 +788,12 @@ bool CNCPlate::CreatePlateTxtFile(const char* file_path)
 			fprintf(fp, "G41\n");			//G41左割缝补偿
 			fprintf(fp, "M07\n");			//开始切割
 			for (CUT_PT* pCutPt = pHolePath->cutPtArr.GetFirst(); pCutPt; pCutPt = pHolePath->cutPtArr.GetNext())
-				fprintf(fp, "G03 %s %s\n", (char*)PointToString(pCutPt->vertex, true), (char*)PointToString(pCutPt->center, true, true));
+			{
+				if (pCutPt->cByte == CUT_PT::EDGE_LINE)
+					fprintf(fp, "G01 %s\n", (char*)PointToString(pCutPt->vertex, true));
+				else
+					fprintf(fp, "G03 %s %s\n", (char*)PointToString(pCutPt->vertex, true), (char*)PointToString(pCutPt->center, true, true));
+			}
 			fprintf(fp, "M08\n");			//停止切割
 			fprintf(fp, "G40\n");			//关闭补偿
 		}

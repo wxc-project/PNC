@@ -2377,11 +2377,19 @@ void CProcessPlateDraw::DrawCuttingTrack(I2dDrawing *p2dDraw,ISolidSet *pSolidSe
 			for (CUT_PT* pCutPt = pHolePath->cutPtArr.GetFirst(); pCutPt; pCutPt = pHolePath->cutPtArr.GetNext())
 			{
 				ptE = ptS + pCutPt->vertex;
-				GEPOINT center = ptS + pCutPt->center;
-				GEPOINT norm = pCutPt->bClockwise ? GEPOINT(0, 0, -1) : GEPOINT(0, 0, 1);
-				double radius = (pCutPt->radius > 0) ? pCutPt->radius : DISTANCE(center, ptE);
-				IDbArcline *pArcLine = AppendDbArcLine(pDrawing, 0, PS_SOLID, cutLineClr, 3);
-				pArcLine->CreateMethod3(ptS, ptE, norm, radius, center);
+				if (pCutPt->cByte == CUT_PT::EDGE_LINE)
+				{
+					AppendDbLine(pDrawing, ptS, ptE, 0, PS_SOLID, cutLineClr, 3);
+					AppendDbPoint(pDrawing, ptE, 0, PS_SOLID, ptClr, 8);
+				}
+				else
+				{
+					GEPOINT center = ptS + pCutPt->center;
+					GEPOINT norm = pCutPt->bClockwise ? GEPOINT(0, 0, -1) : GEPOINT(0, 0, 1);
+					double radius = (pCutPt->radius > 0) ? pCutPt->radius : DISTANCE(center, ptE);
+					IDbArcline *pArcLine = AppendDbArcLine(pDrawing, 0, PS_SOLID, cutLineClr, 3);
+					pArcLine->CreateMethod3(ptS, ptE, norm, radius, center);
+				}
 				p2dDraw->RenderDrawing();
 				Sleep(ftol(interval * 1000));
 				ptS = ptE;
