@@ -267,27 +267,32 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 	else if (PtInDataRect(ITEM_TYPE_LENGTH, data_pos))
 	{	//长度
 		cType = ITEM_TYPE_LENGTH;
-		m_xAngle.length = atof(sValue);
+		if(atof(sValue)>0)
+			m_xAngle.length = atof(sValue);
 	}
 	else if (PtInDataRect(ITEM_TYPE_PIECE_WEIGHT, data_pos))
 	{	//单重
 		cType = ITEM_TYPE_PIECE_WEIGHT;
-		m_xAngle.fMapSumWeight = (float)atof(sValue);
+		if(atof(sValue)>0)
+			m_xAngle.fMapSumWeight = (float)atof(sValue);
 	}
 	else if (PtInDataRect(ITEM_TYPE_SUM_WEIGHT, data_pos))
 	{	//总重
 		cType = ITEM_TYPE_SUM_WEIGHT;
-		m_xAngle.fSumWeight = (float)atof(sValue);
+		if(atof(sValue)>0)
+			m_xAngle.fSumWeight = (float)atof(sValue);
 	}
 	else if (PtInDataRect(ITEM_TYPE_TA_NUM, data_pos))
 	{	//基数
 		cType = ITEM_TYPE_TA_NUM;
-		m_xAngle.nTaNum = atoi(sValue);
+		if (atoi(sValue) > 0)
+			m_xAngle.nTaNum = atoi(sValue);
 	}
 	else if (PtInDataRect(ITEM_TYPE_PART_NUM, data_pos))
 	{	//单基数
 		cType = ITEM_TYPE_PART_NUM;
-		m_xAngle.SetPartNum(atoi(sValue));
+		if(atoi(sValue)>0)
+			m_xAngle.SetPartNum(atoi(sValue));
 	}
 	else if (PtInDataRect(ITEM_TYPE_SUM_PART_NUM, data_pos))
 	{	//加工数
@@ -302,8 +307,12 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 			int num2 = (skey) ? atoi(skey) : 1;
 			m_xAngle.nSumPart = num1 * num2;
 		}
-		else
+		else if(atoi(sValue)>0)
 			m_xAngle.nSumPart = atoi(sValue);
+		if (g_xUbomModel.m_uiCustomizeSerial == ID_QingDao_QLGJG && m_xAngle.GetPartNum() <= 0)
+		{	//青岛强力工艺卡中[加工数量为单基数量]
+			m_xAngle.SetPartNum(m_xAngle.nSumPart);
+		}
 	}
 	else if (PtInDataRect(ITEM_TYPE_LSSUM_NUM, data_pos))
 	{	//螺栓总数
