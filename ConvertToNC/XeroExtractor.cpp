@@ -126,6 +126,56 @@ void CPlateExtractor::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
 		m_iDimStyle = pSchema->m_iDimStyle;
 	}
 }
+void CPlateExtractor::SplitMultiText(AcDbEntity* pEnt, vector<CString>& textArr)
+{
+	if (pEnt == NULL)
+		return;
+	CXhChar500 sText;
+	if (pEnt->isKindOf(AcDbText::desc()))
+	{
+		sText = GetCadTextContent(pEnt);
+		textArr.push_back(CString(sText));
+	}
+	else if (pEnt->isKindOf(AcDbMText::desc()))
+	{
+		sText = GetCadTextContent(pEnt);
+		if (sText.GetLength() <= 0)
+			return;
+		//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
+		CXhChar500 sNewText;
+		char cPreChar = sText.At(0);
+		sNewText.Append(cPreChar);
+		for (int i = 1; i < sText.GetLength(); i++)
+		{
+			char cCurChar = sText.At(i);
+			if ((cPreChar == '\\'&&cCurChar == 'P'))
+				sNewText.Append('W');
+			else if (cCurChar == '\n')
+				sNewText.Append("\\W");
+			else
+				sNewText.Append(cCurChar);
+			cPreChar = cCurChar;
+		}
+		sText.Copy(sNewText);
+		//进行拆分
+		for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
+		{
+			CString sTemp(sKey);
+			sTemp.Replace("\\W", "");
+			textArr.push_back(sTemp);
+		}
+	}
+	else if (pEnt->isKindOf(AcDbAttribute::desc()))
+	{
+		AcDbAttribute* pText = (AcDbAttribute*)pEnt;
+#ifdef _ARX_2007
+		sText.Copy(_bstr_t(pText->textString()));
+#else
+		sText.Copy(pText->textString());
+#endif
+		textArr.push_back(CString(sText));
+	}
+}
 int CPlateExtractor::GetKeyMemberNum()
 {
 	int nNum=0;
@@ -496,50 +546,21 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 {
 	if (pAcadText == NULL)
 		return FALSE;
-	CXhChar500 sText;
-	if (pAcadText->isKindOf(AcDbText::desc()))
-		sText = GetCadTextContent(pAcadText);
-	else if (pAcadText->isKindOf(AcDbMText::desc()))
+	vector<CString> lineTextArr;
+	SplitMultiText(pAcadText, lineTextArr);
+	if (lineTextArr.size() <= 0)
+		return FALSE;
+	CXhChar100 sText;
+	for(size_t i=0;i<lineTextArr.size();i++)
 	{
-		sText = GetCadTextContent(pAcadText);
-		if (sText.GetLength() <= 0)
-			return FALSE;
-		//此处使用\P分割可能会误将2310P中的材质字符抹去，需要特殊处理将\P替换\W wht 19-09-09
-		CXhChar200 sNewText;
-		char cPreChar = sText.At(0);
-		sNewText.Append(cPreChar);
-		for (int i = 1; i < sText.GetLength(); i++)
+		CString ss = lineTextArr.at(i);
+		if (IsMatchPNRule(ss))
 		{
-			char cCurChar = sText.At(i);
-			if (cPreChar == '\\'&&cCurChar == 'P')
-				sNewText.Append('W');
-			else
-				sNewText.Append(cCurChar);
-			cPreChar = cCurChar;
-		}
-		sText.Copy(sNewText);
-		//
-		vector<CString> lineTextArr;
-		for (char* sKey = strtok(sText, "\\W"); sKey; sKey = strtok(NULL, "\\W"))
-		{
-			CString sTemp(sKey);
-			sTemp.Replace("\\W", "");
-			lineTextArr.push_back(sTemp);
-		}
-		if (lineTextArr.size() > 0)
-		{
-			for(size_t i=0;i<lineTextArr.size();i++)
-			{
-				CString ss = lineTextArr.at(i);
-				if (IsMatchPNRule(ss))
-				{
-					sText.Copy(ss);
-					break;
-				}
-			}
+			sText.Copy(ss);
+			break;
 		}
 	}
-	if (!IsMatchPNRule(sText))
+	if (sText.GetLength() <= 0)
 		return FALSE;
 	BYTE ciRetCode = ParsePartNoText(sText, sPartNo);
 	if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)

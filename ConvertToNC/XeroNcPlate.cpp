@@ -2788,25 +2788,21 @@ void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 	AcDbEntity *pEnt = NULL;
 	XhAcdbOpenAcDbEntity(pEnt, partNumId, AcDb::kForWrite);
 	CAcDbObjLife entLife(pEnt);
-	CString sSrcText, sDesText;
-	sSrcText = GetCadTextContent(pEnt), sDesText;
+	CString sSrcText = GetCadTextContent(pEnt);
 	if (sSrcText.GetLength() <= 0)
 		return;
-	sDesText = sSrcText;
-	//获取件数的若干个关键码
-	CXhChar50 sNumKey = g_pncSysPara.m_sPnNumKey, sNumSubStr;
-	std::vector<CXhChar16> numKeyArr;
-	for (char* sKey = strtok(sNumKey, "|"); sKey; sKey = strtok(NULL, "|"))
-		numKeyArr.push_back(CXhChar16(sKey));
+	CString sDesText = sSrcText, sNumSubStr;
 	//解析字符串，获取件数所在位置
 	if (pEnt->isKindOf(AcDbMText::desc()))
 	{
-		CXhChar200 sContents(sSrcText);
-		for (char* sSubStr = strtok(sContents, "\\P"); sSubStr; sSubStr = strtok(NULL, "\\P"))
+		vector<CString> lineTextArr;
+		g_pncSysPara.SplitMultiText(pEnt, lineTextArr);
+		for (size_t i = 0; i < lineTextArr.size(); i++)
 		{
-			if (strstr(sSubStr, numKeyArr[0]) && strstr(sSubStr, CXhChar16("%d", xBomPlate.nSumPart)))
+			CString ss = lineTextArr.at(i);
+			if (g_pncSysPara.IsMatchNumRule(ss))
 			{
-				sNumSubStr.Copy(sSubStr);
+				sNumSubStr = ss;
 				break;
 			}
 		}
@@ -2816,11 +2812,12 @@ void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 		if (strstr(g_pncSysPara.m_sPnNumKey, "件") ||
 			strstr(g_pncSysPara.m_sPnNumKey, "块"))
 		{	//数量标识前或后带有空格
-			for (size_t i = 0; i < numKeyArr.size(); i++)
+			for (size_t i = 0; i < 2; i++)
 			{
-				if (strstr(sSrcText, numKeyArr[i]) == NULL)
+				CString sKey = (i == 0) ? "件" : "块";
+				if (strstr(sSrcText, sKey) == NULL)
 					continue;
-				int iPos = sSrcText.Find(numKeyArr[i]);
+				int iPos = sSrcText.Find(sKey);
 				if (iPos > 1 && sSrcText[iPos - 1] == ' ')
 					sSrcText.Delete(iPos - 1);
 			}
@@ -2833,13 +2830,10 @@ void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
 			sContents.Replace(g_pncSysPara.m_sPnKey, "| ");
 		for (char* sSubStr = strtok(sContents, " \t"); sSubStr; sSubStr = strtok(NULL, " \t"))
 		{
-			for (size_t i = 0; i < numKeyArr.size(); i++)
+			if (g_pncSysPara.IsMatchNumRule(sSubStr) && strstr(sSubStr, CXhChar16("%d", xBomPlate.nSumPart)))
 			{
-				if (strstr(sSubStr, numKeyArr[i]) && strstr(sSubStr, CXhChar16("%d", xBomPlate.nSumPart)))
-				{
-					sNumSubStr.Copy(sSubStr);
-					break;
-				}
+				sNumSubStr = sSubStr;
+				break;
 			}
 		}
 	}

@@ -81,6 +81,7 @@ public:
 	static const int PART_LABEL_EMPTY = 0;	//空件号
 	static const int PART_LABEL_VALID = 1;	//可用件号
 	static const int PART_LABEL_WELD  = 2;	//焊接件号
+	void SplitMultiText(AcDbEntity* pEnt, vector<CString>& textArr);
 	BOOL ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo);
 	BYTE ParsePartNoText(const char* sText,CXhChar16& sPartNo);
 	void ParseThickText(const char* sText,int& nThick);

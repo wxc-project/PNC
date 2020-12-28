@@ -624,109 +624,40 @@ BOOL CPNCSysPara::RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo)
 		return bRetCode;
 	}
 	//从字符串中解析钢板信息
-	CXhChar500 sText;
-	vector<CString> lineList;
-	if (pEnt->isKindOf(AcDbText::desc()))
-	{
-		AcDbText* pText = (AcDbText*)pEnt;
-#ifdef _ARX_2007
-		sText.Copy(_bstr_t(pText->textString()));
-#else
-		sText.Copy(pText->textString());
-#endif
-	}
-	else if (pEnt->isKindOf(AcDbMText::desc()))
-	{
-		AcDbMText* pMText = (AcDbMText*)pEnt;
-#ifdef _ARX_2007
-		sText.Copy(_bstr_t(pMText->contents()));
-#else
-		sText.Copy(pMText->contents());
-#endif
-		for (char* sKey = strtok(sText, "\\P"); sKey; sKey = strtok(NULL, "\\P"))
-		{
-			CString sTemp = sKey;
-			sTemp.Replace("\\P", "");
-			lineList.push_back(sTemp);
-		}
-	}
-	else if (pEnt->isKindOf(AcDbAttribute::desc()))
-	{
-		AcDbAttribute* pText = (AcDbAttribute*)pEnt;
-#ifdef _ARX_2007
-		sText.Copy(_bstr_t(pText->textString()));
-#else
-		sText.Copy(pText->textString());
-#endif
-	}
 	BOOL bRet = FALSE;
-	if (lineList.size() > 0)
+	vector<CString> lineList;
+	SplitMultiText(pEnt, lineList);
+	for (size_t i = 0; i < lineList.size(); i++)
 	{
-		for (size_t i = 0; i < lineList.size(); i++)
+		CString sTemp = lineList.at(i);
+		if (IsMatchThickRule(sTemp))
 		{
-			CString sTemp = lineList.at(i);
-			if (IsMatchThickRule(sTemp))
-			{
-				ParseThickText(sTemp, basicInfo.m_nThick);
-				bRet = TRUE;
-			}
-			if (IsMatchMatRule(sTemp))
-			{
-				ParseMatText(sTemp, basicInfo.m_cMat, basicInfo.m_cQuality);
-				bRet = TRUE;
-			}
-			if (IsMatchNumRule(sTemp))
-			{
-				ParseNumText(sTemp, basicInfo.m_nNum);
-				//记录构件数量对应的实体Id wht 19-08-05
-				basicInfo.m_idCadEntNum = pEnt->id().asOldId();
-				bRet = TRUE;
-			}
-			if (IsMatchPNRule(sTemp))
-			{
-				ParsePartNoText(sTemp, basicInfo.m_sPartNo);
-				bRet = TRUE;
-			}
-			if (strstr(sTemp, "塔型"))
-			{
-				sTemp.Replace("塔型", "");
-				sTemp.Replace(":", "");
-				sTemp.Replace("：", "");
-				basicInfo.m_sTaType.Copy(sTemp);
-			}
-		}
-	}
-	else
-	{
-		if (IsMatchThickRule(sText))
-		{
-			ParseThickText(sText, basicInfo.m_nThick);
+			ParseThickText(sTemp, basicInfo.m_nThick);
 			bRet = TRUE;
 		}
-		if (IsMatchMatRule(sText))
+		if (IsMatchMatRule(sTemp))
 		{
-			ParseMatText(sText, basicInfo.m_cMat, basicInfo.m_cQuality);
+			ParseMatText(sTemp, basicInfo.m_cMat, basicInfo.m_cQuality);
 			bRet = TRUE;
 		}
-		if (IsMatchNumRule(sText))
+		if (IsMatchNumRule(sTemp))
 		{
-			ParseNumText(sText, basicInfo.m_nNum);
+			ParseNumText(sTemp, basicInfo.m_nNum);
 			//记录构件数量对应的实体Id wht 19-08-05
 			basicInfo.m_idCadEntNum = pEnt->id().asOldId();
 			bRet = TRUE;
 		}
-		if (IsMatchPNRule(sText))
+		if (IsMatchPNRule(sTemp))
 		{
-			ParsePartNoText(sText, basicInfo.m_sPartNo);
+			ParsePartNoText(sTemp, basicInfo.m_sPartNo);
 			bRet = TRUE;
 		}
-		if (strstr(sText, "塔型"))
+		if (strstr(sTemp, "塔型"))
 		{
-			sText.Replace("塔型", "");
-			sText.Replace(":", "");
-			sText.Replace("：", "");
-			basicInfo.m_sTaType.Copy(sText);
-			bRet = TRUE;
+			sTemp.Replace("塔型", "");
+			sTemp.Replace(":", "");
+			sTemp.Replace("：", "");
+			basicInfo.m_sTaType.Copy(sTemp);
 		}
 	}
 	return bRet;
