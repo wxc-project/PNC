@@ -384,6 +384,9 @@
     <ClCompile Include="XeroNcPart.cpp">
       <Filter>Model</Filter>
     </ClCompile>
+    <ClCompile Include="DwgExtractor.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -681,6 +684,12 @@
       <Filter>Model</Filter>
     </ClInclude>
     <ClInclude Include="XeroNcPart.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="DwgExtractor.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="common.h">
       <Filter>Model</Filter>
     </ClInclude>
   </ItemGroup>

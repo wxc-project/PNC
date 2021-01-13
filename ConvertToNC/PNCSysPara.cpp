@@ -3,6 +3,7 @@
 #include "CadToolFunc.h"
 #include "LayerTable.h"
 #include "PNCCryptCoreCode.h"
+#include "DwgExtractor.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -20,7 +21,7 @@ CPNCSysPara::CPNCSysPara()
 }
 void CPNCSysPara::Init()
 {
-	CPlateExtractor::Init();
+	CPlateRecogRule::Init();
 	m_iPPiMode = 0;
 	m_bIncDeformed = true;
 	m_iAxisXCalType = 0;
@@ -456,19 +457,17 @@ BOOL CPNCSysPara::IsProfileEnt(AcDbEntity* pEnt)
 
 BOOL CPNCSysPara::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
-	BOOL bRet=CPlateExtractor::IsBendLine(pAcDbLine,pRecognizer);
+	BOOL bRet=CPlateRecogRule::IsBendLine(pAcDbLine,pRecognizer);
 	if (!bRet && m_ciBendLineColorIndex > 0 && m_ciBendLineColorIndex < 255)
 		bRet = (GetEntColorIndex(pAcDbLine) == m_ciBendLineColorIndex);
 	return bRet;
 }
 
 //螺栓图符主要有：圆形、三角形、方形
-BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pBelongModel /*= NULL*/)
+BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole)
 {
 	if (pEnt == NULL)
 		return FALSE;
-	if (pBelongModel == NULL)
-		pBelongModel = &model;
 	if (pEnt->isKindOf(AcDbBlockReference::desc()))
 	{
 		AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
@@ -497,7 +496,7 @@ BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pB
 		{	//只对设置未螺栓图符的块进行处理，否则可能错误识别其它块为螺栓孔 wht 20-04-28
 			return FALSE;
 		}
-		CBoltEntGroup* pLsBlockEnt = pBelongModel->m_xBoltEntHash.GetValue(CXhChar50("%d", pEnt->id().asOldId()));
+		CBoltEntGroup* pLsBlockEnt = CPlateExtractor::GetExtractor()->FindBoltGroup(CXhChar50("%d", pEnt->id().asOldId()));
 		double 	fHoleD = pLsBlockEnt ? pLsBlockEnt->m_fHoleD : 0;
 		if (fHoleD <= 0)
 		{
@@ -547,10 +546,10 @@ BOOL CPNCSysPara::RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pB
 		/*对孔径进行圆整，精确到小数点一位
 		*/
 		GEPOINT center(pCircle->center().x, pCircle->center().y, pCircle->center().z);
-		CBoltEntGroup* pLsBlockEnt = pBelongModel->m_xBoltEntHash.GetValue(CPNCModel::MakePosKeyStr(center));
+		CBoltEntGroup* pLsBlockEnt = CPlateExtractor::GetExtractor()->FindBoltGroup(IExtractor::MakePosKeyStr(center));
 		if (pLsBlockEnt == NULL)
 		{
-			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "丢失圆孔位置(%s)的螺栓", CPNCModel::MakePosKeyStr(center));
+			logerr.LevelLog(CLogFile::WARNING_LEVEL1_IMPORTANT, "丢失圆孔位置(%s)的螺栓", IExtractor::MakePosKeyStr(center));
 			return FALSE;
 		}
 		hole.increment = 0;
@@ -746,7 +745,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 			base_pnt[Y] = origin.y;
 			base_pnt[Z] = origin.z;
 			int resCode = RTNORM;
-			if (CPNCModel::m_bSendCommand)
+			if (IExtractor::m_bSendCommand)
 			{
 				CXhChar50 sCmd, sPos("%.2f,%.2f", origin.x, origin.y);
 				sCmd.Printf("-boundary a i n\n \n%s\n ", (char*)sPos);
@@ -770,7 +769,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 			acdbGetObjectId(plineId, seqent);
 			if (initLastObjId == plineId)
 			{
-				if (CPNCModel::m_bSendCommand)
+				if (IExtractor::m_bSendCommand)
 #ifdef _ARX_2007
 					SendCommandToCad(L" \n ");
 #else
@@ -790,7 +789,7 @@ BOOL CPNCSysPara::RecogMkRect(AcDbEntity* pEnt,f3dPoint* ptArr,int nNum)
 					pPline->erase(Adesk::kTrue);
 					pPline->close();
 				}
-				if (CPNCModel::m_bSendCommand)
+				if (IExtractor::m_bSendCommand)
 #ifdef _ARX_2007
 					SendCommandToCad(L" \n ");
 #else

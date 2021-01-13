@@ -1,5 +1,6 @@
 #pragma once
 #include "XeroNcPart.h"
+#include "XeroExtractor.h"
 #include "BomFile.h"
 #include "TblDef.h"
 #include "PNCDocReactor.h"
@@ -9,36 +10,14 @@ class CPNCModel
 {
 	CHashStrList<CPlateProcessInfo> m_hashPlateInfo;
 public:
-	static const float ASSIST_RADIUS;
-	static const float DIST_ERROR;
-	static const float WELD_MAX_HEIGHT;
-	static BOOL m_bSendCommand;
-	//
-	static CString MakePosKeyStr(GEPOINT pos);
-	static double StandardHoleD(double fDiameter);
-public:
-	CHashSet<AcDbObjectId> m_xAllEntIdSet;
-	CHashStrList<CBoltEntGroup> m_xBoltEntHash;
 	PROJECT_INFO m_xPrjInfo;
 	CString m_sCurWorkFile;		//当前正在操作的文件
-private:
-	bool AppendBoltEntsByBlock(ULONG idBlockEnt);
-	bool AppendBoltEntsByCircle(ULONG idCirEnt);
-	bool AppendBoltEntsByPolyline(ULONG idPolyline);
-	bool AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLine);
-	bool AppendBoltEntsByAloneLines(vector<CAD_LINE> vectorAloneLine);
-	void InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts, CHashSet<AcDbObjectId>& hashAllLines);
 public:
 	CPNCModel(void);
 	~CPNCModel(void);
 	//
 	void Empty();
-	void ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet);
-	void ExtractPlateProfile(CHashSet<AcDbObjectId>& selectedEntIdSet);
-	void ExtractPlateProfileEx(CHashSet<AcDbObjectId>& selectedEntIdSet);
-	void FilterInvalidEnts(CHashSet<AcDbObjectId>& selectedEntIdSet, CSymbolRecoginzer* pSymbols);
-	void MergeManyPartNo();
-	void SplitManyPartNo();
+	bool ExtractPlates(CString sDwgFile, BOOL bSupportSelectEnts=FALSE);
 	void CreatePlatePPiFile(const char* work_path);
 	//绘制钢板
 	void DrawPlates();
@@ -52,11 +31,9 @@ public:
 	int PushPlateStack() { return m_hashPlateInfo.push_stack(); }
 	bool PopPlateStack() { return m_hashPlateInfo.pop_stack(); }
 	BOOL DeletePlate(const char* sPartNo) { return m_hashPlateInfo.DeleteNode(sPartNo); }
-	CPlateProcessInfo* PartFromPartNo(const char* sPartNo) { return m_hashPlateInfo.GetValue(sPartNo); }
 	CPlateProcessInfo* AppendPlate(char* sPartNo){return m_hashPlateInfo.Add(sPartNo);}
 	CPlateProcessInfo* GetPlateInfo(char* sPartNo){return m_hashPlateInfo.GetValue(sPartNo);}
 	CPlateProcessInfo* GetPlateInfo(AcDbObjectId partNoEntId);
-	CPlateProcessInfo* GetPlateInfo(GEPOINT text_pos);
 	CPlateProcessInfo* EnumFirstPlate(){return m_hashPlateInfo.GetFirst();}
 	CPlateProcessInfo* EnumNextPlate(){return m_hashPlateInfo.GetNext();}
 	void WritePrjTowerInfoToCfgFile(const char* cfg_file_path);
@@ -91,7 +68,6 @@ public:
 };
 
 #ifdef __UBOM_ONLY_
-
 struct PART_LABEL_DIM {
 	CAD_ENTITY m_xCirEnt;
 	CAD_ENTITY m_xInnerText;
@@ -106,7 +82,7 @@ class CDwgFileInfo
 private:
 	CProjectTowerType* m_pProject;
 	CHashList<CAngleProcessInfo> m_hashJgInfo;
-	CPNCModel m_xPncMode;
+	CHashStrList<CPlateProcessInfo> m_hashPlateInfo;
 	CBomFile m_xPrintBomFile;	//DWG文件对应的打印清单 wht 20-07-21
 public:
 	CXhChar100 m_sDwgName;
@@ -136,17 +112,16 @@ public:
 	void ModifyAngleDwgMaterial();
 	void FillAngleDwgData();
 	//钢板DWG操作
-	int GetPlateNum() { return m_xPncMode.GetPlateNum(); }
-	void EmptyPlateList() { m_xPncMode.Empty(); }
-	CPlateProcessInfo* EnumFirstPlate() { return m_xPncMode.EnumFirstPlate(); }
-	CPlateProcessInfo* EnumNextPlate() { return m_xPncMode.EnumNextPlate(); }
+	int GetPlateNum() { return m_hashPlateInfo.GetNodeNum(); }
+	void EmptyPlateList() { m_hashPlateInfo.Empty(); }
+	CPlateProcessInfo* EnumFirstPlate() { return m_hashPlateInfo.GetFirst(); }
+	CPlateProcessInfo* EnumNextPlate() { return m_hashPlateInfo.GetNext(); }
 	CPlateProcessInfo* FindPlateByPt(f3dPoint text_pos);
 	CPlateProcessInfo* FindPlateByPartNo(const char* sPartNo);
 	void ModifyPlateDwgPartNum();
 	void ModifyPlateDwgSpec();
 	void ModifyPlateDwgMaterial();
 	void FillPlateDwgData();
-	CPNCModel *GetPncModel() { return &m_xPncMode; }
 	//打印清单
 	BOOL ImportPrintBomExcelFile(const char* sFileName);
 	void EmptyPrintBom() { m_xPrintBomFile.Empty(); }

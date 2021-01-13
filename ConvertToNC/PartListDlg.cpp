@@ -67,7 +67,6 @@ BEGIN_MESSAGE_MAP(CPartListDlg, CDialog)
 	ON_BN_CLICKED(IDC_CHK_EDIT_MK, &CPartListDlg::OnBnClickedChkEditMk)
 	ON_NOTIFY(NM_DBLCLK, IDC_PART_LIST, &CPartListDlg::OnNMDblclkPartList)
 	ON_NOTIFY(NM_RCLICK, IDC_PART_LIST, &CPartListDlg::OnNMRClickPartList)
-	ON_COMMAND(ID_REVISE_TEH_PLATE, &CPartListDlg::OnRetrievedPlate)
 	ON_COMMAND(ID_DELETE_ITEM, &CPartListDlg::OnDeleteItem)
 END_MESSAGE_MAP()
 
@@ -348,58 +347,18 @@ void CPartListDlg::OnNMDblclkPartList(NMHDR *pNMHDR, LRESULT *pResult)
 void CPartListDlg::OnNMRClickPartList(NMHDR *pNMHDR, LRESULT *pResult)
 {
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
-	CPlateProcessInfo *pSelPlate = NULL;
-	POSITION pos = m_partList.GetFirstSelectedItemPosition();
-	if (pos != NULL)
-	{
-		int iCurSel = m_partList.GetNextSelectedItem(pos);
-		if (iCurSel >= 0)
-			pSelPlate = (CPlateProcessInfo*)m_partList.GetItemData(iCurSel);
-	}
 	DWORD dwPos = GetMessagePos();
 	CPoint point(LOWORD(dwPos), HIWORD(dwPos));
 	CMenu popMenu;
 	popMenu.LoadMenu(IDR_ITEM_CMD_POPUP);
 	CMenu *pMenu = popMenu.GetSubMenu(0);
 	pMenu->DeleteMenu(0, MF_BYPOSITION);
-	if (pSelPlate)
-	{
-		pMenu->AppendMenu(MF_STRING, ID_REVISE_TEH_PLATE, "重新提取");
-		pMenu->AppendMenu(MF_SEPARATOR);
-	}
+	//
 	pMenu->AppendMenu(MF_STRING, ID_DELETE_ITEM, "清空");
 	popMenu.GetSubMenu(0)->TrackPopupMenu(TPM_LEFTALIGN | TPM_RIGHTBUTTON, point.x, point.y, this);
 	*pResult = 0;
 }
 
-void CPartListDlg::OnRetrievedPlate()
-{
-	CPlateProcessInfo *pSelPlate = NULL;
-	POSITION pos = m_partList.GetFirstSelectedItemPosition();
-	if (pos != NULL)
-	{
-		int iCurSel = m_partList.GetNextSelectedItem(pos);
-		if (iCurSel >= 0)
-			pSelPlate = (CPlateProcessInfo*)m_partList.GetItemData(iCurSel);
-	}
-	if (pSelPlate == NULL)
-		return;
-	CXhChar16 sPartNo = pSelPlate->GetPartNo();
-	//
-	CPNCModel tempMode;
-	CPNCModel::m_bSendCommand = TRUE;
-	SmartExtractPlate(&tempMode,TRUE);
-	CPlateProcessInfo* pFirstPlate = tempMode.EnumFirstPlate();
-	if (tempMode.GetPlateNum() != 1 || 
-		!sPartNo.Equal(pFirstPlate->GetPartNo())||
-		!pFirstPlate->IsValid())
-	{
-		AfxMessageBox(CXhChar50("钢板{%s}重新提取失败!",(char*)sPartNo));
-		return;
-	}
-	pSelPlate->CopyAttributes(pFirstPlate);
-	UpdatePartList();
-}
 void CPartListDlg::OnDeleteItem()
 {
 	model.Empty();
@@ -411,11 +370,12 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	CString file_name;
 	if (!IsValidDoc(file_name))
 		return;
-	CPNCModel::m_bSendCommand = TRUE;
+	IExtractor::m_bSendCommand = TRUE;
 	if (model.m_sCurWorkFile.CompareNoCase(file_name) == 0)
 	{	//同一文档（分次处理）
 		CPNCModel tempMode;
-		SmartExtractPlate(&tempMode, TRUE);
+		tempMode.ExtractPlates(file_name, TRUE);
+		tempMode.DrawPlates();
 		//数据拷贝
 		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
 		for (pSrcPlate = tempMode.EnumFirstPlate(); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate())
@@ -429,8 +389,8 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	else
 	{	//不同文档(重新处理)
 		model.Empty();
-		model.m_sCurWorkFile = file_name;
-		SmartExtractPlate(&model, TRUE);
+		model.ExtractPlates(file_name, TRUE);
+		model.DrawPlates();
 	}
 	UpdatePartList();
 }
@@ -541,13 +501,6 @@ void CPartListDlg::OnBnClickedBtnAnticlockwiseRotation()
 		mcs.AnticlockwiseRotation();
 	CLockDocumentLife lockLife;
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
-	//更新PPI文件
-	if (CPlateProcessInfo::m_bCreatePPIFile)
-	{
-		CString file_path;
-		GetCurWorkPath(file_path);
-		pPlateInfo->CreatePPiFile(file_path);
-	}
 	//刷新界面
 	actrTransactionManager->flushGraphics();
 	acedUpdateDisplay();
@@ -570,12 +523,6 @@ void CPartListDlg::OnBnClickedBtnClockwiseRotation()
 		mcs.ClockwiseRotation();
 	CLockDocumentLife lockLife;
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
-	if (CPlateProcessInfo::m_bCreatePPIFile)
-	{	//更新PPI文件
-		CString file_path;
-		GetCurWorkPath(file_path);
-		pPlateInfo->CreatePPiFile(file_path);
-	}
 	//刷新界面
 	actrTransactionManager->flushGraphics();
 	acedUpdateDisplay();
@@ -595,12 +542,6 @@ void CPartListDlg::OnBnClickedBtnMirror()
 
 	CLockDocumentLife lockLife;
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
-	if (CPlateProcessInfo::m_bCreatePPIFile)
-	{	//更新PPI文件
-		CString file_path;
-		GetCurWorkPath(file_path);
-		pPlateInfo->CreatePPiFile(file_path);
-	}
 	//刷新界面
 	actrTransactionManager->flushGraphics();
 	acedUpdateDisplay();
@@ -678,12 +619,6 @@ void CPartListDlg::OnBnClickedBtnMoveMkRect()
 		m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 		//更新字盒子位置之后，同步更新PPI文件中钢印号位置
 		pPlateInfo->SyncSteelSealPos();
-		if (CPlateProcessInfo::m_bCreatePPIFile)
-		{	//更新PPI文件
-			CString file_path;
-			GetCurWorkPath(file_path);
-			pPlateInfo->CreatePPiFile(file_path);
-		}
 		//更新界面
 		actrTransactionManager->flushGraphics();
 		acedUpdateDisplay();

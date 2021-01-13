@@ -20,9 +20,9 @@ struct BOLT_HOLE {
 //CPNCSysPara
 class CPNCModel;
 #ifndef __UBOM_ONLY_
-class CPNCSysPara : public CPlateExtractor
+class CPNCSysPara : public CPlateRecogRule
 #else
-class CPNCSysPara : public CPlateExtractor, public CJgCardExtractor
+class CPNCSysPara : public CPlateRecogRule, public CJgCardRecogRule
 #endif
 {
 public:
@@ -143,7 +143,7 @@ public:
 	//
 	BOOL RecogBasicInfo(AcDbEntity* pEnt, BASIC_INFO& basicInfo);
 	BOOL RecogArcEdge(AcDbEntity* pEnt, f3dArcLine& arcLine, BYTE& ciEdgeType);
-	BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole, CPNCModel* pBelongModel = NULL);
+	BOOL RecogBoltHole(AcDbEntity* pEnt, BOLT_HOLE& hole);
 	BOOL RecogMkRect(AcDbEntity* pEnt, f3dPoint* ptArr, int nNum);
 	//
 	BOOL IsHasPlateWeldTag(const char* sText);

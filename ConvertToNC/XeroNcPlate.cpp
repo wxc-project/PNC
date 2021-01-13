@@ -60,7 +60,6 @@ static BOOL IsInSector(double start_ang, double sector_ang, double verify_ang, B
 }
 //////////////////////////////////////////////////////////////////////////
 //CPlateProcessInfo
-BOOL CPlateProcessInfo::m_bCreatePPIFile = TRUE;	//默认输出ppi文件 wht 20-10-10
 CPlateProcessInfo::CPlateProcessInfo()
 {
 	boltList.Empty();
@@ -69,17 +68,6 @@ CPlateProcessInfo::CPlateProcessInfo()
 	partNumId = 0;
 	m_bEnableReactor = TRUE;
 	m_ciModifyState = 0;
-}
-CPNCModel* CPlateProcessInfo::get_pBelongModel() const
-{
-	if (_pBelongModel == NULL)
-		return &model;
-	return _pBelongModel;
-}
-CPNCModel* CPlateProcessInfo::set_pBelongModel(CPNCModel* pBelongModel)
-{
-	_pBelongModel = pBelongModel;
-	return _pBelongModel;
 }
 //获取同一钢板区域内的关联件号
 CXhChar200 CPlateProcessInfo::GetRelatePartNo()
@@ -164,12 +152,12 @@ void CPlateProcessInfo::UpdateVertexPropByArc(f3dArcLine& arcLine, int type)
 	//根据圆弧更新顶点信息
 	for (pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
 	{
-		if (pVer->pos.IsEqual(arcLine.Start(), CPNCModel::DIST_ERROR) && iStart == -1)
+		if (pVer->pos.IsEqual(arcLine.Start(), IExtractor::DIST_ERROR) && iStart == -1)
 		{
 			iStart = i;
 			pVer->pos = arcLine.Start();
 		}
-		else if (pVer->pos.IsEqual(arcLine.End(), CPNCModel::DIST_ERROR) && iEnd == -1)
+		else if (pVer->pos.IsEqual(arcLine.End(), IExtractor::DIST_ERROR) && iEnd == -1)
 		{
 			iEnd = i;
 			pVer->pos = arcLine.End();
@@ -420,8 +408,8 @@ void CPlateProcessInfo::CheckProfileEdge()
 			Cpy_Pnt(ptS, acad_ptS);
 			Cpy_Pnt(ptE, acad_ptE);
 			ptS.z = ptE.z = 0;
-			if ((vertexS.IsEqual(ptS, CPNCModel::DIST_ERROR) && vertexE.IsEqual(ptE, CPNCModel::DIST_ERROR)) ||
-				(vertexS.IsEqual(ptE, CPNCModel::DIST_ERROR) && vertexE.IsEqual(ptS, CPNCModel::DIST_ERROR)))
+			if ((vertexS.IsEqual(ptS, IExtractor::DIST_ERROR) && vertexE.IsEqual(ptE, IExtractor::DIST_ERROR)) ||
+				(vertexS.IsEqual(ptE, IExtractor::DIST_ERROR) && vertexE.IsEqual(ptS, IExtractor::DIST_ERROR)))
 				break;
 		}
 		if (pCadLine)
@@ -463,7 +451,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 				continue;
 			}
 		}
-		CString sPosKey = CPNCModel::MakePosKeyStr(pEnt->pos);
+		CString sPosKey = IExtractor::MakePosKeyStr(pEnt->pos);
 		iter = mapCirAndBlock.find(sPosKey);
 		if (iter == mapCirAndBlock.end())
 			mapCirAndBlock.insert(std::make_pair(sPosKey, pEnt));
@@ -525,7 +513,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 		if (pEnt == NULL)
 			continue;
 		BOLT_HOLE boltInfo;
-		if (!g_pncSysPara.RecogBoltHole(pEnt, boltInfo, m_pBelongModel))
+		if (!g_pncSysPara.RecogBoltHole(pEnt, boltInfo))
 			continue;
 		BOLT_INFO *pBoltInfo = boltList.append();
 		pBoltInfo->posX = boltInfo.posX;
@@ -558,8 +546,9 @@ void CPlateProcessInfo::UpdateBoltHoles()
 	//提取三角螺栓图符、腰圆孔螺栓图符
 	if (g_pncSysPara.IsRecongPolylineLs() > 0)
 	{
-		for (CBoltEntGroup* pBoltGroup = m_pBelongModel->m_xBoltEntHash.GetFirst(); pBoltGroup;
-			pBoltGroup = m_pBelongModel->m_xBoltEntHash.GetNext())
+		IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::PLATE);
+		for (CBoltEntGroup* pBoltGroup = pExtractor->EnumFirstBoltGroup(); pBoltGroup;
+			pBoltGroup = pExtractor->EnumNextBoltGroup())
 		{
 			if (pBoltGroup->m_ciType < 2)
 				continue;	//图符&圆圈已处理
@@ -644,7 +633,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 			AcDbEntity *pEnt = objLife.GetEnt();
 			if (pEnt && pEnt->isKindOf(AcDbBlockReference::desc()))
 			{
-				CBoltEntGroup* pLsBlockEnt = m_pBelongModel->m_xBoltEntHash.GetValue(CXhChar50("%d", pEnt->id().asOldId()));
+				CBoltEntGroup* pLsBlockEnt = g_xExtractorLife.GetExtractor(IExtractor::PLATE)->FindBoltGroup(CXhChar50("%d", pEnt->id().asOldId()));
 				if (pLsBlockEnt)
 					org_hole_d2 = pLsBlockEnt->m_fHoleD;
 			}
@@ -723,7 +712,7 @@ void CPlateProcessInfo::ExtractRelaEnts()
 	ZoomAcadView(scope, 10);
 	//根据闭合区域拾取归属于钢板的图元集合
 	ATOM_LIST<VERTEX> list;
-	CalEquidistantShape(CPNCModel::DIST_ERROR * 2, &list);
+	CalEquidistantShape(IExtractor::DIST_ERROR * 2, &list);
 #ifdef __ALFA_TEST_
 	/*CLockDocumentLife lockCurDocment;
 	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
@@ -874,7 +863,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 		if (pList->GetNodeNum() != 1)
 			continue;
 		CAD_LINE *pLineId = pList->GetFirst();
-		if (pLineId&&pLineId->m_fSize < CPNCModel::WELD_MAX_HEIGHT)
+		if (pLineId&&pLineId->m_fSize < IExtractor::WELD_MAX_HEIGHT)
 			weldMarkLineSet.SetValue(pLineId->idCadEnt, TRUE);
 	}
 	xPlate.m_cFaceN = 1;
@@ -896,8 +885,6 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 				xPlate.m_nSingleNum = xPlate.m_nProcessNum = baseInfo.m_nNum;
 				partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
 			}
-			if (baseInfo.m_sTaType.GetLength() > 0 && m_pBelongModel->m_xPrjInfo.m_sTaType.GetLength() <= 0)
-				m_pBelongModel->m_xPrjInfo.m_sTaType.Copy(baseInfo.m_sTaType);
 			if (baseInfo.m_sPartNo.GetLength() > 0 && bRelatePN)
 			{
 				if (xPlate.GetPartNo().GetLength() <= 0)
@@ -1081,7 +1068,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 		base_pnt[Z] = cur_dim_pos.z;
 		UINT_PTR nTimer = SetTimer(hMainWnd, 1, 100, CloseBoundaryPopupWnd);
 		int resCode = RTNORM;
-		if (CPNCModel::m_bSendCommand)
+		if (IExtractor::m_bSendCommand)
 		{
 			CXhChar50 sCmd, sPos("%.2f,%.2f", cur_dim_pos.x, cur_dim_pos.y);
 			if (bIslandDetection)
@@ -1119,7 +1106,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 	}
 	if (initLastObjId == plineId)
 	{	//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
-		if (CPNCModel::m_bSendCommand)
+		if (IExtractor::m_bSendCommand)
 #ifdef _ARX_2007
 			SendCommandToCad(L" \n ");
 #else
@@ -1136,7 +1123,7 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 		if (pEnt)
 			pEnt->close();
 		//执行空命令行(代表输入回车)，避免重复执行上一条命令 wxc-2019.6.13
-		if (CPNCModel::m_bSendCommand)
+		if (IExtractor::m_bSendCommand)
 #ifdef _ARX_2007
 			SendCommandToCad(L" \n ");
 #else
@@ -1195,18 +1182,18 @@ void CPlateProcessInfo::InitProfileByBPolyCmd(double fMinExtern, double fMaxExte
 	for (int i = 0; i < tem_vertes.GetNodeNum(); i++)
 	{
 		VERTEX* pCurVer = tem_vertes.GetByIndex(i);
-		if (pCurVer->ciEdgeType == 2 && ftoi(pCurVer->arc.radius) == CPNCModel::ASSIST_RADIUS)
+		if (pCurVer->ciEdgeType == 2 && ftoi(pCurVer->arc.radius) == IExtractor::ASSIST_RADIUS)
 		{
 			VERTEX* pNextVer = tem_vertes.GetByIndex((i + 1) % nVertNum);
 			if (pNextVer->ciEdgeType == 1)
 				pNextVer->pos = pCurVer->arc.center;
-			else if (pNextVer->ciEdgeType == 2 && ftoi(pNextVer->arc.radius) != CPNCModel::ASSIST_RADIUS)
+			else if (pNextVer->ciEdgeType == 2 && ftoi(pNextVer->arc.radius) != IExtractor::ASSIST_RADIUS)
 				pNextVer->pos = pCurVer->arc.center;
 		}
 	}
 	for (pVer = tem_vertes.GetFirst(); pVer; pVer = tem_vertes.GetNext())
 	{
-		if (pVer->ciEdgeType == 2 && ftoi(pVer->arc.radius) == CPNCModel::ASSIST_RADIUS)
+		if (pVer->ciEdgeType == 2 && ftoi(pVer->arc.radius) == IExtractor::ASSIST_RADIUS)
 			tem_vertes.DeleteCursor();
 	}
 	tem_vertes.Clean();
@@ -1458,7 +1445,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 			vec = (ptE - ptS);
 			normalize(vec);
 		}
-		if (fabs(DISTANCE(ptS, ptE)) < CPNCModel::DIST_ERROR)
+		if (fabs(DISTANCE(ptS, ptE)) < IExtractor::DIST_ERROR)
 		{
 			bFinish = TRUE;
 			break;
@@ -1469,9 +1456,9 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 		{
 			if (pLine->m_bMatch)
 				continue;
-			if (pLine->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
+			if (pLine->m_ptStart.IsEqual(ptE, IExtractor::DIST_ERROR))
 				linkLineList.append(pLine);
-			else if (pLine->m_ptEnd.IsEqual(ptE, CPNCModel::DIST_ERROR))
+			else if (pLine->m_ptEnd.IsEqual(ptE, IExtractor::DIST_ERROR))
 				linkLineList.append(pLine);
 		}
 		if (linkLineList.GetNodeNum() <= 0)
@@ -1481,7 +1468,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 			pLine = linkLineList[0];
 			pLine->m_bMatch = TRUE;
 			pLine->m_ciSerial = ciSerial++;
-			if (pLine->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
+			if (pLine->m_ptStart.IsEqual(ptE, IExtractor::DIST_ERROR))
 			{
 				pLine->vertex = pLine->m_ptStart;
 				ptE = pLine->m_ptEnd;
@@ -1500,7 +1487,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 			for (int i = 0; i < linkLineList.GetNodeNum(); i++)
 			{
 				GEPOINT cur_vec;
-				if (linkLineList[i]->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
+				if (linkLineList[i]->m_ptStart.IsEqual(ptE, IExtractor::DIST_ERROR))
 					cur_vec = (linkLineList[i]->m_ptEnd - linkLineList[i]->m_ptStart);
 				else
 					cur_vec = (linkLineList[i]->m_ptStart - linkLineList[i]->m_ptEnd);
@@ -1511,7 +1498,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 			pLine = (CAD_LINE*)maxValue.m_pRelaObj;
 			pLine->m_bMatch = TRUE;
 			pLine->m_ciSerial = ciSerial++;
-			if (pLine->m_ptStart.IsEqual(ptE, CPNCModel::DIST_ERROR))
+			if (pLine->m_ptStart.IsEqual(ptE, IExtractor::DIST_ERROR))
 			{
 				pLine->vertex = pLine->m_ptStart;
 				ptE = pLine->m_ptEnd;
@@ -1571,7 +1558,7 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIS
 				AcGePoint3d location;
 				pPline->getPointAt(iVertIndex, location);
 				VERTEX* pNewVer = NULL;
-				if (pVer->pos.IsEqual(GEPOINT(location.x, location.y, 0), CPNCModel::DIST_ERROR))
+				if (pVer->pos.IsEqual(GEPOINT(location.x, location.y, 0), IExtractor::DIST_ERROR))
 					pNewVer = pVer;
 				else
 					pNewVer = tem_vertes.append();
@@ -1726,8 +1713,6 @@ void CPlateProcessInfo::InitPPiInfo()
 }
 void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 {
-	if (!m_bCreatePPIFile)
-		return;	//不输出ppi文件
 	//设置当前工作路径
 	SetCurrentDirectory(file_path);
 	CXhChar200 sRelatePartNo = GetRelatePartNo();

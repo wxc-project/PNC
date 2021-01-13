@@ -13,6 +13,44 @@
 static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
+
+CExtractorLife g_xExtractorLife;
+//////////////////////////////////////////////////////////////////////////
+//
+BOOL IExtractor::m_bSendCommand = FALSE;
+const float IExtractor::ASSIST_RADIUS = 1;
+const float IExtractor::DIST_ERROR = 0.5;
+const float IExtractor::WELD_MAX_HEIGHT = 20;
+CExtractorLife::CExtractorLife() 
+{
+}
+CExtractorLife::~CExtractorLife() 
+{
+	for (IExtractor** ppExtractor = m_listExtractor.GetFirst(); ppExtractor;
+		ppExtractor = m_listExtractor.GetNext())
+	{
+		if (*ppExtractor)
+			delete *ppExtractor;
+		*ppExtractor = NULL;
+	}
+}
+//
+void CExtractorLife::Append(IExtractor* pExtracot) 
+{
+	m_listExtractor.append(pExtracot);
+}
+IExtractor* CExtractorLife::GetExtractor(BYTE ciType) 
+{
+	IExtractor** ppExtractor = NULL;
+	for (ppExtractor = m_listExtractor.GetFirst(); ppExtractor; ppExtractor = m_listExtractor.GetNext())
+	{
+		if ((*ppExtractor)->m_ciType == ciType)
+			break;
+	}
+	if (ppExtractor)
+		return *ppExtractor;
+	return NULL;
+}
 //////////////////////////////////////////////////////////////////////////
 //
 void CSymbolRecoginzer::AppendSymbolEnt(AcDbSpline* pSpline)
@@ -51,17 +89,17 @@ bool CSymbolRecoginzer::IsHuoquLine(GELINE* pCurveLine,DWORD cbFilterFlag/*=0*/)
 	return false;
 }
 //////////////////////////////////////////////////////////////////////////
-//CPlateExtractor
-CPlateExtractor::CPlateExtractor()
+//CPlateRecogRule
+CPlateRecogRule::CPlateRecogRule()
 {
 	Init();
 }
-CPlateExtractor::~CPlateExtractor()
+CPlateRecogRule::~CPlateRecogRule()
 {
 	EmptyBoltBlockRecog();
 	m_recogSchemaList.Empty();
 }
-void CPlateExtractor::Init()
+void CPlateRecogRule::Init()
 {	//件号标注设置
 	m_iDimStyle=0;
 	m_sPnKey.Copy("#");
@@ -75,6 +113,7 @@ void CPlateExtractor::Init()
 	InsertRecogSchema("单行2", 0, "#", "Q", "-", "件");
 	InsertRecogSchema("单行3", 0, "#", "Q", "-", "件", "正曲", "反曲");
 	InsertRecogSchema("单行4", 0, "#", "Q", "-", "件", "外曲", "内曲");
+	InsertRecogSchema("单行5", 0, "件号:", "材质:", "规格:", "单段数量:");
 	InsertRecogSchema("多行1", 1, "#", "Q", "-");
 	InsertRecogSchema("多行2", 1, "#", "Q", "-", "件");
 	InsertRecogSchema("多行3", 1, "#", "Q", "-", "件", "正曲", "反曲");
@@ -89,7 +128,7 @@ void CPlateExtractor::Init()
 	//螺栓直径设置
 	m_xBoltBlockRecog.InitPlateBoltBlock();
 }
-RECOG_SCHEMA* CPlateExtractor::InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
+RECOG_SCHEMA* CPlateRecogRule::InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
 	char* matKey, char* thickKey, char* partCountKey /*= NULL*/,
 	char* frontBendKey /*= NULL*/, char* reverseBendKey /*= NULL*/)
 {
@@ -99,7 +138,7 @@ RECOG_SCHEMA* CPlateExtractor::InsertRecogSchema(char* name, int dimStyle, char*
 	pSchema1->m_iDimStyle = dimStyle;
 	if (name != NULL)
 		pSchema1->m_sSchemaName.Copy(name);
-	if (partCountKey != NULL)
+	if (partNoKey != NULL)
 		pSchema1->m_sPnKey.Copy(partNoKey);
 	if (thickKey != NULL)
 		pSchema1->m_sThickKey.Copy(thickKey);
@@ -113,7 +152,7 @@ RECOG_SCHEMA* CPlateExtractor::InsertRecogSchema(char* name, int dimStyle, char*
 		pSchema1->m_sReverseBendKey.Copy(reverseBendKey);
 	return pSchema1;
 }
-void CPlateExtractor::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
+void CPlateRecogRule::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
 {
 	if (pSchema != NULL)
 	{
@@ -126,7 +165,7 @@ void CPlateExtractor::ActiveRecogSchema(RECOG_SCHEMA *pSchema)
 		m_iDimStyle = pSchema->m_iDimStyle;
 	}
 }
-void CPlateExtractor::SplitMultiText(AcDbEntity* pEnt, vector<CString>& textArr)
+void CPlateRecogRule::SplitMultiText(AcDbEntity* pEnt, vector<CString>& textArr)
 {
 	if (pEnt == NULL)
 		return;
@@ -176,7 +215,7 @@ void CPlateExtractor::SplitMultiText(AcDbEntity* pEnt, vector<CString>& textArr)
 		textArr.push_back(CString(sText));
 	}
 }
-int CPlateExtractor::GetKeyMemberNum()
+int CPlateRecogRule::GetKeyMemberNum()
 {
 	int nNum=0;
 	if(m_sPnKey.GetLength()>0)
@@ -189,7 +228,7 @@ int CPlateExtractor::GetKeyMemberNum()
 		nNum++;
 	return nNum;
 }
-int CPlateExtractor::GetPnKeyNum(const char* dim_str)
+int CPlateRecogRule::GetPnKeyNum(const char* dim_str)
 {
 	if(strlen(dim_str)<=0)
 		return 0;
@@ -214,7 +253,7 @@ int CPlateExtractor::GetPnKeyNum(const char* dim_str)
 	}
 	return n;
 }
-BOOL CPlateExtractor::IsMatchPNRule(const char* sText)
+BOOL CPlateRecogRule::IsMatchPNRule(const char* sText)
 {
 	if(strlen(sText)<=0 || strlen(m_sPnKey)<=0)
 		return FALSE;
@@ -253,7 +292,7 @@ BOOL CPlateExtractor::IsMatchPNRule(const char* sText)
 	}
 	return TRUE;
 }
-BOOL CPlateExtractor::IsMatchThickRule(const char* sText)
+BOOL CPlateRecogRule::IsMatchThickRule(const char* sText)
 {
 	if(strlen(sText)<=0 || strlen(m_sThickKey)<=0)
 		return FALSE;
@@ -269,7 +308,7 @@ BOOL CPlateExtractor::IsMatchThickRule(const char* sText)
 	return FALSE;
 }
 //材质关键字可以不设置，默认为"Q2"|"Q3"|"Q4" wxc-2020.11.3
-BOOL CPlateExtractor::IsMatchMatRule(const char* sText)
+BOOL CPlateRecogRule::IsMatchMatRule(const char* sText)
 {
 	if(strlen(sText)<=0)
 		return FALSE;
@@ -281,7 +320,7 @@ BOOL CPlateExtractor::IsMatchMatRule(const char* sText)
 	else
 		return FALSE;
 }
-BOOL CPlateExtractor::IsMatchNumRule(const char* sText)
+BOOL CPlateRecogRule::IsMatchNumRule(const char* sText)
 {
 	if(strlen(sText)<=0 || strlen(m_sPnNumKey)<=0)
 		return FALSE;
@@ -295,14 +334,14 @@ BOOL CPlateExtractor::IsMatchNumRule(const char* sText)
 	}
 	return FALSE;
 }
-BOOL CPlateExtractor::IsMatchRollEdgeRule(const char* sText)
+BOOL CPlateRecogRule::IsMatchRollEdgeRule(const char* sText)
 {
 	if (strstr(sText, "正曲卷边90") || strstr(sText, "反曲卷边90"))
 		return TRUE;
 	else
 		return FALSE;
 }
-BOOL CPlateExtractor::IsMatchBendRule(const char* sText)
+BOOL CPlateRecogRule::IsMatchBendRule(const char* sText)
 {
 	if(strlen(sText)<=0||(strlen(m_sFrontBendKey)<=0&&strlen(m_sReverseBendKey)<=0))
 		return FALSE;
@@ -311,7 +350,7 @@ BOOL CPlateExtractor::IsMatchBendRule(const char* sText)
 	else
 		return FALSE;
 }
-BOOL CPlateExtractor::IsBriefMatMark(char cMat)
+BOOL CPlateRecogRule::IsBriefMatMark(char cMat)
 {
 	if ('H' == cMat || 'h' == cMat || 'G' == cMat ||
 		'P' == cMat || 'T' == cMat || 'S' == cMat)
@@ -319,7 +358,7 @@ BOOL CPlateExtractor::IsBriefMatMark(char cMat)
 	else
 		return FALSE;
 }
-BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
+BYTE CPlateRecogRule::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 {
 	CString ss(sText);
 	ss.Replace("　"," ");
@@ -367,7 +406,7 @@ BYTE CPlateExtractor::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
 	}
 	return PART_LABEL_EMPTY;
 }
-void CPlateExtractor::ParseThickText(const char* sText,int& nThick)
+void CPlateRecogRule::ParseThickText(const char* sText,int& nThick)
 {
 	//获取件数的若干个关键码
 	CXhChar50 sThickKey = m_sThickKey;
@@ -413,12 +452,12 @@ void CPlateExtractor::ParseThickText(const char* sText,int& nThick)
 			str.Replace(sThickKey, "| ");
 			int nValue = 0;
 			sscanf(str, "%s%d", (char*)sValue, &nValue);
-			if (nValue > 0)
-				nThick = nValue;
+			if (abs(nValue) > 0)
+				nThick = abs(nValue);
 		}
 	}
 }
-void CPlateExtractor::ParseMatText(const char* sText,char& cMat,char& cQuality)
+void CPlateRecogRule::ParseMatText(const char* sText,char& cMat,char& cQuality)
 {
 	CXhChar100 sValue(sText);
 	sValue.Replace("　"," ");
@@ -439,7 +478,7 @@ void CPlateExtractor::ParseMatText(const char* sText,char& cMat,char& cQuality)
 		}
 	}
 }
-void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
+void CPlateRecogRule::ParseNumText(const char* sText,int& nNum)
 {
 	//获取件数的若干个关键码
 	CXhChar50 sNumKey = m_sPnNumKey;
@@ -477,7 +516,7 @@ void CPlateExtractor::ParseNumText(const char* sText,int& nNum)
 		}
 	}
 }
-bool CPlateExtractor::ParseBendText(const char* sText,double &degree,BOOL &bFrontBend)
+bool CPlateRecogRule::ParseBendText(const char* sText,double &degree,BOOL &bFrontBend)
 {
 	if (strstr(sText, m_sFrontBendKey))
 		bFrontBend = TRUE;
@@ -502,14 +541,14 @@ bool CPlateExtractor::ParseBendText(const char* sText,double &degree,BOOL &bFron
 		degree=0;
 	return false;
 }
-bool CPlateExtractor::ParseRollEdgeText(const char* sText, double& degree, BOOL& bFrontBend)
+bool CPlateRecogRule::ParseRollEdgeText(const char* sText, double& degree, BOOL& bFrontBend)
 {
 	if (strstr(sText, "卷边90") == NULL)
 		return false;
 	else
 		return ParseBendText(sText, degree, bFrontBend);
 }
-BOOL CPlateExtractor::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
+BOOL CPlateRecogRule::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
 	BOOL bRet=FALSE;
 	if(pRecognizer!=NULL)
@@ -528,7 +567,7 @@ BOOL CPlateExtractor::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogni
 	}
 	return bRet;
 }
-BOOL CPlateExtractor::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
+BOOL CPlateRecogRule::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecognizer/*=NULL*/)
 {
 	BOOL bRet=FALSE;
 	AcDbObjectId lineTypeId = GetEntLineTypeId(pAcDbLine);
@@ -542,7 +581,7 @@ BOOL CPlateExtractor::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogn
 	}
 	return bRet;
 }
-BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
+BOOL CPlateRecogRule::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 {
 	if (pAcadText == NULL)
 		return FALSE;
@@ -563,24 +602,24 @@ BOOL CPlateExtractor::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
 	if (sText.GetLength() <= 0)
 		return FALSE;
 	BYTE ciRetCode = ParsePartNoText(sText, sPartNo);
-	if (ciRetCode == CPlateExtractor::PART_LABEL_WELD)
+	if (ciRetCode == CPlateRecogRule::PART_LABEL_WELD)
 		return FALSE;	//当前件号为焊接子件件号 wht 19-07-22
 	return TRUE;
 }
 //////////////////////////////////////////////////////////////////////////
-//CJgCardExtractor
+//CJgCardRecogRule
 #ifdef __UBOM_ONLY_
-CJgCardExtractor::CJgCardExtractor()
+CJgCardRecogRule::CJgCardRecogRule()
 {
 	fTextHigh = 0;
 	fPnDistX = 0;
 	fPnDistY = 0;
 }
-CJgCardExtractor::~CJgCardExtractor()
+CJgCardRecogRule::~CJgCardRecogRule()
 {
 
 }
-BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
+BYTE CJgCardRecogRule::InitJgCardInfo(const char* sJgCardPath)
 {
 	if (strlen(sJgCardPath) <= 0)
 		return CARD_READ_FAIL;
@@ -683,7 +722,7 @@ BYTE CJgCardExtractor::InitJgCardInfo(const char* sJgCardPath)
 	}
 	return CARD_READ_FAIL;
 }
-f3dPoint CJgCardExtractor::GetJgCardOrigin(f3dPoint partNo_pt)
+f3dPoint CJgCardRecogRule::GetJgCardOrigin(f3dPoint partNo_pt)
 {
 	return f3dPoint(partNo_pt.x - fPnDistX, partNo_pt.y - fPnDistY, 0);
 }

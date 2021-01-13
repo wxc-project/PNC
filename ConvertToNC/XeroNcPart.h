@@ -1,5 +1,5 @@
 #pragma once
-#include "XeroExtractor.h"
+#include "common.h"
 #include "ProcessPart.h"
 #include "ArrayList.h"
 #include "HashTable.h"
@@ -188,7 +188,6 @@ class CPlateProcessInfo : public CCadPartObject
 	//
 	GECS ucs;
 	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
-	CPNCModel* _pBelongModel;
 	LAYOUT_VERTEX datumStartVertex, datumEndVertex;	//布局基准轮廓点
 public:
 	struct CIR_PLATE {
@@ -231,10 +230,6 @@ public:
 	static const BYTE MODIFY_DES_SPEC = 0x08;
 	static const BYTE MODIFY_DES_MAT = 0x10;
 	BYTE m_ciModifyState;
-	//属性定义区
-	CPNCModel* get_pBelongModel() const;
-	CPNCModel* set_pBelongModel(CPNCModel* pBelongModel);
-	__declspec(property(put = set_pBelongModel, get = get_pBelongModel)) CPNCModel* m_pBelongModel;
 private:
 	void InitBtmEdgeIndex();
 	void BuildPlateUcs();
@@ -299,8 +294,6 @@ public:
 	void RefreshPlateSpec();
 	void RefreshPlateMat();
 	void FillPlateNum(int nNewNum, AcDbObjectId partNoId);
-	//控制是否需要输出ppi文件 wht 20-10-10
-	static BOOL m_bCreatePPIFile;
 };
 //////////////////////////////////////////////////////////////////////////
 //
@@ -353,6 +346,7 @@ public:
 	//
 	void Empty();
 	void SetOrig(f3dPoint pt) { orig_pt = pt; }
+	f3dPoint GetOrig() { return orig_pt; }
 	BYTE InitAngleInfo(f3dPoint data_pos, const char* sValue);
 	bool PtInDataRect(BYTE data_type, const double* poscoord);
 	bool PtInDrawRect(const double* poscoord);
@@ -362,6 +356,7 @@ public:
 	SCOPE_STRU GetCADEntScope();
 	void CreateRgn();
 	void ExtractRelaEnts();
+	void CopyAttributes(CAngleProcessInfo* pSrcAngle);
 	//
 	void RefreshAngleNum();
 	void RefreshAngleSingleNum();

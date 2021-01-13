@@ -17,6 +17,7 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
+#ifndef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //智能提取板的信息,提取成功后支持排版
 //SmartExtractPlate
@@ -34,295 +35,19 @@ void SmartExtractPlate()
 		return;
 	}
 	//提取当前文件的钢板信息
-	CPNCModel::m_bSendCommand = FALSE;
+	IExtractor::m_bSendCommand = FALSE;
 	model.Empty();
-	model.m_sCurWorkFile = file_name;
-	SmartExtractPlate(&model, TRUE);
-}
-
-void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts/*=FALSE*/,CHashSet<AcDbObjectId> *pObjIdSet/*=NULL*/)
-{
-	if (pModel == NULL)
-		return;
-	CLogErrorLife logErrLife;
-	//调整坐标系
-	ShiftCSToWCS(TRUE);
-	//框选图元
-	CHashSet<AcDbObjectId> selectedEntList;
-	if (bSupportSelectEnts)
-	{	//进行手动框选
-		//非智能提取轮廓时，需要选择所有的图形方便后期的过滤使用
-		if (g_pncSysPara.m_ciRecogMode != CPNCSysPara::FILTER_BY_PIXEL)
-			SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
-		if (pObjIdSet)
-		{
-			for (AcDbObjectId entId = pObjIdSet->GetFirst(); entId; entId = pObjIdSet->GetNext())
-				selectedEntList.SetValue(entId.asOldId(), entId);
-		}
-		if (selectedEntList.GetNodeNum() <= 0)
-		{
-			if (!SelCadEntSet(selectedEntList))
-				return;
-		}
-	}
-	else
-	{	//处理所有图元
-		SelCadEntSet(pModel->m_xAllEntIdSet, TRUE);
-		for (AcDbObjectId entId = pModel->m_xAllEntIdSet.GetFirst(); entId; entId = pModel->m_xAllEntIdSet.GetNext())
-			selectedEntList.SetValue(entId.asOldId(), entId);
-	}
-	//从框选信息中提取中钢板的标识，统计钢板集合
-	CHashSet<AcDbObjectId> textIdHash;
-	AcDbEntity *pEnt = NULL;
-	int index = 1,nNum= selectedEntList.GetNodeNum();
-	DisplayCadProgress(0, "查找图纸文字标注,识别钢板件号信息.....");
-	for (AcDbObjectId entId=selectedEntList.GetFirst(); entId.isValid();entId=selectedEntList.GetNext(), index++)
-	{
-		DisplayCadProgress(int(100 * index / nNum));
-		CAcDbObjLife objLife(entId);
-		if((pEnt = objLife.GetEnt())==NULL)
-			continue;
-		if (!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()) && !pEnt->isKindOf(AcDbBlockReference::desc()))
-			continue;
-		textIdHash.SetValue(entId.asOldId(), entId);
-		//
-		BASIC_INFO baseInfo;
-		GEPOINT dim_pos, dim_vec;
-		CXhChar16 sPartNo;
-		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
-		{
-			if(!g_pncSysPara.ParsePartNoText(pEnt,sPartNo))
-				continue;
-			if (strlen(sPartNo) <= 0)
-			{
-				CXhChar500 sText = GetCadTextContent(pEnt);
-				logerr.Log("钢板信息{%s}满足设置的文字识别规则，但识别失败请联系信狐客服!", (char*)sText);
-				continue;
-			}
-			else
-				dim_pos = GetCadTextDimPos(pEnt, &dim_vec);
-		}
-		else if (pEnt->isKindOf(AcDbBlockReference::desc()))
-		{	//从块中解析钢板信息
-			AcDbBlockReference *pBlockRef = (AcDbBlockReference*)pEnt;
-			if(g_pncSysPara.RecogBasicInfo(pBlockRef,baseInfo))
-			{
-				AcGePoint3d txt_pos = pBlockRef->position();
-				dim_pos.Set(txt_pos.x, txt_pos.y, txt_pos.z);
-				dim_vec.Set(cos(pBlockRef->rotation()), sin(pBlockRef->rotation()));
-			}
-			else
-				continue;
-			if (baseInfo.m_sPartNo.GetLength() > 0)
-				sPartNo.Copy(baseInfo.m_sPartNo);
-			else
-			{
-				logerr.Log("通过图块识别钢板基本信息,识别失败请联系信狐客服!");
-				continue;
-			}
-		}
-		CPlateProcessInfo *pExistPlate = pModel->GetPlateInfo(sPartNo);
-		if (pExistPlate != NULL && !(pExistPlate->partNoId == entId || pExistPlate->plateInfoBlockRefId == entId))
-		{	//件号相同，但件号文本对应的实体不相同提示件号重复 wht 19-07-22
-			pExistPlate->repeatEntList.SetValue(entId.asOldId(), entId);
-			logerr.Log("件号{%s}有重复请确认!", (char*)sPartNo);
-			continue;
-		}
-		//
-		CPlateProcessInfo* pPlateProcess = pModel->AppendPlate(sPartNo);
-		pPlateProcess->m_pBelongModel = pModel;
-		pPlateProcess->dim_pos = dim_pos;
-		pPlateProcess->dim_vec = dim_vec;
-		if (baseInfo.m_sPartNo.GetLength() > 0)
-		{
-			pPlateProcess->plateInfoBlockRefId = entId;
-			pPlateProcess->xPlate.SetPartNo(sPartNo);
-			pPlateProcess->xPlate.cMaterial = baseInfo.m_cMat;
-			pPlateProcess->xPlate.m_fThick = (float)baseInfo.m_nThick;
-			pPlateProcess->xPlate.m_nProcessNum = baseInfo.m_nNum;
-			pPlateProcess->xPlate.m_nSingleNum = baseInfo.m_nNum;
-			pPlateProcess->xPlate.mkpos = dim_pos;
-			pPlateProcess->xPlate.mkVec = dim_vec;
-			if (pModel->m_xPrjInfo.m_sTaStampNo.GetLength() <= 0 && baseInfo.m_sTaStampNo.GetLength() > 0)
-				pModel->m_xPrjInfo.m_sTaStampNo.Copy(baseInfo.m_sTaStampNo);
-			if (pModel->m_xPrjInfo.m_sTaType.GetLength() <= 0 && baseInfo.m_sTaType.GetLength() > 0)
-				pModel->m_xPrjInfo.m_sTaType.Copy(baseInfo.m_sTaType);
-			if (pModel->m_xPrjInfo.m_sPrjCode.GetLength() <= 0 && baseInfo.m_sPrjCode.GetLength() > 0)
-				pModel->m_xPrjInfo.m_sPrjCode.Copy(baseInfo.m_sPrjCode);
-		}
-		else
-		{
-			pPlateProcess->partNoId = entId;
-			pPlateProcess->xPlate.SetPartNo(sPartNo);
-			pPlateProcess->xPlate.cMaterial = 'S';
-		}
-	}
-	DisplayCadProgress(100);
-	if (selectedEntList.GetNodeNum() <= 0)
-	{
-		AfxMessageBox("未选择提取内容，无法执行提取操作！");
-		return;
-	}
-	else if(pModel->GetPlateNum()<=0)
-	{
-		if (AfxMessageBox("该文件不满足文字识别配置！是否调整文字识别配置？", MB_YESNO) == IDYES)
-		{
-			CAcModuleResourceOverride resOverride;
-			CPNCSysSettingDlg dlg;
-			dlg.m_iSelTabGroup = 1;
-			dlg.DoModal();
-		}
-		return;
-	}
-	//提取钢板的螺栓孔（螺栓块、圆、三角、矩形、腰圆）
-	pModel->ExtractPlateBoltEnts(selectedEntList);
-	//提取钢板的轮廓边
-	if (g_pncSysPara.m_ciRecogMode == CPNCSysPara::FILTER_BY_PIXEL)
-		pModel->ExtractPlateProfileEx(selectedEntList);
-	else
-		pModel->ExtractPlateProfile(selectedEntList);
-#ifndef __UBOM_ONLY_
-	//处理钢板一板多号的情况
-	pModel->MergeManyPartNo();
-	//根据轮廓闭合区域更新钢板的基本信息+螺栓信息+轮廓边信息
-	int nSum = 0;
-	nNum = pModel->GetPlateNum();
-	DisplayCadProgress(0,"修订钢板信息<基本+螺栓+火曲>.....");
-	for(CPlateProcessInfo* pPlateProcess=pModel->EnumFirstPlate();pPlateProcess;pPlateProcess=pModel->EnumNextPlate(),nSum++)
-	{
-		DisplayCadProgress(int(100 * nSum / nNum));
-		pPlateProcess->ExtractRelaEnts();
-		pPlateProcess->CheckProfileEdge();
-		pPlateProcess->UpdateBoltHoles();
-		if(!pPlateProcess->UpdatePlateInfo())
-			logerr.Log("件号%s板选择了错误的边界,请重新选择.(位置：%s)",(char*)pPlateProcess->GetPartNo(),(char*)CXhChar50(pPlateProcess->dim_pos));
-		if (pPlateProcess->IsValid())
-			pPlateProcess->InitPPiInfo();
-	}
-	DisplayCadProgress(100);
-	//将提取的钢板信息导出到中性文件中
-	if (g_pncSysPara.m_iPPiMode == 0)
-		pModel->SplitManyPartNo();
-	if (CPlateProcessInfo::m_bCreatePPIFile)
-	{
-		CString file_path;
-		GetCurWorkPath(file_path);
-		pModel->CreatePlatePPiFile(file_path);
-		//写工程塔型配置文件 wht 19-01-12
-		if (pModel->m_xPrjInfo.m_sTaType.GetLength() > 0)
-		{
-			CString cfg_path = file_path + "config.ini";
-			cfg_path.Format("%sconfig.ini", file_path);
-			pModel->WritePrjTowerInfoToCfgFile(cfg_path);
-		}
-	}
-	//绘制提取的钢板外形--支持排版
-	pModel->DrawPlates();
+	model.ExtractPlates(file_name,TRUE);
+	model.DrawPlates();
 	//通过菜单提取的钢板需更新构件列表
-	if (CPNCModel::m_bSendCommand == FALSE)
+	CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
+	if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd() != NULL)
 	{
-		CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
-		if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd()!=NULL)
-		{
-			pPartListDlg->RefreshCtrlState();
-			pPartListDlg->RelayoutWnd();
-			pPartListDlg->UpdatePartList();
-		}
+		pPartListDlg->RefreshCtrlState();
+		pPartListDlg->RelayoutWnd();
+		pPartListDlg->UpdatePartList();
 	}
-#else
-	//UBOM只需要更新钢板的基本信息
-	for (CPlateProcessInfo* pPlateProcess = pModel->EnumFirstPlate(); pPlateProcess; pPlateProcess = pModel->EnumNextPlate())
-	{	
-		if(!pPlateProcess->IsValid())
-		{
-			pPlateProcess->CreateRgnByText();
-#ifdef __ALFA_TEST_
-			logerr.Log("(%s)钢板的轮廓点提取失败!", (char*)pPlateProcess->GetPartNo());
-#endif
-		}
-	}
-	//
-	pModel->MergeManyPartNo();
-	for (AcDbObjectId objId = textIdHash.GetFirst(); objId; objId = textIdHash.GetNext())
-	{
-		CAcDbObjLife objLife(objId);
-		AcDbEntity *pEnt = objLife.GetEnt();
-		if (pEnt==NULL)
-			continue;
-		if (pEnt->isKindOf(AcDbBlockReference::desc()))
-		{	//处理带电焊图块的钢板
-			AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
-			AcDbObjectId blockId = pReference->blockTableRecord();
-			AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
-			acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
-			if (pTempBlockTableRecord == NULL)
-				continue;
-			pTempBlockTableRecord->close();
-			CXhChar50 sName;
-#ifdef _ARX_2007
-			ACHAR* sValue = new ACHAR[50];
-			pTempBlockTableRecord->getName(sValue);
-			sName.Copy((char*)_bstr_t(sValue));
-			delete[] sValue;
-#else
-			char *sValue = new char[50];
-			pTempBlockTableRecord->getName(sValue);
-			sName.Copy(sValue);
-			delete[] sValue;
-#endif
-			if(!g_pncSysPara.IsHasPlateWeldTag(sName))
-				continue;
-			AcGePoint3d pos = pReference->position();
-			CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(GEPOINT(pos.x,pos.y));
-			if (pPlateInfo == NULL)
-				continue;
-			pPlateInfo->xBomPlate.bWeldPart = TRUE;
-		}
-		if(!pEnt->isKindOf(AcDbText::desc())&&!pEnt->isKindOf(AcDbMText::desc()))
-			continue;
-		GEPOINT dim_pos=GetCadTextDimPos(pEnt);
-		CPlateProcessInfo* pPlateInfo = pModel->GetPlateInfo(dim_pos);
-		if(pPlateInfo==NULL)
-			continue;	//
-		BASIC_INFO baseInfo;
-		if (g_pncSysPara.RecogBasicInfo(pEnt, baseInfo))
-		{
-			if (baseInfo.m_cMat > 0)
-				pPlateInfo->xPlate.cMaterial = baseInfo.m_cMat;
-			if (baseInfo.m_cQuality > 0)
-				pPlateInfo->xPlate.cQuality = baseInfo.m_cQuality;
-			if (baseInfo.m_nThick > 0)
-				pPlateInfo->xPlate.m_fThick = (float)baseInfo.m_nThick;
-			if (baseInfo.m_nNum > 0)
-			{
-				pPlateInfo->xPlate.m_nSingleNum = pPlateInfo->xPlate.m_nProcessNum = baseInfo.m_nNum;
-				pPlateInfo->partNumId = MkCadObjId(baseInfo.m_idCadEntNum);
-			}	
-		}
-		//焊接字样可能在基本信息中例如：141#正焊
-		CXhChar100 sText = GetCadTextContent(pEnt);
-		if(g_pncSysPara.IsHasPlateBendTag(sText))
-			pPlateInfo->xBomPlate.siZhiWan = 1;
-		if(g_pncSysPara.IsHasPlateWeldTag(sText))
-			pPlateInfo->xBomPlate.bWeldPart = TRUE;
-	}
-	pModel->SplitManyPartNo();
-	for (CPlateProcessInfo* pPlateInfo = pModel->EnumFirstPlate(); pPlateInfo; pPlateInfo = pModel->EnumNextPlate())
-	{
-		pPlateInfo->xBomPlate.sPartNo = pPlateInfo->GetPartNo();
-		pPlateInfo->xBomPlate.cMaterial = pPlateInfo->xPlate.cMaterial;
-		pPlateInfo->xBomPlate.cQualityLevel = pPlateInfo->xPlate.cQuality;
-		pPlateInfo->xBomPlate.thick = pPlateInfo->xPlate.m_fThick;
-		pPlateInfo->xBomPlate.nSumPart = pPlateInfo->xPlate.m_nProcessNum;	//加工数
-		pPlateInfo->xBomPlate.AddPart(pPlateInfo->xPlate.m_nSingleNum);		//单基数
-		if (pPlateInfo->xBomPlate.thick <= 0)
-			logerr.Log("钢板%s信息提取失败!", (char*)pPlateInfo->xBomPlate.sPartNo);
-		else
-			pPlateInfo->xBomPlate.sSpec.Printf("-%.f", pPlateInfo->xBomPlate.thick);
-	}
-#endif
 }
-#ifndef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //编辑钢板信息
 //CreatePartEditProcess
@@ -390,6 +115,17 @@ BOOL WriteToClient(HANDLE hPipeWrite)
 void SendPartEditor()
 {
 	CLogErrorLife logErrLife;
+	//指定路径下生成PPI文件
+	CString file_path;
+	GetCurWorkPath(file_path);
+	model.CreatePlatePPiFile(file_path);
+	//写工程塔型配置文件 wht 19-01-12
+	if (model.m_xPrjInfo.m_sTaType.GetLength() > 0)
+	{
+		CString cfg_path = file_path + "config.ini";
+		cfg_path.Format("%sconfig.ini", file_path);
+		model.WritePrjTowerInfoToCfgFile(cfg_path);
+	}
 	//1、创建第一个管道: 用于服务器端向客户端发送内容
 	SECURITY_ATTRIBUTES attrib;
 	attrib.nLength = sizeof( SECURITY_ATTRIBUTES );

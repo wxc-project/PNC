@@ -454,7 +454,7 @@ static void InsertRecogSchemaItem(CSuperGridCtrl* pListCtrl, RECOG_SCHEMA *pSche
 	lpInfo->SetListItemsStr(5, "Q|材质:|材质：|");
 	lpInfo->AddSubItemText(pSchema->m_sPnNumKey, bEditable);
 	lpInfo->SetControlType(6, GCT_CMB_EDIT);
-	lpInfo->SetListItemsStr(6, "件数:|件数：|数量:|数量：|");
+	lpInfo->SetListItemsStr(6, "件数:|件数：|数量:|数量：|单段数量:");
 	lpInfo->AddSubItemText(pSchema->m_sFrontBendKey, bEditable);
 	lpInfo->SetControlType(7, GCT_CMB_EDIT);
 	lpInfo->SetListItemsStr(7, "正曲|外曲");
@@ -690,9 +690,9 @@ void CPNCSysSettingDlg::RefreshCtrlState()
 		m_listCtrlSysSetting.InsertColumn(3, _T("件号"), LVCFMT_LEFT, 55);
 		m_listCtrlSysSetting.InsertColumn(4, _T("规格"), LVCFMT_LEFT, 55);
 		m_listCtrlSysSetting.InsertColumn(5, _T("材质"), LVCFMT_LEFT, 55);
-		m_listCtrlSysSetting.InsertColumn(6, _T("加工数"), LVCFMT_LEFT, 55);
-		m_listCtrlSysSetting.InsertColumn(7, _T("正曲"), LVCFMT_LEFT, 55);
-		m_listCtrlSysSetting.InsertColumn(8, _T("反曲"), LVCFMT_LEFT, 55);
+		m_listCtrlSysSetting.InsertColumn(6, _T("加工数"), LVCFMT_LEFT, 80);
+		m_listCtrlSysSetting.InsertColumn(7, _T("正曲"), LVCFMT_LEFT, 40);
+		m_listCtrlSysSetting.InsertColumn(8, _T("反曲"), LVCFMT_LEFT, 40);
 	}
 	else if (m_iSelTabGroup == PROPGROUP_BOLT)
 	{

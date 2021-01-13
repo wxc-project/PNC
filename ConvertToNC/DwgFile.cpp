@@ -47,7 +47,7 @@ BOOL CDwgFileInfo::ImportPrintBomExcelFile(const char* sFileName)
 CPlateProcessInfo* CDwgFileInfo::FindPlateByPt(f3dPoint text_pos)
 {
 	CPlateProcessInfo* pPlateInfo=NULL;
-	for(pPlateInfo=m_xPncMode.EnumFirstPlate();pPlateInfo;pPlateInfo=m_xPncMode.EnumNextPlate())
+	for (pPlateInfo = m_hashPlateInfo.GetFirst(); pPlateInfo; pPlateInfo = m_hashPlateInfo.GetNext())
 	{
 		if(pPlateInfo->IsInPartRgn(text_pos))
 			break;
@@ -57,14 +57,14 @@ CPlateProcessInfo* CDwgFileInfo::FindPlateByPt(f3dPoint text_pos)
 //根据件号查找对应的钢板
 CPlateProcessInfo* CDwgFileInfo::FindPlateByPartNo(const char* sPartNo)
 {
-	return m_xPncMode.PartFromPartNo(sPartNo);
+	return m_hashPlateInfo.GetValue(sPartNo);
 }
 //更新钢板加工数据
 void CDwgFileInfo::ModifyPlateDwgPartNum()
 {
-	if(m_xPncMode.GetPlateNum()<=0)
+	if(GetPlateNum ()<=0)
 		return;
-	int index = 1, nNum = m_xPncMode.GetPlateNum() + 1;
+	int index = 1, nNum = GetPlateNum() + 1;
 	DisplayCadProgress(0, "更新钢板加工数信息.....");
 	for(CPlateProcessInfo* pInfo=EnumFirstPlate();pInfo;pInfo=EnumNextPlate(),index++)
 	{
@@ -90,9 +90,9 @@ void CDwgFileInfo::ModifyPlateDwgPartNum()
 //更新钢板规格
 void CDwgFileInfo::ModifyPlateDwgSpec()
 {
-	if (m_xPncMode.GetPlateNum() <= 0)
+	if (GetPlateNum() <= 0)
 		return;
-	int index = 1, nNum = m_xPncMode.GetPlateNum() + 1;
+	int index = 1, nNum = GetPlateNum() + 1;
 	DisplayCadProgress(0, "更新钢板规格信息.....");
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(),index++)
 	{
@@ -121,9 +121,9 @@ void CDwgFileInfo::ModifyPlateDwgSpec()
 //更新钢板材质
 void CDwgFileInfo::ModifyPlateDwgMaterial()
 {
-	if (m_xPncMode.GetPlateNum() <= 0)
+	if (GetPlateNum() <= 0)
 		return;
-	int index = 1, nNum = m_xPncMode.GetPlateNum() + 1;
+	int index = 1, nNum = GetPlateNum() + 1;
 	DisplayCadProgress(0, "更新钢板材质信息.....");
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(), index++)
 	{
@@ -158,10 +158,10 @@ void CDwgFileInfo::ModifyPlateDwgMaterial()
 //完善钢板大样图基本信息（成都铁塔厂定制）
 void CDwgFileInfo::FillPlateDwgData()
 {
-	if (m_xPncMode.GetPlateNum() <= 0)
+	if (GetPlateNum() <= 0)
 		return;
 	std::vector<CPlateProcessInfo*> vectorInvalidPlate;
-	int index = 1, nNum = m_xPncMode.GetPlateNum() + 1;
+	int index = 1, nNum = GetPlateNum() + 1;
 	DisplayCadProgress(0, "填充钢板加工数信息");
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(), index++)
 	{
@@ -206,32 +206,35 @@ void CDwgFileInfo::FillPlateDwgData()
 		vectorInvalidPlate[i]->ExtractRelaEnts();
 		vectorInvalidPlate[i]->EraseRelaEnts();
 		//删除该该钢板
-		m_xPncMode.DeletePlate(vectorInvalidPlate[i]->GetPartNo());
+		m_hashPlateInfo.DeleteNode(vectorInvalidPlate[i]->GetPartNo());
 	}
 	DisplayCadProgress(100);
 }
 //提取板的轮廓边,确定闭合区域
 BOOL CDwgFileInfo::RetrievePlates(BOOL bSupportSelectEnts /*= FALSE*/)
 {
-	CPNCModel::m_bSendCommand = TRUE;
+	IExtractor::m_bSendCommand = TRUE;
+	IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::PLATE);
+	if (pExtractor == NULL)
+		return FALSE;
 	if (bSupportSelectEnts)
 	{	//提取用户选择的图元
-		CPNCModel tempMode;
-		SmartExtractPlate(&tempMode, TRUE);
+		CHashStrList<CPlateProcessInfo> hashTempPlate;
+		pExtractor->ExtractPlates(hashTempPlate, TRUE);
 		//数据拷贝
 		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
-		for (pSrcPlate = tempMode.EnumFirstPlate(); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate())
+		for (pSrcPlate = hashTempPlate.GetFirst(); pSrcPlate; pSrcPlate = hashTempPlate.GetNext())
 		{
-			pDestPlate = m_xPncMode.GetPlateInfo(pSrcPlate->GetPartNo());
+			pDestPlate = this->m_hashPlateInfo.GetValue(pSrcPlate->GetPartNo());
 			if (pDestPlate == NULL)
-				pDestPlate = m_xPncMode.AppendPlate(pSrcPlate->GetPartNo());
+				pDestPlate = this->m_hashPlateInfo.Add(pSrcPlate->GetPartNo());
 			pDestPlate->CopyAttributes(pSrcPlate);
 		}
 	}
 	else
 	{	//提取所有图元
-		m_xPncMode.Empty();
-		SmartExtractPlate(&m_xPncMode);
+		this->m_hashPlateInfo.Empty();
+		pExtractor->ExtractPlates(this->m_hashPlateInfo, FALSE);
 	}
 	return TRUE;
 }
@@ -609,200 +612,28 @@ void CDwgFileInfo::FillAngleDwgData()
 //提取角钢操作
 BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 {
-	CAcModuleResourceOverride resOverride;
-	ShiftCSToWCS(TRUE);
-	//选择所有实体图元
-	CHashSet<AcDbObjectId> allEntIdSet;
-	SelCadEntSet(allEntIdSet, bSupportSelectEnts ? FALSE : TRUE);
-	//根据角钢工艺卡块识别角钢
-	int index = 1, nNum = allEntIdSet.GetNodeNum()*2;
-	DisplayCadProgress(0, "识别角钢工艺卡.....");
-	AcDbEntity *pEnt = NULL;
-	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext(), index++)
-	{
-		DisplayCadProgress(int(100 * index / nNum));
-		CAcDbObjLife objLife(entId);
-		if ((pEnt = objLife.GetEnt()) == NULL)
-			continue;
-		if (!pEnt->isKindOf(AcDbBlockReference::desc()))
-			continue;
-		//根据角钢工艺卡块提取角钢信息
-		AcDbBlockTableRecord *pTempBlockTableRecord = NULL;
-		AcDbBlockReference* pReference = (AcDbBlockReference*)pEnt;
-		AcDbObjectId blockId = pReference->blockTableRecord();
-		acdbOpenObject(pTempBlockTableRecord, blockId, AcDb::kForRead);
-		if (pTempBlockTableRecord == NULL)
-			continue;
-		pTempBlockTableRecord->close();
-		CXhChar50 sName;
-#ifdef _ARX_2007
-		ACHAR* sValue = new ACHAR[50];
-		pTempBlockTableRecord->getName(sValue);
-		sName.Copy((char*)_bstr_t(sValue));
-		delete[] sValue;
-#else
-		char *sValue = new char[50];
-		pTempBlockTableRecord->getName(sValue);
-		sName.Copy(sValue);
-		delete[] sValue;
-#endif
-		if (!g_xUbomModel.IsJgCardBlockName(sName))
-			continue;
-		//添加角钢记录
-		CAngleProcessInfo* pJgInfo = m_hashJgInfo.Add(entId.handle());
-		pJgInfo->Empty();
-		pJgInfo->keyId = entId;
-		pJgInfo->SetOrig(GEPOINT(pReference->position().x, pReference->position().y));
-	}
-	//处理角钢工艺卡块打碎的情况：根据"件号"标题提取角钢信息
-	CHashSet<AcDbObjectId> textIdHash;
-	ATOM_LIST<PART_LABEL_DIM> labelDimList;
-	ATOM_LIST<CAD_ENTITY> cadTextList;
-	for (AcDbObjectId entId = allEntIdSet.GetFirst(); entId.isValid(); entId = allEntIdSet.GetNext(), index++)
-	{
-		DisplayCadProgress(int(100 * index / nNum));
-		CAcDbObjLife objLife(entId);
-		if ((pEnt = objLife.GetEnt()) == NULL)
-			continue;
-		if (pEnt->isKindOf(AcDbCircle::desc()))
-		{
-			AcDbCircle *pCir = (AcDbCircle*)pEnt;
-			PART_LABEL_DIM *pLabelDim = labelDimList.append();
-			pLabelDim->m_xCirEnt.ciEntType = TYPE_CIRCLE;
-			pLabelDim->m_xCirEnt.idCadEnt = pEnt->objectId().asOldId();
-			pLabelDim->m_xCirEnt.m_fSize = pCir->radius();
-			Cpy_Pnt(pLabelDim->m_xCirEnt.pos, pCir->center());
-			continue;
-		}
-		if(!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()))
-			continue;
-		textIdHash.SetValue(entId.handle(), entId);	//记录角钢工艺卡的实时文本
-		//根据件号关键字识别角钢
-		CXhChar100 sText = GetCadTextContent(pEnt);
-		GEPOINT testPt = GetCadTextDimPos(pEnt);
-		if (pEnt->isKindOf(AcDbText::desc()))
-		{
-			AcDbText *pText = (AcDbText*)pEnt;
-			CAD_ENTITY *pCadText = cadTextList.append();
-			pCadText->ciEntType = TYPE_TEXT;
-			pCadText->idCadEnt = entId.asOldId();
-			pCadText->m_fSize = pText->height();
-			pCadText->pos = testPt;
-			strncpy(pCadText->sText, sText, 99);
-		}
-		if (!g_xUbomModel.IsPartLabelTitle(sText))
-			continue;	//无效的件号标题
-		CAngleProcessInfo* pJgInfo = NULL;
-		for (pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())
-		{
-			if (pJgInfo->IsInPartRgn(testPt))
-				break;
-		}
-		if (pJgInfo == NULL)
-			pJgInfo = m_hashJgInfo.Add(entId.handle());
-		//更新角钢信息 wht 20-07-29
-		if(pJgInfo)
-		{	//添加角钢记录
-			//根据工艺卡模板中件号标记点计算该角钢工艺卡的原点位置
-			GEPOINT orig_pt = g_pncSysPara.GetJgCardOrigin(testPt);
-			pJgInfo->Empty();
-			pJgInfo->keyId = entId;
-			pJgInfo->m_bInJgBlock = false;
-			pJgInfo->SetOrig(orig_pt);
-		}
-	}
-	DisplayCadProgress(100);
-	if(m_hashJgInfo.GetNodeNum()<=0)
-	{	
-		logerr.Log("%s文件提取角钢失败",(char*)m_sFileName);
+	IExtractor::m_bSendCommand = TRUE;
+	IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::ANGLE);
+	if (pExtractor == NULL)
 		return FALSE;
-	}
-	//根据角钢数据位置获取角钢信息
-	index = 1;
-	nNum = textIdHash.GetNodeNum();
-	DisplayCadProgress(0, "初始化角钢信息.....");
-	for(AcDbObjectId objId=textIdHash.GetFirst();objId;objId=textIdHash.GetNext(),index++)
-	{
-		DisplayCadProgress(int(100 * index / nNum));
-		CAcDbObjLife objLife(objId);
-		if ((pEnt = objLife.GetEnt()) == NULL)
-			continue;
-		CXhChar50 sValue=GetCadTextContent(pEnt);
-		GEPOINT text_pos = GetCadTextDimPos(pEnt);
-		if(strlen(sValue)<=0)	//过滤空字符
-			continue;
-		CAngleProcessInfo* pJgInfo=FindAngleByPt(text_pos);
-		if (pJgInfo)
+	if (bSupportSelectEnts)
+	{	//提取用户选择的图元
+		CHashList<CAngleProcessInfo> hashTempAngle;
+		pExtractor->ExtractAngles(hashTempAngle, TRUE);
+		//数据拷贝
+		CAngleProcessInfo* pSrcAngle = NULL, *pDestAngle = NULL;
+		for (pSrcAngle = hashTempAngle.GetFirst(); pSrcAngle; pSrcAngle = hashTempAngle.GetNext())
 		{
-			BYTE cType = pJgInfo->InitAngleInfo(text_pos, sValue);
-			if (cType == ITEM_TYPE_SUM_PART_NUM)
-				pJgInfo->partNumId = objId;
-			else if (cType == ITEM_TYPE_SUM_WEIGHT)
-				pJgInfo->sumWeightId = objId;
-			else if (cType == ITEM_TYPE_PART_NUM)
-				pJgInfo->singleNumId = objId;
-			else if (cType == ITEM_TYPE_DES_MAT)
-				pJgInfo->materialId = objId;
-			else if (cType == ITEM_TYPE_DES_GUIGE)
-				pJgInfo->specId = objId;
+			pDestAngle = this->m_hashJgInfo.GetValue(pSrcAngle->keyId.handle());
+			if (pDestAngle == NULL)
+				pDestAngle = this->m_hashJgInfo.Add(pSrcAngle->keyId.handle());
+			pDestAngle->CopyAttributes(pSrcAngle);
 		}
 	}
-	DisplayCadProgress(100);
-	if (!CAngleProcessInfo::bInitGYByGYRect)
-	{	//根据焊接肋板初始化角钢焊接属性 wht 20-09-29
-		//初始化件号标注文字内容
-		for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
-		{
-			CAD_ENTITY *pCadText = NULL;
-			for (pCadText = cadTextList.GetFirst(); pCadText; pCadText = cadTextList.GetNext())
-			{
-				if (pLabelDim->m_xCirEnt.IsInScope(pCadText->pos))
-				{
-					pLabelDim->m_xInnerText.ciEntType = pCadText->ciEntType;
-					pLabelDim->m_xInnerText.idCadEnt = pCadText->idCadEnt;
-					pLabelDim->m_xInnerText.m_fSize = pCadText->m_fSize;
-					pLabelDim->m_xInnerText.pos = pCadText->pos;
-					strcpy(pLabelDim->m_xInnerText.sText, pCadText->sText);
-					break;
-				}
-			}
-			if (pCadText == NULL)	//未找到文字的圆圈需移除
-				labelDimList.DeleteCursor();
-		}
-		labelDimList.Clean();
-		for (PART_LABEL_DIM *pLabelDim = labelDimList.GetFirst(); pLabelDim; pLabelDim = labelDimList.GetNext())
-		{
-			SEGI segI = pLabelDim->GetSegI();
-			if (segI.iSeg <= 0)
-				continue;
-			CAngleProcessInfo* pJgInfo = FindAngleByPt(pLabelDim->m_xCirEnt.pos);
-			if (pJgInfo && !pJgInfo->m_xAngle.bWeldPart)
-				pJgInfo->m_xAngle.bWeldPart = TRUE;
-		}
-	}
-	//对提取的角钢信息进行合理性检查
-	CHashStrList<BOOL> hashJgByPartNo;
-	for (CAngleProcessInfo* pJgInfo = m_hashJgInfo.GetFirst(); pJgInfo; pJgInfo = m_hashJgInfo.GetNext())
-	{
-		if (pJgInfo->m_xAngle.sPartNo.GetLength() <= 0)
-			m_hashJgInfo.DeleteNode(pJgInfo->keyId.handle());
-		else
-		{
-			if (hashJgByPartNo.GetValue(pJgInfo->m_xAngle.sPartNo))
-				logerr.Log("件号(%s)重复", (char*)pJgInfo->m_xAngle.sPartNo);
-			else
-				hashJgByPartNo.SetValue(pJgInfo->m_xAngle.sPartNo, TRUE);
-		}
-#ifdef __ALFA_TEST_
-		if(!pJgInfo->m_bInJgBlock)
-			logerr.Log("(%s)角钢工艺卡是打碎的!", (char*)pJgInfo->m_xAngle.sPartNo);
-#endif
-	}
-	m_hashJgInfo.Clean();
-	if(m_hashJgInfo.GetNodeNum()<=0)
-	{	
-		logerr.Log("%s文件提取角钢失败",(char*)m_sFileName);
-		return FALSE;
+	else
+	{	//提取所有图元
+		this->m_hashJgInfo.Empty();
+		pExtractor->ExtractAngles(this->m_hashJgInfo, FALSE);
 	}
 	return TRUE;
 }

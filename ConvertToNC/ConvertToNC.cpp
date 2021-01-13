@@ -35,6 +35,7 @@
 #include "SteelSealReactor.h"
 #include "PNCDockBarManager.h"
 #include "BomExport.h"
+#include "DwgExtractor.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE
@@ -46,12 +47,6 @@ static char THIS_FILE[]=__FILE__;
 void RegisterServerComponents ()
 {	
 #ifdef _ARX_2007
-	// 智能提取板信息
-	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
-		L"SmartExtractPlate",             // Global function name
-		L"SmartExtractPlate",             // Local function name
-		ACRX_CMD_MODAL,   // Type
-		&SmartExtractPlate);            // Function pointer
 	//系统设置
 	acedRegCmds->addCommand(L"PNC-MENU",         // Group name 
 		L"EnvGeneralSet",          // Global function name
@@ -59,6 +54,12 @@ void RegisterServerComponents ()
 		ACRX_CMD_MODAL,      // Type
 		&EnvGeneralSet);
 #ifndef __UBOM_ONLY_   
+	// 智能提取板信息
+	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
+		L"SmartExtractPlate",             // Global function name
+		L"SmartExtractPlate",             // Local function name
+		ACRX_CMD_MODAL,   // Type
+		&SmartExtractPlate);            // Function pointer
 	//编辑钢板信息
 	acedRegCmds->addCommand(L"PNC-MENU",           // Group name
 		L"SendPartEdit",        // Global function name
@@ -112,12 +113,6 @@ void RegisterServerComponents ()
 		&InternalTest);					// Function pointer
 #endif
 #else
-	// 智能提取板信息
-	acedRegCmds->addCommand( "PNC-MENU",           // Group name
-		"SmartExtractPlate",        // Global function name
-		"SmartExtractPlate",        // Local function name
-		ACRX_CMD_MODAL,   // Type
-		&SmartExtractPlate);            // Function pointer
 	//系统设置
 	acedRegCmds->addCommand("PNC-MENU",         // Group name 
 		"EnvGeneralSet",          // Global function name
@@ -125,6 +120,12 @@ void RegisterServerComponents ()
 		ACRX_CMD_MODAL,      // Type
 		&EnvGeneralSet);
 #ifndef __UBOM_ONLY_  
+	// 智能提取板信息
+	acedRegCmds->addCommand("PNC-MENU",           // Group name
+		"SmartExtractPlate",        // Global function name
+		"SmartExtractPlate",        // Local function name
+		ACRX_CMD_MODAL,   // Type
+		&SmartExtractPlate);            // Function pointer
 	//编辑钢板信息
 	acedRegCmds->addCommand( "PNC-MENU",           // Group name
 		"SendPartEdit",        // Global function name
@@ -365,6 +366,7 @@ void InitApplication()
 	//读取配置文件
 	PNCSysSetImportDefault();
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
+	g_xExtractorLife.Append(CPlateExtractor::GetExtractor());
 	g_xPNCDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 #else
 	//读取配置文件
@@ -374,6 +376,7 @@ void InitApplication()
 	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)
 		sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');
 	::SetWindowText(adsw_acadMainWnd(), sWndText);
+	g_xExtractorLife.Append(CAngleExtractor::GetExtractor());
 	g_xBomExport.Init();
 	if(g_xUbomModel.m_bExeRppWhenArxLoad)
 		RevisionPartProcess	();

@@ -4,15 +4,53 @@
 #include "HashTable.h"
 #include "XhCharString.h"
 #include "BoltBlockRecog.h"
-#include <vector>
-#include <list>
-#include <map>
-#include <set>
-using std::vector;
-using std::map;
-using std::set;
-using std::multimap;
-using std::multiset;
+#include "XeroNcPart.h"
+#include "common.h"
+//////////////////////////////////////////////////////////////////////////
+//
+class IExtractor
+{
+public:
+	static BOOL m_bSendCommand;
+	static const float ASSIST_RADIUS;
+	static const float DIST_ERROR;
+	static const float WELD_MAX_HEIGHT;
+	static const BYTE PLATE = 1;
+	static const BYTE ANGLE = 2;
+	BYTE m_ciType;
+	PROJECT_INFO m_xPrjInfo;
+	CHashStrList<CBoltEntGroup> m_xBoltEntHash;
+public:
+	static CString MakePosKeyStr(GEPOINT pos) {
+		CString sKeyStr;
+		sKeyStr.Format("X%d-Y%d", ftoi(pos.x), ftoi(pos.y));
+		return sKeyStr;
+	}
+	CBoltEntGroup* FindBoltGroup(const char* sKey) {
+		return m_xBoltEntHash.GetValue(sKey);
+	}
+	CBoltEntGroup* EnumFirstBoltGroup() {
+		return m_xBoltEntHash.GetFirst();
+	}
+	CBoltEntGroup* EnumNextBoltGroup() {
+		return m_xBoltEntHash.GetNext();
+	}
+	//
+	virtual bool ExtractPlates(CHashStrList<CPlateProcessInfo>& hashPlateInfo, BOOL bSupportSelectEnts) = 0;
+#ifdef __UBOM_ONLY_
+	virtual bool ExtractAngles(CHashList<CAngleProcessInfo>& hashJgInfo, BOOL bSupportSelectEnts) = 0;
+#endif
+};
+class CExtractorLife
+{
+	ATOM_LIST<IExtractor*> m_listExtractor;
+public:
+	CExtractorLife();
+	~CExtractorLife();
+	//
+	void Append(IExtractor* pExtracot);
+	IExtractor* GetExtractor(BYTE ciType);
+};
 //////////////////////////////////////////////////////////////////////////
 //特殊符号识别器
 struct ISymbolRecognizer {
@@ -32,7 +70,7 @@ public:
 	bool IsHuoquLine(GELINE* pLine,DWORD cbFilterFlag=0);
 };
 //////////////////////////////////////////////////////////////////////////
-//钢板大样图识别器
+//钢板大样图识别规则
 struct RECOG_SCHEMA{
 	CXhChar50 m_sSchemaName;//识别模式名称
 	int m_iDimStyle;		//0.单行标注 1.多行标注
@@ -47,7 +85,7 @@ struct RECOG_SCHEMA{
 	RECOG_SCHEMA() {m_iDimStyle = 0; m_bEditable = FALSE; m_bEnable = FALSE; }
 };
 //
-class CPlateExtractor
+class CPlateRecogRule
 {
 protected:
 	RECOG_SCHEMA* InsertRecogSchema(char* name, int dimStyle, char* partNoKey,
@@ -64,8 +102,8 @@ public:
 	CXhChar50 m_sReverseBendKey;//反曲
 	ATOM_LIST<RECOG_SCHEMA> m_recogSchemaList;
 public:
-	CPlateExtractor();
-	virtual ~CPlateExtractor();
+	CPlateRecogRule();
+	virtual ~CPlateRecogRule();
 	//
 	void ActiveRecogSchema(RECOG_SCHEMA *pSchema);
 	int  GetPnKeyNum(const char* sText);
@@ -107,8 +145,8 @@ public:
 };
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
-//角钢工艺卡识别器
-class CJgCardExtractor
+//角钢工艺卡识别规则
+class CJgCardRecogRule
 {
 public:
 	map<long, f2dRect> mapJgCardRect;	//数据点区域
@@ -117,8 +155,8 @@ public:
 	double fTextHigh;
 	double fPnDistX, fPnDistY;
 public:
-	CJgCardExtractor();
-	~CJgCardExtractor();
+	CJgCardRecogRule();
+	~CJgCardRecogRule();
 	//
 	static const int CARD_READ_FAIL = 0;
 	static const int CARD_READ_SUCCEED = 1;
@@ -127,3 +165,5 @@ public:
 	f3dPoint GetJgCardOrigin(f3dPoint partNo_pt);
 };
 #endif
+
+extern CExtractorLife g_xExtractorLife;

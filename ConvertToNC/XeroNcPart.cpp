@@ -321,6 +321,8 @@ bool CCadPartObject::IsInPartRgn(const double* start, const double* end)
 //根据构件区域提取关联图元
 void CCadPartObject::ExtractRelaEnts(vector<GEPOINT>& ptArr)
 {
+	if (ptArr.size() <= 0)
+		return;
 	struct resbuf* pList = NULL, *pPoly = NULL;
 	for(size_t i=0;i<ptArr.size();i++)
 	{

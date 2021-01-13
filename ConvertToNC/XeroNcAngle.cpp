@@ -90,6 +90,29 @@ void CAngleProcessInfo::ExtractRelaEnts()
 		vectorPt.push_back(m_xPolygon.GetVertexAt(i));
 	CCadPartObject::ExtractRelaEnts(vectorPt);
 }
+
+void CAngleProcessInfo::CopyAttributes(CAngleProcessInfo* pSrcAngle)
+{
+	keyId = pSrcAngle->keyId;
+	orig_pt = pSrcAngle->GetOrig();
+	partNumId = pSrcAngle->partNumId;
+	singleNumId=pSrcAngle->singleNumId;
+	sumWeightId=pSrcAngle->sumWeightId;
+	specId=pSrcAngle->specId;
+	materialId=pSrcAngle->materialId;
+	m_sTowerType = pSrcAngle->m_sTowerType;
+	m_bInJgBlock = pSrcAngle->m_bInJgBlock;
+	//
+	EmptyRelaEnts();
+	for (CAD_ENTITY* pSrcCadEnt = pSrcAngle->EnumFirstRelaEnt(); pSrcCadEnt;
+		pSrcCadEnt = pSrcAngle->EnumNextRelaEnt())
+		AddRelaEnt(pSrcCadEnt->idCadEnt, *pSrcCadEnt);
+	//
+	CBuffer buffer(1024);
+	pSrcAngle->m_xAngle.ToBuffer(buffer);
+	buffer.SeekToBegin();
+	this->m_xAngle.FromBuffer(buffer);
+}
 //判断坐标点是否在指定类型的数据框中
 bool CAngleProcessInfo::PtInDataRect(BYTE data_type, const double* poscoord)
 {
@@ -245,7 +268,7 @@ BYTE CAngleProcessInfo::InitAngleInfo(f3dPoint data_pos, const char* sValue)
 				if (sKey)
 					sSpec = sKey;
 			}
-			sprintf(m_xAngle.sSpec, "L%s", sSpec);
+			m_xAngle.sSpec.Printf("L%s", sSpec);
 			m_xAngle.sSpec.Replace(" ", "");
 			sSpec = m_xAngle.sSpec;
 		}

@@ -3,10 +3,9 @@
 #define __PNC_MENU_FUNC_H_
 #include "PNCModel.h"
 //加工
-void SmartExtractPlate();	//智能提取板的信息
-void SmartExtractPlate(CPNCModel *pModel, BOOL bSupportSelectEnts = FALSE, CHashSet<AcDbObjectId>* pObjIdSet=NULL);
 void EnvGeneralSet();		//系统设置
 #ifndef __UBOM_ONLY_
+void SmartExtractPlate();	//智能提取板的信息
 void SendPartEditor();		//编辑钢板信息
 void ShowPartList();		//显示钢板信息
 void DrawPlates();			//绘制钢板
