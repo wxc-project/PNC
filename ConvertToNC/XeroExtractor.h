@@ -41,12 +41,12 @@ public:
 	virtual bool ExtractAngles(CHashList<CAngleProcessInfo>& hashJgInfo, BOOL bSupportSelectEnts) = 0;
 #endif
 };
-class CExtractorLife
+class CExtractorManager
 {
 	ATOM_LIST<IExtractor*> m_listExtractor;
 public:
-	CExtractorLife();
-	~CExtractorLife();
+	CExtractorManager();
+	~CExtractorManager();
 	//
 	void Append(IExtractor* pExtracot);
 	IExtractor* GetExtractor(BYTE ciType);
@@ -166,4 +166,4 @@ public:
 };
 #endif
 
-extern CExtractorLife g_xExtractorLife;
+extern CExtractorManager g_xExtractorManager;

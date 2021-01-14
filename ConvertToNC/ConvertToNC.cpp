@@ -366,7 +366,7 @@ void InitApplication()
 	//读取配置文件
 	PNCSysSetImportDefault();
 	::SetWindowText(adsw_acadMainWnd(), "PNC");
-	g_xExtractorLife.Append(CPlateExtractor::GetExtractor());
+	g_xExtractorManager.Append(CPlateExtractor::GetExtractor());
 	g_xPNCDockBarManager.DisplayPartListDockBar(CPartListDlg::m_nDlgWidth);
 #else
 	//读取配置文件
@@ -376,7 +376,8 @@ void InitApplication()
 	if(g_xUbomModel.m_sCustomizeName.GetLength()>0)
 		sWndText.Append(g_xUbomModel.m_sCustomizeName, '-');
 	::SetWindowText(adsw_acadMainWnd(), sWndText);
-	g_xExtractorLife.Append(CAngleExtractor::GetExtractor());
+	g_xExtractorManager.Append(CPlateExtractor::GetExtractor());
+	g_xExtractorManager.Append(CAngleExtractor::GetExtractor());
 	g_xBomExport.Init();
 	if(g_xUbomModel.m_bExeRppWhenArxLoad)
 		RevisionPartProcess	();

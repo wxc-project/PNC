@@ -52,7 +52,7 @@ void CPNCModel::Empty()
 bool CPNCModel::ExtractPlates(CString sDwgFile, BOOL bSupportSelectEnts/*=FALSE*/)
 {
 	model.m_sCurWorkFile = sDwgFile;
-	IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::PLATE);
+	IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::PLATE);
 	if (pExtractor)
 		return pExtractor->ExtractPlates(this->m_hashPlateInfo, bSupportSelectEnts);
 	return false;

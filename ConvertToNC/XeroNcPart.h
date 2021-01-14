@@ -295,23 +295,6 @@ public:
 	void RefreshPlateMat();
 	void FillPlateNum(int nNewNum, AcDbObjectId partNoId);
 };
-//////////////////////////////////////////////////////////////////////////
-//
-class CPlateReactorLife
-{	//钢板反应器生命周期控制类
-	CPlateProcessInfo *m_pPlateInfo;
-public:
-	CPlateReactorLife(CPlateProcessInfo *pPlate, BOOL bEnable) {
-		m_pPlateInfo = pPlate;
-		if (m_pPlateInfo)
-			m_pPlateInfo->m_bEnableReactor = bEnable;
-	}
-	~CPlateReactorLife() {
-		if (m_pPlateInfo)
-			m_pPlateInfo->m_bEnableReactor = !m_pPlateInfo->m_bEnableReactor;
-	}
-};
-
 #ifdef __UBOM_ONLY_
 //////////////////////////////////////////////////////////////////////////
 //CAngleProcessInfo

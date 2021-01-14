@@ -5,6 +5,23 @@
 #include "DrawDamBoard.h"
 
 #ifndef __UBOM_ONLY_
+//////////////////////////////////////////////////////////////////////////
+//CPlateReactorLife
+class CPlateReactorLife
+{	//钢板反应器生命周期控制类
+	CPlateProcessInfo *m_pPlateInfo;
+public:
+	CPlateReactorLife(CPlateProcessInfo *pPlate, BOOL bEnable) {
+		m_pPlateInfo = pPlate;
+		if (m_pPlateInfo)
+			m_pPlateInfo->m_bEnableReactor = bEnable;
+	}
+	~CPlateReactorLife() {
+		if (m_pPlateInfo)
+			m_pPlateInfo->m_bEnableReactor = !m_pPlateInfo->m_bEnableReactor;
+	}
+};
+//////////////////////////////////////////////////////////////////////////
 // CPartListDlg 对话框
 #ifdef __SUPPORT_DOCK_UI_
 class CPartListDlg : public CAcUiDialog

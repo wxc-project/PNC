@@ -546,7 +546,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 	//ÌáÈ¡Èý½ÇÂÝË¨Í¼·û¡¢ÑüÔ²¿×ÂÝË¨Í¼·û
 	if (g_pncSysPara.IsRecongPolylineLs() > 0)
 	{
-		IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::PLATE);
+		IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::PLATE);
 		for (CBoltEntGroup* pBoltGroup = pExtractor->EnumFirstBoltGroup(); pBoltGroup;
 			pBoltGroup = pExtractor->EnumNextBoltGroup())
 		{
@@ -633,7 +633,7 @@ void CPlateProcessInfo::UpdateBoltHoles()
 			AcDbEntity *pEnt = objLife.GetEnt();
 			if (pEnt && pEnt->isKindOf(AcDbBlockReference::desc()))
 			{
-				CBoltEntGroup* pLsBlockEnt = g_xExtractorLife.GetExtractor(IExtractor::PLATE)->FindBoltGroup(CXhChar50("%d", pEnt->id().asOldId()));
+				CBoltEntGroup* pLsBlockEnt = g_xExtractorManager.GetExtractor(IExtractor::PLATE)->FindBoltGroup(CXhChar50("%d", pEnt->id().asOldId()));
 				if (pLsBlockEnt)
 					org_hole_d2 = pLsBlockEnt->m_fHoleD;
 			}
@@ -1773,7 +1773,17 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 	for (ULONG *pSrcId = pSrcPlate->m_newAddEntIdList.GetFirst(); pSrcId;
 		pSrcId = pSrcPlate->m_newAddEntIdList.GetNext())
 		m_newAddEntIdList.append(*pSrcId);
+	//
+	relateEntList.Empty();
+	for (AcDbObjectId objId = pSrcPlate->relateEntList.GetFirst(); objId; objId = pSrcPlate->relateEntList.GetNext())
+		relateEntList.SetValue(objId.asOldId(), objId);
+	repeatEntList.Empty();
+	for (AcDbObjectId objId = pSrcPlate->repeatEntList.GetFirst(); objId; objId = pSrcPlate->repeatEntList.GetNext())
+		repeatEntList.SetValue(objId.asOldId(), objId);
 #ifdef __UBOM_ONLY_
+	partNoId = pSrcPlate->partNoId;
+	partNumId = pSrcPlate->partNumId;
+	plateInfoBlockRefId = pSrcPlate->plateInfoBlockRefId;
 	CBuffer buffer(1024);
 	pSrcPlate->xBomPlate.ToBuffer(buffer);
 	buffer.SeekToBegin();

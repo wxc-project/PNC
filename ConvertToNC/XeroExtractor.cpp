@@ -14,17 +14,17 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-CExtractorLife g_xExtractorLife;
+CExtractorManager g_xExtractorManager;
 //////////////////////////////////////////////////////////////////////////
 //
 BOOL IExtractor::m_bSendCommand = FALSE;
 const float IExtractor::ASSIST_RADIUS = 1;
 const float IExtractor::DIST_ERROR = 0.5;
 const float IExtractor::WELD_MAX_HEIGHT = 20;
-CExtractorLife::CExtractorLife() 
+CExtractorManager::CExtractorManager()
 {
 }
-CExtractorLife::~CExtractorLife() 
+CExtractorManager::~CExtractorManager()
 {
 	for (IExtractor** ppExtractor = m_listExtractor.GetFirst(); ppExtractor;
 		ppExtractor = m_listExtractor.GetNext())
@@ -35,11 +35,11 @@ CExtractorLife::~CExtractorLife()
 	}
 }
 //
-void CExtractorLife::Append(IExtractor* pExtracot) 
+void CExtractorManager::Append(IExtractor* pExtracot)
 {
 	m_listExtractor.append(pExtracot);
 }
-IExtractor* CExtractorLife::GetExtractor(BYTE ciType) 
+IExtractor* CExtractorManager::GetExtractor(BYTE ciType)
 {
 	IExtractor** ppExtractor = NULL;
 	for (ppExtractor = m_listExtractor.GetFirst(); ppExtractor; ppExtractor = m_listExtractor.GetNext())

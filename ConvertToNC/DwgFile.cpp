@@ -214,7 +214,7 @@ void CDwgFileInfo::FillPlateDwgData()
 BOOL CDwgFileInfo::RetrievePlates(BOOL bSupportSelectEnts /*= FALSE*/)
 {
 	IExtractor::m_bSendCommand = TRUE;
-	IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::PLATE);
+	IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::PLATE);
 	if (pExtractor == NULL)
 		return FALSE;
 	if (bSupportSelectEnts)
@@ -613,7 +613,7 @@ void CDwgFileInfo::FillAngleDwgData()
 BOOL CDwgFileInfo::RetrieveAngles(BOOL bSupportSelectEnts /*= FALSE*/)
 {
 	IExtractor::m_bSendCommand = TRUE;
-	IExtractor* pExtractor = g_xExtractorLife.GetExtractor(IExtractor::ANGLE);
+	IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::ANGLE);
 	if (pExtractor == NULL)
 		return FALSE;
 	if (bSupportSelectEnts)

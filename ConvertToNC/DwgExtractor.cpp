@@ -1696,10 +1696,7 @@ CAngleExtractor::CAngleExtractor()
 CAngleExtractor* CAngleExtractor::GetExtractor()
 {
 	if (m_pExtractor == NULL)
-	{
 		m_pExtractor = new CAngleExtractor();
-		g_xExtractorLife.Append(m_pExtractor);
-	}
 	return m_pExtractor;
 }
 bool CAngleExtractor::ExtractAngles(CHashList<CAngleProcessInfo>& hashJgInfo,BOOL bSupportSelectEnts)
