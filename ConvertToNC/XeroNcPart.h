@@ -171,7 +171,6 @@ struct VERTEX {
 		tag.dwParam = 0;
 	}
 };
-class CPNCModel;
 class CPlateProcessInfo : public CCadPartObject
 {
 	struct LAYOUT_VERTEX {
@@ -185,9 +184,6 @@ class CPlateProcessInfo : public CCadPartObject
 			offsetPos.Set();
 		}
 	};
-	//
-	GECS ucs;
-	double m_fZoomScale;		//缩放比例，钢板缩放使用 wht 20.09.01
 	LAYOUT_VERTEX datumStartVertex, datumEndVertex;	//布局基准轮廓点
 public:
 	struct CIR_PLATE {
@@ -204,8 +200,6 @@ public:
 		}
 	}cir_plate_para;
 	//
-	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
-	BOOL m_bEnableReactor;
 	CProcessPlate xPlate;
 	PART_PLATE xBomPlate;
 	AcDbObjectId partNoId;
@@ -217,10 +211,11 @@ public:
 	CHashSet<AcDbObjectId> repeatEntList;	//重复件号钢板
 	ATOM_LIST<BOLT_INFO> boltList;
 	ATOM_LIST<VERTEX> vertexList;
-	//钢板关联实体
+	//绘制对象，钢板关联实体
+	BOOL m_bEnableReactor;
+	CAD_ENTITY m_xMkDimPoint;	//钢板标注数据点 wht 19-03-02
 	CHashList<CAD_LINE> m_hashCloneEdgeEntIdByIndex;
-	CHashList<ULONG> m_hashColneEntIdBySrcId;
-	ARRAY_LIST<ULONG> m_cloneEntIdList;
+	CHashList<ULONG> m_cloneEntIdList;
 	ARRAY_LIST<ULONG> m_newAddEntIdList;
 	AcDbObjectId m_layoutBlockId;	//自动排版时添加的块引用
 	//加工数、单基数、总重修改状态 wht 20-07-29
@@ -232,7 +227,7 @@ public:
 	BYTE m_ciModifyState;
 private:
 	void InitBtmEdgeIndex();
-	void BuildPlateUcs();
+	//
 	bool RecogRollEdge(CHashSet<CAD_ENTITY*>& rollEdgeDimTextSet, f3dLine& line);
 	bool RecogCirclePlate(ATOM_LIST<VERTEX>& vertex_list);
 	BOOL IsValidVertexs();
@@ -255,7 +250,6 @@ public:
 	//获取钢板相关区域
 	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
 	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL, double dfMaxRectW = 0);
-	SCOPE_STRU GetPlateScope(BOOL bVertexOnly, BOOL bDisplayMK = TRUE);
 	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
 	void CreateRgnByText();
 	void CreateRgn();

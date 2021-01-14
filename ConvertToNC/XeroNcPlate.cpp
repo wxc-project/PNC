@@ -1765,14 +1765,20 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 	for (CAD_ENTITY* pSrcCadEnt = pSrcPlate->EnumFirstRelaEnt(); pSrcCadEnt;
 		pSrcCadEnt = pSrcPlate->EnumNextRelaEnt())
 		AddRelaEnt(pSrcCadEnt->idCadEnt, *pSrcCadEnt);
+	//绘制数据
+	m_xMkDimPoint = pSrcPlate->m_xMkDimPoint;
 	m_cloneEntIdList.Empty();
 	for (ULONG *pSrcId = pSrcPlate->m_cloneEntIdList.GetFirst(); pSrcId;
 		pSrcId = pSrcPlate->m_cloneEntIdList.GetNext())
-		m_cloneEntIdList.append(*pSrcId);
+		m_cloneEntIdList.SetValue(pSrcPlate->m_cloneEntIdList.GetCursorKey(), *pSrcId);
 	m_newAddEntIdList.Empty();
 	for (ULONG *pSrcId = pSrcPlate->m_newAddEntIdList.GetFirst(); pSrcId;
 		pSrcId = pSrcPlate->m_newAddEntIdList.GetNext())
 		m_newAddEntIdList.append(*pSrcId);
+	m_hashCloneEdgeEntIdByIndex.Empty();
+	for (CAD_LINE* pSrcLine = pSrcPlate->m_hashCloneEdgeEntIdByIndex.GetFirst(); pSrcLine;
+		pSrcLine = pSrcPlate->m_hashCloneEdgeEntIdByIndex.GetNext())
+		m_hashCloneEdgeEntIdByIndex.SetValue(pSrcPlate->m_hashCloneEdgeEntIdByIndex.GetCursorKey(), *pSrcLine);
 	//
 	relateEntList.Empty();
 	for (AcDbObjectId objId = pSrcPlate->relateEntList.GetFirst(); objId; objId = pSrcPlate->relateEntList.GetNext())
@@ -1870,124 +1876,6 @@ void CPlateProcessInfo::InitBtmEdgeIndex()
 		xPlate.mcsFlg.ciBottomEdge = (BYTE)bottom_edge;
 	}
 }
-//获取钢板调整后的加工坐标
-void CPlateProcessInfo::BuildPlateUcs()
-{
-	int i = 0, n = xPlate.vertex_list.GetNodeNum();
-	if (n <= 0)
-		return;
-	DYN_ARRAY<GEPOINT> vertex_arr(n);
-	for (PROFILE_VER* pVertex = xPlate.vertex_list.GetFirst(); pVertex; pVertex = xPlate.vertex_list.GetNext(), i++)
-		vertex_arr[i] = pVertex->vertex;
-	if (xPlate.mcsFlg.ciBottomEdge == -1 || xPlate.mcsFlg.ciBottomEdge >= n)
-	{	//初始化加工坐标系
-		WORD bottom_edge;
-		GEPOINT vertice, prev_vec, edge_vec;
-		double prev_edge_dist = 0, edge_dist = 0, max_edge = 0;
-		for (i = 0; i < n; i++)
-		{
-			edge_vec = vertex_arr[(i + 1) % n] - vertex_arr[i];
-			edge_dist = edge_vec.mod();
-			edge_vec /= edge_dist;	//单位化边矢量
-			if (!dim_vec.IsZero() && fabs(dim_vec*edge_vec) > EPS_COS)
-			{	//优先查找与文字标注方向相同的边作为基准边
-				bottom_edge = i;
-				break;
-			}
-			if (i > 0 && prev_vec*edge_vec > EPS_COS)	//连续共线边轮廓
-				edge_dist += edge_dist + prev_edge_dist;
-			if (edge_dist > max_edge)
-			{
-				max_edge = edge_dist;
-				bottom_edge = i;
-			}
-			prev_edge_dist = edge_dist;
-			prev_vec = edge_vec;
-		}
-		//
-		xPlate.mcsFlg.ciBottomEdge = (BYTE)bottom_edge;
-	}
-	//根据bottom_edge_i计算加工坐标系
-	int iEdge = xPlate.mcsFlg.ciBottomEdge;
-	f3dPoint prev_pt = vertex_arr[(iEdge - 1 + n) % n];
-	f3dPoint cur_pt = vertex_arr[iEdge];
-	f3dPoint next_pt = vertex_arr[(iEdge + 1) % n];
-	f3dPoint next_next_pt = vertex_arr[(iEdge + 2) % n];
-	ucs.origin = cur_pt;
-	ucs.axis_x = next_pt - cur_pt;
-	if (DistOf2dPtLine(next_pt.x, next_pt.y, cur_pt.x, cur_pt.y, next_next_pt.x, next_next_pt.y) > 0)
-	{	//next_pt点为凹点，以next_next_pt为基准计算加持边 wht 19-04-09
-		ucs.axis_x = next_next_pt - cur_pt;
-	}
-	else if (DistOf2dPtLine(cur_pt.x, cur_pt.y, prev_pt.x, prev_pt.y, next_pt.x, next_pt.y) > 0)
-	{	//cur_pt点位凹点，以prev_pt与next_pt连线位为基准计算加持边 wht 19-04-09
-		ucs.axis_x = next_pt - prev_pt;
-	}
-	normalize(ucs.axis_x);
-	ucs.axis_y.Set(-ucs.axis_x.y, ucs.axis_x.x);
-	ucs.axis_z = ucs.axis_x^ucs.axis_y;
-	//调整坐标系原点
-	SCOPE_STRU scope = GetPlateScope(TRUE);
-	ucs.origin += scope.fMinX*ucs.axis_x;
-	//如果钢板进行反转，更新钢板坐标系
-	if (xPlate.mcsFlg.ciOverturn == TRUE)
-	{
-		ucs.origin += ((scope.fMaxX - scope.fMinX)*ucs.axis_x);
-		ucs.axis_x *= -1.0;
-		ucs.axis_z *= -1.0;
-	}
-}
-SCOPE_STRU CPlateProcessInfo::GetPlateScope(BOOL bVertexOnly, BOOL bDisplayMK/*=TRUE*/)
-{
-	SCOPE_STRU scope;
-	scope.ClearScope();
-	if (xPlate.vertex_list.GetNodeNum() >= 3)
-	{
-		PROFILE_VER* pPreVertex = xPlate.vertex_list.GetTail();
-		for (PROFILE_VER *pVertex = xPlate.vertex_list.GetFirst(); pVertex; pVertex = xPlate.vertex_list.GetNext())
-		{
-			f3dPoint pt = pPreVertex->vertex;
-			coord_trans(pt, ucs, FALSE);
-			scope.VerifyVertex(pt);
-			if (pPreVertex->type == 2)
-			{
-				f3dPoint axis_len(ucs.axis_x);
-				f3dArcLine arcLine;
-				arcLine.CreateMethod2(pPreVertex->vertex, pVertex->vertex, pPreVertex->work_norm, pPreVertex->sector_angle);
-				f3dPoint startPt = f3dPoint(arcLine.Center()) + axis_len * arcLine.Radius();
-				f3dPoint endPt = f3dPoint(arcLine.Center()) - axis_len * arcLine.Radius();
-				coord_trans(startPt, ucs, FALSE);
-				coord_trans(endPt, ucs, FALSE);
-				scope.VerifyVertex(startPt);
-				scope.VerifyVertex(endPt);
-			}
-			pPreVertex = pVertex;
-		}
-		if (!bVertexOnly)
-		{	//处理螺栓孔和钢印号
-			for (BOLT_INFO *pHole = xPlate.m_xBoltInfoList.GetFirst(); pHole; pHole = xPlate.m_xBoltInfoList.GetNext())
-			{
-				double radius = 0.5*pHole->bolt_d;
-				scope.VerifyVertex(f3dPoint(pHole->posX - radius, pHole->posY - radius));
-				scope.VerifyVertex(f3dPoint(pHole->posX + radius, pHole->posY + radius));
-			}
-			if (xPlate.IsDisplayMK() && bDisplayMK)
-				scope.VerifyVertex(f3dPoint(xPlate.mkpos.x, xPlate.mkpos.y));
-		}
-	}
-	else if (IsValid())
-	{
-		for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
-			scope.VerifyVertex(pVer->pos);
-	}
-	else
-	{	//件号标注区域
-		f2dRect rect = GetPnDimRect();
-		scope.VerifyVertex(rect.topLeft);
-		scope.VerifyVertex(rect.bottomRight);
-	}
-	return scope;
-}
 void CPlateProcessInfo::InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType)
 {
 	datumStartVertex.Init();
@@ -2047,7 +1935,6 @@ bool CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/, BOOL bCreateDimPos
 	}
 	//
 	m_cloneEntIdList.Empty();
-	m_hashColneEntIdBySrcId.Empty();
 	AcDbBlockTableRecord *pCurBlockTblRec = pBlockTableRecord;
 	if (bDrawAsBlock&&pPlateCenter&&DRAGSET.BeginBlockRecord())
 		pCurBlockTblRec = DRAGSET.RecordingBlockTableRecord();
@@ -2074,8 +1961,7 @@ bool CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/, BOOL bCreateDimPos
 				pClone->transformBy(scaleMat);		//按指定比例缩放钢板 wht 20-01-22
 			AcDbObjectId entId;
 			DRAGSET.AppendAcDbEntity(pCurBlockTblRec, entId, pClone);
-			m_cloneEntIdList.append(entId.asOldId());
-			m_hashColneEntIdBySrcId.SetValue(pRelaObj->idCadEnt, entId.asOldId());
+			m_cloneEntIdList.SetValue(pRelaObj->idCadEnt, entId.asOldId());
 			pClone->close();
 		}
 	}
@@ -2627,7 +2513,7 @@ void CPlateProcessInfo::InitEdgeEntIdMap()
 		VERTEX *pCurVertex = vertexList.GetByIndex(i);
 		if (pCurVertex->tag.lParam == 0 || pCurVertex->tag.lParam == -1)
 			continue;
-		ULONG *pCloneEntId = m_hashColneEntIdBySrcId.GetValue(pCurVertex->tag.dwParam);
+		ULONG *pCloneEntId = m_cloneEntIdList.GetValue(pCurVertex->tag.dwParam);
 		if (pCloneEntId == NULL)
 			continue;
 		CAD_LINE lineId(*pCloneEntId);
@@ -2657,9 +2543,9 @@ bool CPlateProcessInfo::SyncSteelSealPos()
 		return false;
 	//2.获取Src实体对应的前两条边
 	AcDbObjectId srcFirstId = 0, srcSecondId = 0;
-	for (ULONG *pId = m_hashColneEntIdBySrcId.GetFirst(); pId; pId = m_hashColneEntIdBySrcId.GetNext())
+	for (ULONG *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
 	{
-		long idSrcEnt = m_hashColneEntIdBySrcId.GetCursorKey();
+		long idSrcEnt = m_cloneEntIdList.GetCursorKey();
 		if (*pId == pFirstLineId->idCadEnt)
 			srcFirstId = MkCadObjId(idSrcEnt);
 		else if (*pId == pSecondLineId->idCadEnt)
@@ -3130,6 +3016,18 @@ SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
 			VerifyVertexByCADEntId(scope, MkCadObjId(pEnt->idCadEnt));
 	}
 	else
-		scope = GetPlateScope(TRUE);
+	{
+		if (IsValid())
+		{
+			for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+				scope.VerifyVertex(pVer->pos);
+		}
+		else
+		{	//件号标注区域
+			f2dRect rect = GetPnDimRect();
+			scope.VerifyVertex(rect.topLeft);
+			scope.VerifyVertex(rect.bottomRight);
+		}
+	}
 	return scope;
 }

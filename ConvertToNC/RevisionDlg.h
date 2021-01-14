@@ -2,7 +2,7 @@
 #include "resource.h"
 #include "supergridctrl.h"
 #include "XhTreeCtrl.h"
-#include "PncModel.h"
+#include "UbomModel.h"
 
 #ifdef __UBOM_ONLY_
 class CWndShowLife

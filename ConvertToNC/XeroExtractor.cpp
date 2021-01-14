@@ -7,6 +7,7 @@
 #include "DefCard.h"
 #include "ProcessPart.h"
 #include "PNCModel.h"
+#include "UbomModel.h"
 
 #ifdef _DEBUG
 #undef THIS_FILE

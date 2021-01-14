@@ -3782,6 +3782,7 @@
     <ClCompile Include="CADCallBackDlg.cpp" />
     <ClCompile Include="CadHighlightEntManager.cpp" />
     <ClCompile Include="DwgExtractor.cpp" />
+    <ClCompile Include="UbomModel.cpp" />
     <ClCompile Include="XeroNcAngle.cpp" />
     <ClCompile Include="XeroNcPart.cpp" />
     <ClCompile Include="XeroNcPlate.cpp" />
@@ -4109,6 +4110,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\CadToolFunc.h" />
     <ClInclude Include="common.h" />
     <ClInclude Include="DwgExtractor.h" />
+    <ClInclude Include="UbomModel.h" />
     <ClInclude Include="XeroNcPart.h" />
     <ClInclude Include="CadObjLife.h" />
     <ClInclude Include="DrawDamBoard.h" />

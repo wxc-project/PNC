@@ -387,6 +387,9 @@
     <ClCompile Include="DwgExtractor.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="UbomModel.cpp">
+      <Filter>Model</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Resource.h">
@@ -690,6 +693,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="common.h">
+      <Filter>Model</Filter>
+    </ClInclude>
+    <ClInclude Include="UbomModel.h">
       <Filter>Model</Filter>
     </ClInclude>
   </ItemGroup>
