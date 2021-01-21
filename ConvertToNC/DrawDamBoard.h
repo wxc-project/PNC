@@ -4,7 +4,6 @@
 #ifndef __UBOM_ONLY_
 class CDrawDamBoard
 {
-	CPlateProcessInfo *m_pPlate;
 	ARRAY_LIST<AcDbObjectId> m_xEntIdList;
 	AcDbObjectId m_rectId;	//钢印矩形框对应的实体Id
 public:

@@ -1,6 +1,9 @@
 #pragma once
 #include "PNCModel.h"
 
+const double SQRT_2 = 1.414213562373095;
+const double SQRT_3 = 1.732050807568877;
+
 class CDwgExtractor : public IExtractor
 {
 public:

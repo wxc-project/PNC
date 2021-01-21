@@ -71,12 +71,21 @@ void CSymbolRecoginzer::AppendSymbolEnt(AcDbSpline* pSpline)
 		Cpy_Pnt(pLine->end, ptE);
 	}
 }
-bool CSymbolRecoginzer::IsHuoquLine(GELINE* pCurveLine,DWORD cbFilterFlag/*=0*/)
+void CSymbolRecoginzer::AppendSymbolEnt(ARRAY_LIST<GELINE>& weldLines)
+{
+	if (weldLines.Count <= 0)
+		return;
+	SYMBOL_ENTITY* pSymbolEnt = listSymbols.AttachObject();
+	pSymbolEnt->ciSymbolType = 2;	//焊缝标识线
+	for (int i = 0; i < weldLines.GetSize(); i++)
+		pSymbolEnt->listSonlines.AttachObject(weldLines[i]);
+}
+bool CSymbolRecoginzer::IsHuoquLine(GELINE* pCurveLine)
 {	//通过标记符号识别火曲线
 	f3dPoint inters;
 	for(SYMBOL_ENTITY* pSymbol=listSymbols.EnumObjectFirst();pSymbol;pSymbol=listSymbols.EnumObjectNext())
 	{
-		if(pSymbol->ciSymbolType!=cbFilterFlag)
+		if (pSymbol->ciSymbolType != 0x01)
 			continue;
 		int nInters=0;
 		for(GELINE* pSonLine=pSymbol->listSonlines.EnumObjectFirst();pSonLine;pSonLine=pSymbol->listSonlines.EnumObjectNext())
@@ -85,6 +94,25 @@ bool CSymbolRecoginzer::IsHuoquLine(GELINE* pCurveLine,DWORD cbFilterFlag/*=0*/)
 				nInters++;
 		}
 		if(nInters>=3)
+			return true;
+	}
+	return false;
+}
+//通过焊缝标识线识别焊缝边
+bool CSymbolRecoginzer::IsWeldLine(GELINE* pCurveLine)
+{
+	f3dLine line(pCurveLine->start, pCurveLine->end);
+	for (SYMBOL_ENTITY* pSymbol = listSymbols.EnumObjectFirst(); pSymbol; pSymbol = listSymbols.EnumObjectNext())
+	{
+		if (pSymbol->ciSymbolType != 0x02)
+			continue;
+		int nInters = 0;
+		for (GELINE* pSonLine = pSymbol->listSonlines.EnumObjectFirst(); pSonLine; pSonLine = pSymbol->listSonlines.EnumObjectNext())
+		{
+			if (line.PtInLine(pSonLine->start, EPS2) || line.PtInLine(pSonLine->end, EPS2))
+				nInters++;
+		}
+		if (nInters > 10)
 			return true;
 	}
 	return false;
@@ -560,7 +588,7 @@ BOOL CPlateRecogRule::IsBendLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogni
 		GELINE line;
 		Cpy_Pnt(line.start, startPt);
 		Cpy_Pnt(line.end, endPt);
-		bRet=pRecognizer->IsHuoquLine(&line,0x01);
+		bRet=pRecognizer->IsHuoquLine(&line);
 	}
 	if(!bRet)
 	{	//TODO:将来应允许通过图层或线型来识别火曲线 wjh-2017.6.3
@@ -578,7 +606,13 @@ BOOL CPlateRecogRule::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogn
 		return TRUE;
 	if(pRecognizer!=NULL)
 	{
-		
+		AcGePoint3d startPt, endPt;
+		pAcDbLine->getStartPoint(startPt);
+		pAcDbLine->getEndPoint(endPt);
+		GELINE line;
+		Cpy_Pnt(line.start, startPt);
+		Cpy_Pnt(line.end, endPt);
+		bRet = pRecognizer->IsWeldLine(&line);
 	}
 	return bRet;
 }

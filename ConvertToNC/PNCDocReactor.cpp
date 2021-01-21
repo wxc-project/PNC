@@ -24,6 +24,9 @@ void CPNCDocReactor::documentActivated(AcApDocument* pActivatedDoc)
 	CPartListDlg* pPartDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 	if (pPartDlg)
 		pPartDlg->ClearPartList();
+	IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::PLATE);
+	if (pExtractor)
+		pExtractor->EmptyBoltGroups();
 #endif
 }
 
@@ -38,6 +41,9 @@ void CPNCDocReactor::documentDestroyed(const char* fileName)
 		CPartListDlg* pPartDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 		if (pPartDlg)
 			pPartDlg->ClearPartList();
+		IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::PLATE);
+		if (pExtractor)
+			pExtractor->EmptyBoltGroups();
 	}
 #endif
 }

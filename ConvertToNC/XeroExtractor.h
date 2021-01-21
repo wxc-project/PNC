@@ -26,8 +26,20 @@ public:
 		sKeyStr.Format("X%d-Y%d", ftoi(pos.x), ftoi(pos.y));
 		return sKeyStr;
 	}
+	void EmptyBoltGroups() {
+		m_xBoltEntHash.Empty();
+	}
 	CBoltEntGroup* FindBoltGroup(const char* sKey) {
 		return m_xBoltEntHash.GetValue(sKey);
+	}
+	CBoltEntGroup* FindBoltGroup(GEPOINT boltPt) {
+		CBoltEntGroup* pBoltGroup = NULL;
+		for (pBoltGroup = m_xBoltEntHash.GetFirst(); pBoltGroup; pBoltGroup = m_xBoltEntHash.GetNext())
+		{
+			if(boltPt.IsEqual(GEPOINT(pBoltGroup->m_fPosX, pBoltGroup->m_fPosY),EPS2))
+				break;
+		}
+		return pBoltGroup;
 	}
 	CBoltEntGroup* EnumFirstBoltGroup() {
 		return m_xBoltEntHash.GetFirst();
@@ -54,20 +66,24 @@ public:
 //////////////////////////////////////////////////////////////////////////
 //特殊符号识别器
 struct ISymbolRecognizer {
-	virtual bool IsHuoquLine(GELINE* pLine, DWORD cbFilterFlag = 0) = 0;
+	virtual bool IsHuoquLine(GELINE* pLine) = 0;
+	virtual bool IsWeldLine(GELINE* pLine) = 0;
 };
 class CSymbolRecoginzer : public ISymbolRecognizer
 {
 	struct SYMBOL_ENTITY
 	{
-		BYTE ciSymbolType;	//0x01.火曲线S型符号
+		BYTE ciSymbolType;	//0x01.火曲线S型符号;0x02.焊缝标识线
 		CXhSimpleList<GELINE> listSonlines;
 	};
 	CXhSimpleList<SYMBOL_ENTITY> listSymbols;
 public:
 	void AppendSymbolEnt(AcDbSpline* pSpline);
+	void AppendSymbolEnt(ARRAY_LIST<GELINE>& weldLines);
 	//通过标记符号识别火曲线
-	bool IsHuoquLine(GELINE* pLine,DWORD cbFilterFlag=0);
+	bool IsHuoquLine(GELINE* pLine);
+	//通过焊缝标识线识别焊缝边
+	bool IsWeldLine(GELINE* pLine);
 };
 //////////////////////////////////////////////////////////////////////////
 //钢板大样图识别规则

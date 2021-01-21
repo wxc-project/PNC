@@ -8,8 +8,6 @@
 #include "PolygonObject.h"
 #include "DefCard.h"
 
-const double SQRT_2 = 1.414213562373095;
-const double SQRT_3 = 1.732050807568877;
 //////////////////////////////////////////////////////////////////////////
 //CDwgExtractor
 //////////////////////////////////////////////////////////////////////////
@@ -59,7 +57,6 @@ bool CPlateExtractor::ExtractPlates(CHashStrList<CPlateProcessInfo>& hashPlateIn
 {
 	CLogErrorLife logErrLife;
 	m_xAllEntIdSet.Empty();
-	m_xBoltEntHash.Empty();
 	m_pHashPlate = &hashPlateInfo;
 	//调整坐标系
 	ShiftCSToWCS(TRUE);
@@ -738,11 +735,11 @@ bool CPlateExtractor::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLi
 	for (set_iter = setKeyStr.begin(); set_iter != setKeyStr.end(); ++set_iter)
 	{
 		CString sKey = *set_iter;
-		//处理三角
-		if (mapTriangle.count(sKey) == 3)
+		ITERATOR begIter = mapTriangle.lower_bound(sKey);
+		ITERATOR endIter = mapTriangle.upper_bound(sKey);
+		//处理三角螺栓（目前只处理标准螺栓孔径）
+		if (mapTriangle.count(sKey) == 3 && begIter->second.m_fSize < 30)
 		{
-			ITERATOR begIter = mapTriangle.lower_bound(sKey);
-			ITERATOR endIter = mapTriangle.upper_bound(sKey);
 			CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(sKey);
 			if (pBoltEnt == NULL)
 			{
@@ -760,11 +757,9 @@ bool CPlateExtractor::AppendBoltEntsByConnectLines(vector<CAD_LINE> vectorConnLi
 			else
 				pBoltEnt->m_fHoleD = (float)max(pBoltEnt->m_fHoleD, StandardHoleD(begIter->second.m_fSize));
 		}
-		//处理正方形
-		if (mapSquare.count(sKey) == 4)
+		//处理正方形（目前只处理标准螺栓孔径）
+		if (mapSquare.count(sKey) == 4 && begIter->second.m_fSize < 30)
 		{
-			ITERATOR begIter = mapSquare.lower_bound(sKey);
-			ITERATOR endIter = mapSquare.upper_bound(sKey);
 			CBoltEntGroup* pBoltEnt = m_xBoltEntHash.GetValue(sKey);
 			if (pBoltEnt == NULL)
 			{

@@ -15,6 +15,7 @@
 #include "PNCSysPara.h"
 #include "PNCSysSettingDlg.h"
 #include "PNCCryptCoreCode.h"
+#include "DwgExtractor.h"
 
 #ifndef __UBOM_ONLY_
 // CPartListDlg 对话框
@@ -163,11 +164,6 @@ BOOL CPartListDlg::UpdatePartList()
 		if(pPlate->IsValid())
 			nValid++;
 		nSum++;
-	}
-	if(CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
-	{
-		m_xDamBoardManager.DrawAllDamBoard(&model);
-		m_xDamBoardManager.DrawAllSteelSealRect(&model);
 	}
 	//
 	m_sNote.Format("总数{%d},成功{%d},失败{%d}", nSum, nValid, nSum - nValid);
@@ -392,6 +388,12 @@ void CPartListDlg::OnBnClickedBtnExtract()
 		model.ExtractPlates(file_name, TRUE);
 		model.DrawPlates();
 	}
+	//下料预审模式绘制挡板
+	if (CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)
+	{
+		m_xDamBoardManager.DrawAllDamBoard(&model);
+		m_xDamBoardManager.DrawAllSteelSealRect(&model);
+	}
 	UpdatePartList();
 }
 void CPartListDlg::OnBnClickedSettings()
@@ -471,15 +473,97 @@ void CPartListDlg::OnBnClickedBtnSendToPpe()
 void CPartListDlg::OnBnClickedBtnExportDxf()
 {
 	CLockDocumentLife lock;
+	IExtractor* pExtractor = g_xExtractorManager.GetExtractor(IExtractor::PLATE);
+	if (pExtractor == NULL)
+		return;
 	CString sDxfFolderPath,sFilePath;
 	GetCurWorkPath(sDxfFolderPath,TRUE,"DXF");
 	for(CPlateProcessInfo *pPlate=model.EnumFirstPlate();pPlate;pPlate=model.EnumNextPlate())
 	{
-		ARRAY_LIST<AcDbObjectId> entIdList;
-		for(ULONG *pId=pPlate->m_cloneEntIdList.GetFirst();pId;pId=pPlate->m_cloneEntIdList.GetNext())
-			entIdList.append(MkCadObjId(*pId));
+		ARRAY_LIST<AcDbObjectId> entIdList, newCirIdList;
+		CHashSet<AcDbObjectId> hashInvalidCloneEntId;
+		//添加螺栓圆孔（替换三角螺栓）
+		for (BOLT_INFO* pBolt = pPlate->boltList.GetFirst(); pBolt; pBolt = pPlate->boltList.GetNext())
+		{
+			CBoltEntGroup* pBoltGroup = pExtractor->FindBoltGroup(GEPOINT(pBolt->posX, pBolt->posY));
+			if (pBoltGroup && pBoltGroup->m_ciType == CBoltEntGroup::BOLT_TRIANGLE)
+			{
+				if(pBoltGroup->m_xLineArr.size()!=3)
+					continue;
+				std::set<CString> setKeyStr;
+				std::multimap<CString, CAD_ENTITY> mapTriangle;
+				for (size_t ii = 0; ii < pBoltGroup->m_xLineArr.size(); ii++)
+				{
+					ULONG iSrcLineId = pBoltGroup->m_xLineArr[ii];
+					ULONG *pCloneId = pPlate->m_cloneEntIdList.GetValue(iSrcLineId);
+					if (pCloneId == NULL)
+						break;
+					CAcDbObjLife entLife(MkCadObjId(*pCloneId));
+					AcDbEntity *pEnt = entLife.GetEnt();
+					if (pEnt == NULL || !pEnt->isKindOf(AcDbLine::desc()))
+						break;
+					AcDbLine* pLine = (AcDbLine*)pEnt;
+					GEPOINT ptS, ptE, ptM, line_vec, up_off_vec, dw_off_vec;
+					Cpy_Pnt(ptS, pLine->startPoint());
+					Cpy_Pnt(ptE, pLine->endPoint());
+					ptM = (ptS + ptE) * 0.5;
+					line_vec = (ptE - ptS).normalized();
+					up_off_vec.Set(-line_vec.y, line_vec.x, line_vec.z);
+					normalize(up_off_vec);
+					dw_off_vec = up_off_vec * -1;
+					double fLen = DISTANCE(ptS, ptE);
+					CAD_ENTITY xEntity;
+					xEntity.idCadEnt = *pCloneId;
+					xEntity.m_fSize = fLen / SQRT_3 * 2;
+					xEntity.pos = ptM + up_off_vec * (0.5*fLen / SQRT_3);
+					setKeyStr.insert(IExtractor::MakePosKeyStr(xEntity.pos));
+					mapTriangle.insert(std::make_pair(IExtractor::MakePosKeyStr(xEntity.pos), xEntity));
+					xEntity.pos = ptM + dw_off_vec * (0.5*fLen / SQRT_3);
+					setKeyStr.insert(IExtractor::MakePosKeyStr(xEntity.pos));
+					mapTriangle.insert(std::make_pair(IExtractor::MakePosKeyStr(xEntity.pos), xEntity));
+					//
+					hashInvalidCloneEntId.SetValue(*pCloneId, MkCadObjId(*pCloneId));
+				}
+				std::multimap<CString, CAD_ENTITY>::iterator begIter;
+				std::set<CString>::iterator set_iter;
+				for (set_iter = setKeyStr.begin(); set_iter != setKeyStr.end(); ++set_iter)
+				{
+					CString sKey = *set_iter;
+					if (mapTriangle.count(sKey) == 3)
+					{
+						AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+						begIter = mapTriangle.lower_bound(sKey);
+						GEPOINT center(begIter->second.pos.x, begIter->second.pos.y, 0);
+						double fHoleR = (pBolt->bolt_d + pBolt->hole_d_increment)*0.5;
+						AcDbObjectId entId = CreateAcadCircle(pBlockTableRecord, center, fHoleR);
+						newCirIdList.append(entId);
+						entIdList.append(entId);
+						pBlockTableRecord->close();
+						break;
+					}
+				}
+			}
+		}
+		//添加其余克隆图元
+		for (ULONG *pId = pPlate->m_cloneEntIdList.GetFirst(); pId; pId = pPlate->m_cloneEntIdList.GetNext())
+		{
+			if(hashInvalidCloneEntId.GetValue(*pId)==NULL)
+				entIdList.append(MkCadObjId(*pId));
+		}
+		//导出DXF
+		GEPOINT orgPt = pPlate->CalBoardOrg(CDrawDamBoard::BOARD_HEIGHT);
 		sFilePath.Format("%s%s.dxf",sDxfFolderPath,(char*)pPlate->GetPartNo());
-		SaveAsDxf(sFilePath,entIdList,true);
+		SaveAsDxf(sFilePath, entIdList, true, orgPt);
+		//删除新增的螺栓孔
+		for (int i = 0; i < newCirIdList.GetSize(); i++)
+		{
+			AcDbEntity *pEnt = NULL;
+			XhAcdbOpenAcDbEntity(pEnt, newCirIdList[i], AcDb::kForWrite);
+			if (pEnt == NULL)
+				continue;
+			pEnt->erase(Adesk::kTrue);
+			pEnt->close();
+		}
 	}
 	ShellExecute(NULL,"open",NULL,NULL,sDxfFolderPath,SW_SHOW);
 }
@@ -500,6 +584,7 @@ void CPartListDlg::OnBnClickedBtnAnticlockwiseRotation()
 	else
 		mcs.AnticlockwiseRotation();
 	CLockDocumentLife lockLife;
+	m_xDamBoardManager.DrawDamBoard(pPlateInfo);
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 	//刷新界面
 	actrTransactionManager->flushGraphics();
@@ -522,6 +607,7 @@ void CPartListDlg::OnBnClickedBtnClockwiseRotation()
 	else
 		mcs.ClockwiseRotation();
 	CLockDocumentLife lockLife;
+	m_xDamBoardManager.DrawDamBoard(pPlateInfo);
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 	//刷新界面
 	actrTransactionManager->flushGraphics();
@@ -541,6 +627,7 @@ void CPartListDlg::OnBnClickedBtnMirror()
 	mcs.Mirror();
 
 	CLockDocumentLife lockLife;
+	m_xDamBoardManager.DrawDamBoard(pPlateInfo);
 	m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 	//刷新界面
 	actrTransactionManager->flushGraphics();
@@ -574,12 +661,11 @@ void CPartListDlg::OnBnClickedBtnMove()
 	int nRetCode=DragEntSet(basepnt,sPrompt);
 	if(nRetCode==RTNORM)
 	{	//更新构件规格位置
-		m_xDamBoardManager.EraseDamBoard(pPlateInfo);
-		m_xDamBoardManager.DrawDamBoard(pPlateInfo);
 		for(CAD_LINE *pLineId=pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetFirst();pLineId;pLineId=pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetNext())
 			pLineId->UpdatePos();
 		//更新字盒位置
 		CLockDocumentLife lockLife;
+		m_xDamBoardManager.DrawDamBoard(pPlateInfo);
 		m_xDamBoardManager.DrawSteelSealRect(pPlateInfo);
 		//更新界面
 		actrTransactionManager->flushGraphics();

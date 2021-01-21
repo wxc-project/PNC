@@ -173,18 +173,8 @@ struct VERTEX {
 };
 class CPlateProcessInfo : public CCadPartObject
 {
-	struct LAYOUT_VERTEX {
-		int index;			//轮廓点索引
-		GEPOINT srcPos;		//轮廓点坐标
-		GEPOINT offsetPos;	//相对于最小包络记性左上角的偏移位置
-		LAYOUT_VERTEX() { index = 0; }
-		void Init() {
-			index = 0;
-			srcPos.Set();
-			offsetPos.Set();
-		}
-	};
-	LAYOUT_VERTEX datumStartVertex, datumEndVertex;	//布局基准轮廓点
+	//布局基准轮廓点
+	GEPOINT m_xDatumPtS, m_xDatumPtE, m_xOffPt;
 public:
 	struct CIR_PLATE {
 		BOOL m_bCirclePlate;	//是否为圆型板
@@ -250,7 +240,7 @@ public:
 	//获取钢板相关区域
 	f2dRect GetPnDimRect(double fRectW = 10, double fRectH = 10);
 	f2dRect GetMinWrapRect(double minDistance = 0, fPtList *pVertexList = NULL, double dfMaxRectW = 0);
-	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE);
+	SCOPE_STRU GetCADEntScope(BOOL bIsColneEntScope = FALSE, BOOL bOnlyVertex = FALSE);
 	void CreateRgnByText();
 	void CreateRgn();
 	void ExtractRelaEnts();
@@ -283,6 +273,8 @@ public:
 	bool AutoCorrectedSteelSealPos();
 	bool GetSteelSealPos(GEPOINT &pos);
 	bool UpdateSteelSealPos(GEPOINT &pos);
+	GEPOINT CalBoardOrg(double fBoardH);
+	void MoveEnts(AcGeMatrix3d moveMat, BYTE ciClone0_Add1 = 0);
 	//刷新钢板显示数量
 	void RefreshPlateNum(int nNewNum);
 	void RefreshPlateSpec();

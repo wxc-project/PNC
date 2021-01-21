@@ -290,24 +290,14 @@ void CPNCModel::DrawPlatesToProcess()
 			datum_pos.y -= PAPER_WIDTH;
 		}
 	}
-	CXhPtrSet<CPlateProcessInfo> needUpdatePlateList;
 	for (CPlateProcessInfo *pPlate = sortedModel.EnumFirstPlate(); pPlate; pPlate = sortedModel.EnumNextPlate())
 	{
 		//初始化轮廓边对应关系
 		pPlate->InitEdgeEntIdMap();	
 		//调整钢印位置
 		if (pPlate->AutoCorrectedSteelSealPos())
-			needUpdatePlateList.append(pPlate);
-	}
-	//更新字盒子位置之后，同步更新PPI文件中钢印号位置
-	for (CPlateProcessInfo *pPlate = needUpdatePlateList.GetFirst(); pPlate; pPlate = needUpdatePlateList.GetNext())
-	{	
-		pPlate->SyncSteelSealPos();
-		//更新PPI文件
-		CString file_path;
-		GetCurWorkPath(file_path);
-		pPlate->CreatePPiFile(file_path);
-	}
+			pPlate->SyncSteelSealPos();
+	}	
 #ifdef __DRAG_ENT_
 	SCOPE_STRU scope;
 	DRAGSET.GetDragScope(scope);

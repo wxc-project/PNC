@@ -6,23 +6,10 @@
 CAdjustPlateMCS::CAdjustPlateMCS(CPlateProcessInfo *pPlate)
 {
 	m_pPlateInfo=pPlate;
-	m_xEntIdList.Empty();
-	unsigned long cloneMarkCadEntId = pPlate->m_xMkDimPoint.idCadEnt;
-	for (unsigned long *pId = pPlate->m_cloneEntIdList.GetFirst(); pId; pId = pPlate->m_cloneEntIdList.GetNext())
-	{
-		if (*pId==cloneMarkCadEntId)
-			continue;	//计算钢板区域时不算号料孔实体 wht 19-11-01
-		AcDbEntity *pEnt = NULL;
-		acdbOpenObject(pEnt, MkCadObjId(*pId), AcDb::kForRead);
-		if (pEnt == NULL)
-			continue;
-		CAcDbObjLife entLife(pEnt);
-		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
-			continue;	//计算钢板区域时不计算文字区域 wht 19-10-17
-		m_xEntIdList.append(MkCadObjId(*pId));
-	}
-	f2dRect curRect=GetCadEntRect(m_xEntIdList);
-	m_origin.Set(curRect.topLeft.x,curRect.bottomRight.y);
+	SCOPE_STRU scope;
+	if (pPlate)
+		scope = pPlate->GetCADEntScope(TRUE);
+	m_origin.Set(scope.fMinX, scope.fMinY);
 }
 
 CAdjustPlateMCS::~CAdjustPlateMCS(void)
@@ -36,21 +23,6 @@ void CAdjustPlateMCS::UpdateCloneEdgePos()
 		pLineId = m_pPlateInfo->m_hashCloneEdgeEntIdByIndex.GetNext())
 		pLineId->UpdatePos();
 }
-void CAdjustPlateMCS::MoveCloneEnts(AcGeMatrix3d moveMat)
-{
-	AcDbEntity *pEnt = NULL;
-	for (ULONG *pId = m_pPlateInfo->m_cloneEntIdList.GetFirst(); pId; pId = m_pPlateInfo->m_cloneEntIdList.GetNext())
-	{
-		AcDbObjectId entId = MkCadObjId(*pId);
-		Acad::ErrorStatus es = XhAcdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
-		if (es != Acad::eOk)
-			AfxMessageBox(CXhChar50("%d", es));
-		if (pEnt == NULL)
-			continue;
-		pEnt->transformBy(moveMat);
-		pEnt->close();
-	}
-}
 
 bool CAdjustPlateMCS::Rotation()
 {
@@ -60,7 +32,7 @@ bool CAdjustPlateMCS::Rotation()
 	int cur_edge = m_pPlateInfo->xPlate.mcsFlg.ciBottomEdge;
 	int next_edge = (cur_edge + 1) % n;
 	int i = 2;
-	while (IsConcavePt(next_edge) && i<n)
+	while (IsConcavePt(next_edge) && i < n)
 	{
 		next_edge = cur_edge + i;
 		next_edge = next_edge % n;
@@ -75,23 +47,23 @@ bool CAdjustPlateMCS::Rotation()
 	AcGeMatrix3d rotationMat;
 	f3dPoint ptS = pLineS->m_ptStart;
 	f3dPoint ptE = pLineE->m_ptStart;
-	GEPOINT src_vec= (ptE - ptS).normalized();
-	GEPOINT dest_vec(1,0,0);
-	double fDegAngle=Cal2dLineAng(0,0,dest_vec.x,dest_vec.y)-Cal2dLineAng(0,0,src_vec.x,src_vec.y);
-	rotationMat.setToRotation(fDegAngle,AcGeVector3d::kZAxis,AcGePoint3d(ptS.x, ptS.y,0));
-	MoveCloneEnts(rotationMat);
+	GEPOINT src_vec = (ptE - ptS).normalized();
+	GEPOINT dest_vec(1, 0, 0);
+	double fDegAngle = Cal2dLineAng(0, 0, dest_vec.x, dest_vec.y) - Cal2dLineAng(0, 0, src_vec.x, src_vec.y);
+	rotationMat.setToRotation(fDegAngle, AcGeVector3d::kZAxis, AcGePoint3d(ptS.x, ptS.y, 0));
+	m_pPlateInfo->MoveEnts(rotationMat);
 	//2.将钢板移动至坐标系原点
-	f2dRect rect=GetCadEntRect(m_xEntIdList);
+	SCOPE_STRU scope = m_pPlateInfo->GetCADEntScope(TRUE);
 	AcGeMatrix3d moveMat;
-	ads_point ptFrom,ptTo;
-	ptFrom[X]=rect.topLeft.x;
-	ptFrom[Y]=rect.bottomRight.y;
-	ptFrom[Z]=0;
-	ptTo[X]=m_origin.x;
-	ptTo[Y]=m_origin.y;
-	ptTo[Z]=0;
-	moveMat.setToTranslation(AcGeVector3d(ptTo[X]-ptFrom[X],ptTo[Y]-ptFrom[Y],ptTo[Z]-ptFrom[Z]));
-	MoveCloneEnts(moveMat);
+	ads_point ptFrom, ptTo;
+	ptFrom[X] = scope.fMinX;
+	ptFrom[Y] = scope.fMinY;
+	ptFrom[Z] = 0;
+	ptTo[X] = m_origin.x;
+	ptTo[Y] = m_origin.y;
+	ptTo[Z] = 0;
+	moveMat.setToTranslation(AcGeVector3d(ptTo[X] - ptFrom[X], ptTo[Y] - ptFrom[Y], ptTo[Z] - ptFrom[Z]));
+	m_pPlateInfo->MoveEnts(moveMat);
 	//3. 旋转钢印号位置
 	AcDbEntity *pEnt = NULL;
 	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(m_pPlateInfo->m_xMkDimPoint.idCadEnt), AcDb::kForWrite);
@@ -140,29 +112,29 @@ void CAdjustPlateMCS::ClockwiseRotation()
 
 void CAdjustPlateMCS::Mirror()
 {
-	BOOL bOverturn=m_pPlateInfo->xPlate.mcsFlg.ciOverturn;
-	bOverturn=!bOverturn;
-	m_pPlateInfo->xPlate.mcsFlg.ciOverturn=bOverturn;
+	BOOL bOverturn = m_pPlateInfo->xPlate.mcsFlg.ciOverturn;
+	bOverturn = !bOverturn;
+	m_pPlateInfo->xPlate.mcsFlg.ciOverturn = bOverturn;
 	CLockDocumentLife lockLife;
 	//1.将特定边旋转至水平
 	AcGeMatrix3d mirrorMat;
 	AcGeLine3d line3d;
-	AcGePoint3d start(m_origin.x,m_origin.y,0),end(m_origin.x,m_origin.y+1000,0);
-	line3d.set(start,end);
+	AcGePoint3d start(m_origin.x, m_origin.y, 0), end(m_origin.x, m_origin.y + 1000, 0);
+	line3d.set(start, end);
 	mirrorMat.setToMirroring(line3d);
-	MoveCloneEnts(mirrorMat);
+	m_pPlateInfo->MoveEnts(mirrorMat);
 	//2.将钢板移动至坐标系原点
-	f2dRect rect=GetCadEntRect(m_xEntIdList);
+	SCOPE_STRU scope = m_pPlateInfo->GetCADEntScope(TRUE);
 	AcGeMatrix3d moveMat;
-	ads_point ptFrom,ptTo;
-	ptFrom[X]=rect.topLeft.x;
-	ptFrom[Y]=rect.bottomRight.y;
-	ptFrom[Z]=0;
-	ptTo[X]=m_origin.x;
-	ptTo[Y]=m_origin.y;
-	ptTo[Z]=0;
-	moveMat.setToTranslation(AcGeVector3d(ptTo[X]-ptFrom[X],ptTo[Y]-ptFrom[Y],ptTo[Z]-ptFrom[Z]));
-	MoveCloneEnts(moveMat);
+	ads_point ptFrom, ptTo;
+	ptFrom[X] = scope.fMinX;
+	ptFrom[Y] = scope.fMinY;
+	ptFrom[Z] = 0;
+	ptTo[X] = m_origin.x;
+	ptTo[Y] = m_origin.y;
+	ptTo[Z] = 0;
+	moveMat.setToTranslation(AcGeVector3d(ptTo[X] - ptFrom[X], ptTo[Y] - ptFrom[Y], ptTo[Z] - ptFrom[Z]));
+	m_pPlateInfo->MoveEnts(moveMat);
 	//3.更新钢板对应实体位置
 	UpdateCloneEdgePos();
 }

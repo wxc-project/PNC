@@ -13,7 +13,6 @@ int CDrawDamBoard::BOARD_HEIGHT=500;
 BOOL CDrawDamBoard::m_bDrawAllBamBoard=TRUE;
 CDrawDamBoard::CDrawDamBoard()
 {
-	m_pPlate=NULL;
 }
 bool CDrawDamBoard::IsValidDamBoard()
 {
@@ -25,37 +24,38 @@ bool CDrawDamBoard::IsValidSteelSealRect()
 }
 void CDrawDamBoard::DrawDamBoard(CPlateProcessInfo *pPlate)
 {
-	m_pPlate=pPlate;
-	if(m_pPlate==NULL)
+	if (pPlate == NULL || !pPlate->IsValid())
 		return;
-	ARRAY_LIST<AcDbObjectId> entIdList;
-	for(unsigned long *pId=pPlate->m_cloneEntIdList.GetFirst();pId;pId=pPlate->m_cloneEntIdList.GetNext())
-		entIdList.append(MkCadObjId(*pId));
-	f2dRect rect=GetCadEntRect(entIdList);
-	f2dPoint leftBtm(rect.topLeft.x,rect.bottomRight.y);
-	const int ARROW_LEN=20;
 	CLockDocumentLife lock;
-	CBlockTableRecordLife rec(GetBlockTableRecord());
+	AcDbBlockTableRecord *pBlockTblRec = GetBlockTableRecord();
+	if (pBlockTblRec == NULL)
+		return;
+	GEPOINT leftBtm = pPlate->CalBoardOrg(BOARD_HEIGHT);
+	CBlockTableRecordLife xBlockTblRecLife(pBlockTblRec);
+	//»æÖÆµ²°å¾ØÐÎ¿ò
 	fPtList vertexList;
 	vertexList.append(leftBtm.x,leftBtm.y,0);
 	vertexList.append(leftBtm.x,leftBtm.y+BOARD_HEIGHT,0);
 	vertexList.append(leftBtm.x-BOARD_THICK,leftBtm.y+BOARD_HEIGHT,0);
 	vertexList.append(leftBtm.x-BOARD_THICK,leftBtm.y,0);
-	AcDbObjectId entId=CreateAcadHatch(rec.pBlockTblRec,vertexList,"ANSI31",0.3);
+	AcDbObjectId entId=CreateAcadHatch(pBlockTblRec,vertexList,"ANSI31",0.3);
 	m_xEntIdList.append(entId);
-	entId=CreateAcadRect(rec.pBlockTblRec,f3dPoint(leftBtm.x-BOARD_THICK,leftBtm.y+BOARD_HEIGHT,0),BOARD_THICK,BOARD_HEIGHT);
+	entId=CreateAcadRect(pBlockTblRec,f3dPoint(leftBtm.x-BOARD_THICK,leftBtm.y+BOARD_HEIGHT,0),BOARD_THICK,BOARD_HEIGHT);
 	m_xEntIdList.append(entId);
+	//»æÖÆXÖá¼ýÍ·
+	const int ARROW_LEN = 20;
+	SCOPE_STRU scope = pPlate->GetCADEntScope();
+	double width = max(scope.wide(), scope.high());
 	f3dPoint vertextArr[4];
-	double width=max(rect.Width(),rect.Height());
 	vertextArr[0].Set(leftBtm.x,leftBtm.y);
 	vertextArr[1].Set(leftBtm.x+1.5*width,leftBtm.y);
 	vertextArr[2].Set(leftBtm.x+1.5*width-ARROW_LEN,leftBtm.y+0.5*ARROW_LEN);
 	vertextArr[3].Set(leftBtm.x+1.5*width-ARROW_LEN,leftBtm.y-0.5*ARROW_LEN);
-	entId=CreateAcadLine(rec.pBlockTblRec,vertextArr[0],vertextArr[1]);
+	entId=CreateAcadLine(pBlockTblRec,vertextArr[0],vertextArr[1]);
 	m_xEntIdList.append(entId);
-	entId=CreateAcadLine(rec.pBlockTblRec,vertextArr[1],vertextArr[2]);
+	entId=CreateAcadLine(pBlockTblRec,vertextArr[1],vertextArr[2]);
 	m_xEntIdList.append(entId);
-	entId=CreateAcadLine(rec.pBlockTblRec,vertextArr[1],vertextArr[3]);
+	entId=CreateAcadLine(pBlockTblRec,vertextArr[1],vertextArr[3]);
 	m_xEntIdList.append(entId);
 }
 
@@ -80,13 +80,13 @@ void CDrawDamBoard::EraseDamBoard()
 
 void CDrawDamBoard::DrawSteelSealRect(CPlateProcessInfo *pPlate)
 {
-	if(m_pPlate&&m_pPlate!=pPlate)
-		return;
-	m_pPlate=pPlate;
-	if(m_pPlate==NULL)
+	if (pPlate == NULL)
 		return;
 	CLockDocumentLife lock;
-	CBlockTableRecordLife rec(GetBlockTableRecord());
+	AcDbBlockTableRecord *pBlockTblRec = GetBlockTableRecord();
+	if (pBlockTblRec == NULL)
+		return;
+	CBlockTableRecordLife rec(pBlockTblRec);
 	double fHalfL=g_pncSysPara.m_nMkRectLen*0.5,fHalfW=g_pncSysPara.m_nMkRectWidth*0.5;
 	AcDbEntity* pEnt = NULL;
 	XhAcdbOpenAcDbEntity(pEnt, MkCadObjId(pPlate->m_xMkDimPoint.idCadEnt), AcDb::kForRead);
@@ -106,7 +106,7 @@ void CDrawDamBoard::DrawSteelSealRect(CPlateProcessInfo *pPlate)
 	vertex_arr[3].Set(pos.x - fHalfL, pos.y - fHalfW);
 	vertex_arr[4].Set(pos.x - fHalfL, pos.y + fHalfW);
 	m_rectId = CreateAcadPolyLine(DRAGSET.RecordingBlockTableRecord(), vertex_arr, 5, 1, pPlate->partNoId.asOldId());
-	DRAGSET.EndBlockRecord(rec.pBlockTblRec, pPlate->m_xMkDimPoint.pos, 1, &outputId, pPlate->partNoId.asOldId());
+	DRAGSET.EndBlockRecord(pBlockTblRec, pPlate->m_xMkDimPoint.pos, 1, &outputId, pPlate->partNoId.asOldId());
 	if (!outputId.isNull())
 	{
 		m_rectId = outputId;

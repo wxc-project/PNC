@@ -204,8 +204,8 @@ BOOL CPlateProcessInfo::RecogWeldLine(f3dLine slop_line)
 {
 	f3dPoint slop_vec = slop_line.endPt - slop_line.startPt;
 	normalize(slop_vec);
-	VERTEX* pPreVer = vertexList.GetTail();
-	for (VERTEX* pCurVer = vertexList.GetFirst(); pCurVer; pCurVer = vertexList.GetNext())
+	VERTEX* pPreVer = vertexList.GetTail(), *pCurVer = NULL;
+	for (pCurVer = vertexList.GetFirst(); pCurVer; pCurVer = vertexList.GetNext())
 	{
 		f3dPoint vec = pCurVer->pos - pPreVer->pos;
 		normalize(vec);
@@ -217,11 +217,11 @@ BOOL CPlateProcessInfo::RecogWeldLine(f3dLine slop_line)
 		double fDist = 0;
 		f3dPoint inters, midPt = (pCurVer->pos + pPreVer->pos)*0.5;
 		SnapPerp(&inters, slop_line, midPt, &fDist);
-		if (fDist < MIN_DISTANCE && slop_line.PtInLine(inters) == 2)
+		if (fDist < EPS2 && slop_line.PtInLine(inters) == 2)
 			break;
 		pPreVer = pCurVer;
 	}
-	if (pPreVer)
+	if (pCurVer)
 	{
 		pPreVer->m_bWeldEdge = true;
 		return TRUE;
@@ -811,7 +811,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 	CSymbolRecoginzer symbols;
 	CHashSet<CAD_ENTITY*> bendDimTextSet;
 	CHashSet<CAD_ENTITY*> rollEdgeDimTextSet;
-	CHashSet<BOOL> weldMarkLineSet;
+	map<ULONG, CAD_LINE> weldMarkLineMap;
 	CHashStrList< ATOM_LIST<CAD_LINE> > hashLineArrByPosKeyStr;
 	for (CAD_ENTITY *pRelaObj = EnumFirstRelaEnt(); pRelaObj; pRelaObj = EnumNextRelaEnt())
 	{
@@ -843,19 +843,18 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			Cpy_Pnt(ptS, acad_ptS);
 			Cpy_Pnt(ptE, acad_ptE);
 			ptS.z = ptE.z = 0;
-			double len = DISTANCE(ptS, ptE);
 			//记录始端点坐标处的连接线
 			CXhChar50 startKeyStr(ptS);
 			ATOM_LIST<CAD_LINE> *pStartLineList = hashLineArrByPosKeyStr.GetValue(startKeyStr);
 			if (pStartLineList == NULL)
 				pStartLineList = hashLineArrByPosKeyStr.Add(startKeyStr);
-			pStartLineList->append(CAD_LINE(pEnt->objectId(), len));
+			pStartLineList->append(CAD_LINE(pEnt->objectId(), ptS, ptE));
 			//记录终端点坐标处的连接线
 			CXhChar50 endKeyStr(ptE);
 			ATOM_LIST<CAD_LINE> *pEndLineList = hashLineArrByPosKeyStr.GetValue(endKeyStr);
 			if (pEndLineList == NULL)
 				pEndLineList = hashLineArrByPosKeyStr.Add(endKeyStr);
-			pEndLineList->append(CAD_LINE(pEnt->objectId(), len));
+			pEndLineList->append(CAD_LINE(pEnt->objectId(), ptS, ptE));
 		}
 	}
 	for (ATOM_LIST<CAD_LINE> *pList = hashLineArrByPosKeyStr.GetFirst(); pList; pList = hashLineArrByPosKeyStr.GetNext())
@@ -864,7 +863,15 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			continue;
 		CAD_LINE *pLineId = pList->GetFirst();
 		if (pLineId&&pLineId->m_fSize < IExtractor::WELD_MAX_HEIGHT)
-			weldMarkLineSet.SetValue(pLineId->idCadEnt, TRUE);
+			weldMarkLineMap[pLineId->idCadEnt] = *pLineId;
+	}
+	if (weldMarkLineMap.size() > 10)
+	{
+		ARRAY_LIST<GELINE> markLines;
+		map<ULONG, CAD_LINE>::iterator it;
+		for (it = weldMarkLineMap.begin(); it != weldMarkLineMap.end(); it++)
+			markLines.append(GELINE(it->second.m_ptStart, it->second.m_ptEnd));
+		symbols.AppendSymbolEnt(markLines);
 	}
 	xPlate.m_cFaceN = 1;
 	BASIC_INFO baseInfo;
@@ -906,7 +913,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 			continue;
 		}
 		//提取火曲线信息
-		if (pEnt->isKindOf(AcDbLine::desc()) && weldMarkLineSet.GetValue(pRelaObj->idCadEnt) == NULL)
+		if (pEnt->isKindOf(AcDbLine::desc()) && weldMarkLineMap.find(pRelaObj->idCadEnt)==weldMarkLineMap.end())
 		{
 			f3dLine line;
 			AcDbLine* pAcDbLine = (AcDbLine*)pEnt;
@@ -956,7 +963,7 @@ BOOL CPlateProcessInfo::UpdatePlateInfo(BOOL bRelatePN/*=FALSE*/)
 					}
 				}
 			}
-			else if (g_pncSysPara.IsSlopeLine((AcDbLine*)pEnt))
+			else if (g_pncSysPara.IsSlopeLine((AcDbLine*)pEnt,&symbols))
 			{
 				RecogWeldLine(line);
 				continue;
@@ -1799,7 +1806,7 @@ void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 //初始化钢板加工坐标系X轴所在的轮廓边
 void CPlateProcessInfo::InitBtmEdgeIndex()
 {
-	int i = 0, n = xPlate.vertex_list.GetNodeNum(), bottom_edge = -1, weld_edge = -1;
+	int i = 0, n = xPlate.vertex_list.GetNodeNum(), bottom_edge = -1;
 	DYN_ARRAY<f3dPoint> vertex_arr(n);
 	for (PROFILE_VER* pVertex = xPlate.vertex_list.GetFirst(); pVertex; pVertex = xPlate.vertex_list.GetNext(), i++)
 	{
@@ -1807,7 +1814,7 @@ void CPlateProcessInfo::InitBtmEdgeIndex()
 		if (pVertex->type > 1)
 			vertex_arr[i].feature = -1;
 		if (pVertex->m_bWeldEdge)
-			weld_edge = i;
+			vertex_arr[i].feature = -2;
 	}
 	if (g_pncSysPara.m_iAxisXCalType == 1)
 	{	//优先根据螺栓确定X轴所在轮廓边
@@ -1845,8 +1852,20 @@ void CPlateProcessInfo::InitBtmEdgeIndex()
 		}
 	}
 	else if (g_pncSysPara.m_iAxisXCalType == 2)
-	{	//以焊接边作为加工坐标系的X坐标轴
-		bottom_edge = weld_edge;
+	{	//以最长焊接边作为加工坐标系的X坐标轴
+		double dfMaxWeldLen = EPS2;
+		for (i = 0; i < n; i++)
+		{
+			if (vertex_arr[i].feature != -2)
+				continue;	//非焊缝边
+			GEPOINT edge_vec = vertex_arr[(i + 1) % n] - vertex_arr[i];
+			double edge_dist = edge_vec.mod();
+			if (edge_dist > dfMaxWeldLen)
+			{
+				dfMaxWeldLen = edge_dist;
+				bottom_edge = i;
+			}
+		}
 	}
 	if (bottom_edge > -1)
 		xPlate.mcsFlg.ciBottomEdge = (BYTE)bottom_edge;
@@ -1878,15 +1897,12 @@ void CPlateProcessInfo::InitBtmEdgeIndex()
 }
 void CPlateProcessInfo::InitLayoutVertex(SCOPE_STRU& scope, BYTE ciLayoutType)
 {
-	datumStartVertex.Init();
-	datumEndVertex.Init();
-	GEPOINT datumPt;
+	m_xOffPt.Set();
 	if (ciLayoutType == 0)	//水平排布时，以左下角为基准点
-		datumPt.Set(scope.fMinX, scope.fMinY);
+		m_xDatumPtS.Set(scope.fMinX, scope.fMinY);
 	else                    //竖直排布时，以左上角为基准点
-		datumPt.Set(scope.fMinX, scope.fMaxY);
-	datumStartVertex.srcPos = datumPt;
-	datumEndVertex.srcPos = datumStartVertex.srcPos;
+		m_xDatumPtS.Set(scope.fMinX, scope.fMaxY);
+	m_xDatumPtE = m_xDatumPtS;
 }
 bool CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/, BOOL bCreateDimPos/*=FALSE*/,
 	BOOL bDrawAsBlock/*=FALSE*/, GEPOINT *pPlateCenter /*= NULL*/,
@@ -1904,19 +1920,22 @@ bool CPlateProcessInfo::DrawPlate(f3dPoint *pOrgion/*=NULL*/, BOOL bCreateDimPos
 	if (pOrgion)
 	{	//计算平移基准点及旋转角度
 		ads_point ptFrom, ptTo;
-		ptFrom[X] = datumStartVertex.srcPos.x;
-		ptFrom[Y] = datumStartVertex.srcPos.y;
+		ptFrom[X] = m_xDatumPtS.x;
+		ptFrom[Y] = m_xDatumPtS.y;
 		ptFrom[Z] = 0;
-		ptTo[X] = pOrgion->x + datumStartVertex.offsetPos.x;
-		ptTo[Y] = pOrgion->y + datumStartVertex.offsetPos.y;
+		ptTo[X] = pOrgion->x + m_xOffPt.x;
+		ptTo[Y] = pOrgion->y + m_xOffPt.y;
 		ptTo[Z] = 0;
 		moveMat.setToTranslation(AcGeVector3d(ptTo[X] - ptFrom[X], ptTo[Y] - ptFrom[Y], ptTo[Z] - ptFrom[Z]));
-		//
-		GEPOINT src_vec = datumEndVertex.srcPos - datumStartVertex.srcPos;
-		GEPOINT dest_vec = datumEndVertex.offsetPos - datumStartVertex.offsetPos;
-		double fDegAngle = Cal2dLineAng(0, 0, dest_vec.x, dest_vec.y) - Cal2dLineAng(0, 0, src_vec.x, src_vec.y);
-		rotationMat.setToRotation(fDegAngle, AcGeVector3d::kZAxis, AcGePoint3d(ptTo[X], ptTo[Y], ptTo[Z]));
-		//
+		//旋转
+		if (!m_xDatumPtE.IsZero() && !m_xDatumPtE.IsEqual(m_xDatumPtS, 0.5))
+		{
+			GEPOINT src_vec = (m_xDatumPtE - m_xDatumPtS).normalized();
+			GEPOINT dest_vec(1, 0, 0);
+			double fDegAngle = Cal2dLineAng(0, 0, dest_vec.x, dest_vec.y) - Cal2dLineAng(0, 0, src_vec.x, src_vec.y);
+			rotationMat.setToRotation(fDegAngle, AcGeVector3d::kZAxis, AcGePoint3d(ptTo[X], ptTo[Y], ptTo[Z]));
+		}
+		//缩放
 		AcGePoint3d centerPt(pOrgion->x, pOrgion->y, 0);
 		if (fabs(scale) > 0)
 			scaleMat.setToScaling(scale, centerPt);
@@ -2147,33 +2166,10 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 		entId = CreateAcadLine(pBlockTableRecord, f3dPoint(dim_pos.x - 10, dim_pos.y - 10), f3dPoint(dim_pos.x - 10, dim_pos.y + 10), 0, 0, g_pncSysPara.crMode.crEdge);
 		m_newAddEntIdList.append(entId.asOldId());
 	}
-	//
-	if (pOrgion)
-	{
-		//计算平移基准点
-		AcGeMatrix3d moveMat;
-		ads_point ptFrom, ptTo;
-		ptFrom[X] = datumStartVertex.srcPos.x;
-		ptFrom[Y] = datumStartVertex.srcPos.y;
-		ptFrom[Z] = 0;
-		ptTo[X] = pOrgion->x + datumStartVertex.offsetPos.x;
-		ptTo[Y] = pOrgion->y + datumStartVertex.offsetPos.y;
-		ptTo[Z] = 0;
-		moveMat.setToTranslation(AcGeVector3d(ptTo[X] - ptFrom[X], ptTo[Y] - ptFrom[Y], ptTo[Z] - ptFrom[Z]));
-		//对新增图元进行移动
-		for (int i = 0; i < m_newAddEntIdList.GetSize(); i++)
-		{
-			entId = MkCadObjId(m_newAddEntIdList.At(i));
-			AcDbEntity* pEnt = NULL;
-			XhAcdbOpenAcDbEntity(pEnt, entId, AcDb::kForWrite);
-			if (pEnt)
-			{
-				pEnt->transformBy(moveMat);
-				pEnt->close();
-			}
-		}
-	}
 	pBlockTableRecord->close();
+	//新增图元移到指定位置
+	if (pOrgion)
+		MoveEntIds(m_newAddEntIdList, m_xDatumPtS, GEPOINT(pOrgion->x, pOrgion->y), true);
 }
 
 void CPlateProcessInfo::CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList)
@@ -2321,7 +2317,7 @@ f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVe
 	f2dRect rect;
 	rect.SetRect(f2dPoint(0, 0), f2dPoint(0, 0));
 	int i = 0, n = vertexList.GetNodeNum();
-	if (n < 3)
+	if (!IsValid())
 		return rect;
 	GECS tmucs, minUcs;
 	SCOPE_STRU scope, min_scope;
@@ -2344,6 +2340,7 @@ f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVe
 	double minarea = 10000000000000000;	//预置任一大数
 	fPtList ptList;
 	fPtList minRectPtList;
+	int indexS = 0, indexE = 0;
 	for (i = 0; i < n; i++)
 	{
 		tmucs.axis_x = vertex_arr[(i + 1) % n]->pos - vertex_arr[i]->pos;
@@ -2399,8 +2396,8 @@ f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVe
 			minarea = scope.wide()*scope.high();
 			min_scope = scope;
 			minUcs = tmucs;
-			datumStartVertex.index = i;
-			datumEndVertex.index = (i + 1) % n;
+			indexS = i;
+			indexE = (i + 1) % n;
 			minRectPtList.Empty();
 			for (f3dPoint *pPt = ptList.GetFirst(); pPt; pPt = ptList.GetNext())
 				minRectPtList.append(*pPt);
@@ -2412,17 +2409,14 @@ f2dRect CPlateProcessInfo::GetMinWrapRect(double minDistance/*=0*/, fPtList *pVe
 		for (f3dPoint *pPt = minRectPtList.GetFirst(); pPt; pPt = minRectPtList.GetNext())
 			pVertexList->append(*pPt);
 	}
-
 	rect.topLeft.Set(min_scope.fMinX, min_scope.fMaxY);
 	rect.bottomRight.Set(min_scope.fMaxX, min_scope.fMinY);
-	datumStartVertex.srcPos = vertex_arr[datumStartVertex.index]->pos;
-	datumEndVertex.srcPos = vertex_arr[datumEndVertex.index]->pos;
 	GEPOINT topLeft(rect.topLeft.x, rect.topLeft.y, 0);
-	GEPOINT startPt = datumStartVertex.srcPos, endPt = datumEndVertex.srcPos;
+	GEPOINT startPt = vertex_arr[indexS]->pos;
 	coord_trans(startPt, minUcs, FALSE);
-	coord_trans(endPt, minUcs, FALSE);
-	datumStartVertex.offsetPos = startPt - topLeft;
-	datumEndVertex.offsetPos = endPt - topLeft;
+	m_xOffPt = startPt - topLeft;
+	m_xDatumPtS = vertex_arr[indexS]->pos;
+	m_xDatumPtE = vertex_arr[indexE]->pos;
 	return rect;
 }
 bool CPlateProcessInfo::InitLayoutVertexByBottomEdgeIndex(f2dRect &rect)
@@ -2490,19 +2484,14 @@ bool CPlateProcessInfo::InitLayoutVertexByBottomEdgeIndex(f2dRect &rect)
 			scope.VerifyVertex(ptE);
 		}
 	}
-	datumStartVertex.index = iCurIndex;
-	datumEndVertex.index = (iCurIndex + 1) % n;
-	//
 	rect.topLeft.Set(scope.fMinX, scope.fMaxY);
 	rect.bottomRight.Set(scope.fMaxX, scope.fMinY);
-	datumStartVertex.srcPos = vertexList[datumStartVertex.index].pos;
-	datumEndVertex.srcPos = vertexList[datumEndVertex.index].pos;
 	GEPOINT topLeft(rect.topLeft.x, rect.topLeft.y, 0);
-	GEPOINT startPt = datumStartVertex.srcPos, endPt = datumEndVertex.srcPos;
+	GEPOINT startPt = vertexList[iCurIndex].pos;
 	coord_trans(startPt, tmucs, FALSE);
-	coord_trans(endPt, tmucs, FALSE);
-	datumStartVertex.offsetPos = startPt - topLeft;
-	datumEndVertex.offsetPos = endPt - topLeft;
+	m_xOffPt = startPt - topLeft;
+	m_xDatumPtS = vertexList[iCurIndex].pos;
+	m_xDatumPtE = vertexList[(iCurIndex + 1) % n].pos;
 	return true;
 }
 void CPlateProcessInfo::InitEdgeEntIdMap()
@@ -2614,11 +2603,8 @@ bool CPlateProcessInfo::SyncSteelSealPos()
 
 bool CPlateProcessInfo::AutoCorrectedSteelSealPos()
 {
-	ARRAY_LIST<AcDbObjectId> entIdList;
-	for (ULONG *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
-		entIdList.append(MkCadObjId(*pId));
-	f2dRect rect = GetCadEntRect(entIdList);
-	f2dPoint leftBtm(rect.topLeft.x, rect.bottomRight.y);
+	SCOPE_STRU scope = GetCADEntScope(TRUE);
+	f2dPoint leftBtm(scope.fMinX, scope.fMinY);
 	//检查钢印字盒是否超出范围
 	GEPOINT pos;
 	GetSteelSealPos(pos);
@@ -2659,6 +2645,50 @@ bool CPlateProcessInfo::UpdateSteelSealPos(GEPOINT &pos)
 
 	SyncSteelSealPos();
 	return true;
+}
+/*计算挡板的起始位置，默认钢板区域的左下角；
+ 若依靠挡板轮廓边超出挡板高度时调整起始位置，保证轮廓边于挡板有交点 wxc-2021.1.19*/
+GEPOINT CPlateProcessInfo::CalBoardOrg(double fBoardH)
+{
+	SCOPE_STRU scope = GetCADEntScope(TRUE, TRUE);
+	GEPOINT orgPt(scope.fMinX, scope.fMinY);
+	if (!IsValid())
+		return orgPt;
+	int nNum = xPlate.vertex_list.GetNodeNum();
+	int cur_edge = xPlate.mcsFlg.ciBottomEdge;
+	int pre_edge = (cur_edge - 1 + nNum) % nNum;
+	CAD_LINE *pLineS = m_hashCloneEdgeEntIdByIndex.GetValue(pre_edge + 1);
+	CAD_LINE *pLineE = m_hashCloneEdgeEntIdByIndex.GetValue(cur_edge + 1);
+	if (pLineS && pLineE && pLineS->UpdatePos() && pLineE->UpdatePos())
+	{
+		GEPOINT leftTopPt;
+		if (pLineS->m_ptStart == pLineE->m_ptStart || pLineS->m_ptStart == pLineE->m_ptEnd)
+			leftTopPt = pLineS->m_ptEnd;
+		else
+			leftTopPt = pLineS->m_ptStart;
+		if (leftTopPt.y - orgPt.y > fBoardH && leftTopPt.x <= orgPt.x)
+		{	//轮廓点超出挡板高度没有交点，重新计算挡板位置
+			GEPOINT intersPt, ptS(orgPt.x, orgPt.y + fBoardH, 0), ptE(ptS.x + 100000, ptS.y, 0);
+			if (Int3dll(pLineS->m_ptStart, pLineS->m_ptEnd, ptS, ptE, intersPt) > 0)
+				orgPt.x = intersPt.x;
+		}
+	}
+	return orgPt;
+}
+void CPlateProcessInfo::MoveEnts(AcGeMatrix3d moveMat, BYTE ciClone0_Add1 /*= 0*/)
+{
+	ARRAY_LIST<AcDbObjectId> entIdList;
+	if (ciClone0_Add1 == 0)
+	{
+		for (ULONG *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
+			entIdList.append(MkCadObjId(*pId));
+	}
+	else if(ciClone0_Add1==1)
+	{
+		for (int i = 0; i < m_newAddEntIdList.GetSize(); i++)
+			entIdList.append(MkCadObjId(m_newAddEntIdList[i]));
+	}
+	MoveEntIds(entIdList, moveMat, true);
 }
 //更新钢板加工数
 void CPlateProcessInfo::RefreshPlateNum(int nNewNum)
@@ -3001,19 +3031,46 @@ void CPlateProcessInfo::FillPlateNum(int nNewNum, AcDbObjectId partNoId)
 		m_ciModifyState |= MODIFY_MANU_NUM;
 	}
 }
-SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/)
+SCOPE_STRU CPlateProcessInfo::GetCADEntScope(BOOL bIsColneEntScope /*= FALSE*/,BOOL bOnlyVertex /*= FALSE*/)
 {
 	SCOPE_STRU scope;
 	scope.ClearScope();
+	if (bOnlyVertex && IsValid())
+	{
+		for (VERTEX* pVer = vertexList.GetFirst(); pVer; pVer = vertexList.GetNext())
+		{
+			if (bIsColneEntScope)
+			{
+				ULONG* pId = m_cloneEntIdList.GetValue(pVer->tag.lParam);
+				if(pId)
+					VerifyVertexByCADEntId(scope, MkCadObjId(*pId));
+			}
+			else
+				scope.VerifyVertex(pVer->pos);
+		}
+		return scope;
+	}
 	if (bIsColneEntScope)
 	{
 		for (unsigned long *pId = m_cloneEntIdList.GetFirst(); pId; pId = m_cloneEntIdList.GetNext())
-			VerifyVertexByCADEntId(scope, MkCadObjId(*pId));
+		{
+			if (*pId == m_xMkDimPoint.idCadEnt)
+				continue;
+			CAcDbObjLife entLife(MkCadObjId(*pId));
+			AcDbEntity *pEnt = entLife.GetEnt();
+			if(pEnt==NULL || pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
+				continue;
+			VerifyVertexByCADEnt(scope, pEnt);
+		}
 	}
 	else if (GetRelaEntCount() > 1)
 	{
 		for (CAD_ENTITY *pEnt = EnumFirstRelaEnt(); pEnt; pEnt = EnumNextRelaEnt())
+		{
+			if (pEnt->ciEntType == TYPE_TEXT || pEnt->ciEntType == TYPE_MTEXT)
+				continue;	//忽略文本
 			VerifyVertexByCADEntId(scope, MkCadObjId(pEnt->idCadEnt));
+		}
 	}
 	else
 	{
