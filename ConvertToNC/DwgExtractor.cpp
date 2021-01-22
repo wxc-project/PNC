@@ -957,7 +957,6 @@ bool CPlateExtractor::AppendBoltEntsByAloneLines(vector<CAD_LINE> vectorAloneLin
 }
 void CPlateExtractor::ExtractPlateBoltEnts(CHashSet<AcDbObjectId>& selectedEntIdSet)
 {
-	m_xBoltEntHash.Empty();
 	//Ê¶±ðÍ¼¿éÊ½ÂÝË¨&Ô²È¦ÂÝË¨&¶à¶ÎÂÝË¨
 	AcDbEntity *pEnt = NULL;
 	for (AcDbObjectId objId = selectedEntIdSet.GetFirst(); objId; objId = selectedEntIdSet.GetNext())
