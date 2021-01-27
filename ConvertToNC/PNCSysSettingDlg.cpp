@@ -208,6 +208,12 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 	}
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("RoundLineLen"))
 		g_pncSysPara.m_fRoundLineLen = atof(valueStr);
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("standard_SJ"))
+		g_pncSysPara.standard_hole.m_fLS_SJ = atof(valueStr);
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("standard_ZF"))
+		g_pncSysPara.standard_hole.m_fLS_ZF = atof(valueStr);
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("standard_YY"))
+		g_pncSysPara.standard_hole.m_fLS_YY = atof(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_iRecogMode"))
 	{
 		g_pncSysPara.m_ciRecogMode = valueStr[0] - '0';
