@@ -84,6 +84,7 @@ public:
 	int m_nMinDistance;		//最小间距
 	int m_nMkRectLen;		//钢印字盒长度
 	int m_nMkRectWidth;		//钢印字盒宽度
+	int m_nMkCircleRadius;		//钢印圆半径
 	//螺栓识别参数
 	static const BYTE FILTER_PARTNO_CIR = 0X01;	//过滤件号特殊圆圈
 	static const BYTE RECOGN_HOLE_D_DIM = 0X02;	//识别孔径文字标注

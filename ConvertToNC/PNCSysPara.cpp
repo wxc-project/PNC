@@ -39,6 +39,7 @@ void CPNCSysPara::Init()
 	m_nMinDistance = 0;
 	m_nMkRectWidth = 30;
 	m_nMkRectLen = 60;
+	m_nMkCircleRadius = 26;
 	//识别设置
 	m_ciRecogMode = 3;
 	m_ciLayerMode = 0;
@@ -205,6 +206,7 @@ int CPNCSysPara::InitPropHashtable()
 	AddPropItem("CDrawDamBoard::m_bDrawAllBamBoard", PROPLIST_ITEM(id++, "档板显示模式", "档板显示模式", "0.仅显示选中钢板档板|1.显示所有档板"));
 	AddPropItem("m_nMkRectLen", PROPLIST_ITEM(id++, "钢印字盒长度", "钢印字盒宽度"));
 	AddPropItem("m_nMkRectWidth", PROPLIST_ITEM(id++, "钢印字盒宽度", "钢印字盒宽度"));
+	AddPropItem("m_nMkCircleRadius", PROPLIST_ITEM(id++, "钢印圆半径", "钢印圆半径"));
 	AddPropItem("m_ciArrangeType", PROPLIST_ITEM(id++, "布局方案", "","0.以行为主|1.以列为主"));
 	AddPropItem("m_ciGroupType", PROPLIST_ITEM(id++, "分组方案", "", "1.按段号|2.材质&厚度|3.材质|4.厚度"));
 	AddPropItem("crMode", PROPLIST_ITEM(id++, "颜色方案"));
@@ -320,6 +322,8 @@ int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=1
 		sText.Printf("%d", m_nMkRectWidth);
 	else if (GetPropID("m_nMkRectLen") == id)
 		sText.Printf("%d", m_nMkRectLen);
+	else if (GetPropID("m_nMkCircleRadius") == id)
+		sText.Printf("%d", m_nMkCircleRadius);
 	else if (GetPropID("layer_mode") == id)
 	{
 		if (m_ciLayerMode == 0)
@@ -1090,6 +1094,8 @@ bool PNCSysSetImportDefault(FILE *fp)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectWidth);
 		else if (_stricmp(key_word, "m_nMkRectLen") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectLen);
+		else if (_stricmp(key_word, "m_nMkCircleRadius") == 0)
+			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkCircleRadius);
 #ifndef __UBOM_ONLY_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::BOARD_HEIGHT);
@@ -1266,6 +1272,7 @@ bool PNCSysSetExportDefault(FILE *fp)
 	fprintf(fp, "MinDistance=%d ;最小间距\n", g_pncSysPara.m_nMinDistance);
 	fprintf(fp, "m_nMkRectWidth=%d ;字盒宽度\n", g_pncSysPara.m_nMkRectWidth);
 	fprintf(fp, "m_nMkRectLen=%d ;字盒长度\n", g_pncSysPara.m_nMkRectLen);
+	fprintf(fp, "m_nMkCircleRadius=%d ;圆半径\n", g_pncSysPara.m_nMkCircleRadius);
 #ifndef __UBOM_ONLY_
 	fprintf(fp, "CDrawDamBoard::BOARD_HEIGHT=%d ;档板高度\n", CDrawDamBoard::BOARD_HEIGHT);
 	fprintf(fp, "CDrawDamBoard::m_bDrawAllBamBoard=%d ;绘制所有档板\n", CDrawDamBoard::m_bDrawAllBamBoard);
