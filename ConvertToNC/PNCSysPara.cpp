@@ -364,7 +364,7 @@ int CPNCSysPara::GetPropValueStr(long id, char* valueStr, UINT nMaxStrBufLen/*=1
 		sText.Printf("%g", standard_hole.m_fLS20);
 	else if (GetPropID("standardM24") == id)
 		sText.Printf("%g", standard_hole.m_fLS24);
-	else if(GetPropID("standard_SJ")==id)
+	else if(GetPropID("standard_SJ") == id)
 		sText.Printf("%g", standard_hole.m_fLS_SJ);
 	else if (GetPropID("standard_ZF") == id)
 		sText.Printf("%g", standard_hole.m_fLS_ZF);
@@ -1096,6 +1096,23 @@ bool PNCSysSetImportDefault(FILE *fp)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkRectLen);
 		else if (_stricmp(key_word, "m_nMkCircleRadius") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkCircleRadius);
+		else if (_stricmp(key_word, "standard_SJ") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.standard_hole.m_fLS_SJ = atof(skey);
+		}
+		else if (_stricmp(key_word, "standard_ZF") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.standard_hole.m_fLS_ZF = atof(skey);
+		}
+			
+		else if (_stricmp(key_word, "standard_YY") == 0)
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.standard_hole.m_fLS_YY = atof(skey);
+		}
+			
 #ifndef __UBOM_ONLY_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::BOARD_HEIGHT);
@@ -1273,6 +1290,9 @@ bool PNCSysSetExportDefault(FILE *fp)
 	fprintf(fp, "m_nMkRectWidth=%d ;×ÖºÐ¿í¶È\n", g_pncSysPara.m_nMkRectWidth);
 	fprintf(fp, "m_nMkRectLen=%d ;×ÖºÐ³¤¶È\n", g_pncSysPara.m_nMkRectLen);
 	fprintf(fp, "m_nMkCircleRadius=%d ;Ô²°ë¾¶\n", g_pncSysPara.m_nMkCircleRadius);
+	fprintf(fp, "standard_SJ=%.1f ;Èý½ÇÂÝË¨¿×¾¶\n", g_pncSysPara.standard_hole.m_fLS_SJ);
+	fprintf(fp, "standard_ZF=%.1f ;·½ÐÎÂÝË¨¿×¾¶\n", g_pncSysPara.standard_hole.m_fLS_ZF);
+	fprintf(fp, "standard_YY=%.1f ;ÑüÔ²ÂÝË¨¿×¾¶\n", g_pncSysPara.standard_hole.m_fLS_YY);
 #ifndef __UBOM_ONLY_
 	fprintf(fp, "CDrawDamBoard::BOARD_HEIGHT=%d ;µµ°å¸ß¶È\n", CDrawDamBoard::BOARD_HEIGHT);
 	fprintf(fp, "CDrawDamBoard::m_bDrawAllBamBoard=%d ;»æÖÆËùÓÐµµ°å\n", CDrawDamBoard::m_bDrawAllBamBoard);
