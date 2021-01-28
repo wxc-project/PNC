@@ -1097,11 +1097,22 @@ bool PNCSysSetImportDefault(FILE *fp)
 		else if (_stricmp(key_word, "m_nMkCircleRadius") == 0)
 			sscanf(line_txt, "%s%d", key_word, &g_pncSysPara.m_nMkCircleRadius);
 		else if (_stricmp(key_word, "standard_SJ") == 0)
-			sscanf(line_txt, "%s%f", key_word, &g_pncSysPara.standard_hole.m_fLS_SJ);
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.standard_hole.m_fLS_SJ = atof(skey);
+		}
 		else if (_stricmp(key_word, "standard_ZF") == 0)
-			sscanf(line_txt, "%s%f", key_word, &g_pncSysPara.standard_hole.m_fLS_ZF);
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.standard_hole.m_fLS_ZF = atof(skey);
+		}
+			
 		else if (_stricmp(key_word, "standard_YY") == 0)
-			sscanf(line_txt, "%s%f", key_word, &g_pncSysPara.standard_hole.m_fLS_YY);
+		{
+			skey = strtok(NULL, "=,;");
+			g_pncSysPara.standard_hole.m_fLS_YY = atof(skey);
+		}
+			
 #ifndef __UBOM_ONLY_
 		else if (_stricmp(key_word, "CDrawDamBoard::BOARD_HEIGHT") == 0)
 			sscanf(line_txt, "%s%d", key_word, &CDrawDamBoard::BOARD_HEIGHT);
