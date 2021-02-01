@@ -144,8 +144,8 @@ static BOOL ModifySystemSettingValue(CPropertyList	*pPropList, CPropTreeItem *pI
 		g_pncSysPara.m_nMkRectLen = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMkRectWidth"))
 		g_pncSysPara.m_nMkRectWidth = atoi(valueStr);
-	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMkCircleRadius"))
-		g_pncSysPara.m_nMkCircleRadius = atoi(valueStr);
+	else if (pItem->m_idProp == CPNCSysPara::GetPropID("m_nMkCirclediameter"))
+		g_pncSysPara.m_nMkCirclediameter = atoi(valueStr);
 	else if (pItem->m_idProp == CPNCSysPara::GetPropID("layer_mode"))
 	{
 		g_pncSysPara.m_ciLayerMode = valueStr[0] - '0';
@@ -1004,7 +1004,7 @@ void CPNCSysSettingDlg::UpdateLayoutProperty(CPropTreeItem* pParentItem)
 		oper.InsertCmbListPropItem(pParentItem, "CDrawDamBoard::m_bDrawAllBamBoard", "", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMkRectLen", "", "", -1, TRUE);
 		oper.InsertEditPropItem(pParentItem, "m_nMkRectWidth", "", "", -1, TRUE);
-		oper.InsertEditPropItem(pParentItem, "m_nMkCircleRadius", "", "", -1, TRUE);
+		oper.InsertEditPropItem(pParentItem, "m_nMkCirclediameter", "", "", -1, TRUE);
 	}
 	else if (g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_COMPARE)
 	{

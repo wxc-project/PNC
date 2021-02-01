@@ -547,7 +547,7 @@ void CPartListDlg::OnBnClickedBtnExportDxf()
 		//Ìí¼Ó¸ÖÓ¡Ô²È¦
 		AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
 		GEPOINT center(pPlate->m_xMkDimPoint.pos.x, pPlate->m_xMkDimPoint.pos.y, 0);
-		AcDbObjectId entId = CreateAcadCircle(pBlockTableRecord, center, g_pncSysPara.m_nMkCircleRadius,0L,RGB(255,0,0));
+		AcDbObjectId entId = CreateAcadCircle(pBlockTableRecord, center, g_pncSysPara.m_nMkCirclediameter / 2, 0L, RGB(255,0,0));
 		newCirIdList.append(entId);
 		entIdList.append(entId);
 		pBlockTableRecord->close();
