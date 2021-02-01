@@ -308,7 +308,7 @@ void CNCPart::AddEdgeToDxf(CDxfFile& dxf_file, PROFILE_VER* pPrevVertex, PROFILE
 {
 	if (pPrevVertex == NULL || pCurVertex == NULL)
 		return;
-	GEPOINT ptS = pPrevVertex->vertex, ptE = pCurVertex->vertex, ptC = pPrevVertex->vertex;
+	GEPOINT ptS = pPrevVertex->vertex, ptE = pCurVertex->vertex, ptC = pPrevVertex->center;
 	if (pPrevVertex->type == 1)
 		AddLineToDxf(dxf_file, ptS, ptE);
 	else if (pPrevVertex->type == 2)
@@ -333,8 +333,8 @@ void CNCPart::AddEdgeToDxf(CDxfFile& dxf_file, PROFILE_VER* pPrevVertex, PROFILE
 	else //if(pPrevVertex->type==3)
 	{
 		f3dArcLine arcLine;
-		arcLine.CreateEllipse(ptC, ptS, ptE, pPrevVertex->column_norm, pPrevVertex->work_norm, pPrevVertex->radius);
-		AddEllipseToDxf(dxf_file, arcLine);
+		if(arcLine.CreateEllipse(ptC, ptS, ptE, pPrevVertex->column_norm, pPrevVertex->work_norm, pPrevVertex->radius))
+			AddEllipseToDxf(dxf_file, arcLine);
 	}
 }
 

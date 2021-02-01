@@ -103,6 +103,9 @@
     <ClCompile Include="..\..\XhCore-dll\XeroCad\Localize\LocalDrawing.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\ToolKits\ToolCode\MonoImage.cpp">
+      <Filter>ToolCode</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="PEC.h">
@@ -218,6 +221,9 @@
     </ClInclude>
     <ClInclude Include="..\PPE\Model\NcPlate.h">
       <Filter>Source Files\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ToolKits\ToolCode\MonoImage.h">
+      <Filter>ToolCode</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

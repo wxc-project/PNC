@@ -2072,7 +2072,6 @@ void CPlateProcessInfo::DrawPlateProfile(f3dPoint *pOrgion /*= NULL*/)
 					{	//ÍÖÔ²
 						arcline.CreateEllipse(org, ptS, ptE, pCurVer->arc.column_norm, norm, pCurVer->arc.radius);
 						entId = CreateAcadEllipseLine(pBlockTableRecord, arcline, 0, g_pncSysPara.crMode.crEdge);
-						m_newAddEntIdList.append(entId.asOldId());
 					}
 				}
 				else

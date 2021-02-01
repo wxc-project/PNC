@@ -226,6 +226,7 @@
     <ClCompile Include="..\..\ToolKits\ToolCode\Expression.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\HiberarchyId.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\LogFile.cpp" />
+    <ClCompile Include="..\..\ToolKits\ToolCode\MonoImage.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\SolidBody.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\SolidBodyBuffer.cpp" />
     <ClCompile Include="..\..\ToolKits\ToolCode\SortFunc.cpp" />
@@ -275,6 +276,7 @@
     <ClInclude Include="..\..\ToolKits\ToolCode\HashTable.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\HiberarchyId.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\LogFile.h" />
+    <ClInclude Include="..\..\ToolKits\ToolCode\MonoImage.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SolidBody.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SolidBodyBuffer.h" />
     <ClInclude Include="..\..\ToolKits\ToolCode\SortFunc.h" />
