@@ -812,7 +812,7 @@ int CBomConfig::InitBomTitle()
 	m_xTmaTblCfg.m_xTblCfg.GetRealColIndex(mapRealCol);
 	//初始化显示列
 	m_xBomTitleArr.clear();
-	if (mapRealCol[CBomTblTitleCfg::I_PART_NO] > 0)
+	if (mapRealCol[CBomTblTitleCfg::I_PART_NO] >= 0)
 		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_PART_NO, 75));
 	if (mapRealCol[CBomTblTitleCfg::I_SPEC] > 0)
 		m_xBomTitleArr.push_back(BOM_TITLE(CBomTblTitleCfg::I_SPEC, 70));
