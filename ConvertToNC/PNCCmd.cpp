@@ -35,10 +35,32 @@ void SmartExtractPlate()
 		return;
 	}
 	//提取当前文件的钢板信息
+	CString file_path;
+	GetCurWorkPath(file_path);
 	IExtractor::m_bSendCommand = FALSE;
-	model.Empty();
-	model.ExtractPlates(file_name,TRUE);
-	model.DrawPlates();
+	if (model.m_sCurWorkFile.CompareNoCase(file_name) == 0)
+	{	//同一文档（分次处理）
+		CPNCModel tempMode;
+		tempMode.ExtractPlates(file_name, TRUE);
+		tempMode.DrawPlates();
+		tempMode.CreatePlatePPiFile(file_path);
+		//数据拷贝
+		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
+		for (pSrcPlate = tempMode.EnumFirstPlate(); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate())
+		{
+			pDestPlate = model.GetPlateInfo(pSrcPlate->GetPartNo());
+			if (pDestPlate == NULL)
+				pDestPlate = model.AppendPlate(pSrcPlate->GetPartNo());
+			pDestPlate->CopyAttributes(pSrcPlate);
+		}
+	}
+	else
+	{
+		model.Empty();
+		model.ExtractPlates(file_name, TRUE);
+		model.DrawPlates();
+		model.CreatePlatePPiFile(file_path);
+	}
 	//通过菜单提取的钢板需更新构件列表
 	CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
 	if (pPartListDlg != NULL && pPartListDlg->GetSafeHwnd() != NULL)
@@ -115,11 +137,9 @@ BOOL WriteToClient(HANDLE hPipeWrite)
 void SendPartEditor()
 {
 	CLogErrorLife logErrLife;
-	//指定路径下生成PPI文件
+	//写工程塔型配置文件 wht 19-01-12
 	CString file_path;
 	GetCurWorkPath(file_path);
-	model.CreatePlatePPiFile(file_path);
-	//写工程塔型配置文件 wht 19-01-12
 	if (model.m_xPrjInfo.m_sTaType.GetLength() > 0)
 	{
 		CString cfg_path = file_path + "config.ini";

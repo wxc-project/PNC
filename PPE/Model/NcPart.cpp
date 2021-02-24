@@ -284,14 +284,19 @@ void CNCPart::AddEllipseToDxf(CDxfFile& dxf_file, f3dArcLine ellipse, int clrInd
 	if (ellipse.SectorAngle() <= 0 || ellipse.Radius() <= 0)
 		return;
 	int nSlices = CalArcResolution(ellipse.Radius(), ellipse.SectorAngle(), 1.0, 3.0, 10);
-	double slice_angle = ellipse.SectorAngle() / nSlices;
-	GEPOINT pre_pt = ellipse.Start(), cut_pt;
-	for (int i = 1; i <= nSlices; i++)
+	if (nSlices > 0)
 	{
-		cut_pt = ellipse.PositionInAngle(i*slice_angle);
-		AddLineToDxf(dxf_file, pre_pt, cut_pt, clrIndex);
-		pre_pt = cut_pt;
+		double slice_angle = ellipse.SectorAngle() / nSlices;
+		GEPOINT pre_pt = ellipse.Start(), cut_pt;
+		for (int i = 1; i <= nSlices; i++)
+		{
+			cut_pt = ellipse.PositionInAngle(i*slice_angle);
+			AddLineToDxf(dxf_file, pre_pt, cut_pt, clrIndex);
+			pre_pt = cut_pt;
+		}
 	}
+	else
+		AddLineToDxf(dxf_file, ellipse.Start(), ellipse.End(), clrIndex);
 }
 void CNCPart::AddCircleToDxf(CDxfFile& dxf_file, GEPOINT ptC, double radius, int clrIndex /*= -1*/)
 {
@@ -335,6 +340,8 @@ void CNCPart::AddEdgeToDxf(CDxfFile& dxf_file, PROFILE_VER* pPrevVertex, PROFILE
 		f3dArcLine arcLine;
 		if(arcLine.CreateEllipse(ptC, ptS, ptE, pPrevVertex->column_norm, pPrevVertex->work_norm, pPrevVertex->radius))
 			AddEllipseToDxf(dxf_file, arcLine);
+		else
+			AddLineToDxf(dxf_file, ptS, ptE);
 	}
 }
 
