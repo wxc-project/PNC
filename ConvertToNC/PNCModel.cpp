@@ -41,13 +41,18 @@ bool CPNCModel::ExtractPlates(CString sDwgFile, BOOL bSupportSelectEnts/*=FALSE*
 	return false;
 }
 //
-void CPNCModel::CreatePlatePPiFile(const char* work_path)
+void CPNCModel::CreatePlatePPiFile(const char* work_path/* = NULL*/)
 {
+	CString file_path;
+	if (work_path == NULL)
+		GetCurWorkPath(file_path);
+	else
+		file_path = work_path;
 	for (CPlateProcessInfo* pPlateProcess = m_hashPlateInfo.GetFirst(); pPlateProcess; pPlateProcess = m_hashPlateInfo.GetNext())
 	{	
 		if (!pPlateProcess->IsValid())
 			continue;
-		pPlateProcess->CreatePPiFile(work_path);
+		pPlateProcess->CreatePPiFile(file_path);
 	}
 }
 //вт╤╞ее╟Ф

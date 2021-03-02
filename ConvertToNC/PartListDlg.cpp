@@ -372,6 +372,7 @@ void CPartListDlg::OnBnClickedBtnExtract()
 		CPNCModel tempMode;
 		tempMode.ExtractPlates(file_name, TRUE);
 		tempMode.DrawPlates();
+		tempMode.CreatePlatePPiFile();
 		//数据拷贝
 		CPlateProcessInfo* pSrcPlate = NULL, *pDestPlate = NULL;
 		for (pSrcPlate = tempMode.EnumFirstPlate(); pSrcPlate; pSrcPlate = tempMode.EnumNextPlate())
@@ -387,6 +388,7 @@ void CPartListDlg::OnBnClickedBtnExtract()
 		model.Empty();
 		model.ExtractPlates(file_name, TRUE);
 		model.DrawPlates();
+		model.CreatePlatePPiFile();
 	}
 	//下料预审模式绘制挡板
 	if (CDrawDamBoard::m_bDrawAllBamBoard&&g_pncSysPara.m_ciLayoutMode == CPNCSysPara::LAYOUT_PROCESS)

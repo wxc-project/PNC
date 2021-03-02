@@ -16,7 +16,7 @@ public:
 	//
 	void Empty();
 	bool ExtractPlates(CString sDwgFile, BOOL bSupportSelectEnts=FALSE);
-	void CreatePlatePPiFile(const char* work_path);
+	void CreatePlatePPiFile(const char* work_path=NULL);
 	//ªÊ÷∆∏÷∞Â
 	void DrawPlates();
 	void DrawPlatesToLayout();
