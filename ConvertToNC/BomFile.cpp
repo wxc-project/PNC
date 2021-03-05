@@ -196,6 +196,7 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		CXhChar100 sSingleNum, sProcessNum, sTaNum;
 		BOOL bCutAngle = FALSE, bCutRoot = FALSE, bCutBer = FALSE, bPushFlat = FALSE;
 		BOOL bKaiJiao = FALSE, bHeJiao = FALSE, bWeld = FALSE, bZhiWan = FALSE, bFootNail = FALSE;
+		BOOL bSynchroParseMatSpec = FALSE;
 		short siSubType = 0;
 		//件号
 		DWORD *pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_PART_NO));
@@ -214,6 +215,10 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 		pColIndex= hashColIndex.GetValue(CBomTblTitleCfg::GetColName(CBomTblTitleCfg::I_SPEC));
 		sheetContentMap.GetValueAt(i,*pColIndex,value);
 		sSpec=VariantToString(value);
+		if (sMaterial.Equal(sSpec))
+		{	//材质&规格在同一个单元格中
+			bSynchroParseMatSpec = TRUE;
+		}
 		sSpec.Replace("×", "*");
 		sSpec.Replace("x", "*");
 		sSpec.Replace("X", "*");
@@ -471,9 +476,30 @@ BOOL CBomFile::ParseSheetContent(CVariant2dArray &sheetContentMap,CHashStrList<D
 			}
 			repeatPartLabelArr.Add(CXhChar100("%s\t\t\t%d", (char*)sPartNo, atoi(sProcessNum)));
 		}
-		//logerr.Log("存在重复件号：%s", (char*)sPartNo);
+		//
 		double fWidth = 0, fThick = 0;
-		CProcessPart::RestoreSpec(sSpec, &fWidth, &fThick);
+		if (bSynchroParseMatSpec)
+		{	//同步解析材质与规格信息
+			CXhChar100 sMatSpec = sMaterial, sMat;
+			CProcessPart::RestoreSpec(sMatSpec, &fWidth, &fThick, sMat);
+			if (sMat.GetLength() > 0)
+			{
+				sMat.Remove(' ');
+				sSpec.Replace(sMat, "");
+				sSpec.Remove(' ');
+				sMaterial = sMat;
+			}
+			else
+				sMaterial.Copy("Q235");
+			if (fWidth > 0 && fThick > 0 && fThick > fWidth)
+			{
+				double fValue = fThick;
+				fThick = fWidth;
+				fWidth = fValue;
+			}
+		}
+		else
+			CProcessPart::RestoreSpec(sSpec, &fWidth, &fThick);
 		if (fWidth <= 0 && fThick <= 0)
 			continue;	//异常数据
 		if (pBomPart == NULL)
