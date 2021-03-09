@@ -898,7 +898,8 @@ BOOL CPNCSysPara::IsHasPlateWeldTag(const char* sText)
 {
 	if (sText == NULL || strlen(sText) <= 0)
 		return FALSE;
-	if (strstr(sText, "º¸") || strstr(sText, "weld"))
+	CString sContents(sText);
+	if (sContents.Find("º¸") >= 0 || sContents.Find("weld") >= 0)
 		return TRUE;
 	return FALSE;
 }
@@ -907,9 +908,10 @@ BOOL CPNCSysPara::IsHasPlateBendTag(const char* sText)
 {
 	if (sText == NULL || strlen(sText) <= 0)
 		return FALSE;
-	if (strstr(sText, "¾í±ß") || strstr(sText, "»ðÇú") ||
-		strstr(sText, "ÍâÇú") || strstr(sText, "ÄÚÇú") ||
-		strstr(sText, "ÕýÇú") || strstr(sText, "·´Çú"))
+	CString sContents(sText);
+	if (sContents.Find("¾í±ß") >= 0 || sContents.Find("»ðÇú") >= 0 ||
+		sContents.Find("ÍâÇú") >= 0 || sContents.Find("ÄÚÇú") >= 0 ||
+		sContents.Find("ÕýÇú") >= 0 || sContents.Find("·´Çú") >= 0)
 		return TRUE;
 	return FALSE;
 }
