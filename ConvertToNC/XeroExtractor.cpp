@@ -387,7 +387,7 @@ BOOL CPlateRecogRule::IsBriefMatMark(char cMat)
 	else
 		return FALSE;
 }
-BYTE CPlateRecogRule::ParsePartNoText(const char* sText,CXhChar16& sPartNo)
+BYTE CPlateRecogRule::ParsePartNoText(const char* sText, CXhChar50& sPartNo)
 {
 	CString ss(sText);
 	ss.Replace("¡¡"," ");
@@ -616,7 +616,7 @@ BOOL CPlateRecogRule::IsSlopeLine(AcDbLine* pAcDbLine,ISymbolRecognizer* pRecogn
 	}
 	return bRet;
 }
-BOOL CPlateRecogRule::ParsePartNoText(AcDbEntity *pAcadText, CXhChar16& sPartNo)
+BOOL CPlateRecogRule::ParsePartNoText(AcDbEntity *pAcadText, CXhChar50& sPartNo)
 {
 	if (pAcadText == NULL)
 		return FALSE;

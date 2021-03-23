@@ -7,8 +7,8 @@
 typedef CPlateProcessInfo* CPlateInfoPtr;
 int ComparePlatePtrByPartNo(const CPlateInfoPtr &plate1, const CPlateInfoPtr &plate2)
 {
-	CXhChar16 sPartNo1 = plate1->xPlate.GetPartNo();
-	CXhChar16 sPartNo2 = plate2->xPlate.GetPartNo();
+	CXhChar50 sPartNo1 = plate1->xPlate.GetPartNo();
+	CXhChar50 sPartNo2 = plate2->xPlate.GetPartNo();
 	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
 }
 //////////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ void CSortedModel::DividPlatesBySeg()
 	SEGI segI, temSegI;
 	for (CPlateProcessInfo *pPlate = EnumFirstPlate(); pPlate; pPlate = EnumNextPlate())
 	{
-		CXhChar16 sPartNo = pPlate->GetPartNo();
+		CXhChar50 sPartNo = pPlate->GetPartNo();
 		ParsePartNo(sPartNo, &segI, NULL, "SHPGT");
 		CXhChar16 sSegStr = segI.ToString();
 		if (sSegStr.GetLength() > 3)

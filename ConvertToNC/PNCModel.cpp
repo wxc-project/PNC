@@ -268,7 +268,7 @@ void CPNCModel::DrawPlatesToProcess()
 	//Êä³ö
 	for (CPlateProcessInfo *pPlate = sortedModel.EnumFirstPlate(); pPlate; pPlate = sortedModel.EnumNextPlate())
 	{
-		CXhChar16 sPartNo = pPlate->GetPartNo();
+		CXhChar50 sPartNo = pPlate->GetPartNo();
 		ParsePartNo(sPartNo, &curSegI, NULL, "SHPGT");
 		CXhChar16 sSegStr = curSegI.ToString();
 		if (sSegStr.GetLength() > 3)

@@ -98,7 +98,7 @@ struct BASIC_INFO {
 	int m_nThick;
 	int m_nNum;
 	long m_idCadEntNum;
-	CXhChar16 m_sPartNo;
+	CXhChar50 m_sPartNo;
 	CXhChar50 m_sTaStampNo;		//¸ÖÓ¡ºÅ
 	CXhChar50 m_sTaType;		//ËþÐÍ
 	CXhChar100 m_sPrjCode;		//¹¤³Ì±àºÅ
@@ -228,7 +228,7 @@ private:
 public:
 	CPlateProcessInfo();
 	//
-	CXhChar16 GetPartNo() { return xPlate.GetPartNo(); }
+	CXhChar50 GetPartNo() { return xPlate.GetPartNo(); }
 	void EmptyVertexs() {
 		vertexList.Empty();
 		m_xPolygon.Empty();

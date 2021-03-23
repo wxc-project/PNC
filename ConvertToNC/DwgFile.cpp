@@ -69,7 +69,7 @@ void CDwgFileInfo::ModifyPlateDwgPartNum()
 	for(CPlateProcessInfo* pInfo=EnumFirstPlate();pInfo;pInfo=EnumNextPlate(),index++)
 	{
 		DisplayCadProgress(int(100 * index / nNum));
-		CXhChar16 sPartNo=pInfo->xPlate.GetPartNo();
+		CXhChar50 sPartNo=pInfo->xPlate.GetPartNo();
 		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if(pLoftBom ==NULL)
 		{
@@ -97,7 +97,7 @@ void CDwgFileInfo::ModifyPlateDwgSpec()
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(),index++)
 	{
 		DisplayCadProgress(int(100 * index / nNum));
-		CXhChar16 sPartNo = pInfo->xPlate.GetPartNo();
+		CXhChar50 sPartNo = pInfo->xPlate.GetPartNo();
 		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if (pLoftBom == NULL)
 		{
@@ -128,7 +128,7 @@ void CDwgFileInfo::ModifyPlateDwgMaterial()
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(), index++)
 	{
 		DisplayCadProgress(int(100 * index / nNum));
-		CXhChar16 sPartNo = pInfo->xPlate.GetPartNo();
+		CXhChar50 sPartNo = pInfo->xPlate.GetPartNo();
 		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if (pLoftBom == NULL)
 		{
@@ -166,7 +166,7 @@ void CDwgFileInfo::FillPlateDwgData()
 	for (CPlateProcessInfo* pInfo = EnumFirstPlate(); pInfo; pInfo = EnumNextPlate(), index++)
 	{
 		DisplayCadProgress(int(100 * index / nNum));
-		CXhChar16 sPartNo = pInfo->xPlate.GetPartNo();
+		CXhChar50 sPartNo = pInfo->xPlate.GetPartNo();
 		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if (pLoftBom == NULL)
 		{
@@ -587,7 +587,7 @@ void CDwgFileInfo::FillAngleDwgData()
 	for (CAngleProcessInfo* pJgInfo = EnumFirstJg(); pJgInfo; pJgInfo = EnumNextJg(), index++)
 	{
 		DisplayCadProgress(int(100 * index / nNum));
-		CXhChar16 sPartNo = pJgInfo->m_xAngle.GetPartNo();
+		CXhChar50 sPartNo = pJgInfo->m_xAngle.GetPartNo();
 		BOMPART* pLoftBom = m_pProject->m_xLoftBom.FindPart(sPartNo);
 		if (pLoftBom == NULL)
 		{

@@ -132,7 +132,7 @@ bool CNCPart::CreatePlateTtpFile(CProcessPlate *pPlate,const char* file_path)
 		return false;
 	//
 	CXhChar200 sFileName(fname);
-	CXhChar16 sPartLabel = tempPlate.GetPartNo();
+	CXhChar50 sPartLabel = tempPlate.GetPartNo();
 	sPartLabel.ToLower();
 	sFileName.ToLower();
 	sprintf(file_name,"%s.ttp",(char*)sFileName);

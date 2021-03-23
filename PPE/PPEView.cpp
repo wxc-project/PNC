@@ -1634,7 +1634,7 @@ void CPPEView::AmendHoleIncrement()
 	{
 		if (!pProcessPart->IsPlate() || pProcessPart->m_xBoltInfoList.GetNodeNum() <= 0)
 			continue;
-		CXhChar16 sPartNo = pProcessPart->GetPartNo();
+		CXhChar50 sPartNo = pProcessPart->GetPartNo();
 		if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE) && g_sysPara.nc.m_ciDisplayType != CNCPart::PUNCH_MODE)
 		{
 			pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);

@@ -81,13 +81,13 @@ CXhChar200 CPlateProcessInfo::GetRelatePartNo()
 		AcDbEntity *pEnt = objLife.GetEnt();
 		if (pEnt == NULL)
 			continue;
-		CXhChar16 sPartNo;
+		CXhChar50 sPartNo;
 		if (g_pncSysPara.ParsePartNoText(pEnt, sPartNo))
 		{
 			if (sRelatePartNo.GetLength() <= 0)
 				sRelatePartNo.Copy(sPartNo);
 			else
-				sRelatePartNo.Append(CXhChar16(",%s", (char*)sPartNo));
+				sRelatePartNo.Append(CXhChar50(",%s", (char*)sPartNo));
 		}
 	}
 	return sRelatePartNo;
@@ -1751,7 +1751,7 @@ void CPlateProcessInfo::CreatePPiFile(const char* file_path)
 //ÊôÐÔ³ÉÔ±¿½±´
 void CPlateProcessInfo::CopyAttributes(CPlateProcessInfo* pSrcPlate)
 {
-	CXhChar16 sDestPartNo = GetPartNo();
+	CXhChar50 sDestPartNo = GetPartNo();
 	pSrcPlate->xPlate.ClonePart(&xPlate);
 	xPlate.cQuality = pSrcPlate->xPlate.cQuality;
 	if (sDestPartNo.GetLength() > 1)

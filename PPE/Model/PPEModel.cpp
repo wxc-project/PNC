@@ -181,7 +181,7 @@ BOOL CPPEModel::InitModelByFolderPath(const char *folder_path)
 		if(!LoadBufferFromFile(sFilename,buffer))
 			continue;
 		buffer.SeekToBegin();
-		CXhChar16 sPartNo;
+		CXhChar50 sPartNo;
 		BYTE cPartType=CProcessPart::RetrievedPartTypeAndLabelFromBuffer(buffer,sPartNo);
 		buffer.SeekToBegin();
 		CProcessPart *pPart=AddPart(sPartNo,cPartType,sFilename);
@@ -258,8 +258,8 @@ typedef CProcessPart* CProcessPartPtr;
 extern char* SearchChar(char* srcStr,char ch,bool reverseOrder/*=false*/);
 static int CompareProcessPart(const CProcessPartPtr &part1,const CProcessPartPtr &part2)
 {
-	CXhChar16 sPartNo1=part1->GetPartNo();
-	CXhChar16 sPartNo2=part2->GetPartNo();
+	CXhChar50 sPartNo1=part1->GetPartNo();
+	CXhChar50 sPartNo2=part2->GetPartNo();
 	char* szExt1=SearchChar(sPartNo1,'#',true);
 	if(szExt1)	//¼þºÅÖÐº¬ÓÐ¾ä±ú
 		*szExt1=0;
@@ -322,6 +322,8 @@ void CPPEModel::SyncRelaPlateInfo(CProcessPlate* pWorkPlate)
 	if (pWorkPlate == NULL || !pWorkPlate->IsPlate())
 		return;
 	CProcessPlate* pSrcPlate = (CProcessPlate*)m_hashPartByPartNo.GetValue(pWorkPlate->GetPartNo());
+	if (pSrcPlate == NULL)
+		return;
 	pSrcPlate->mcsFlg.wFlag = pWorkPlate->mcsFlg.wFlag;
 	pSrcPlate->mkpos = pWorkPlate->mkpos;
 	pSrcPlate->mkVec = pWorkPlate->mkVec;

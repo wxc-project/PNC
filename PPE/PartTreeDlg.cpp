@@ -22,8 +22,8 @@
 typedef CProcessPlate* CProcessPlatePtr;
 static int ComparePartNo(const CProcessPlatePtr &plate1, const CProcessPlatePtr &plate2)
 {
-	CXhChar16 sPartNo1 = plate1->GetPartNo();
-	CXhChar16 sPartNo2 = plate2->GetPartNo();
+	CXhChar50 sPartNo1 = plate1->GetPartNo();
+	CXhChar50 sPartNo2 = plate2->GetPartNo();
 	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
 }
 static int CompareThick(const CProcessPlatePtr &plate1, const CProcessPlatePtr &plate2)
@@ -56,8 +56,8 @@ static int ComparePlateGroupPtr(const PLATE_GROUP_PTR &platePtr1, const PLATE_GR
 typedef CProcessAngle* CProcessAnglePtr;
 static int ComparePartNo(const CProcessAnglePtr &jg1, const CProcessAnglePtr &jg2)
 {
-	CXhChar16 sPartNo1 = jg1->GetPartNo();
-	CXhChar16 sPartNo2 = jg2->GetPartNo();
+	CXhChar50 sPartNo1 = jg1->GetPartNo();
+	CXhChar50 sPartNo2 = jg2->GetPartNo();
 	return ComparePartNoString(sPartNo1, sPartNo2, "SHGPT");
 }
 static int CompareSpec(const CProcessAnglePtr &jg1, const CProcessAnglePtr &jg2)

@@ -93,7 +93,7 @@ bool CPlateExtractor::ExtractPlates(CHashStrList<CPlateProcessInfo>& hashPlateIn
 		//
 		BASIC_INFO baseInfo;
 		GEPOINT dim_pos, dim_vec;
-		CXhChar16 sPartNo;
+		CXhChar50 sPartNo;
 		if (pEnt->isKindOf(AcDbText::desc()) || pEnt->isKindOf(AcDbMText::desc()))
 		{
 			if (!g_pncSysPara.ParsePartNoText(pEnt, sPartNo))
@@ -1664,7 +1664,7 @@ void CPlateExtractor::SplitManyPartNo()
 			AcDbEntity *pEnt = objLife.GetEnt();
 			if (pEnt == NULL)
 				continue;
-			CXhChar16 sPartNo;
+			CXhChar50 sPartNo;
 			if (g_pncSysPara.ParsePartNoText(pEnt, sPartNo))
 			{
 				CPlateProcessInfo* pNewPlateInfo = m_pHashPlate->Add(sPartNo);

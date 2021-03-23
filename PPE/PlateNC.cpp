@@ -189,7 +189,7 @@ void CPPEView::AdjustHoleOrder()
 	if (m_pProcessPart == NULL || !m_pProcessPart->IsPlate())
 		return;
 	CProcessPlate* pPlate = (CProcessPlate*)m_pProcessPart;
-	CXhChar16 sPartNo = pPlate->GetPartNo();
+	CXhChar50 sPartNo = pPlate->GetPartNo();
 	//进行调整操作
 	CHashList<BOLT_INFO> boltHashList;
 	BOLT_INFO* pBolt = NULL, *pNewBolt = NULL;
@@ -250,7 +250,7 @@ void CPPEView::SmartSortBolts(BYTE ciAlgType)
 	if (m_pProcessPart == NULL || !m_pProcessPart->IsPlate())
 		return;
 	CWaitCursor waitCursor;
-	CXhChar16 sPartNo = m_pProcessPart->GetPartNo();
+	CXhChar50 sPartNo = m_pProcessPart->GetPartNo();
 	CProcessPlate* pDestPlate = NULL, *pCompPlate = NULL;
 	if (g_sysPara.IsValidDisplayFlag(CNCPart::PUNCH_MODE))
 	{
@@ -376,7 +376,7 @@ void CPPEView::OnBatchSortHole()
 		model.DisplayProcess(ftoi(100 * index / num), "批量优化螺栓顺序进度");
 		if (!pProcessPart->IsPlate())
 			continue;
-		CXhChar16 sPartNo = pProcessPart->GetPartNo();
+		CXhChar50 sPartNo = pProcessPart->GetPartNo();
 		CProcessPlate *pDestPlate = NULL, *pCompPlate = NULL;
 		//冲床工艺下的螺栓孔排序
 		pDestPlate = (CProcessPlate*)model.FromPartNo(sPartNo, CNCPart::PUNCH_MODE);
