@@ -366,6 +366,8 @@ void CPartListDlg::OnBnClickedBtnExtract()
 	CString file_name;
 	if (!IsValidDoc(file_name))
 		return;
+
+	CLogErrorLife logErrorLife;
 	IExtractor::m_bSendCommand = TRUE;
 	if (model.m_sCurWorkFile.CompareNoCase(file_name) == 0)
 	{	//同一文档（分次处理）
@@ -562,7 +564,7 @@ void CPartListDlg::OnBnClickedBtnExportDxf()
 		//导出DXF
 		GEPOINT orgPt = pPlate->CalBoardOrg(CDrawDamBoard::BOARD_HEIGHT);
 		sFilePath.Format("%s%s.dxf",sDxfFolderPath,(char*)pPlate->GetPartNo());
-		SaveAsDxf(sFilePath, entIdList, true, orgPt);
+		SaveAsDxf(sFilePath, entIdList, true, NULL, orgPt);
 		//删除新增的螺栓孔
 		for (int i = 0; i < newCirIdList.GetSize(); i++)
 		{

@@ -24,6 +24,7 @@ static char THIS_FILE[]=__FILE__;
 //////////////////////////////////////////////////////////////////////////
 void SmartExtractPlate()
 {
+	CLogErrorLife logErrorLife;
 	//获取当前激活文件
 	CString file_name;
 	AcApDocument* pDoc = acDocManager->curDocument();
@@ -278,6 +279,8 @@ void DrawPlates()
 		g_pncSysPara.m_ciArrangeType = bDrawByVert;
 	else if (draw_type == 4)
 		g_pncSysPara.m_ciGroupType = group_type;
+
+	CLogErrorLife logErrorLife;
 	model.DrawPlates();
 	//更新构件列表
 	CPartListDlg *pPartListDlg = g_xPNCDockBarManager.GetPartListDlgPtr();
