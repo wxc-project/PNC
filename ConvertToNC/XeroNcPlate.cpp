@@ -299,31 +299,52 @@ void CPlateProcessInfo::CreateRgnByText()
 {
 	CAcDbObjLife objLife(partNoId);
 	AcDbEntity *pEnt = objLife.GetEnt();
-	if (pEnt == NULL || !pEnt->isKindOf(AcDbText::desc()))
+	if (pEnt == NULL)
 		return;
-	CXhChar50 sText;
-	AcDbText* pText = (AcDbText*)pEnt;
+	if (!pEnt->isKindOf(AcDbText::desc()) && !pEnt->isKindOf(AcDbMText::desc()))
+		return;
+	double dfTextH = 0, dfTextL = 0;
+	f3dPoint dim_norm, dim_vec(1, 0, 0);
+	if (pEnt->isKindOf(AcDbText::desc()))
+	{	//单行文本
+		CXhChar50 sText;
+		AcDbText* pText = (AcDbText*)pEnt;
 #ifdef _ARX_2007
-	sText.Copy(_bstr_t(pText->textString()));
+		sText.Copy(_bstr_t(pText->textString()));
 #else
-	sText.Copy(pText->textString());
+		sText.Copy(pText->textString());
 #endif
-	f3dPoint text_norm, dim_norm, dim_vec(1, 0, 0);
-	Cpy_Pnt(text_norm, pText->normal());
-	if (text_norm.IsZero())
-		text_norm.Set(0, 0, 1);
-	double height = pText->height();
-	double angle = pText->rotation();
-	double len = DrawTextLength(sText, height, pText->textStyle());
-	dim_norm.Set(-sin(angle), cos(angle));
-	RotateVectorAroundVector(dim_vec, angle, text_norm);
-	//
-	ARRAY_LIST<f3dPoint> vertexList;
-	vertexList.append(f3dPoint(dim_pos + dim_norm * height * 3 - dim_vec * len * 2));
-	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 3 - dim_vec * len * 2));
-	vertexList.append(f3dPoint(dim_pos - dim_norm * height * 3 + dim_vec * len * 2));
-	vertexList.append(f3dPoint(dim_pos + dim_norm * height * 3 + dim_vec * len * 2));
-	m_xPolygon.CreatePolygonRgn(vertexList.m_pData, vertexList.GetSize());
+		f3dPoint text_norm;
+		Cpy_Pnt(text_norm, pText->normal());
+		if (text_norm.IsZero())
+			text_norm.Set(0, 0, 1);
+		dfTextH = pText->height();
+		dfTextL = DrawTextLength(sText, dfTextH, pText->textStyle());
+		double dfAngle = pText->rotation();
+		dim_norm.Set(-sin(dfAngle), cos(dfAngle));
+		RotateVectorAroundVector(dim_vec, dfAngle, text_norm);
+		ARRAY_LIST<f3dPoint> vertexList;
+		vertexList.append(f3dPoint(dim_pos + dim_norm * dfTextH * 3 - dim_vec * dfTextL * 2));
+		vertexList.append(f3dPoint(dim_pos - dim_norm * dfTextH * 3 - dim_vec * dfTextL * 2));
+		vertexList.append(f3dPoint(dim_pos - dim_norm * dfTextH * 3 + dim_vec * dfTextL * 2));
+		vertexList.append(f3dPoint(dim_pos + dim_norm * dfTextH * 3 + dim_vec * dfTextL * 2));
+		m_xPolygon.CreatePolygonRgn(vertexList.m_pData, vertexList.GetSize());
+	}
+	else
+	{	//多行文本
+		AcDbMText* pMText = (AcDbMText*)pEnt;
+		dfTextH = pMText->actualHeight();
+		dfTextL = pMText->actualWidth();
+		dim_vec.Set(cos(pMText->rotation()), sin(pMText->rotation()));
+		dim_norm.Set(-sin(pMText->rotation()), cos(pMText->rotation()));
+		ARRAY_LIST<f3dPoint> vertexList;
+		vertexList.append(f3dPoint(dim_pos + dim_norm * dfTextH - dim_vec * dfTextL * 2));
+		vertexList.append(f3dPoint(dim_pos - dim_norm * dfTextH - dim_vec * dfTextL * 2));
+		vertexList.append(f3dPoint(dim_pos - dim_norm * dfTextH + dim_vec * dfTextL * 2));
+		vertexList.append(f3dPoint(dim_pos + dim_norm * dfTextH + dim_vec * dfTextL * 2));
+		m_xPolygon.CreatePolygonRgn(vertexList.m_pData, vertexList.GetSize());
+	}
+	
 }
 //检测钢板原图的轮廓状态：是否闭合
 void CPlateProcessInfo::CheckProfileEdge()
