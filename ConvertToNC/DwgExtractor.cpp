@@ -1576,11 +1576,11 @@ void CPlateExtractor::InitPlateVextexs(CHashSet<AcDbObjectId>& hashProfileEnts, 
 		while (nSize > 0)
 		{
 			DisplayCadProgress(int(100 * nStep / nNum));
-			CAD_LINE* pStartLine = line_arr.GetFirst();
+			CAD_LINE* pStartLine = NULL;
 			if (index != 0)
 				pStartLine = hashUnmatchLine.GetFirst();
 			CPlateProcessInfo tem_plate;
-			BOOL bSucceed = tem_plate.InitProfileByAcdbLineList(*pStartLine, line_arr);
+			BOOL bSucceed = tem_plate.InitProfileByAcdbLineList(pStartLine, line_arr);
 			if (bSucceed)
 			{	//匹配成功,将轮廓点放入对应的钢板内
 				CPlateProcessInfo* pCurPlateInfo = NULL;

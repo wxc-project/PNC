@@ -250,7 +250,7 @@ public:
 	BOOL InitProfileByAcdbCircle(AcDbObjectId idAcdbCircle);
 	BOOL InitProfileByAcdbPolyLine(AcDbObjectId idAcdbPline);
 	BOOL InitProfileByAcdbLineList(ARRAY_LIST<CAD_LINE>& xLineArr);
-	BOOL InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr);
+	BOOL InitProfileByAcdbLineList(CAD_LINE* pStartLine, ARRAY_LIST<CAD_LINE>& xLineArr);
 	//更新钢板信息
 	void CalEquidistantShape(double minDistance, ATOM_LIST<VERTEX> *pDestList);
 	BOOL UpdatePlateInfo(BOOL bRelatePN = FALSE);

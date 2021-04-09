@@ -564,7 +564,7 @@ void CPartListDlg::OnBnClickedBtnExportDxf()
 		//导出DXF
 		GEPOINT orgPt = pPlate->CalBoardOrg(CDrawDamBoard::BOARD_HEIGHT);
 		sFilePath.Format("%s%s.dxf",sDxfFolderPath,(char*)pPlate->GetPartNo());
-		SaveAsDxf(sFilePath, entIdList, true, NULL, orgPt);
+		SaveAsDxf(sFilePath, entIdList, true, orgPt);
 		//删除新增的螺栓孔
 		for (int i = 0; i < newCirIdList.GetSize(); i++)
 		{

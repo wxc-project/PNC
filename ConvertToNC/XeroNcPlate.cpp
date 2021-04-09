@@ -735,19 +735,19 @@ void CPlateProcessInfo::ExtractRelaEnts()
 	ATOM_LIST<VERTEX> list;
 	CalEquidistantShape(IExtractor::DIST_ERROR * 2, &list);
 #ifdef __ALFA_TEST_
-	/*CLockDocumentLife lockCurDocment;
-	AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
-	if (pBlockTableRecord)
-	{
-		int nNum = list.GetNodeNum();
-		for (int i = 0; i < nNum; i++)
-		{
-			VERTEX* pCurVer = list.GetByIndex(i);
-			VERTEX* pNextVer = list.GetByIndex((i + 1) % nNum);
-			CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, RGB(125, 255, 0));
-		}
-		pBlockTableRecord->close();
-	}*/
+	//CLockDocumentLife lockCurDocment;
+	//AcDbBlockTableRecord *pBlockTableRecord = GetBlockTableRecord();
+	//if (pBlockTableRecord)
+	//{
+	//	int nNum = list.GetNodeNum();
+	//	for (int i = 0; i < nNum; i++)
+	//	{
+	//		VERTEX* pCurVer = list.GetByIndex(i);
+	//		VERTEX* pNextVer = list.GetByIndex((i + 1) % nNum);
+	//		CreateAcadLine(pBlockTableRecord, pCurVer->pos, pNextVer->pos, 0, 0, RGB(125, 255, 0));
+	//	}
+	//	pBlockTableRecord->close();
+	//}
 #endif
 	vector<GEPOINT> vectorProfilePt;
 	for (VERTEX* pVer = list.GetFirst(); pVer; pVer = list.GetNext())
@@ -1437,13 +1437,18 @@ BOOL CPlateProcessInfo::InitProfileByAcdbLineList(ARRAY_LIST<CAD_LINE>& xLineArr
 {
 	if (xLineArr.GetSize() <= 0)
 		return FALSE;
-	return InitProfileByAcdbLineList(xLineArr[0], xLineArr);
+	return InitProfileByAcdbLineList(NULL, xLineArr);
 }
-BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE& startLine, ARRAY_LIST<CAD_LINE>& xLineArr)
+BOOL CPlateProcessInfo::InitProfileByAcdbLineList(CAD_LINE* pStartLine, ARRAY_LIST<CAD_LINE>& xLineArr)
 {
 	if (xLineArr.GetSize() <= 0)
 		return FALSE;
+	if (pStartLine == NULL)
+	{	//TODO:查找有效的起始轮廓线
+
+	}
 	//查找起始轮廓线
+	CAD_LINE startLine = *pStartLine;
 	CAD_LINE *pLine = NULL, *pFirLine = NULL;
 	for (pLine = xLineArr.GetFirst(); pLine; pLine = xLineArr.GetNext())
 	{
